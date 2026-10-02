@@ -62,7 +62,7 @@ class LLMClient:
         model: str = "qwen2.5:7b",
         host: str = "http://localhost:11434",
         api_key: Optional[str] = None,
-        timeout: int = 300,
+        timeout: int = 600,
         max_retries: int = 2,
         retry_delay: float = 2.0,
         temperature: float = 0.3,
