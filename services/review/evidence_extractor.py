@@ -137,26 +137,47 @@ class EvidenceExtractor:
         Returns:
             EvidenceCard 列表
         """
-        all_cards: list[EvidenceCard] = []
-        seq_counter = 0
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
+        # V30.1: 先过滤掉不需要处理的段落
+        valid_paragraphs = []
         for para in paragraphs:
             text = para.get("text", "").strip()
             if len(text) < self.min_paragraph_length:
                 continue
-
-            # 跳过明显的非正文段落
             if self._is_boilerplate(text):
                 continue
+            valid_paragraphs.append(para)
 
-            try:
-                cards = self._extract_one_paragraph(para, topic, seq_counter, language=language)
-                all_cards.extend(cards)
-                seq_counter += len(cards)
-            except LLMError as e:
-                # 单个段落抽取失败不中断整体流程，记录警告
-                print(f"⚠️  段落 {para.get('para_id', '?')} 证据抽取失败: {e}")
-                continue
+        print(f"🔍 并行证据抽取：{len(valid_paragraphs)} 个段落，并发数=10")
+
+        all_cards: list[EvidenceCard] = []
+        seq_counter = 0
+
+        # V30.1: 并行处理
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            # 提交所有任务
+            future_to_para = {}
+            for para in valid_paragraphs:
+                future = executor.submit(
+                    self._extract_one_paragraph,
+                    para,
+                    topic,
+                    0,  # seq_counter 后面再统一处理
+                    language=language,
+                )
+                future_to_para[future] = para
+
+            # 收集结果
+            for future in as_completed(future_to_para):
+                para = future_to_para[future]
+                try:
+                    cards = future.result()
+                    all_cards.extend(cards)
+                    seq_counter += len(cards)
+                except LLMError as e:
+                    print(f"⚠️  段落 {para.get('para_id', '?')} 证据抽取失败: {e}")
+                    continue
 
         return all_cards
 
