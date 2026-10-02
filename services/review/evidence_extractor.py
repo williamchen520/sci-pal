@@ -203,6 +203,11 @@ class EvidenceExtractor:
         all_cards: list[EvidenceCard] = cached_cards  # V30.6: 先把缓存里的结果放进去
         seq_counter = len(cached_cards)
 
+        # V31.10: 熔断机制 - 失败太多就直接停止
+        failed_count = 0
+        max_failed = 10  # 最多失败 10 次就停止
+        stopped = False
+
         # V30.3: 并行处理批次
         with ThreadPoolExecutor(max_workers=5) as executor:
             # 提交所有批次
@@ -218,13 +223,21 @@ class EvidenceExtractor:
 
             # 收集结果
             for future in as_completed(future_to_batch):
+                if stopped:
+                    continue
                 batch_idx, batch = future_to_batch[future]
                 try:
                     cards = future.result()
                     all_cards.extend(cards)
                     seq_counter += len(cards)
                 except LLMError as e:
+                    failed_count += 1
                     print(f"⚠️  第 {batch_idx+1} 批证据抽取失败: {e}")
+                    # V31.10: 失败太多就停止
+                    if failed_count >= max_failed:
+                        print(f"⚠️  失败次数达到 {max_failed}，停止证据抽取，跳过剩余批次")
+                        stopped = True
+                        continue
                     # V30.3: 批量失败后，退回到单段处理
                     for para in batch:
                         try:
@@ -233,6 +246,9 @@ class EvidenceExtractor:
                             seq_counter += len(cards)
                         except LLMError as e2:
                             print(f"⚠️  段落 {para.get('para_id', '?')} 单段抽取也失败: {e2}")
+
+        # V31.7: 把缓存保存到硬盘，重启不丢失
+        self._save_cache_to_disk()
 
         return all_cards
 
