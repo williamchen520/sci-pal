@@ -84,12 +84,32 @@ class CitationVerifier:
         warnings: list[str] = []
         verified_sentences: list[ReviewSentence] = []
 
+        # V30.5: 先做确定性校验，收集需要 LLM 深度校验的句子
+        llm_verify_sentences: list[ReviewSentence] = []
+
         for sent in draft.sentences:
-            sent, sent_warnings = self._verify_sentence(
-                sent, draft.evidence_cards, use_llm
+            sent, sent_warnings = self._verify_sentence_deterministic(
+                sent, draft.evidence_cards
             )
             verified_sentences.append(sent)
             warnings.extend(sent_warnings)
+
+            # 如果确定性校验通过，且需要 LLM 深度校验，就收集起来
+            if use_llm and self.llm and self.llm.is_available():
+                if sent.status == SentenceStatus.VERIFIED:
+                    llm_verify_sentences.append(sent)
+
+        # V30.5: 批量 LLM 深度校验
+        if llm_verify_sentences and use_llm and self.llm and self.llm.is_available():
+            try:
+                verified_sentences = self._batch_llm_verify(
+                    verified_sentences,
+                    llm_verify_sentences,
+                    draft.evidence_cards,
+                    warnings,
+                )
+            except LLMError as e:
+                warnings.append(f"⚠️  批量 LLM 深度校验失败（保留确定性校验结果）: {e}")
 
         # 更新 draft 中的 sentences
         draft.sentences = verified_sentences
@@ -108,13 +128,12 @@ class CitationVerifier:
 
         return draft, warnings
 
-    def _verify_sentence(
+    def _verify_sentence_deterministic(
         self,
         sentence: ReviewSentence,
         evidence_cards: dict[str, EvidenceCard],
-        use_llm: bool,
     ) -> tuple[ReviewSentence, list[str]]:
-        """校验单个句子。"""
+        """确定性校验（不用 LLM）。"""
         warnings: list[str] = []
 
         # ── 第一层：确定性校验 ──
@@ -148,15 +167,74 @@ class CitationVerifier:
         # 确定性校验通过
         sentence.status = SentenceStatus.VERIFIED
 
-        # ── 第二层：LLM 深度校验（可选）──
-        if use_llm and self.llm is not None:
-            try:
-                sentence, llm_warnings = self._llm_deep_verify(sentence, evidence_cards)
-                warnings.extend(llm_warnings)
-            except LLMError as e:
-                warnings.append(f"  ⚠️  句子 {sentence.sentence_id} LLM深度校验失败（保留确定性校验结果）: {e}")
-
         return sentence, warnings
+
+    def _batch_llm_verify(
+        self,
+        all_sentences: list[ReviewSentence],
+        llm_sentences: list[ReviewSentence],
+        evidence_cards: dict[str, EvidenceCard],
+        warnings: list[str],
+    ) -> list[ReviewSentence]:
+        """V30.5: 批量 LLM 深度校验。"""
+        # 构建批量 prompt
+        sentences_text = ""
+        for i, sent in enumerate(llm_sentences):
+            # 构建该句子的证据上下文
+            evidence_text = ""
+            for eid in sent.evidence_ids:
+                if eid in evidence_cards:
+                    card = evidence_cards[eid]
+                    evidence_text += f"  [{eid}] ({card.evidence_type.value}) {card.content[:200]}\n"
+
+            sentences_text += f"【句子 {i+1}】(sentence_id: {sent.sentence_id})\n"
+            sentences_text += f"内容: {sent.text}\n"
+            sentences_text += f"关联证据:\n{evidence_text}\n"
+            sentences_text += "\n"
+
+        user_prompt = f"""{sentences_text}
+
+For each sentence above, judge whether it is truly supported by its associated evidence cards.
+Return a JSON array, each element containing:
+- sentence_id: the sentence ID
+- verdict: "supported" | "not_supported" | "controversial"
+- reason: brief reason for the verdict
+- matching_evidence_ids: list of evidence IDs that actually support this sentence
+"""
+
+        result = self.llm.chat_json(VERIFY_SYSTEM_PROMPT, user_prompt)
+
+        # 解析批量结果
+        if not isinstance(result, list):
+            raise LLMError("批量校验结果不是数组")
+
+        # 建立 sentence_id 到结果的映射
+        result_map = {}
+        for item in result:
+            if isinstance(item, dict) and "sentence_id" in item:
+                result_map[item["sentence_id"]] = item
+
+        # 更新句子状态
+        for sent in llm_sentences:
+            if sent.sentence_id in result_map:
+                item = result_map[sent.sentence_id]
+                verdict = item.get("verdict", "supported")
+                reason = item.get("reason", "")
+                matching_ids = item.get("matching_evidence_ids", [])
+
+                if verdict == "not_supported":
+                    sent.status = SentenceStatus.UNVERIFIED
+                    sent.verification_note = f"LLM 校验：未被证据支撑 — {reason}"
+                    warnings.append(f"  ⚠️  句子 {sent.sentence_id} 未被证据支撑: {reason}")
+                elif verdict == "controversial":
+                    sent.status = SentenceStatus.UNVERIFIED
+                    sent.verification_note = f"LLM 校验：证据存在矛盾 — {reason}"
+                    warnings.append(f"  ⚠️  句子 {sent.sentence_id} 证据存在矛盾: {reason}")
+                else:
+                    # supported
+                    sent.verification_note = f"LLM 校验：被证据支撑 — {reason}"
+
+        return all_sentences
 
     def _llm_deep_verify(
         self,
