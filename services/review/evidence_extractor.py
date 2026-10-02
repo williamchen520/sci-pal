@@ -246,11 +246,16 @@ If a paragraph has no evidence, return an empty array for that key.
         all_cards: list[EvidenceCard] = []
         seq_counter = 0
 
+        # V30.7: 编号核查，看看哪些段落的结果缺失了
+        missing_paragraphs: list[dict] = []
+
         if isinstance(raw_results, dict):
             for i, para in enumerate(batch):
                 para_key = f"paragraph_{i+1}"
                 para_results = raw_results.get(para_key, [])
                 if not isinstance(para_results, list):
+                    para_results = []
+                    missing_paragraphs.append(para)  # V30.7: 标记为缺失
                     continue
 
                 para_cards: list[EvidenceCard] = []  # V30.6: 这个段落的证据卡片
@@ -296,6 +301,20 @@ If a paragraph has no evidence, return an empty array for that key.
                 # V30.6: 把这个段落的证据卡片存到缓存里
                 cache_key = self._get_cache_key(para)
                 self._cache[cache_key] = para_cards
+
+        # V30.7: 补缺失的段落，不重发整批，只单独补
+        if missing_paragraphs:
+            print(f"⚠️  批量结果缺失 {len(missing_paragraphs)} 个段落，单独补一下")
+            for para in missing_paragraphs:
+                try:
+                    cards = self._extract_one_paragraph(para, topic, seq_counter, language=language)
+                    all_cards.extend(cards)
+                    seq_counter += len(cards)
+                    # 也存到缓存里
+                    cache_key = self._get_cache_key(para)
+                    self._cache[cache_key] = cards
+                except LLMError as e:
+                    print(f"⚠️  段落 {para.get('para_id', '?')} 单独补也失败: {e}")
 
         return all_cards
 
