@@ -59,7 +59,7 @@ class LLMClient:
     def __init__(
         self,
         provider: str = "ollama",
-        model: str = "qwen2.5-7b:latest",
+        model: str = "qwen2.5:7b",
         host: str = "http://localhost:11434",
         api_key: Optional[str] = None,
         timeout: int = 300,
