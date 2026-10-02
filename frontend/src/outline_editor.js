@@ -682,6 +682,8 @@
     // V26.1: 隐藏这两个按钮
     if (els.assignPapersBtn) els.assignPapersBtn.style.display = 'none';
     if (els.confirmAssignBtn) els.confirmAssignBtn.style.display = 'none';
+    // V30.3: 启用"生成综述"按钮
+    if (els.generateReviewBtn) els.generateReviewBtn.disabled = false;
   }
 
   // ── 自动解析未解析文献（V25.14: 生成综述前自动解析）──
