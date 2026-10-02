@@ -127,20 +127,27 @@ class EvidenceExtractor:
         if os.path.exists(self._cache_file):
             try:
                 with open(self._cache_file, "r", encoding="utf-8") as f:
-                    self._cache = json.load(f)
+                    cache_raw = json.load(f)
+                # V31.13: 把 dict 转成 EvidenceCard 对象
+                for key, cards_raw in cache_raw.items():
+                    self._cache[key] = [EvidenceCard(**card) for card in cards_raw]
                 print(f"📦 从硬盘加载了 {len(self._cache)} 条缓存")
             except Exception as e:
                 print(f"⚠️ 加载缓存失败：{e}")
                 self._cache = {}
 
     def _save_cache_to_disk(self):
-        """V31.7: 把缓存保存到硬盘。"""
+        """V31.7: 把缓存保存到硬盘。V31.13: 修复 EvidenceCard 不能 JSON 序列化的问题。"""
         import json
         import os
         try:
             os.makedirs(os.path.dirname(self._cache_file), exist_ok=True)
+            # V31.13: 把 EvidenceCard 转成 dict
+            cache_serializable = {}
+            for key, cards in self._cache.items():
+                cache_serializable[key] = [card.model_dump() for card in cards]
             with open(self._cache_file, "w", encoding="utf-8") as f:
-                json.dump(self._cache, f, ensure_ascii=False, indent=2)
+                json.dump(cache_serializable, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"⚠️ 保存缓存失败：{e}")
 
