@@ -36,7 +36,8 @@ def _load_ner_model():
         from transformers import AutoTokenizer, AutoModelForTokenClassification
         import torch
 
-        model_name = 'pruas/BENT-PubMedBERT-NER-Gene'
+        # V31.15: 指定本地模型路径，不用 HuggingFace 模型名
+        model_name = r"D:\models\models\pruas--BENT-PubMedBERT-NER-Gene"
         print(f"  📥 Loading NER model: {model_name}...")
         _ner_tokenizer = AutoTokenizer.from_pretrained(model_name)
         # V31.12: 改成自动判断，不强制 use_safetensors
