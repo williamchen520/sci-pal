@@ -133,8 +133,14 @@ class EvidenceExtractor:
                     self._cache[key] = [EvidenceCard(**card) for card in cards_raw]
                 print(f"📦 从硬盘加载了 {len(self._cache)} 条缓存")
             except Exception as e:
-                print(f"⚠️ 加载缓存失败：{e}")
+                print(f"⚠️ 加载缓存失败（缓存文件可能坏了，已忽略）：{e}")
                 self._cache = {}
+                # V31.14: 删掉坏的缓存文件
+                try:
+                    os.remove(self._cache_file)
+                    print(f"🗑️ 已删掉坏的缓存文件")
+                except:
+                    pass
 
     def _save_cache_to_disk(self):
         """V31.7: 把缓存保存到硬盘。V31.13: 修复 EvidenceCard 不能 JSON 序列化的问题。"""
