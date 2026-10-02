@@ -39,9 +39,9 @@ def _load_ner_model():
         model_name = 'pruas/BENT-PubMedBERT-NER-Gene'
         print(f"  📥 Loading NER model: {model_name}...")
         _ner_tokenizer = AutoTokenizer.from_pretrained(model_name)
+        # V31.12: 改成自动判断，不强制 use_safetensors
         _ner_model = AutoModelForTokenClassification.from_pretrained(
             model_name,
-            use_safetensors=True
         )
 
         # Move to GPU if available
