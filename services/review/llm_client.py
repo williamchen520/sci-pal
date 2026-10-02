@@ -135,9 +135,9 @@ class LLMClient:
         }
         if self.provider == "openai":
             payload["temperature"] = temperature
-            payload["max_tokens"] = 8192  # V31.4: 改大一点，避免输出被截断
+            payload["max_tokens"] = 16384  # V31.5: 改大到 16384，避免本地模型输出被截断
         else:
-            payload["options"] = {"temperature": temperature, "num_predict": 8192}
+            payload["options"] = {"temperature": temperature, "num_predict": 16384}
         return payload
 
     def _parse_response(self, data: dict) -> str:
