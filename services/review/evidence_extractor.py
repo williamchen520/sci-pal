@@ -241,11 +241,15 @@ If a paragraph has no evidence, return an empty array for that key.
 
                     evidence_type = self._parse_evidence_type(item.get("evidence_type", "fact"))
 
+                    safe_paper = self._sanitize_id(para["paper_id"])
+                    safe_para = self._sanitize_id(para["para_id"])
+
                     card = EvidenceCard(
+                        evidence_id=f"ev_{safe_paper}_{safe_para}_{seq_counter}",
                         seq=seq_counter,
                         content=content,
                         evidence_type=evidence_type,
-                        original_quote=item.get("original_quote", "").strip(),
+                        original_quote=item.get("original_quote", "")[:500],
                         paper_id=para["paper_id"],
                         para_id=para["para_id"],
                         section_l1=para.get("section_l1", ""),
@@ -259,6 +263,7 @@ If a paragraph has no evidence, return an empty array for that key.
                         cell_type=item.get("cell_type", "unknown"),
                         measurement=item.get("measurement", "unknown"),
                         stimulus=item.get("stimulus", "unknown"),
+                        confidence=item.get("confidence", 1.0),
                     )
                     all_cards.append(card)
                     seq_counter += 1
