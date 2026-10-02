@@ -118,8 +118,31 @@ class EvidenceExtractor:
         # V25.2: 句内定位器（抽取后自动定位 original_quote 在段落中的偏移）
         from .sentence_locator import SentenceLocator
         self._locator = SentenceLocator()
-        # V30.6: 缓存，避免重复处理相同段落
+        # V31.7: 缓存改成存在硬盘上（JSON 文件），重启不丢失
+        import json
+        import os
+        self._cache_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "evidence_cache.json")
         self._cache: dict[str, list[EvidenceCard]] = {}
+        # 从硬盘加载缓存
+        if os.path.exists(self._cache_file):
+            try:
+                with open(self._cache_file, "r", encoding="utf-8") as f:
+                    self._cache = json.load(f)
+                print(f"📦 从硬盘加载了 {len(self._cache)} 条缓存")
+            except Exception as e:
+                print(f"⚠️ 加载缓存失败：{e}")
+                self._cache = {}
+
+    def _save_cache_to_disk(self):
+        """V31.7: 把缓存保存到硬盘。"""
+        import json
+        import os
+        try:
+            os.makedirs(os.path.dirname(self._cache_file), exist_ok=True)
+            with open(self._cache_file, "w", encoding="utf-8") as f:
+                json.dump(self._cache, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"⚠️ 保存缓存失败：{e}")
 
     def _get_cache_key(self, para: dict) -> str:
         """V30.6: 生成缓存 key。"""
@@ -315,6 +338,9 @@ If a paragraph has no evidence, return an empty array for that key.
                     self._cache[cache_key] = cards
                 except LLMError as e:
                     print(f"⚠️  段落 {para.get('para_id', '?')} 单独补也失败: {e}")
+
+        # V31.7: 把缓存保存到硬盘，重启不丢失
+        self._save_cache_to_disk()
 
         return all_cards
 
