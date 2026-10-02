@@ -210,6 +210,16 @@ class CitationVerifier:
         warnings: list[str],
     ) -> list[ReviewSentence]:
         """V30.5: 批量 LLM 深度校验。"""
+        # V30.9: 结构约束，把章节信息加进去
+        section_names = {
+            "sec_01": "研究背景",
+            "sec_02": "研究方法",
+            "sec_03": "分子机制",
+            "sec_04": "研究结果",
+            "sec_05": "研究争议",
+            "sec_06": "研究展望",
+        }
+
         # 构建批量 prompt
         sentences_text = ""
         for i, sent in enumerate(llm_sentences):
@@ -220,7 +230,10 @@ class CitationVerifier:
                     card = evidence_cards[eid]
                     evidence_text += f"  [{eid}] ({card.evidence_type.value}) {card.content[:200]}\n"
 
-            sentences_text += f"【句子 {i+1}】(sentence_id: {sent.sentence_id})\n"
+            # V30.9: 加上章节信息
+            section_name = section_names.get(sent.section_id, sent.section_id)
+
+            sentences_text += f"【句子 {i+1}】(sentence_id: {sent.sentence_id}, 所属章节: {section_name})\n"
             sentences_text += f"内容: {sent.text}\n"
             sentences_text += f"关联证据:\n{evidence_text}\n"
             sentences_text += "\n"
@@ -228,6 +241,15 @@ class CitationVerifier:
         user_prompt = f"""{sentences_text}
 
 For each sentence above, judge whether it is truly supported by its associated evidence cards.
+
+V30.9: 结构约束 - 不同章节的句子，校验标准不一样：
+- "研究背景"章节的句子：主要是介绍基本概念和背景，不需要特别精确的数据支撑，只要有相关证据即可
+- "研究方法"章节的句子：必须有明确的方法描述支撑
+- "分子机制"章节的句子：必须有明确的实验证据支撑
+- "研究结果"章节的句子：必须有精确的实验数据支撑
+- "研究争议"章节的句子：必须有明确的矛盾证据支撑
+- "研究展望"章节的句子：主要是未来方向的推测，不需要特别精确的证据支撑
+
 Return a JSON array, each element containing:
 - sentence_id: the sentence ID
 - verdict: "supported" | "not_supported" | "controversial"
