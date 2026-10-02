@@ -63,7 +63,7 @@ class LLMClient:
         host: str = "http://localhost:11434",
         api_key: Optional[str] = None,
         timeout: int = 1800,
-        max_retries: int = 2,
+        max_retries: int = 1,
         retry_delay: float = 2.0,
         temperature: float = 0.3,
     ):
