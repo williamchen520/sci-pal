@@ -45,10 +45,11 @@ Requirements:
 2. **Each section must contain 2-3 paragraphs**, each with a clear topic
 3. Each section must have a clear title and brief description
 4. Each paragraph must have a clear topic (one sentence summarizing what this paragraph covers)
-5. Each section must be assigned at least 1 evidence ID (selected from the given evidence list)
-6. Evidence IDs must be used exactly as given — never fabricate non-existent IDs
-7. Prioritize assigning evidence from the same research direction / similar conclusions to the same section
-8. If there are obvious conflicting viewpoints among evidence, create a separate "Research Controversies" section
+5. **V31.11: Each paragraph topic must be a specific writing instruction**, not a vague title. For example: "Describe the structural domains of STAT1 and their function in the JAK-STAT pathway" instead of "STAT1 background"
+6. Each section must be assigned at least 1 evidence ID (selected from the given evidence list)
+7. Evidence IDs must be used exactly as given — never fabricate non-existent IDs
+8. Prioritize assigning evidence from the same research direction / similar conclusions to the same section
+9. If there are obvious conflicting viewpoints among evidence, create a separate "Research Controversies" section
 
 Output strictly in JSON format, no other text:
 {
