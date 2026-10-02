@@ -97,7 +97,12 @@ class CitationVerifier:
             # 如果确定性校验通过，且需要 LLM 深度校验，就收集起来
             if use_llm and self.llm and self.llm.is_available():
                 if sent.status == SentenceStatus.VERIFIED:
-                    llm_verify_sentences.append(sent)
+                    # V30.8: 规则判断，只有"可疑的"句子才需要 LLM 深度校验
+                    if self._is_suspicious(sent, draft.evidence_cards):
+                        llm_verify_sentences.append(sent)
+                    else:
+                        # 不可疑的，直接标记为已验证，不用 LLM
+                        sent.verification_note = "规则校验通过，证据充分"
 
         # V30.5: 批量 LLM 深度校验
         if llm_verify_sentences and use_llm and self.llm and self.llm.is_available():
@@ -168,6 +173,34 @@ class CitationVerifier:
         sentence.status = SentenceStatus.VERIFIED
 
         return sentence, warnings
+
+    def _is_suspicious(
+        self,
+        sentence: ReviewSentence,
+        evidence_cards: dict[str, EvidenceCard],
+    ) -> bool:
+        """V30.8: 判断句子是不是"可疑的"，只有可疑的才需要 LLM 深度校验。"""
+        # 1. 计算所有证据卡片的总长度
+        total_evidence_length = 0
+        for eid in sentence.evidence_ids:
+            if eid in evidence_cards:
+                total_evidence_length += len(evidence_cards[eid].content)
+
+        # 2. 计算句子的长度
+        sentence_length = len(sentence.text)
+
+        # 3. 规则判断：
+        # 如果证据总长度 < 句子长度的 2 倍，说明证据可能不够支撑句子 → 可疑
+        if total_evidence_length < sentence_length * 2:
+            return True
+
+        # 4. 如果句子里有数字（百分比、p值、数量等），说明是具体结论 → 可疑
+        import re
+        if re.search(r'\d+%|p\s*[<>=]|N\s*=\s*\d+|样本量', sentence.text):
+            return True
+
+        # 5. 其他情况：证据看起来很充分 → 不可疑，不用 LLM
+        return False
 
     def _batch_llm_verify(
         self,
