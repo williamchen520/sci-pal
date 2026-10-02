@@ -763,46 +763,24 @@ class ReviewGenerator:
         sent_seq = 0
 
         for section in outline.sections:
-            # V25.8: 如果章节有段落级大纲，按段落撰写；否则按章节撰写（向后兼容）
-            if section.paragraphs:
-                for paragraph in section.paragraphs:
-                    # 收集本段的证据：优先用段落分配的，其次用段落分配论文的证据，最后用章节证据
-                    section_evidence = self._collect_paragraph_evidence(paragraph, section, evidence_dict)
-                    if not section_evidence:
-                        continue
+            # V31.8: 不管有没有段落级大纲，都按章节写（减少调用次数）
+            section_evidence = [
+                evidence_dict[eid] for eid in section.assigned_evidence_ids
+                if eid in evidence_dict
+            ]
+            if not section_evidence:
+                continue
 
-                    # 用 LLM 撰写本段
-                    paragraph_text = self._write_paragraph(paragraph, section, section_evidence, review_type=review_type, language=language)
+            section_text = self._write_section(section, section_evidence, review_type=review_type, language=language)
 
-                    # 拆分为句子并关联证据ID
-                    sentences = self._split_and_link(
-                        paragraph_text, section.section_id, section_evidence, sent_seq
-                    )
-                    # V25.7: 后处理自动补引用（兜底机制）
-                    auto_cited = self._auto_cite_sentences(sentences, section_evidence)
-                    if auto_cited > 0:
-                        self._auto_cite_count += auto_cited
-                    all_sentences.extend(sentences)
-                    sent_seq += len(sentences)
-            else:
-                # 向后兼容：没有段落级大纲时，按章节撰写
-                section_evidence = [
-                    evidence_dict[eid] for eid in section.assigned_evidence_ids
-                    if eid in evidence_dict
-                ]
-                if not section_evidence:
-                    continue
-
-                section_text = self._write_section(section, section_evidence, review_type=review_type, language=language)
-
-                sentences = self._split_and_link(
-                    section_text, section.section_id, section_evidence, sent_seq
-                )
-                auto_cited = self._auto_cite_sentences(sentences, section_evidence)
-                if auto_cited > 0:
-                    self._auto_cite_count += auto_cited
-                all_sentences.extend(sentences)
-                sent_seq += len(sentences)
+            sentences = self._split_and_link(
+                section_text, section.section_id, section_evidence, sent_seq
+            )
+            auto_cited = self._auto_cite_sentences(sentences, section_evidence)
+            if auto_cited > 0:
+                self._auto_cite_count += auto_cited
+            all_sentences.extend(sentences)
+            sent_seq += len(sentences)
 
         return ReviewDraft(
             topic=topic,
