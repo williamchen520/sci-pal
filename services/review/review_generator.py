@@ -404,6 +404,9 @@ class ReviewGenerator:
         - stats: 统计信息
         """
         # ── Step 1: 检索 ──
+        if task_id:
+            from .task_manager import task_manager
+            task_manager.update_progress(task_id, "检索文献中...")
         paragraphs = self._retrieve(
             topic,
             max_papers,
@@ -429,6 +432,9 @@ class ReviewGenerator:
             }
 
         # ── Step 2: 证据抽取 ──
+        if task_id:
+            from .task_manager import task_manager
+            task_manager.update_progress(task_id, "抽取证据中...")
         evidence_cards = self.extractor.extract_from_paragraphs(paragraphs, topic=topic, language=language)
         evidence_cards = self._limit_evidence_per_paper(evidence_cards)
 
@@ -456,6 +462,7 @@ class ReviewGenerator:
         # V26.3: 检查是否被取消
         if task_id:
             from .task_manager import task_manager
+            task_manager.update_progress(task_id, "生成大纲中...")
             if task_manager.is_cancelled(task_id):
                 raise Exception("Task cancelled by user")
 

@@ -32,6 +32,7 @@ class TaskManager:
                 "task_id": task_id,
                 "task_type": task_type,
                 "status": "running",  # running / completed / failed / cancelled
+                "progress": "初始化中...",  # V26.5: 当前进度
                 "result": None,
                 "error": None,
                 "cancelled": False,
@@ -100,6 +101,28 @@ class TaskManager:
         with self._lock:
             task = self._tasks.get(task_id)
             return task["cancelled"] if task else False
+
+    def update_progress(self, task_id: str, progress: str):
+        """
+        更新任务的进度（V26.5）
+        :param task_id: 任务ID
+        :param progress: 进度描述（比如 "检索中..."、"证据抽取中..."）
+        """
+        with self._lock:
+            task = self._tasks.get(task_id)
+            if task and task["status"] == "running":
+                task["progress"] = progress
+
+    def get_running_task(self) -> Optional[Dict[str, Any]]:
+        """
+        V26.5: 获取当前运行中的任务（用于刷新页面后恢复任务）
+        :return: 运行中的任务，如果没有返回 None
+        """
+        with self._lock:
+            for task in self._tasks.values():
+                if task["status"] == "running":
+                    return dict(task)
+            return None
 
     def cleanup_old_tasks(self, max_count: int = 100):
         """

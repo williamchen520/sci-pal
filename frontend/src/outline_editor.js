@@ -19,6 +19,7 @@
   // ── 共享状态 ──
   let papers = [];
   let localPapers = [];
+  let abstractPapers = [];  // V26.5: 摘要库论文列表
   let currentTab = 'related';
   let currentTopic = '';
   let currentReviewType = 'narrative';
@@ -105,6 +106,30 @@
 
     applySavedLayout();
     loadSavedOutlines();
+    restoreRunningTask();  // V26.5: 刷新页面后恢复任务
+  }
+
+  // V26.5: 刷新页面后恢复任务
+  async function restoreRunningTask() {
+    try {
+      const resp = await fetch('/api/review/running_task');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      
+      if (data.running && data.task) {
+        // 有运行中的任务，恢复轮询
+        currentTaskId = data.task.task_id;
+        taskState = 'running';
+        els.generateOutlineBtn.textContent = '取消';
+        els.generateOutlineBtn.classList.add('cancel-mode');
+        els.generateOutlineBtn.disabled = false;
+        
+        showMessage('检测到正在运行的任务，已恢复监控...', 'info');
+        pollTaskStatus(currentTaskId);
+      }
+    } catch (e) {
+      console.error('恢复任务失败:', e);
+    }
   }
 
   // ── 初始化各独立模块 ──
@@ -271,6 +296,14 @@
     if (!paperList) return;
     if (currentTab === 'local') {
       paperList.renderLocal(localPapers, pdfViewer ? pdfViewer.getState().paperId : null);
+    } else if (currentTab === 'abstracts') {
+      // V26.5: 摘要库
+      paperList.render(
+        abstractPapers,
+        outlineCore ? outlineCore.getData() : null,
+        outlineCore ? outlineCore.getSelectedId() : null,
+        pdfViewer ? pdfViewer.getState().paperId : null
+      );
     } else {
       paperList.render(
         papers,
@@ -289,6 +322,8 @@
     });
     if (tab === 'local') {
       loadLocalPapers();
+    } else if (tab === 'abstracts') {
+      loadAbstracts();  // V26.5: 摘要库
     } else {
       refreshPaperList();
     }
@@ -353,6 +388,25 @@
       refreshPaperList();
     } catch (e) {
       showMessage('加载本地文献库失败：' + e.message, 'error');
+    }
+  }
+
+  // ── V26.5: 加载摘要库 ──
+  async function loadAbstracts() {
+    if (abstractPapers.length > 0) {
+      refreshPaperList();
+      return;
+    }
+    try {
+      showMessage('正在加载摘要库...', 'info');
+      const resp = await fetch('/api/abstracts/list?page=1&page_size=50');
+      if (!resp.ok) throw new Error('加载失败');
+      const data = await resp.json();
+      abstractPapers = data.papers || [];
+      refreshPaperList();
+      showMessage('摘要库加载完成，共 ' + data.total + ' 篇摘要', 'success');
+    } catch (e) {
+      showMessage('加载摘要库失败：' + e.message, 'error');
     }
   }
 
@@ -567,6 +621,11 @@
             els.generateOutlineBtn.classList.remove('cancel-mode');
             els.generateOutlineBtn.disabled = false;
             resolve(null);
+          } else if (task.status === 'running') {
+            // V26.5: 显示当前进度
+            if (task.progress) {
+              showMessage(task.progress + '...', 'info');
+            }
           }
           // 如果是 running，继续轮询
         } catch (e) {
