@@ -118,6 +118,12 @@ class EvidenceExtractor:
         # V25.2: 句内定位器（抽取后自动定位 original_quote 在段落中的偏移）
         from .sentence_locator import SentenceLocator
         self._locator = SentenceLocator()
+        # V30.6: 缓存，避免重复处理相同段落
+        self._cache: dict[str, list[EvidenceCard]] = {}
+
+    def _get_cache_key(self, para: dict) -> str:
+        """V30.6: 生成缓存 key。"""
+        return f"{para.get('paper_id', '')}_{para.get('para_id', '')}"
 
     def extract_from_paragraphs(
         self,
@@ -149,14 +155,30 @@ class EvidenceExtractor:
                 continue
             valid_paragraphs.append(para)
 
+        # V30.6: 检查缓存，把已经处理过的段落直接拿出来
+        cached_cards: list[EvidenceCard] = []
+        paragraphs_to_process: list[dict] = []
+        cache_hits = 0
+
+        for para in valid_paragraphs:
+            cache_key = self._get_cache_key(para)
+            if cache_key in self._cache:
+                cached_cards.extend(self._cache[cache_key])
+                cache_hits += 1
+            else:
+                paragraphs_to_process.append(para)
+
+        if cache_hits > 0:
+            print(f"📦 缓存命中：{cache_hits} 个段落，直接从缓存读取")
+
         # V30.3: 批量处理，5 段一组
         batch_size = 5
-        batches = [valid_paragraphs[i:i+batch_size] for i in range(0, len(valid_paragraphs), batch_size)]
+        batches = [paragraphs_to_process[i:i+batch_size] for i in range(0, len(paragraphs_to_process), batch_size)]
 
-        print(f"🔍 批量证据抽取：{len(valid_paragraphs)} 个段落，{len(batches)} 批，每批 {batch_size} 段")
+        print(f"🔍 批量证据抽取：{len(paragraphs_to_process)} 个段落待处理，{len(batches)} 批，每批 {batch_size} 段")
 
-        all_cards: list[EvidenceCard] = []
-        seq_counter = 0
+        all_cards: list[EvidenceCard] = cached_cards  # V30.6: 先把缓存里的结果放进去
+        seq_counter = len(cached_cards)
 
         # V30.3: 并行处理批次
         with ThreadPoolExecutor(max_workers=5) as executor:
@@ -231,6 +253,8 @@ If a paragraph has no evidence, return an empty array for that key.
                 if not isinstance(para_results, list):
                     continue
 
+                para_cards: list[EvidenceCard] = []  # V30.6: 这个段落的证据卡片
+
                 for item in para_results[:self.max_evidence_per_paragraph]:
                     if not isinstance(item, dict):
                         continue
@@ -266,7 +290,12 @@ If a paragraph has no evidence, return an empty array for that key.
                         confidence=item.get("confidence", 1.0),
                     )
                     all_cards.append(card)
+                    para_cards.append(card)  # V30.6: 加到这个段落的列表里
                     seq_counter += 1
+
+                # V30.6: 把这个段落的证据卡片存到缓存里
+                cache_key = self._get_cache_key(para)
+                self._cache[cache_key] = para_cards
 
         return all_cards
 
