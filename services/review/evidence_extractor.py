@@ -149,35 +149,119 @@ class EvidenceExtractor:
                 continue
             valid_paragraphs.append(para)
 
-        print(f"🔍 并行证据抽取：{len(valid_paragraphs)} 个段落，并发数=10")
+        # V30.3: 批量处理，5 段一组
+        batch_size = 5
+        batches = [valid_paragraphs[i:i+batch_size] for i in range(0, len(valid_paragraphs), batch_size)]
+
+        print(f"🔍 批量证据抽取：{len(valid_paragraphs)} 个段落，{len(batches)} 批，每批 {batch_size} 段")
 
         all_cards: list[EvidenceCard] = []
         seq_counter = 0
 
-        # V30.1: 并行处理
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            # 提交所有任务
-            future_to_para = {}
-            for para in valid_paragraphs:
+        # V30.3: 并行处理批次
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            # 提交所有批次
+            future_to_batch = {}
+            for i, batch in enumerate(batches):
                 future = executor.submit(
-                    self._extract_one_paragraph,
-                    para,
+                    self._extract_batch,
+                    batch,
                     topic,
-                    0,  # seq_counter 后面再统一处理
                     language=language,
                 )
-                future_to_para[future] = para
+                future_to_batch[future] = (i, batch)
 
             # 收集结果
-            for future in as_completed(future_to_para):
-                para = future_to_para[future]
+            for future in as_completed(future_to_batch):
+                batch_idx, batch = future_to_batch[future]
                 try:
                     cards = future.result()
                     all_cards.extend(cards)
                     seq_counter += len(cards)
                 except LLMError as e:
-                    print(f"⚠️  段落 {para.get('para_id', '?')} 证据抽取失败: {e}")
+                    print(f"⚠️  第 {batch_idx+1} 批证据抽取失败: {e}")
+                    # V30.3: 批量失败后，退回到单段处理
+                    for para in batch:
+                        try:
+                            cards = self._extract_one_paragraph(para, topic, 0, language=language)
+                            all_cards.extend(cards)
+                            seq_counter += len(cards)
+                        except LLMError as e2:
+                            print(f"⚠️  段落 {para.get('para_id', '?')} 单段抽取也失败: {e2}")
+
+        return all_cards
+
+    def _extract_batch(
+        self,
+        batch: list[dict],
+        topic: str,
+        language: str = "en",
+    ) -> list[EvidenceCard]:
+        """V30.3: 批量从多个段落抽取证据。"""
+        # 构建批量 prompt
+        paragraphs_text = ""
+        for i, para in enumerate(batch):
+            paragraphs_text += f"【段落 {i+1}】(para_id: {para['para_id']}, paper_id: {para['paper_id']})\n"
+            paragraphs_text += para["text"][:2000]  # 每段最多 2000 字
+            paragraphs_text += "\n\n"
+
+        user_prompt = f"""Topic: {topic}
+
+{paragraphs_text}
+
+Extract evidence cards from each paragraph above. 
+For each paragraph, extract at most 3 evidence cards.
+Return a JSON object with keys "paragraph_1", "paragraph_2", ..., each value is an array of evidence cards.
+If a paragraph has no evidence, return an empty array for that key.
+"""
+
+        # V25.9: 按语言选择 system prompt
+        system_prompt = SYSTEM_PROMPT_EN if language.lower() == "en" else SYSTEM_PROMPT_ZH
+
+        raw_results = self.llm.chat_json(system_prompt, user_prompt)
+
+        # V30.3: 解析批量结果
+        all_cards: list[EvidenceCard] = []
+        seq_counter = 0
+
+        if isinstance(raw_results, dict):
+            for i, para in enumerate(batch):
+                para_key = f"paragraph_{i+1}"
+                para_results = raw_results.get(para_key, [])
+                if not isinstance(para_results, list):
                     continue
+
+                for item in para_results[:self.max_evidence_per_paragraph]:
+                    if not isinstance(item, dict):
+                        continue
+
+                    content = item.get("content", "").strip()
+                    if not content:
+                        continue
+
+                    evidence_type = self._parse_evidence_type(item.get("evidence_type", "fact"))
+
+                    card = EvidenceCard(
+                        seq=seq_counter,
+                        content=content,
+                        evidence_type=evidence_type,
+                        original_quote=item.get("original_quote", "").strip(),
+                        paper_id=para["paper_id"],
+                        para_id=para["para_id"],
+                        section_l1=para.get("section_l1", ""),
+                        page=para.get("page", 0),
+                        paper_title=para.get("paper_title", ""),
+                        model_system=item.get("model_system", ""),
+                        sample_size=item.get("sample_size", ""),
+                        treatment=item.get("treatment", ""),
+                        time_point=item.get("time_point", ""),
+                        mutation_type=item.get("mutation_type", "unknown"),
+                        cell_type=item.get("cell_type", "unknown"),
+                        measurement=item.get("measurement", "unknown"),
+                        stimulus=item.get("stimulus", "unknown"),
+                    )
+                    all_cards.append(card)
+                    seq_counter += 1
 
         return all_cards
 
