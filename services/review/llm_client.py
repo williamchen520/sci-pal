@@ -327,9 +327,11 @@ def create_llm_client(
     if model:
         model_name = model
     elif light:
+        # V31.21: light model 用 3B（生成大纲，快）
         model_name = os.environ.get("SCIPAL_LLM_LIGHT_MODEL", "qwen2.5:3b")
     else:
-        model_name = os.environ.get("SCIPAL_LLM_MODEL", "qwen2.5:3b")
+        # V31.21: heavy model 用 7B（写正文，质量好）
+        model_name = os.environ.get("SCIPAL_LLM_MODEL", "qwen2.5:7b")
 
     if provider == "openai":
         host = os.environ.get(
