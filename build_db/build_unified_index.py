@@ -113,7 +113,7 @@ def build_unified_index(db_paths: list[str], output_db: str):
                 cursor.execute("""
                     INSERT OR IGNORE INTO unified_papers (
                         paper_id, pmcid, pmid, doi, title, journal, publish_date, source_db
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """, (paper_id, pmcid, pmid, doi, title, journal, publish_date, "xml.db"))
 
             print(f"  ✅ 从 xml.db 导入了 {len(rows)} 篇论文！")
