@@ -31,15 +31,16 @@ def build_unified_index(db_paths: list[str], output_db: str):
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS unified_papers (
-            paper_id TEXT PRIMARY KEY,  -- 用 PMCID 或 PMID 作为主键
+            paper_id TEXT PRIMARY KEY,  -- 用 paper_id 作为主键
             pmcid TEXT,
             pmid TEXT,
             doi TEXT,
             title TEXT,
+            authors TEXT,
+            abstract TEXT,
             journal TEXT,
             publish_date TEXT,
-            source_db TEXT,  -- 来源数据库：'research.db'、'abstracts.db'、'xml.db'
-            abstract TEXT
+            source_db TEXT  -- 来源数据库：'research.db'、'abstracts.db'、'xml.db'
         )
     """)
 
@@ -57,22 +58,21 @@ def build_unified_index(db_paths: list[str], output_db: str):
 
         # 从 research.db 导入
         if "research.db" in db_path:
-            # 假设 research.db 有 papers 表
+            # research.db 的 papers 表有 paper_id、title、authors、abstract、journal、year、doi 等字段
             source_cursor.execute("""
-                SELECT pmcid, pmid, doi, title FROM papers
+                SELECT paper_id, title, authors, abstract, journal, year, doi FROM papers
             """)
             rows = source_cursor.fetchall()
 
             for row in rows:
-                pmcid, pmid, doi, title = row
-                paper_id = pmcid if pmcid else pmid
+                paper_id, title, authors, abstract, journal, year, doi = row
 
                 # 插入到联合论文表（注意去重）
                 cursor.execute("""
                     INSERT OR IGNORE INTO unified_papers (
-                        paper_id, pmcid, pmid, doi, title, source_db
-                    ) VALUES (?, ?, ?, ?, ?, ?)
-                """, (paper_id, pmcid, pmid, doi, title, "research.db"))
+                        paper_id, title, authors, abstract, journal, publish_date, doi, source_db
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (paper_id, title, authors, abstract, journal, str(year) if year else None, doi, "research.db"))
 
             print(f"  ✅ 从 research.db 导入了 {len(rows)} 篇论文！")
 
