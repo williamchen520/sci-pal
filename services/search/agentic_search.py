@@ -30,80 +30,43 @@ _ner_device = None
 
 
 def _load_ner_model():
-    """Lazy load PubMedBERT NER model for gene/protein extraction."""
+    """V31.17: 改成用 scispacy 做 NER，不用 HuggingFace 模型。"""
     global _ner_model, _ner_tokenizer, _ner_device
     if _ner_model is None:
-        from transformers import AutoTokenizer, AutoModelForTokenClassification
-        import torch
-
-        # V31.15: 指定本地模型路径，不用 HuggingFace 模型名
-        model_name = r"D:\models\models\pruas--BENT-PubMedBERT-NER-Gene"
-        print(f"  📥 Loading NER model: {model_name}...")
-        _ner_tokenizer = AutoTokenizer.from_pretrained(model_name)
-        # V31.16: 强制用 safetensors，不用 pytorch_model.bin（避免 torch 安全漏洞问题）
-        _ner_model = AutoModelForTokenClassification.from_pretrained(
-            model_name,
-            use_safetensors=True,
-        )
-
-        # Move to GPU if available
-        _ner_device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        _ner_model = _ner_model.to(_ner_device)
-        _ner_model.eval()
-        print(f"  ✅ NER model loaded on {_ner_device}")
+        import spacy
+        print(f"  📥 Loading scispacy NER model...")
+        _ner_model = spacy.load("en_ner_bionlp13cg_md")
+        _ner_tokenizer = None
+        _ner_device = "cpu"
+        print(f"  ✅ scispacy NER model loaded")
     return _ner_model, _ner_tokenizer, _ner_device
 
 
 def _extract_genes_with_ner(text: str) -> List[str]:
     """
-    Extract gene/protein entities using PubMedBERT NER model.
+    V31.17: Extract gene/protein entities using scispacy NER model.
     Returns list of gene names found in text.
     """
     try:
-        model, tokenizer, device = _load_ner_model()
-        import torch
-
-        # Tokenize
-        inputs = tokenizer(
-            text,
-            return_tensors="pt",
-            truncation=True,
-            max_length=512
-        ).to(device)
+        nlp, _, _ = _load_ner_model()
 
         # Predict
-        with torch.no_grad():
-            outputs = model(**inputs)
-            predictions = torch.argmax(outputs.logits, dim=2)
+        doc = nlp(text)
 
-        # Decode predictions
-        tokens = inputs.tokens()
-        predicted_labels = predictions[0].cpu().numpy()
-
-        # Extract entities (BIO format)
+        # Extract entities (只保留基因/蛋白/细胞相关的)
         entities = []
-        current_entity = []
+        for ent in doc.ents:
+            # scispacy 的实体类型：
+            # GENE_OR_GENE_PRODUCT：基因/蛋白
+            # CELL：细胞
+            # 我们主要要基因/蛋白
+            if ent.label_ in ["GENE_OR_GENE_PRODUCT", "PROTEIN"]:
+                entities.append(ent.text)
 
-        for token, label_id in zip(tokens, predicted_labels):
-            label = model.config.id2label[label_id]
+        # 去重
+        entities = list(set(entities))
 
-            if label.startswith("B-"):
-                # Start of new entity
-                if current_entity:
-                    entities.append("".join(current_entity).replace("##", ""))
-                current_entity = [token.replace("##", "")]
-            elif label.startswith("I-") and current_entity:
-                # Continue current entity
-                current_entity.append(token.replace("##", ""))
-            else:
-                # Outside entity
-                if current_entity:
-                    entities.append("".join(current_entity).replace("##", ""))
-                    current_entity = []
-
-        # Don't forget the last entity
-        if current_entity:
-            entities.append("".join(current_entity).replace("##", ""))
+        return entities
 
         return entities
 
