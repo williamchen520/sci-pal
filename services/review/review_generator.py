@@ -227,7 +227,7 @@ class ReviewGenerator:
         from .llm_client import create_llm_client
         self._light_llm = create_llm_client(light=True, timeout=300, max_retries=2)
         self.extractor = EvidenceExtractor(self._light_llm)
-        self.verifier = CitationVerifier(llm_client if use_llm_verification else None)
+        self.verifier = CitationVerifier(self._light_llm if use_llm_verification else None)
         # V31.22: 大纲生成也改成用 light_llm（3B），速度快
         from .outline_generator import OutlineGenerator
         self.outline_generator = OutlineGenerator(self._light_llm, db_path=db_path)
