@@ -333,9 +333,31 @@ class ReviewGenerator:
 
         # ── Step 3.5: 关系抽取 + 冲突识别（V25.3）──
         relations = self.relation_extractor.extract(evidence_cards)
-        conflicts = self.conflict_detector.detect(evidence_cards, relations, language=language)
         contradictions = [r for r in relations if r.relation_type.value == "contradicts"]
         warnings.append(f"🔗 抽取到 {len(relations)} 条证据间关系（{len(contradictions)} 条矛盾）")
+
+        # V31.24: 写正文 + 冲突检测 并行处理
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _do_write_draft():
+            self._auto_cite_count = 0  # V25.7: 每次生成前清零自动补引用计数器
+            draft = self._write_draft(topic, outline, evidence_dict, review_type=review_type, language=language)
+            return draft
+
+        def _do_detect_conflicts():
+            conflicts = self.conflict_detector.detect(evidence_cards, relations, language=language)
+            return conflicts
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_draft = executor.submit(_do_write_draft)
+            future_conflicts = executor.submit(_do_detect_conflicts)
+            draft = future_draft.result()
+            conflicts = future_conflicts.result()
+
+        warnings.append(f"✍️  撰写完成，共 {len(draft.sentences)} 句。")
+        if self._auto_cite_count > 0:
+            warnings.append(f"🔧 后处理自动补引用 {self._auto_cite_count} 句（从同章节证据中关键词匹配，建议人工复核）。")
+
         if conflicts:
             true_controv = [c for c in conflicts if getattr(c, 'conflict_type', 'true_controversy') == 'true_controversy']
             cond_diff = [c for c in conflicts if getattr(c, 'conflict_type', 'true_controversy') == 'condition_difference']
@@ -345,13 +367,6 @@ class ReviewGenerator:
             if cond_diff:
                 warning_parts.append(f'{len(cond_diff)} 个为条件差异型（将单独成节呈现）')
             warnings.append('，'.join(warning_parts) + '。')
-
-        # ── Step 4: 撰写 ──
-        self._auto_cite_count = 0  # V25.7: 每次生成前清零自动补引用计数器
-        draft = self._write_draft(topic, outline, evidence_dict, review_type=review_type, language=language)
-        warnings.append(f"✍️  撰写完成，共 {len(draft.sentences)} 句。")
-        if self._auto_cite_count > 0:
-            warnings.append(f"🔧 后处理自动补引用 {self._auto_cite_count} 句（从同章节证据中关键词匹配，建议人工复核）。")
 
         # ── Step 5: 校验 ──
         draft, verify_warnings = self.verifier.verify(draft, use_llm=self.use_llm_verification)
