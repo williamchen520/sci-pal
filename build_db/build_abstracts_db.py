@@ -27,7 +27,7 @@ DB_PATH = PROJECT_ROOT / "data" / "abstracts.db"  # D:\sciPal\data\abstracts.db�
 CHROMA_DIR = PROJECT_ROOT / "data" / "chroma_abstracts"  # D:\sciPal\data\chroma_abstracts\（跟 chroma/ 在一起）
 
 # 模型配置
-EMBEDDING_MODEL = "all-mpnet-base-v2"
+EMBEDDING_MODEL = r"D:\models\models\BAAI--bge-base-en-v1.5"  # V31.26: 从 all-mpnet-base-v2 改成 bge-base-en-v1.5
 
 
 def create_database():

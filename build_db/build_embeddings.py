@@ -14,7 +14,7 @@ DB_PATH = PROJECT_ROOT / "data" / "research.db"
 CHROMA_PATH = PROJECT_ROOT / "data" / "chroma"
 
 # Embedding model
-EMBEDDING_MODEL = "all-mpnet-base-v2"
+EMBEDDING_MODEL = r"D:\models\models\BAAI--bge-base-en-v1.5"  # V31.26: 从 all-mpnet-base-v2 改成 bge-base-en-v1.5
 
 
 def build_embeddings():
