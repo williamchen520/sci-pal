@@ -228,9 +228,9 @@ class ReviewGenerator:
         self._light_llm = create_llm_client(light=True, timeout=300, max_retries=2)
         self.extractor = EvidenceExtractor(self._light_llm)
         self.verifier = CitationVerifier(llm_client if use_llm_verification else None)
-        # V25.2: LLM 大纲生成器（复用文献聚类信息需要 db_path）—— 用14b
+        # V31.22: 大纲生成也改成用 light_llm（3B），速度快
         from .outline_generator import OutlineGenerator
-        self.outline_generator = OutlineGenerator(llm_client, db_path=db_path)
+        self.outline_generator = OutlineGenerator(self._light_llm, db_path=db_path)
         # V25.3: 关系抽取器 + 冲突识别 Agent —— 用7b
         from .relation_extractor import RelationExtractor
         from .conflict_detector import ConflictDetector
