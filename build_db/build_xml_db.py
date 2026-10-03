@@ -13,7 +13,10 @@ import sys
 from pathlib import Path
 
 # 导入解析函数
-sys.path.insert(0, str(Path(__file__).parent))
+# parse_pmc_xml.py 在 scripts 文件夹里，所以！把 scripts 文件夹加到 sys.path 里
+project_root = Path(__file__).parent.parent
+scripts_dir = project_root / "scripts"
+sys.path.insert(0, str(scripts_dir))
 from parse_pmc_xml import parse_pmc_xml
 
 
