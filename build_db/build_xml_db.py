@@ -25,11 +25,10 @@ def create_database(db_path: str):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # 论文表
+    # 论文表（用 pmcid 作为主键）
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS papers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pmcid TEXT UNIQUE,
+            pmcid TEXT PRIMARY KEY,
             pmid TEXT,
             doi TEXT,
             title TEXT
@@ -40,10 +39,10 @@ def create_database(db_path: str):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS abstract_paragraphs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            paper_id INTEGER,
+            paper_id TEXT,
             paragraph_index INTEGER,
             text TEXT,
-            FOREIGN KEY (paper_id) REFERENCES papers(id)
+            FOREIGN KEY (paper_id) REFERENCES papers(pmcid)
         )
     """)
 
@@ -51,12 +50,12 @@ def create_database(db_path: str):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS body_paragraphs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            paper_id INTEGER,
+            paper_id TEXT,
             section_title TEXT,
             section_level INTEGER,
             paragraph_index INTEGER,
             text TEXT,
-            FOREIGN KEY (paper_id) REFERENCES papers(id)
+            FOREIGN KEY (paper_id) REFERENCES papers(pmcid)
         )
     """)
 
@@ -64,12 +63,12 @@ def create_database(db_path: str):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sentences (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            paper_id INTEGER,
+            paper_id TEXT,
             paragraph_type TEXT,  -- 'abstract' or 'body'
             paragraph_id INTEGER,
             sentence_index INTEGER,
             text TEXT,
-            FOREIGN KEY (paper_id) REFERENCES papers(id)
+            FOREIGN KEY (paper_id) REFERENCES papers(pmcid)
         )
     """)
 
@@ -77,10 +76,10 @@ def create_database(db_path: str):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ref_list (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            paper_id INTEGER,
+            paper_id TEXT,
             ref_id TEXT,
             text TEXT,
-            FOREIGN KEY (paper_id) REFERENCES papers(id)
+            FOREIGN KEY (paper_id) REFERENCES papers(pmcid)
         )
     """)
 
@@ -103,7 +102,8 @@ def insert_paper(conn, result: dict):
         result['title']
     ))
 
-    paper_id = cursor.lastrowid
+    # 直接用 pmcid 作为 paper_id
+    paper_id = result['pmcid']
 
     # 插入摘要段落
     for i, p in enumerate(result['abstract']):
