@@ -102,16 +102,17 @@ class UnifiedSearch:
             conn = sqlite3.connect(self.research_db)
             cursor = conn.cursor()
 
-            # 假设 research.db 有 paragraphs 表
+            # research.db 的 paragraphs 表有 sequence、section_level1、section_level2、section_level3、text 字段
             cursor.execute("""
-                SELECT paragraph_index, text FROM paragraphs
+                SELECT sequence, section_level1, section_level2, section_level3, text FROM paragraphs
                 WHERE paper_id = ?
             """, (paper_id,))
 
             for row in cursor.fetchall():
-                paragraph_index, text = row
+                sequence, section_level1, section_level2, section_level3, text = row
                 paragraphs.append({
-                    "paragraph_index": paragraph_index,
+                    "paragraph_index": sequence,
+                    "section_title": section_level1,
                     "text": text,
                 })
 
