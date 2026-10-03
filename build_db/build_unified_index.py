@@ -78,28 +78,28 @@ def build_unified_index(db_paths: list[str], output_db: str):
 
         # 从 abstracts.db 导入
         elif "abstracts.db" in db_path:
-            # 假设 abstracts.db 有 papers 表
+            # abstracts.db 的 papers 表有 id、pmid、doi、title、abstract、authors、journal、year 等字段
             source_cursor.execute("""
-                SELECT pmcid, pmid, doi, title, abstract FROM papers
+                SELECT id, pmid, doi, title, abstract, authors, journal, year FROM papers
             """)
             rows = source_cursor.fetchall()
 
             for row in rows:
-                pmcid, pmid, doi, title, abstract = row
-                paper_id = pmcid if pmcid else pmid
+                paper_id, pmid, doi, title, abstract, authors, journal, year = row
+                paper_id = f"PMID{pmid}" if pmid else f"ID{paper_id}"
 
                 # 插入到联合论文表（注意去重）
                 cursor.execute("""
                     INSERT OR IGNORE INTO unified_papers (
-                        paper_id, pmcid, pmid, doi, title, abstract, source_db
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (paper_id, pmcid, pmid, doi, title, abstract, "abstracts.db"))
+                        paper_id, pmid, doi, title, abstract, authors, journal, publish_date, source_db
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (paper_id, pmid, doi, title, abstract, authors, journal, str(year) if year else None, "abstracts.db"))
 
             print(f"  ✅ 从 abstracts.db 导入了 {len(rows)} 篇论文！")
 
         # 从 xml.db 导入
         elif "xml.db" in db_path:
-            # 假设 xml.db 有 papers 表
+            # xml.db 的 papers 表有 pmcid、pmid、doi、title、journal、publish_date 等字段
             source_cursor.execute("""
                 SELECT pmcid, pmid, doi, title, journal, publish_date FROM papers
             """)
@@ -107,13 +107,13 @@ def build_unified_index(db_paths: list[str], output_db: str):
 
             for row in rows:
                 pmcid, pmid, doi, title, journal, publish_date = row
-                paper_id = pmcid if pmcid else pmid
+                paper_id = pmcid if pmcid else f"PMID{pmid}"
 
                 # 插入到联合论文表（注意去重）
                 cursor.execute("""
                     INSERT OR IGNORE INTO unified_papers (
                         paper_id, pmcid, pmid, doi, title, journal, publish_date, source_db
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (paper_id, pmcid, pmid, doi, title, journal, publish_date, "xml.db"))
 
             print(f"  ✅ 从 xml.db 导入了 {len(rows)} 篇论文！")
