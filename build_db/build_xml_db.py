@@ -31,7 +31,51 @@ def create_database(db_path: str):
             pmcid TEXT PRIMARY KEY,
             pmid TEXT,
             doi TEXT,
-            title TEXT
+            title TEXT,
+            journal TEXT,
+            publish_date TEXT
+        )
+    """)
+
+    # 作者表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS authors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            paper_id TEXT,
+            name TEXT,
+            FOREIGN KEY (paper_id) REFERENCES papers(pmcid)
+        )
+    """)
+
+    # 关键词表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS keywords (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            paper_id TEXT,
+            keyword TEXT,
+            FOREIGN KEY (paper_id) REFERENCES papers(pmcid)
+        )
+    """)
+
+    # 图表表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS figures (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            paper_id TEXT,
+            fig_id TEXT,
+            caption TEXT,
+            FOREIGN KEY (paper_id) REFERENCES papers(pmcid)
+        )
+    """)
+
+    # 表格表
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tables (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            paper_id TEXT,
+            table_id TEXT,
+            caption TEXT,
+            FOREIGN KEY (paper_id) REFERENCES papers(pmcid)
         )
     """)
 
@@ -93,17 +137,47 @@ def insert_paper(conn, result: dict):
 
     # 插入论文
     cursor.execute("""
-        INSERT OR REPLACE INTO papers (pmcid, pmid, doi, title)
-        VALUES (?, ?, ?, ?)
+        INSERT OR REPLACE INTO papers (pmcid, pmid, doi, title, journal, publish_date)
+        VALUES (?, ?, ?, ?, ?, ?)
     """, (
         result['pmcid'],
         result['pmid'],
         result['doi'],
-        result['title']
+        result['title'],
+        result['journal'],
+        result['publish_date']
     ))
 
     # 直接用 pmcid 作为 paper_id
     paper_id = result['pmcid']
+
+    # 插入作者
+    for author_name in result['authors']:
+        cursor.execute("""
+            INSERT INTO authors (paper_id, name)
+            VALUES (?, ?)
+        """, (paper_id, author_name))
+
+    # 插入关键词
+    for keyword in result['keywords']:
+        cursor.execute("""
+            INSERT INTO keywords (paper_id, keyword)
+            VALUES (?, ?)
+        """, (paper_id, keyword))
+
+    # 插入图表
+    for fig in result['figures']:
+        cursor.execute("""
+            INSERT INTO figures (paper_id, fig_id, caption)
+            VALUES (?, ?, ?)
+        """, (paper_id, fig['id'], fig['caption']))
+
+    # 插入表格
+    for table in result['tables']:
+        cursor.execute("""
+            INSERT INTO tables (paper_id, table_id, caption)
+            VALUES (?, ?, ?)
+        """, (paper_id, table['id'], table['caption']))
 
     # 插入摘要段落
     for i, p in enumerate(result['abstract']):
