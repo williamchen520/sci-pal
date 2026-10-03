@@ -542,7 +542,7 @@
   function pollTaskStatus(taskId) {
     return new Promise((resolve, reject) => {
       let pollCount = 0;  // V26.3: 记录轮询次数
-      const maxPollCount = 600;  // V26.4: 最多轮询 600 次（600 秒 = 10 分钟）
+      const maxPollCount = 1800;  // V31.19: 最多轮询 1800 次（1800 秒 = 30 分钟）
 
       taskPollTimer = setInterval(async () => {
         pollCount++;
