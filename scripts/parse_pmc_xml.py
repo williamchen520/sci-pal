@@ -66,6 +66,10 @@ def parse_pmc_xml(xml_path: str) -> dict:
         "pmid": None,
         "doi": None,
         "title": None,
+        "authors": [],  # 作者列表
+        "journal": None,  # 期刊名
+        "publish_date": None,  # 发表日期
+        "keywords": [],  # 关键词列表
         "abstract": [],  # 摘要段落列表
         "body": [],  # 正文章节列表
         "figures": [],  # 图表列表
@@ -97,6 +101,47 @@ def parse_pmc_xml(xml_path: str) -> dict:
         title_elem = article_meta.find(".//article-title")
         if title_elem is not None:
             result["title"] = "".join(title_elem.itertext()).strip()
+
+        # 作者
+        contrib_group_elem = article_meta.find(".//contrib-group")
+        if contrib_group_elem is not None:
+            for contrib_elem in contrib_group_elem.findall("./contrib[@contrib-type='author']"):
+                name_elem = contrib_elem.find(".//name")
+                if name_elem is not None:
+                    given_names = name_elem.find(".//given-names")
+                    surname = name_elem.find(".//surname")
+                    if given_names is not None and surname is not None:
+                        author_name = f"{given_names.text} {surname.text}"
+                        result["authors"].append(author_name)
+
+        # 期刊
+        journal_meta_elem = article.find(".//journal-meta")
+        if journal_meta_elem is not None:
+            journal_title_elem = journal_meta_elem.find(".//journal-title")
+            if journal_title_elem is not None:
+                result["journal"] = journal_title_elem.text
+
+        # 发表日期
+        pub_date_elem = article_meta.find(".//pub-date")
+        if pub_date_elem is not None:
+            year_elem = pub_date_elem.find(".//year")
+            month_elem = pub_date_elem.find(".//month")
+            day_elem = pub_date_elem.find(".//day")
+            year = year_elem.text if year_elem is not None else None
+            month = month_elem.text if month_elem is not None else None
+            day = day_elem.text if day_elem is not None else None
+            if year and month and day:
+                result["publish_date"] = f"{year}-{month}-{day}"
+            elif year:
+                result["publish_date"] = year
+
+        # 关键词
+        kw_group_elem = article_meta.find(".//kwd-group")
+        if kw_group_elem is not None:
+            for kw_elem in kw_group_elem.findall("./kwd"):
+                kw_text = "".join(kw_elem.itertext()).strip()
+                if kw_text:
+                    result["keywords"].append(kw_text)
 
     # ============================================================
     # 提取摘要
