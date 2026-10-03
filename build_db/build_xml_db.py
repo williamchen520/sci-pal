@@ -75,7 +75,7 @@ def create_database(db_path: str):
 
     # 参考文献表
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS references (
+        CREATE TABLE IF NOT EXISTS ref_list (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             paper_id INTEGER,
             ref_id TEXT,
@@ -141,7 +141,7 @@ def insert_paper(conn, result: dict):
     # 插入参考文献
     for ref in result['references']:
         cursor.execute("""
-            INSERT INTO references (paper_id, ref_id, text)
+            INSERT INTO ref_list (paper_id, ref_id, text)
             VALUES (?, ?, ?)
         """, (paper_id, ref['id'], ref['text']))
 
