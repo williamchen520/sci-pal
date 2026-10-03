@@ -42,9 +42,12 @@ def build_sentences_for_research_db():
     
     conn = sqlite3.connect(str(RESEARCH_DB))
     
+    # 先删掉旧的表，重新建
+    conn.execute("DROP TABLE IF EXISTS sentences")
+    
     # 建 sentences 表
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS sentences (
+        CREATE TABLE sentences (
             sentence_id TEXT PRIMARY KEY,
             para_id TEXT NOT NULL,
             paper_id TEXT NOT NULL,
@@ -116,9 +119,12 @@ def build_sentences_for_abstracts_db():
     
     conn = sqlite3.connect(str(ABSTRACTS_DB))
     
+    # 先删掉旧的表，重新建
+    conn.execute("DROP TABLE IF EXISTS sentences")
+    
     # 建 sentences 表
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS sentences (
+        CREATE TABLE sentences (
             sentence_id TEXT PRIMARY KEY,
             pmid TEXT NOT NULL,
             title TEXT,
