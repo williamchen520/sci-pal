@@ -37,9 +37,9 @@ class UnifiedSearch:
         conn = sqlite3.connect(self.unified_db)
         cursor = conn.cursor()
 
-        # 用 FTS5 全文检索
+        # 用 FTS5 全文检索（unified_papers_fts 表只有 paper_id、title、journal、abstract 字段）
         cursor.execute("""
-            SELECT paper_id, title, authors, abstract, journal, publish_date, source_db
+            SELECT paper_id, title, journal, abstract
             FROM unified_papers_fts
             WHERE unified_papers_fts MATCH ?
             LIMIT ?
@@ -51,7 +51,23 @@ class UnifiedSearch:
         # 第二步：根据论文的 paper_id，去对应的数据库里面找具体的文章的结构信息
         results = []
         for row in rows:
-            paper_id, title, authors, abstract, journal, publish_date, source_db = row
+            paper_id, title, journal, abstract = row
+
+            # 从 unified_papers 表找 authors、publish_date、source_db
+            conn = sqlite3.connect(self.unified_db)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT authors, publish_date, source_db
+                FROM unified_papers
+                WHERE paper_id = ?
+            """, (paper_id,))
+            paper_row = cursor.fetchone()
+            conn.close()
+
+            if paper_row:
+                authors, publish_date, source_db = paper_row
+            else:
+                authors, publish_date, source_db = None, None, None
 
             # 找具体的文章的结构信息
             paragraphs = self._get_paragraphs(paper_id, source_db)
