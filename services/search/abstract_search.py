@@ -11,7 +11,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 ABSTRACT_DB_PATH = PROJECT_ROOT / "data" / "abstracts.db"
 ABSTRACT_CHROMA_PATH = PROJECT_ROOT / "data" / "chroma_abstracts"
 
-EMBEDDING_MODEL = "all-mpnet-base-v2"
+EMBEDDING_MODEL = r"D:\models\models\BAAI--bge-base-en-v1.5"  # V31.26: 从 all-mpnet-base-v2 改成 bge-base-en-v1.5
 
 
 class AbstractSearch:
