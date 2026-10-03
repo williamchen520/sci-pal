@@ -207,10 +207,8 @@ def retrieve():
 
     try:
         retriever = get_retriever()
-        result = retriever.retrieve(
-            q, paper_id=paper_id,
-            top_paragraphs=top_paragraphs, top_figures=top_figures,
-            filters=filters)
+        # V31.61: 从旧的 retriever.retrieve(...) 改成新的 retriever.search_papers(...)
+        result = retriever.search_papers(q, limit=top_paragraphs)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": f"Retrieval failed: {str(e)}"}), 500
