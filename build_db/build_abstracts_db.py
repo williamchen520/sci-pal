@@ -256,36 +256,77 @@ def build_embeddings(papers):
         print(f"  ✅ 已保存向量到 numpy 文件")
 
 
+def load_papers_from_db(conn):
+    """从数据库里读所有 papers"""
+    print("\n📥 从数据库里读所有 papers...")
+    
+    rows = conn.execute("""
+        SELECT pmid, doi, title, abstract, authors, journal, year, topic
+        FROM papers
+        WHERE abstract IS NOT NULL AND length(abstract) > 10
+    """).fetchall()
+    
+    papers = []
+    for row in rows:
+        papers.append({
+            "pmid": row[0],
+            "doi": row[1],
+            "title": row[2],
+            "abstract": row[3],
+            "authors": row[4],
+            "journal": row[5],
+            "year": row[6],
+            "topic": row[7],
+        })
+    
+    print(f"✅ 从数据库里读了 {len(papers)} 篇摘要")
+    return papers
+
+
 def main():
     print("=" * 60)
-    print("📊 摘要数据库建索引脚本 V1.0")
+    print("📊 摘要数据库建索引脚本 V1.1")
     print("=" * 60)
     
-    # 1. 建数据库
-    conn = create_database()
+    # 检查数据库是否已经存在
+    db_exists = DB_PATH.exists()
     
-    # 2. 加载 JSON 文件
-    papers = load_json_files()
-    
-    # 3. 插入数据
-    insert_papers(conn, papers)
-    
-    # 4. 建 FTS 索引
-    build_fts(conn)
-    
-    # 5. 建向量索引
-    build_embeddings(papers)
-    
-    # 关闭连接
-    conn.close()
+    if db_exists:
+        # 数据库已经存在，直接从数据库里读 papers
+        print("\n📂 数据库已经存在，直接从数据库里读 papers...")
+        conn = sqlite3.connect(DB_PATH)
+        papers = load_papers_from_db(conn)
+        
+        # 只建向量索引（FTS 索引已经建好了）
+        build_embeddings(papers)
+        
+        conn.close()
+    else:
+        # 数据库不存在，建数据库 + FTS 索引 + 向量索引
+        print("\n🆕 数据库不存在，建数据库...")
+        
+        # 1. 建数据库
+        conn = create_database()
+        
+        # 2. 加载 JSON 文件
+        papers = load_json_files()
+        
+        # 3. 插入数据
+        insert_papers(conn, papers)
+        
+        # 4. 建 FTS 索引
+        build_fts(conn)
+        
+        # 5. 建向量索引
+        build_embeddings(papers)
+        
+        conn.close()
     
     print("\n" + "=" * 60)
     print("✅ 全部完成！")
     print("=" * 60)
     print(f"  数据库: {DB_PATH}")
-    print(f"  FTS 索引: 已建")
     print(f"  向量索引: {CHROMA_DIR}")
-    print(f"  总篇数: {len(papers)}")
 
 
 if __name__ == "__main__":
