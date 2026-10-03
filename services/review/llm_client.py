@@ -59,7 +59,7 @@ class LLMClient:
     def __init__(
         self,
         provider: str = "ollama",
-        model: str = "qwen2.5:7b",
+        model: str = "qwen2.5:3b",
         host: str = "http://localhost:11434",
         api_key: Optional[str] = None,
         timeout: int = 1800,
@@ -327,9 +327,9 @@ def create_llm_client(
     if model:
         model_name = model
     elif light:
-        model_name = os.environ.get("SCIPAL_LLM_LIGHT_MODEL", "qwen2.5:7b")
+        model_name = os.environ.get("SCIPAL_LLM_LIGHT_MODEL", "qwen2.5:3b")
     else:
-        model_name = os.environ.get("SCIPAL_LLM_MODEL", "qwen2.5:14b")
+        model_name = os.environ.get("SCIPAL_LLM_MODEL", "qwen2.5:3b")
 
     if provider == "openai":
         host = os.environ.get(
