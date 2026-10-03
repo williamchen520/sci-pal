@@ -346,8 +346,9 @@ def create_llm_client(
         model=model_name,
         host=host,
         api_key=api_key,
-        timeout=timeout if timeout is not None else int(os.environ.get("SCIPAL_LLM_TIMEOUT", "120")),
-        max_retries=max_retries if max_retries is not None else int(os.environ.get("SCIPAL_LLM_MAX_RETRIES", "3")),
+        # V31.18: 工厂函数默认值也改成 1800 秒超时、1 次重试
+        timeout=timeout if timeout is not None else int(os.environ.get("SCIPAL_LLM_TIMEOUT", "1800")),
+        max_retries=max_retries if max_retries is not None else int(os.environ.get("SCIPAL_LLM_MAX_RETRIES", "1")),
         temperature=float(os.environ.get("SCIPAL_LLM_TEMPERATURE", "0.3")),
     )
 
