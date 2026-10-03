@@ -223,6 +223,8 @@ def main():
     print(f"  标题: {result['title']}")
     print(f"  摘要段落数: {len(result['abstract'])}")
     print(f"  顶级章节数: {len(result['body'])}")
+    print(f"  图表数: {len(result['figures'])}")
+    print(f"  表格数: {len(result['tables'])}")
     print(f"  参考文献数: {len(result['references'])}")
 
     # 打印摘要内容
