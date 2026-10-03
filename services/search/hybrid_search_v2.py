@@ -10,7 +10,11 @@
 
 import argparse
 import sqlite3
+import sys
 from pathlib import Path
+
+# 把项目根目录加到 sys.path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from services.search.unified_search import UnifiedSearch
 
