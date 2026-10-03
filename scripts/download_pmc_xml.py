@@ -141,7 +141,7 @@ class PMCXMLDownloader:
 
         for start in range(0, max_results, batch_size):
             end = min(start + batch_size, max_results)
-            search_term = f"{query} AND free fulltext[filter]"
+            search_term = f"{query}"
 
             params = self._build_params(
                 db="pmc",

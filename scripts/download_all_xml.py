@@ -10,7 +10,7 @@ TOPICS = [
     ("breast cancer immunology", 100),
     ("liver disease fibrosis", 100),
     ("hepatitis B virus HBV", 100),
-    ("bioinformatics single cell RNA sequencing", 100),
+    ("bioinformatics", 100),
     ("innate immunity macrophage", 100),
     ("pediatric immunology children", 100),
     ("primary immunodeficiency disease", 100),
