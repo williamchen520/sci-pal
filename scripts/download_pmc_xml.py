@@ -124,7 +124,7 @@ class PMCXMLDownloader:
 
     def search(self, query: str, max_results: int = 50) -> list[str]:
         """
-        搜索 PMC，获取 PMCID 列表
+        搜索 PubMed，获取 PMID 列表，然后！转换成 PMCID
 
         Args:
             query: 搜索关键词
@@ -134,18 +134,18 @@ class PMCXMLDownloader:
             PMCID 列表（如 ["PMC12345", "PMC67890"]）
         """
         if self.verbose:
-            print(f"🔍 搜索: {query}（目标 {max_results} 篇）")
+            print(f"🔍 在 PubMed 搜索: {query}（目标 {max_results} 篇）")
 
-        pmc_ids = []
+        # 第一步：在 PubMed 搜索，拿到 PMID
+        pmids = []
         batch_size = 100  # ESearch 单次最多返回这么多
 
         for start in range(0, max_results, batch_size):
             end = min(start + batch_size, max_results)
-            search_term = f"{query}"
 
             params = self._build_params(
-                db="pmc",
-                term=search_term,
+                db="pubmed",
+                term=query,
                 retstart=start,
                 retmax=end - start,
                 retmode="json",
@@ -156,12 +156,48 @@ class PMCXMLDownloader:
 
             data = resp.json()
             id_list = data.get("esearchresult", {}).get("idlist", [])
-            # PMC ID 格式：数字，需要加 PMC 前缀
-            pmc_ids.extend([f"PMC{pid}" for pid in id_list])
+            pmids.extend(id_list)
 
-            self.stats["searched"] = len(pmc_ids)
             if self.verbose:
-                print(f"   获取到 {len(pmc_ids)} 个 PMCID")
+                print(f"   获取到 {len(pmids)} 个 PMID")
+
+        pmids = pmids[:max_results]
+
+        # 第二步：把 PMID 转换成 PMCID
+        if self.verbose:
+            print(f"🔄 把 {len(pmids)} 个 PMID 转换成 PMCID...")
+
+        pmc_ids = []
+        batch_size = 200  # ELink 单次最多处理这么多
+
+        for i in range(0, len(pmids), batch_size):
+            batch = pmids[i:i + batch_size]
+
+            params = self._build_params(
+                dbfrom="pubmed",
+                db="pmc",
+                id=",".join(batch),
+                linkname="pubmed_pmc",
+                retmode="json",
+            )
+            resp = self._request(f"{EUTILS_BASE}/elink.fcgi", params)
+            if not resp:
+                continue
+
+            data = resp.json()
+            linksets = data.get("linksets", [])
+
+            for linkset in linksets:
+                linksetdbs = linkset.get("linksetdbs", [])
+                for lsdb in linksetdbs:
+                    if lsdb.get("dbto") == "pmc":
+                        links = lsdb.get("links", [])
+                        for pmc_id in links:
+                            pmc_ids.append(f"PMC{pmc_id}")
+
+        self.stats["searched"] = len(pmc_ids)
+        if self.verbose:
+            print(f"   转换成了 {len(pmc_ids)} 个 PMCID")
 
         return pmc_ids[:max_results]
 
