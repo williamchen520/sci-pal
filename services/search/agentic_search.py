@@ -40,9 +40,10 @@ def _load_ner_model():
         model_name = r"D:\models\models\pruas--BENT-PubMedBERT-NER-Gene"
         print(f"  📥 Loading NER model: {model_name}...")
         _ner_tokenizer = AutoTokenizer.from_pretrained(model_name)
-        # V31.12: 改成自动判断，不强制 use_safetensors
+        # V31.16: 强制用 safetensors，不用 pytorch_model.bin（避免 torch 安全漏洞问题）
         _ner_model = AutoModelForTokenClassification.from_pretrained(
             model_name,
+            use_safetensors=True,
         )
 
         # Move to GPU if available
