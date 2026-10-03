@@ -193,6 +193,29 @@ def main():
     print(f"  顶级章节数: {len(result['body'])}")
     print(f"  参考文献数: {len(result['references'])}")
 
+    # 打印摘要内容
+    if result['abstract']:
+        print(f"\n{'='*60}")
+        print(f"📝 摘要内容：")
+        print(f"{'='*60}")
+        for i, p in enumerate(result['abstract']):
+            print(f"\n段落 {i+1}:")
+            print(f"  {p['text'][:200]}...")  # 只打印前 200 个字符
+            print(f"  句子数: {len(p['sentences'])}")
+
+    # 打印正文内容
+    if result['body']:
+        print(f"\n{'='*60}")
+        print(f"📖 正文内容：")
+        print(f"{'='*60}")
+        for i, sec in enumerate(result['body']):
+            print(f"\n章节 {i+1}: {sec['title']}")
+            print(f"  段落数: {len(sec['paragraphs'])}")
+            if sec['paragraphs']:
+                first_para = sec['paragraphs'][0]
+                print(f"  第一段: {first_para['text'][:200]}...")  # 只打印前 200 个字符
+                print(f"  句子数: {len(first_para['sentences'])}")
+
     # 保存到 JSON
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
