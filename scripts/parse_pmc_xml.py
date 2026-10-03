@@ -68,6 +68,8 @@ def parse_pmc_xml(xml_path: str) -> dict:
         "title": None,
         "abstract": [],  # 摘要段落列表
         "body": [],  # 正文章节列表
+        "figures": [],  # 图表列表
+        "tables": [],  # 表格列表
         "references": [],  # 参考文献列表
     }
 
@@ -150,6 +152,36 @@ def parse_pmc_xml(xml_path: str) -> dict:
         for sec_elem in body_elem.findall("./sec"):
             sec = parse_sec(sec_elem, level=1)
             result["body"].append(sec)
+
+    # ============================================================
+    # 提取图表
+    # ============================================================
+    for fig_elem in article.findall(".//fig"):
+        fig_id = fig_elem.get("id")
+        # 提取图表标题
+        fig_caption_elem = fig_elem.find(".//caption")
+        fig_caption = None
+        if fig_caption_elem is not None:
+            fig_caption = "".join(fig_caption_elem.itertext()).strip()
+        result["figures"].append({
+            "id": fig_id,
+            "caption": fig_caption,
+        })
+
+    # ============================================================
+    # 提取表格
+    # ============================================================
+    for table_elem in article.findall(".//table-wrap"):
+        table_id = table_elem.get("id")
+        # 提取表格标题
+        table_caption_elem = table_elem.find(".//caption")
+        table_caption = None
+        if table_caption_elem is not None:
+            table_caption = "".join(table_caption_elem.itertext()).strip()
+        result["tables"].append({
+            "id": table_id,
+            "caption": table_caption,
+        })
 
     # ============================================================
     # 提取参考文献
