@@ -1608,7 +1608,10 @@ def assign_papers_to_outline(
         return outline
 
     if not papers:
+        print("⚠️  assign_papers_to_outline: papers 列表为空！")
         return outline
+
+    print(f"📋 assign_papers_to_outline: 开始分配 {len(papers)} 篇论文到 {len(outline['sections'])} 个章节")
 
     # 1. 收集每个章节的关键词
     section_keywords = {}
@@ -1633,7 +1636,7 @@ def assign_papers_to_outline(
 
         # 计算与每个章节的相似度（关键词重叠数）
         best_section = None
-        best_score = 0
+        best_score = -1  # V31.76: 初始化为 -1，确保即使 overlap=0 也能分配
         for sec_id, sec_keywords in section_keywords.items():
             overlap = len(paper_keywords & sec_keywords)
             if overlap > best_score:

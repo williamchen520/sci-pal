@@ -716,7 +716,7 @@
       // 更新论文列表
       if (result.papers && result.papers.length > 0) {
         papers = result.papers;
-        renderPaperList();
+        refreshPaperList();
       }
       showMessage('搜索并分配完成！共找到 ' + (result.papers ? result.papers.length : 0) + ' 篇论文，请检查分配结果。', 'success');
 
