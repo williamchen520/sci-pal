@@ -620,6 +620,48 @@ def assign_papers_to_outline_route():
         return jsonify({"error": f"Assign papers failed: {str(e)}"}), 500
 
 
+# ── V31.75: 按大纲搜索并分配论文 ──
+
+@app.route("/api/review/search_and_assign", methods=["POST"])
+def search_and_assign_route():
+    """V31.75: 按大纲内容搜索论文，然后自动分配给对应的章节和段落。
+
+    Body:
+      outline: 大纲 JSON {"sections": [...]}（必填）
+      topic: 综述主题（必填）
+      max_papers: 最大论文数（可选，默认 100）
+
+    Returns:
+      outline: 更新后的大纲（每章节包含 assigned_paper_ids）
+      papers: 搜索到的论文列表
+    """
+    data = request.get_json(silent=True) or {}
+    outline = data.get("outline")
+    topic = data.get("topic", "")
+    max_papers = int(data.get("max_papers", 100))
+
+    if not outline or not outline.get("sections"):
+        return jsonify({"error": "outline is required"}), 400
+    if not topic:
+        return jsonify({"error": "topic is required"}), 400
+
+    try:
+        from services.review.review_generator import search_and_assign_papers
+        retriever = get_retriever()
+        updated_outline, papers = search_and_assign_papers(
+            outline=outline,
+            topic=topic,
+            max_papers=max_papers,
+            retriever=retriever,
+        )
+        return jsonify({"outline": updated_outline, "papers": papers})
+    except Exception as e:
+        print(f"[ERROR] Search and assign failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Search and assign failed: {str(e)}"}), 500
+
+
 # ── V25.9: 大纲保存/加载路由 ──
 
 @app.route("/api/review/outline/saved", methods=["GET"])

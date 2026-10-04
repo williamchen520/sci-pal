@@ -54,6 +54,7 @@
     els.maxPapersInput = document.getElementById('editorMaxPapers');
     els.generateOutlineBtn = document.getElementById('generateOutlineBtn');
     els.assignPapersBtn = document.getElementById('assignPapersBtn');  // V26.1
+    els.searchAndAssignBtn = document.getElementById('searchAndAssignBtn');  // V31.75
     els.confirmAssignBtn = document.getElementById('confirmAssignBtn');  // V26.1
     els.generateReviewBtn = document.getElementById('generateReviewBtn');
     els.saveOutlineBtn = document.getElementById('saveOutlineBtn');
@@ -84,6 +85,7 @@
 
     els.generateOutlineBtn.addEventListener('click', handleGenerateOutline);
     if (els.assignPapersBtn) els.assignPapersBtn.addEventListener('click', handleAssignPapers);  // V26.1
+    if (els.searchAndAssignBtn) els.searchAndAssignBtn.addEventListener('click', handleSearchAndAssign);  // V31.75
     if (els.confirmAssignBtn) els.confirmAssignBtn.addEventListener('click', handleConfirmAssign);  // V26.1
     els.generateReviewBtn.addEventListener('click', handleGenerateReview);
     els.saveOutlineBtn.addEventListener('click', handleSaveOutline);
@@ -673,6 +675,57 @@
       showMessage('自动发配失败：' + e.message, 'error');
     } finally {
       if (els.assignPapersBtn) els.assignPapersBtn.disabled = false;
+    }
+  }
+
+  // ── V31.75: 按大纲搜索并分配论文 ──
+  async function handleSearchAndAssign() {
+    const data = outlineCore ? outlineCore.getData() : null;
+    if (!data || !data.sections || data.sections.length === 0) {
+      showMessage('请先生成或加载大纲', 'error');
+      return;
+    }
+
+    const topic = els.topicInput ? els.topicInput.value : '';
+    if (!topic.trim()) {
+      showMessage('请输入综述主题', 'error');
+      return;
+    }
+
+    const maxPapers = els.maxPapersInput ? parseInt(els.maxPapersInput.value) || 100 : 100;
+
+    showMessage('正在按大纲内容搜索文献并分配...（可能需要几分钟）', 'info');
+    if (els.searchAndAssignBtn) els.searchAndAssignBtn.disabled = true;
+
+    try {
+      const resp = await fetch('/api/review/search_and_assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outline: data,
+          topic: topic,
+          max_papers: maxPapers,
+        }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.error || '搜索并分配失败');
+      }
+      const result = await resp.json();
+      outlineCore.setData(result.outline);
+      // 更新论文列表
+      if (result.papers && result.papers.length > 0) {
+        papers = result.papers;
+        renderPaperList();
+      }
+      showMessage('搜索并分配完成！共找到 ' + (result.papers ? result.papers.length : 0) + ' 篇论文，请检查分配结果。', 'success');
+
+      // 显示"最终确定"按钮
+      if (els.confirmAssignBtn) els.confirmAssignBtn.style.display = '';
+    } catch (e) {
+      showMessage('搜索并分配失败：' + e.message, 'error');
+    } finally {
+      if (els.searchAndAssignBtn) els.searchAndAssignBtn.disabled = false;
     }
   }
 

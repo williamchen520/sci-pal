@@ -1671,3 +1671,89 @@ def assign_papers_to_outline(
             para["assigned_paper_ids"] = para_papers
 
     return outline
+
+
+def search_and_assign_papers(
+    outline: dict,
+    topic: str,
+    max_papers: int = 100,
+    retriever=None,
+) -> tuple[dict, list[dict]]:
+    """V31.75: 按大纲内容搜索论文，然后自动分配给对应的章节和段落。
+
+    流程：
+    1. 按综述主题搜索一批论文
+    2. 按每个章节的标题和描述搜索更多论文
+    3. 收集所有搜索到的论文（去重）
+    4. 调用 assign_papers_to_outline 分配论文
+    5. 返回更新后的大纲和论文列表
+
+    Args:
+        outline: 大纲 JSON {"sections": [...]}
+        topic: 综述主题
+        max_papers: 最大论文数
+        retriever: 检索器实例
+
+    Returns:
+        (更新后的大纲, 论文列表)
+    """
+    if not outline or not outline.get("sections"):
+        return outline, []
+
+    if retriever is None:
+        return outline, []
+
+    print(f"🔍 开始按大纲内容搜索论文...")
+
+    # 1. 收集所有搜索查询（综述主题 + 每个章节的标题）
+    search_queries = [topic]
+    for sec in outline.get("sections", []):
+        sec_title = sec.get("title", "").strip()
+        if sec_title and sec_title not in search_queries:
+            search_queries.append(sec_title)
+
+    print(f"📝 共 {len(search_queries)} 个搜索查询")
+
+    # 2. 按每个查询搜索论文
+    all_papers = {}  # paper_id -> paper dict
+    for i, query in enumerate(search_queries):
+        try:
+            print(f"  [{i+1}/{len(search_queries)}] 搜索: {query[:50]}...")
+            result = retriever.retrieve(
+                query=query,
+                top_paragraphs=max_papers,
+                top_figures=0,
+            )
+            paragraphs = result.get("paragraphs", [])
+            for p in paragraphs:
+                pid = p.get("paper_id", "")
+                if not pid:
+                    continue
+                if pid not in all_papers:
+                    all_papers[pid] = {
+                        "paper_id": pid,
+                        "title": p.get("paper_title", pid),
+                        "source": p.get("source", "full_text"),
+                    }
+            print(f"    找到 {len(paragraphs)} 个段落，累计 {len(all_papers)} 篇论文")
+        except Exception as e:
+            print(f"    ⚠️  搜索失败: {e}")
+            continue
+
+    papers = list(all_papers.values())
+    print(f"✅ 搜索完成：共 {len(papers)} 篇论文")
+
+    # 3. 分配论文到章节和段落
+    print(f"📋 开始分配论文到章节和段落...")
+    updated_outline = assign_papers_to_outline(outline, papers, None)
+
+    # 统计分配结果
+    total_assigned = 0
+    for sec in updated_outline.get("sections", []):
+        sec_assigned = len(sec.get("assigned_paper_ids", []))
+        total_assigned += sec_assigned
+        print(f"  {sec.get('title', '')}: {sec_assigned} 篇论文")
+
+    print(f"✅ 分配完成：共分配 {total_assigned} 篇次")
+
+    return updated_outline, papers
