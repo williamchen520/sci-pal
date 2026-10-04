@@ -485,8 +485,11 @@ class ReviewGenerator:
             from .outline_generator import OutlineGenerator
             outline = OutlineGenerator.from_custom_json(topic, custom_outline, evidence_cards=evidence_cards)
         else:
+            print(f"📝 开始生成大纲（规则版）...")
             outline = self.outline_generator.generate(topic, evidence_cards, use_communities=True, review_type=review_type, language=language)
+            print(f"✅ 大纲生成完成：{len(outline.sections)} 个章节")
 
+        print(f"📚 开始构建论文列表...")
         # V26.1: 构建论文列表 - 从 paragraphs 里提取所有论文，不只是 evidence_cards 里的
         paper_map = {}
         for p in paragraphs:
@@ -531,6 +534,8 @@ class ReviewGenerator:
             outline_json["sections"].append(sec_data)
 
         total_paragraphs = sum(len(s.paragraphs) for s in outline.sections)
+
+        print(f"✅ 大纲生成全部完成：{len(outline.sections)} 个章节，{total_paragraphs} 个段落，{len(paper_map)} 篇论文")
 
         return {
             "topic": topic,
