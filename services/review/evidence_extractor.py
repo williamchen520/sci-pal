@@ -170,6 +170,8 @@ class EvidenceExtractor:
         """
         从一组检索段落中抽取证据卡片。
 
+        V31.65: 简化证据抽取逻辑，直接把每个段落作为一个证据卡片，跳过 LLM 证据抽取。
+
         Args:
             paragraphs: 段落列表，每个 dict 需含 para_id, paper_id, text,
                        可选 section_l1, page, paper_title
@@ -179,90 +181,37 @@ class EvidenceExtractor:
         Returns:
             EvidenceCard 列表
         """
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        # V31.65: 简化证据抽取逻辑，直接把每个段落作为一个证据卡片
+        all_cards: list[EvidenceCard] = []
+        seq_counter = 0
 
-        # V30.1: 先过滤掉不需要处理的段落
-        valid_paragraphs = []
         for para in paragraphs:
             text = para.get("text", "").strip()
             if len(text) < self.min_paragraph_length:
                 continue
             if self._is_boilerplate(text):
                 continue
-            valid_paragraphs.append(para)
 
-        # V30.6: 检查缓存，把已经处理过的段落直接拿出来
-        cached_cards: list[EvidenceCard] = []
-        paragraphs_to_process: list[dict] = []
-        cache_hits = 0
+            safe_paper = self._sanitize_id(para["paper_id"])
+            safe_para = self._sanitize_id(para["para_id"])
 
-        for para in valid_paragraphs:
-            cache_key = self._get_cache_key(para)
-            if cache_key in self._cache:
-                cached_cards.extend(self._cache[cache_key])
-                cache_hits += 1
-            else:
-                paragraphs_to_process.append(para)
+            card = EvidenceCard(
+                evidence_id=f"ev_{safe_paper}_{safe_para}_{seq_counter}",
+                seq=seq_counter,
+                content=text[:1000],  # 最多 1000 字符
+                evidence_type="fact",
+                original_quote=text[:500],
+                paper_id=para["paper_id"],
+                para_id=para["para_id"],
+                section_l1=para.get("section_l1", ""),
+                page=para.get("page", 0),
+                paper_title=para.get("paper_title", ""),
+                confidence=1.0,
+            )
+            all_cards.append(card)
+            seq_counter += 1
 
-        if cache_hits > 0:
-            print(f"📦 缓存命中：{cache_hits} 个段落，直接从缓存读取")
-
-        # V30.3: 批量处理，5 段一组
-        batch_size = 5
-        batches = [paragraphs_to_process[i:i+batch_size] for i in range(0, len(paragraphs_to_process), batch_size)]
-
-        print(f"🔍 批量证据抽取：{len(paragraphs_to_process)} 个段落待处理，{len(batches)} 批，每批 {batch_size} 段")
-
-        all_cards: list[EvidenceCard] = cached_cards  # V30.6: 先把缓存里的结果放进去
-        seq_counter = len(cached_cards)
-
-        # V31.10: 熔断机制 - 失败太多就直接停止
-        failed_count = 0
-        max_failed = 10  # 最多失败 10 次就停止
-        stopped = False
-
-        # V30.3: 并行处理批次
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            # 提交所有批次
-            future_to_batch = {}
-            for i, batch in enumerate(batches):
-                future = executor.submit(
-                    self._extract_batch,
-                    batch,
-                    topic,
-                    language=language,
-                )
-                future_to_batch[future] = (i, batch)
-
-            # 收集结果
-            for future in as_completed(future_to_batch):
-                if stopped:
-                    continue
-                batch_idx, batch = future_to_batch[future]
-                try:
-                    cards = future.result()
-                    all_cards.extend(cards)
-                    seq_counter += len(cards)
-                except LLMError as e:
-                    failed_count += 1
-                    print(f"⚠️  第 {batch_idx+1} 批证据抽取失败: {e}")
-                    # V31.10: 失败太多就停止
-                    if failed_count >= max_failed:
-                        print(f"⚠️  失败次数达到 {max_failed}，停止证据抽取，跳过剩余批次")
-                        stopped = True
-                        continue
-                    # V30.3: 批量失败后，退回到单段处理
-                    for para in batch:
-                        try:
-                            cards = self._extract_one_paragraph(para, topic, 0, language=language)
-                            all_cards.extend(cards)
-                            seq_counter += len(cards)
-                        except LLMError as e2:
-                            print(f"⚠️  段落 {para.get('para_id', '?')} 单段抽取也失败: {e2}")
-
-        # V31.7: 把缓存保存到硬盘，重启不丢失
-        self._save_cache_to_disk()
-
+        print(f"✅ 简化证据抽取：{len(all_cards)} 个证据卡片")
         return all_cards
 
     def _extract_batch(
