@@ -98,14 +98,10 @@ def get_outline_store():
 def get_retriever():
     global _retriever
     if _retriever is None:
-        # V31.60: 从旧的统一检索器（unified_retriever.py）改成新的统一检索层（unified_search.py）
-        from services.search.unified_search import UnifiedSearch
-        _retriever = UnifiedSearch(
-            unified_db="data/unified.db",
-            research_db="data/research.db",
-            abstracts_db="data/abstracts.db",
-            xml_db="data/xml.db"
-        )
+        # V31.71: 回退到旧的统一检索器（unified_retriever.py），检索层不改，只改数据层
+        from services.search.unified_retriever import UnifiedRetriever
+        _retriever = UnifiedRetriever(
+            rerank=True, routing=True, expand=True, graph_expand=True)
     return _retriever
 
 
@@ -120,14 +116,9 @@ def get_graph():
 def get_hybrid():
     global _hybrid
     if _hybrid is None:
-        # V31.60: 从旧的混合检索（hybrid_search.py）改成新的混合检索 V2（hybrid_search_v2.py）
-        from services.search.hybrid_search_v2 import HybridSearchV2
-        _hybrid = HybridSearchV2(
-            unified_db="data/unified.db",
-            research_db="data/research.db",
-            abstracts_db="data/abstracts.db",
-            xml_db="data/xml.db"
-        )
+        # V31.71: 回退到旧的混合检索（hybrid_search.py），检索层不改，只改数据层
+        from services.search.hybrid_search import HybridSearch
+        _hybrid = HybridSearch()
     return _hybrid
 
 
