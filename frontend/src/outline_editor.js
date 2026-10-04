@@ -1161,21 +1161,44 @@
   async function loadSavedOutlines() {
     try {
       const resp = await fetch('/api/review/outline/saved');
-      if (!resp.ok) return;
+      if (!resp.ok) {
+        console.log('V32.1 调试: 获取已保存大纲失败，状态码:', resp.status);
+        return;
+      }
       const data = await resp.json();
       savedOutlines = data.outlines || [];
+      console.log('V32.1 调试: 获取到已保存大纲数量:', savedOutlines.length);
 
       // V32.1: 把已保存大纲加到 templateSelect 的 savedOutlineGroup 里
+      // 如果 els.savedOutlineGroup 是 null，就重新获取一下
+      if (!els.savedOutlineGroup) {
+        els.savedOutlineGroup = document.getElementById('savedOutlineGroup');
+        console.log('V32.1 调试: 重新获取 savedOutlineGroup:', els.savedOutlineGroup ? '成功' : '失败');
+      }
+
       if (els.savedOutlineGroup) {
         els.savedOutlineGroup.innerHTML = '';
-        savedOutlines.forEach(function(o) {
-          const option = document.createElement('option');
-          option.value = 'saved_' + o.name;  // 加前缀区分预设模板
-          option.textContent = (o.display_name || o.name) + ' (' + o.section_count + '章 ' + o.paragraph_count + '段) - ' + (o.updated_at || '');
-          els.savedOutlineGroup.appendChild(option);
-        });
+        if (savedOutlines.length === 0) {
+          // 如果没有已保存大纲，显示一个提示选项
+          const emptyOption = document.createElement('option');
+          emptyOption.value = '';
+          emptyOption.textContent = '（暂无已保存大纲）';
+          emptyOption.disabled = true;
+          els.savedOutlineGroup.appendChild(emptyOption);
+        } else {
+          savedOutlines.forEach(function(o) {
+            const option = document.createElement('option');
+            option.value = 'saved_' + o.name;  // 加前缀区分预设模板
+            option.textContent = (o.display_name || o.name) + ' (' + o.section_count + '章 ' + o.paragraph_count + '段) - ' + (o.updated_at || '');
+            els.savedOutlineGroup.appendChild(option);
+          });
+        }
+        console.log('V32.1 调试: 已保存大纲已添加到下拉菜单');
+      } else {
+        console.log('V32.1 调试: savedOutlineGroup 元素不存在！');
       }
     } catch (e) {
+      console.log('V32.1 调试: loadSavedOutlines 异常:', e);
       // 静默失败
     }
   }
