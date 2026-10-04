@@ -22,10 +22,19 @@ PMC 全文一键批量下载脚本 V1.0
 """
 
 import argparse
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+# V1.1: Windows 控制台编码修复
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 # ============================================================
 # 主题列表配置（可以自由增删）
@@ -113,10 +122,18 @@ def run_download(query: str, max_results: int, output_dir: str, no_filter: bool 
 
     start_time = time.time()
     try:
+        # V1.1: 设置子进程环境变量，强制 utf-8 编码（Windows 控制台修复）
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUTF8"] = "1"
+
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
             timeout=max_results * 30 + 120,  # 每篇最多30秒，加2分钟缓冲
         )
         elapsed = time.time() - start_time

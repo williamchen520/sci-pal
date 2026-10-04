@@ -38,6 +38,14 @@ from urllib.parse import quote_plus
 
 import requests
 
+# V2.1: Windows 控制台编码修复（cp1252 不支持 emoji 和中文，强制用 utf-8）
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # 浏览器 User-Agent
 BROWSER_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
