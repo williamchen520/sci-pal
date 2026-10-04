@@ -25,7 +25,17 @@ DB_PATH = PROJECT_ROOT / "data" / "abstracts.db"
 CHROMA_DIR = PROJECT_ROOT / "data" / "chroma_abstracts"
 
 # 模型配置
-EMBEDDING_MODEL = "all-mpnet-base-v2"
+# V32.7: 跟主程序保持一致，用 BAAI/bge-base-en-v1.5，支持本地模型路径
+# 优先级：环境变量 ABSTRACT_EMBEDDING_MODEL > 本地路径 > 默认模型名
+import os
+EMBEDDING_MODEL = os.environ.get(
+    "ABSTRACT_EMBEDDING_MODEL",
+    r"D:\models\models\BAAI--bge-base-en-v1.5"  # Windows 本地路径
+)
+# 如果本地路径不存在，回退到模型名（会自动下载）
+if not os.path.exists(EMBEDDING_MODEL):
+    EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
+    print(f"⚠️  本地模型路径不存在，回退到模型名: {EMBEDDING_MODEL}")
 
 
 def create_database():
