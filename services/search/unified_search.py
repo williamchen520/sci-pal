@@ -38,12 +38,18 @@ class UnifiedSearch:
         cursor = conn.cursor()
 
         # 用 FTS5 全文检索（unified_papers_fts 表只有 paper_id、title、journal、abstract 字段）
+        # V31.66: 把查询里的特殊字符转义，避免 FTS5 语法错误
+        import re
+        safe_query = re.sub(r'[^\w\s]', ' ', query)
+        safe_query = ' '.join(safe_query.split())
+        if not safe_query:
+            safe_query = query
         cursor.execute("""
             SELECT paper_id, title, journal, abstract
             FROM unified_papers_fts
             WHERE unified_papers_fts MATCH ?
             LIMIT ?
-        """, (query, limit))
+        """, (safe_query, limit))
 
         rows = cursor.fetchall()
         conn.close()
