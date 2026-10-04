@@ -1060,8 +1060,9 @@
   }
 
   // ── V32.1: 模板选择/加载 ──
-  function handleTemplateSelect() {
+  async function handleTemplateSelect() {
     const value = els.templateSelect.value;
+    console.log('V32.1 调试: handleTemplateSelect 被调用，value:', value);
     if (!value) return;
 
     // 重置下拉菜单，方便下次选择同一个模板
@@ -1071,6 +1072,7 @@
     if (value.startsWith('template_')) {
       // 预设模板
       const template = OUTLINE_TEMPLATES[value];
+      console.log('V32.1 调试: 找到预设模板:', template ? template.name : '未找到');
       if (!template) {
         showMessage('模板不存在：' + value, 'error');
         return;
@@ -1078,6 +1080,7 @@
 
       // 深拷贝模板数据，避免修改原始模板
       const outlineData = JSON.parse(JSON.stringify(template));
+      console.log('V32.1 调试: outlineData.sections.length:', outlineData.sections?.length);
 
       // 设置到大纲编辑器
       outlineCore.setData(outlineData);
