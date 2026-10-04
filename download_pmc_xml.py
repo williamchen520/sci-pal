@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """
-PMC (PubMed Central) 批量下载 XML 脚本 V1.0
+PMC (PubMed Central) 批量下载 XML 脚本 V2.0
 
 下载 JATS XML 格式的论文全文，而不是 PDF。
 
+V2.0 新增：自动过滤只有摘要、没有全文正文的文章
+  - 搜索时加 open access[filter]，从源头只搜开放获取论文
+  - 下载后检查 XML 是否有 <body> 标签（有全文的标志）
+  - 只有摘要的文章自动删除，不计入成功下载
+  - 用 --no-filter 可关闭过滤
+
 使用方法：
-  # 按关键词搜索下载（默认100篇）
+  # 按关键词搜索下载（默认100篇，自动过滤只有摘要的）
   python download_pmc_xml.py --query "STAT1 interferon"
 
   # 每个主题下载100篇
@@ -13,6 +19,12 @@ PMC (PubMed Central) 批量下载 XML 脚本 V1.0
 
   # 指定输出目录
   python download_pmc_xml.py --query "cancer immunotherapy" --output documents_xml/
+
+  # 不过滤（下载所有文章，包括只有摘要的）
+  python download_pmc_xml.py --query "STAT1" --no-filter
+
+  # 只搜索不下载（预览结果）
+  python download_pmc_xml.py --query "STAT1" --dry-run
 """
 
 import argparse
@@ -74,8 +86,10 @@ class PMCXMLDownloader:
             "downloaded": 0,
             "skipped": 0,
             "failed": 0,
+            "filtered_no_fulltext": 0,  # V2: 过滤掉只有摘要、没有全文的文章
             "failed_ids": [],
         }
+        self.filter_no_fulltext = True  # V2: 默认开启过滤只有摘要的文章
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -245,6 +259,19 @@ class PMCXMLDownloader:
                 self.stats["failed_ids"].append(pmc_id)
                 return False
 
+            # V2: 过滤只有摘要、没有全文正文的文章
+            # JATS XML 里有全文的文章一定有 <body> 标签，只有摘要的文章只有 <front> 没有 <body>
+            if self.filter_no_fulltext:
+                has_body = "<body" in xml_content
+                # 有些文章用 <body/> 自闭合标签（空 body），也算没有全文
+                has_body_content = "<body>" in xml_content or ("<body " in xml_content and "</body>" in xml_content and "<body/>" not in xml_content)
+                if not has_body or not has_body_content:
+                    if self.verbose:
+                        print(f"⚠️  只有摘要，无全文正文，已过滤")
+                    output_file.unlink()
+                    self.stats["filtered_no_fulltext"] += 1
+                    return False
+
             if self.verbose:
                 print(f"✅ ({size//1024}KB)")
             self.stats["downloaded"] += 1
@@ -291,7 +318,8 @@ class PMCXMLDownloader:
         print(f"📊 下载报告")
         print(f"{'='*60}")
         print(f"   搜索到:   {self.stats['searched']} 篇")
-        print(f"   下载成功: {self.stats['downloaded']} 篇")
+        print(f"   下载成功: {self.stats['downloaded']} 篇（有全文正文）")
+        print(f"   过滤掉:   {self.stats['filtered_no_fulltext']} 篇（只有摘要，无全文）")
         print(f"   跳过(已存在): {self.stats['skipped']} 篇")
         print(f"   下载失败: {self.stats['failed']} 篇")
         print(f"   总耗时:   {elapsed:.1f} 秒")
@@ -315,6 +343,7 @@ def main():
     parser.add_argument("--tool", type=str, default=DEFAULT_TOOL, help="工具标识")
     parser.add_argument("--email", type=str, default=DEFAULT_EMAIL, help="联系邮箱")
     parser.add_argument("--dry-run", action="store_true", help="只搜索不下载")
+    parser.add_argument("--no-filter", action="store_true", help="不过滤只有摘要的文章（默认开启过滤，只下载有全文正文的）")
 
     args = parser.parse_args()
 
@@ -324,6 +353,12 @@ def main():
         api_key=args.api_key,
         output_dir=args.output,
     )
+    # V2: 设置是否过滤只有摘要的文章
+    downloader.filter_no_fulltext = not args.no_filter
+    if not args.no_filter:
+        print("🔍 已开启全文过滤：只下载有完整正文的文章，自动过滤只有摘要的")
+    else:
+        print("⚠️  已关闭全文过滤：将下载所有文章（包括只有摘要的）")
 
     if args.query:
         pmc_ids = downloader.search(args.query, args.max)
