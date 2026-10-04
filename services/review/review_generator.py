@@ -580,18 +580,18 @@ class ReviewGenerator:
             return []
 
         try:
-            result = self.retriever.retrieve(
-                query=topic,
-                top_paragraphs=max_papers,
-                top_figures=0,
-            )
+            # V31.62: 从旧的 self.retriever.retrieve(...) 改成新的 self.retriever.search_papers(...)
+            papers = self.retriever.search_papers(query=topic, limit=max_papers)
             paragraphs = []
-            for p in result.get("paragraphs", []):
-                paper_id = p.get("paper_id", "")
-
+            for paper in papers:
+                paper_id = paper.get("paper_id", "")
                 # V26.0: 如果用户指定了要剔除的论文，跳过
                 if excluded_paper_ids and paper_id in excluded_paper_ids:
                     continue
+                for p in paper.get("paragraphs", []):
+                    p["paper_id"] = paper_id
+                    p["title"] = paper.get("title", "")
+                    paragraphs.append(p)
 
                 # V26.0: 如果用户指定了要选定的论文，只保留这些
                 if selected_paper_ids and paper_id not in selected_paper_ids:
