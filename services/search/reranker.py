@@ -10,7 +10,8 @@ from typing import List, Dict
 
 # BGE reranker: good on English academic text, small (~280MB), fast on CPU.
 # Alternative: "cross-encoder/ms-marco-MiniLM-L-6-v2"
-RERANK_MODEL = "BAAI/bge-reranker-base"
+# V31.74: 直接用本地路径，避免从 HuggingFace 下载
+RERANK_MODEL = "D:\\models\\models\\BAAI--bge-reranker-base"
 
 
 class Reranker:
