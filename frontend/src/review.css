@@ -1612,3 +1612,59 @@ body.resizing * {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── V32.1: 关键词编辑样式 ── */
+.section-keywords-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e8eaed;
+}
+.keywords-label {
+  font-size: 12px;
+  color: #5f6368;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.section-keywords-input {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  background: #fff;
+  color: #202124;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.section-keywords-input:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+}
+.para-keywords-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed #e8eaed;
+}
+.para-keywords-input {
+  flex: 1;
+  padding: 3px 6px;
+  font-size: 11px;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  background: #fafafa;
+  color: #5f6368;
+  outline: none;
+  transition: all 0.2s;
+}
+.para-keywords-input:focus {
+  border-color: #1a73e8;
+  background: #fff;
+  color: #202124;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+}

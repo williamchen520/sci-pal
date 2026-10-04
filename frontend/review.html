@@ -37,7 +37,6 @@
       <label for="editorMaxPapers">最大论文数</label>
       <input type="number" id="editorMaxPapers" value="20" min="5" max="50" style="width:70px;">
     </div>
-    <button id="generateOutlineBtn" class="btn-primary">生成大纲</button>
     <button id="searchAndAssignBtn" class="btn-secondary" title="按大纲内容搜索文献，然后自动分配给各章节和段落">🔍 按大纲搜索并分配</button>
     <button id="assignPapersBtn" class="btn-secondary" style="display:none;" title="自动计算论文与各章节的相似度，发配到相关章节">📌 确定大纲，自动发配</button>
     <button id="confirmAssignBtn" class="btn-secondary" style="display:none;" title="确认文献和章节的对应关系">✅ 最终确定</button>
@@ -58,17 +57,23 @@
         <span class="outline-stats" id="outlineStats"></span>
         <div class="panel-actions">
           <button id="saveOutlineBtn" class="btn-small" title="保存当前大纲">💾 保存</button>
-          <select id="loadOutlineSelect" class="select-small">
-            <option value="">-- 加载已保存 --</option>
+          <select id="templateSelect" class="select-small">
+            <option value="">-- 📂 选择模板/加载 --</option>
+            <optgroup label="📋 预设模板">
+              <option value="template_systematic">系统综述型 Systematic</option>
+              <option value="template_narrative">叙事型 Narrative</option>
+              <option value="template_methodological">方法学型 Methodological</option>
+            </optgroup>
+            <optgroup label="💾 已保存大纲" id="savedOutlineGroup">
+            </optgroup>
           </select>
-          <button id="loadOutlineBtn" class="btn-small">加载</button>
         </div>
       </div>
       <div class="outline-content" id="outlineContent">
         <div class="outline-empty">
           <div class="icon">📝</div>
-          <div>输入综述主题，点击"生成大纲"<br>系统将自动生成段落级大纲供你编辑</div>
-          <div class="hint">你可以：编辑标题/主题 · 增删章节段落 · 调整顺序 · 分配论文 · 保存/加载</div>
+          <div>从上方"选择模板/加载"下拉菜单选择大纲模板<br>然后编辑标题、关键词，按大纲搜索文献并生成综述</div>
+          <div class="hint">你可以：选择模板 · 编辑标题/关键词 · 增删章节段落 · 按大纲搜文献 · 保存/加载</div>
         </div>
       </div>
       <div class="editor-footer">

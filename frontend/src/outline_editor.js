@@ -25,6 +25,201 @@
   let currentReviewType = 'narrative';
   let savedOutlines = [];
 
+  // ── V32.1: 预设大纲模板 ──
+  const OUTLINE_TEMPLATES = {
+    template_systematic: {
+      name: '系统综述型 Systematic',
+      sections: [
+        {
+          title: '1. Introduction',
+          description: '研究背景与综述目的',
+          keywords: ['background', 'introduction', 'overview'],
+          paragraphs: [
+            { topic: '1.1 Research Background', description: '研究领域背景与重要性', keywords: ['background', 'context'] },
+            { topic: '1.2 Purpose and Scope', description: '综述目的、范围与方法', keywords: ['purpose', 'scope', 'methodology'] },
+          ]
+        },
+        {
+          title: '2. Methods',
+          description: '文献检索与筛选方法',
+          keywords: ['methods', 'methodology', 'search strategy'],
+          paragraphs: [
+            { topic: '2.1 Search Strategy', description: '文献检索策略与数据库', keywords: ['search strategy', 'databases', 'PubMed'] },
+            { topic: '2.2 Inclusion and Exclusion Criteria', description: '纳入与排除标准', keywords: ['inclusion criteria', 'exclusion criteria', 'PRISMA'] },
+            { topic: '2.3 Data Extraction and Quality Assessment', description: '数据提取与质量评估', keywords: ['data extraction', 'quality assessment', 'risk of bias'] },
+          ]
+        },
+        {
+          title: '3. Results',
+          description: '文献筛选结果与研究特征',
+          keywords: ['results', 'findings', 'study characteristics'],
+          paragraphs: [
+            { topic: '3.1 Study Selection', description: '文献筛选流程与结果', keywords: ['study selection', 'PRISMA flow', 'screening'] },
+            { topic: '3.2 Study Characteristics', description: '纳入研究的基本特征', keywords: ['study characteristics', 'sample size', 'design'] },
+            { topic: '3.3 Risk of Bias Assessment', description: '偏倚风险评估结果', keywords: ['risk of bias', 'quality assessment', 'Cochrane'] },
+          ]
+        },
+        {
+          title: '4. Synthesis of Evidence',
+          description: '证据综合与分析',
+          keywords: ['synthesis', 'meta-analysis', 'evidence'],
+          paragraphs: [
+            { topic: '4.1 Quantitative Synthesis', description: '定量综合（Meta分析）', keywords: ['meta-analysis', 'effect size', 'heterogeneity'] },
+            { topic: '4.2 Qualitative Synthesis', description: '定性综合与主题分析', keywords: ['qualitative synthesis', 'thematic analysis', 'narrative'] },
+            { topic: '4.3 Subgroup and Sensitivity Analysis', description: '亚组分析与敏感性分析', keywords: ['subgroup analysis', 'sensitivity analysis', 'moderator'] },
+          ]
+        },
+        {
+          title: '5. Discussion',
+          description: '结果讨论与意义',
+          keywords: ['discussion', 'interpretation', 'implications'],
+          paragraphs: [
+            { topic: '5.1 Summary of Evidence', description: '主要证据总结', keywords: ['summary', 'main findings'] },
+            { topic: '5.2 Comparison with Previous Studies', description: '与既往研究的比较', keywords: ['comparison', 'previous studies', 'literature'] },
+            { topic: '5.3 Limitations', description: '研究局限性', keywords: ['limitations', 'weaknesses', 'gaps'] },
+          ]
+        },
+        {
+          title: '6. Conclusion and Future Directions',
+          description: '结论与未来研究方向',
+          keywords: ['conclusion', 'future directions', 'recommendations'],
+          paragraphs: [
+            { topic: '6.1 Key Conclusions', description: '主要结论', keywords: ['conclusion', 'key findings'] },
+            { topic: '6.2 Future Research Directions', description: '未来研究方向', keywords: ['future research', 'directions', 'recommendations'] },
+          ]
+        },
+      ]
+    },
+    template_narrative: {
+      name: '叙事型 Narrative',
+      sections: [
+        {
+          title: '1. Introduction',
+          description: '研究背景与综述目的',
+          keywords: ['introduction', 'background', 'overview'],
+          paragraphs: [
+            { topic: '1.1 Historical Context', description: '研究领域的历史背景', keywords: ['history', 'background', 'context'] },
+            { topic: '1.2 Current State of the Field', description: '领域现状与关键问题', keywords: ['current state', 'key issues', 'overview'] },
+            { topic: '1.3 Scope and Objectives', description: '综述范围与目标', keywords: ['scope', 'objectives', 'purpose'] },
+          ]
+        },
+        {
+          title: '2. Molecular Mechanisms',
+          description: '分子机制',
+          keywords: ['molecular mechanisms', 'signaling', 'pathway'],
+          paragraphs: [
+            { topic: '2.1 Structural Basis', description: '结构基础', keywords: ['structure', 'domain', 'protein'] },
+            { topic: '2.2 Signaling Pathways', description: '信号通路', keywords: ['signaling', 'pathway', 'activation'] },
+            { topic: '2.3 Regulation and Feedback', description: '调控与反馈机制', keywords: ['regulation', 'feedback', 'negative regulation'] },
+          ]
+        },
+        {
+          title: '3. Physiological Functions',
+          description: '生理功能',
+          keywords: ['physiological functions', 'normal biology', 'homeostasis'],
+          paragraphs: [
+            { topic: '3.1 Development and Differentiation', description: '发育与分化', keywords: ['development', 'differentiation', 'cell fate'] },
+            { topic: '3.2 Immune Regulation', description: '免疫调控', keywords: ['immune', 'regulation', 'cytokine'] },
+            { topic: '3.3 Tissue Homeostasis', description: '组织稳态', keywords: ['homeostasis', 'tissue', 'maintenance'] },
+          ]
+        },
+        {
+          title: '4. Pathological Roles',
+          description: '病理作用',
+          keywords: ['pathological', 'disease', 'pathogenesis'],
+          paragraphs: [
+            { topic: '4.1 Gain-of-Function Diseases', description: '功能获得性疾病', keywords: ['gain-of-function', 'GOF', 'hyperactivation'] },
+            { topic: '4.2 Loss-of-Function Diseases', description: '功能丧失性疾病', keywords: ['loss-of-function', 'LOF', 'deficiency'] },
+            { topic: '4.3 Complex Disease Associations', description: '复杂疾病关联', keywords: ['complex disease', 'association', 'susceptibility'] },
+          ]
+        },
+        {
+          title: '5. Therapeutic Implications',
+          description: '治疗意义',
+          keywords: ['therapeutic', 'treatment', 'drug target'],
+          paragraphs: [
+            { topic: '5.1 Current Therapeutic Strategies', description: '当前治疗策略', keywords: ['current therapy', 'treatment', 'clinical'] },
+            { topic: '5.2 Emerging Drug Targets', description: '新兴药物靶点', keywords: ['drug target', 'emerging', 'novel'] },
+            { topic: '5.3 Challenges and Opportunities', description: '挑战与机遇', keywords: ['challenges', 'opportunities', 'translation'] },
+          ]
+        },
+        {
+          title: '6. Conclusion and Future Perspectives',
+          description: '结论与未来展望',
+          keywords: ['conclusion', 'future perspectives', 'outlook'],
+          paragraphs: [
+            { topic: '6.1 Summary of Progress', description: '研究进展总结', keywords: ['summary', 'progress', 'advances'] },
+            { topic: '6.2 Unresolved Questions', description: '未解决的科学问题', keywords: ['unresolved', 'questions', 'gaps'] },
+            { topic: '6.3 Future Research Directions', description: '未来研究方向', keywords: ['future directions', 'research', 'outlook'] },
+          ]
+        },
+      ]
+    },
+    template_methodological: {
+      name: '方法学型 Methodological',
+      sections: [
+        {
+          title: '1. Introduction',
+          description: '方法学背景与综述目的',
+          keywords: ['introduction', 'methodology', 'background'],
+          paragraphs: [
+            { topic: '1.1 Rationale for Methodological Review', description: '方法学综述的必要性', keywords: ['rationale', 'necessity', 'motivation'] },
+            { topic: '1.2 Scope and Objectives', description: '综述范围与目标', keywords: ['scope', 'objectives', 'purpose'] },
+          ]
+        },
+        {
+          title: '2. Existing Methods',
+          description: '现有方法综述',
+          keywords: ['existing methods', 'approaches', 'techniques'],
+          paragraphs: [
+            { topic: '2.1 Traditional Methods', description: '传统方法', keywords: ['traditional', 'conventional', 'classic'] },
+            { topic: '2.2 Modern Computational Methods', description: '现代计算方法', keywords: ['computational', 'machine learning', 'bioinformatics'] },
+            { topic: '2.3 Experimental Validation Methods', description: '实验验证方法', keywords: ['experimental', 'validation', 'assay'] },
+          ]
+        },
+        {
+          title: '3. Comparative Analysis',
+          description: '方法比较分析',
+          keywords: ['comparative analysis', 'comparison', 'benchmark'],
+          paragraphs: [
+            { topic: '3.1 Performance Comparison', description: '性能比较', keywords: ['performance', 'accuracy', 'benchmark'] },
+            { topic: '3.2 Advantages and Limitations', description: '优势与局限性', keywords: ['advantages', 'limitations', 'pros and cons'] },
+            { topic: '3.3 Applicability Domain', description: '适用范围', keywords: ['applicability', 'domain', 'use case'] },
+          ]
+        },
+        {
+          title: '4. Best Practices and Recommendations',
+          description: '最佳实践与建议',
+          keywords: ['best practices', 'recommendations', 'guidelines'],
+          paragraphs: [
+            { topic: '4.1 Method Selection Guidelines', description: '方法选择指南', keywords: ['selection', 'guidelines', 'decision tree'] },
+            { topic: '4.2 Experimental Design Recommendations', description: '实验设计建议', keywords: ['experimental design', 'recommendations', 'protocol'] },
+            { topic: '4.3 Reporting Standards', description: '报告标准', keywords: ['reporting', 'standards', 'checklist'] },
+          ]
+        },
+        {
+          title: '5. Emerging Trends and Future Directions',
+          description: '新兴趋势与未来方向',
+          keywords: ['emerging trends', 'future directions', 'innovation'],
+          paragraphs: [
+            { topic: '5.1 Technological Innovations', description: '技术创新', keywords: ['innovation', 'technology', 'breakthrough'] },
+            { topic: '5.2 Integration with Other Fields', description: '与其他领域的交叉融合', keywords: ['integration', 'interdisciplinary', 'cross-field'] },
+            { topic: '5.3 Future Research Priorities', description: '未来研究重点', keywords: ['future research', 'priorities', 'agenda'] },
+          ]
+        },
+        {
+          title: '6. Conclusion',
+          description: '结论',
+          keywords: ['conclusion', 'summary', 'take-home'],
+          paragraphs: [
+            { topic: '6.1 Key Takeaways', description: '核心要点', keywords: ['key takeaways', 'summary', 'highlights'] },
+            { topic: '6.2 Call to Action', description: '行动呼吁', keywords: ['call to action', 'next steps', 'community'] },
+          ]
+        },
+      ]
+    },
+  };
+
   // ── 模块实例 ──
   let outlineCore = null;
   let paperList = null;
@@ -52,14 +247,13 @@
     els.topicInput = document.getElementById('editorTopicInput');
     els.reviewTypeSelect = document.getElementById('editorReviewType');
     els.maxPapersInput = document.getElementById('editorMaxPapers');
-    els.generateOutlineBtn = document.getElementById('generateOutlineBtn');
     els.assignPapersBtn = document.getElementById('assignPapersBtn');  // V26.1
     els.searchAndAssignBtn = document.getElementById('searchAndAssignBtn');  // V31.75
     els.confirmAssignBtn = document.getElementById('confirmAssignBtn');  // V26.1
     els.generateReviewBtn = document.getElementById('generateReviewBtn');
     els.saveOutlineBtn = document.getElementById('saveOutlineBtn');
-    els.loadOutlineSelect = document.getElementById('loadOutlineSelect');
-    els.loadOutlineBtn = document.getElementById('loadOutlineBtn');
+    els.templateSelect = document.getElementById('templateSelect');  // V32.1: 模板选择下拉菜单
+    els.savedOutlineGroup = document.getElementById('savedOutlineGroup');  // V32.1: 已保存大纲分组
     els.swapLayoutBtn = document.getElementById('swapLayoutBtn');
     els.outlineStats = document.getElementById('outlineStats');
     els.editorMessage = document.getElementById('editorMessage');
@@ -83,17 +277,20 @@
 
     initModules();
 
-    els.generateOutlineBtn.addEventListener('click', handleGenerateOutline);
+    // V32.1: 模板选择下拉菜单的 change 事件
+    if (els.templateSelect) els.templateSelect.addEventListener('change', handleTemplateSelect);
     if (els.assignPapersBtn) els.assignPapersBtn.addEventListener('click', handleAssignPapers);  // V26.1
     if (els.searchAndAssignBtn) els.searchAndAssignBtn.addEventListener('click', handleSearchAndAssign);  // V31.75
     if (els.confirmAssignBtn) els.confirmAssignBtn.addEventListener('click', handleConfirmAssign);  // V26.1
     els.generateReviewBtn.addEventListener('click', handleGenerateReview);
     els.saveOutlineBtn.addEventListener('click', handleSaveOutline);
-    els.loadOutlineBtn.addEventListener('click', handleLoadOutline);
     if (els.swapLayoutBtn) els.swapLayoutBtn.addEventListener('click', swapLayout);
 
     els.topicInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') handleGenerateOutline();
+      if (e.key === 'Enter') {
+        // V32.1: 回车不再生成大纲，只是提示用户选择模板
+        showMessage('请从上方"选择模板/加载"下拉菜单选择大纲模板', 'info');
+      }
     });
 
     // V25.11: tab 切换
@@ -862,6 +1059,70 @@
     }
   }
 
+  // ── V32.1: 模板选择/加载 ──
+  function handleTemplateSelect() {
+    const value = els.templateSelect.value;
+    if (!value) return;
+
+    // 重置下拉菜单，方便下次选择同一个模板
+    els.templateSelect.value = '';
+
+    // 检查是预设模板还是已保存大纲
+    if (value.startsWith('template_')) {
+      // 预设模板
+      const template = OUTLINE_TEMPLATES[value];
+      if (!template) {
+        showMessage('模板不存在：' + value, 'error');
+        return;
+      }
+
+      // 深拷贝模板数据，避免修改原始模板
+      const outlineData = JSON.parse(JSON.stringify(template));
+
+      // 设置到大纲编辑器
+      outlineCore.setData(outlineData);
+
+      // 更新主题输入框
+      if (els.topicInput && currentTopic) {
+        els.topicInput.value = currentTopic;
+      }
+
+      showMessage('已加载模板：' + template.name + '，请编辑标题和关键词后搜索文献', 'success');
+      console.log('V32.1: 加载预设模板', template.name, outlineData.sections.length, '个章节');
+
+    } else if (value.startsWith('saved_')) {
+      // 已保存大纲
+      const name = value.substring(6);  // 去掉 "saved_" 前缀
+
+      // V32.1: 从后端重新获取完整的 outline data
+      try {
+        const resp = await fetch('/api/review/outline/saved/' + encodeURIComponent(name));
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.error || '加载失败');
+        }
+        const data = await resp.json();
+        outlineCore.setData(data.outline || { sections: [] });
+        currentTopic = data.topic || '';
+        currentReviewType = data.review_type || 'narrative';
+
+        if (currentTopic) els.topicInput.value = currentTopic;
+        if (els.reviewTypeSelect) els.reviewTypeSelect.value = currentReviewType;
+
+        papers = [];
+        refreshPaperList();
+        showMessage('大纲「' + (data.display_name || name) + '」已加载，请编辑后搜索文献', 'success');
+        console.log('V32.1: 加载已保存大纲', name, (data.outline?.sections?.length || 0), '个章节');
+
+        // V26.1: 加载已保存的大纲时，隐藏这两个按钮
+        if (els.assignPapersBtn) els.assignPapersBtn.style.display = 'none';
+        if (els.confirmAssignBtn) els.confirmAssignBtn.style.display = 'none';
+      } catch (e) {
+        showMessage('加载失败：' + e.message, 'error');
+      }
+    }
+  }
+
   async function handleSaveOutline() {
     const data = outlineCore ? outlineCore.getData() : null;
     if (!data || !data.sections || data.sections.length === 0) {
@@ -904,13 +1165,16 @@
       const data = await resp.json();
       savedOutlines = data.outlines || [];
 
-      els.loadOutlineSelect.innerHTML = '<option value="">-- 选择已保存的大纲 --</option>';
-      savedOutlines.forEach(function(o) {
-        const option = document.createElement('option');
-        option.value = o.name;
-        option.textContent = (o.display_name || o.name) + ' (' + o.section_count + '章 ' + o.paragraph_count + '段) - ' + (o.updated_at || '');
-        els.loadOutlineSelect.appendChild(option);
-      });
+      // V32.1: 把已保存大纲加到 templateSelect 的 savedOutlineGroup 里
+      if (els.savedOutlineGroup) {
+        els.savedOutlineGroup.innerHTML = '';
+        savedOutlines.forEach(function(o) {
+          const option = document.createElement('option');
+          option.value = 'saved_' + o.name;  // 加前缀区分预设模板
+          option.textContent = (o.display_name || o.name) + ' (' + o.section_count + '章 ' + o.paragraph_count + '段) - ' + (o.updated_at || '');
+          els.savedOutlineGroup.appendChild(option);
+        });
+      }
     } catch (e) {
       // 静默失败
     }

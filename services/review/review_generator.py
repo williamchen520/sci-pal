@@ -1758,19 +1758,42 @@ def search_and_assign_papers(
         sec_id = sec.get("section_id", "")
         sec_title = sec.get("title", "").strip()
 
-        # 收集章节的搜索关键词：章节标题 + 所有段落的主题
-        search_keywords = [sec_title]
-        for para in sec.get("paragraphs", []):
-            para_topic = para.get("topic", "").strip()
-            if para_topic and para_topic not in search_keywords:
-                search_keywords.append(para_topic)
+        # V32.1: 优先用章节和段落的 keywords 字段搜索；如果没有，就用标题和主题
+        section_keywords = sec.get("keywords", [])
+        if isinstance(section_keywords, str):
+            section_keywords = [k.strip() for k in section_keywords.split(',') if k.strip()]
 
-        # 组合成搜索查询（章节标题 + 前几个段落主题）
-        query = sec_title
-        if len(search_keywords) > 1:
-            query += " " + " ".join(search_keywords[1:3])  # 最多加2个段落主题
+        # 收集段落的 keywords
+        para_keywords_all = []
+        for para in sec.get("paragraphs", []):
+            para_kw = para.get("keywords", [])
+            if isinstance(para_kw, str):
+                para_kw = [k.strip() for k in para_kw.split(',') if k.strip()]
+            para_keywords_all.extend(para_kw)
+
+        # 组合搜索关键词
+        search_keywords = []
+        if section_keywords:
+            search_keywords.extend(section_keywords)
+        if para_keywords_all:
+            search_keywords.extend(para_keywords_all)
+
+        # 如果没有 keywords，就用标题和段落主题
+        if not search_keywords:
+            search_keywords = [sec_title]
+            for para in sec.get("paragraphs", []):
+                para_topic = para.get("topic", "").strip()
+                if para_topic and para_topic not in search_keywords:
+                    search_keywords.append(para_topic)
+
+        # 去重
+        search_keywords = list(dict.fromkeys(search_keywords))
+
+        # 组合成搜索查询（最多用前5个关键词）
+        query = " ".join(search_keywords[:5])
 
         print(f"\n  [{sec_idx+1}/{num_sections}] 章节: {sec_title[:40]}")
+        print(f"    搜索关键词: {search_keywords[:5]}")
         print(f"    搜索查询: {query[:60]}...")
 
         # 按章节关键词搜索

@@ -79,6 +79,15 @@
           '<button class="section-btn del" data-sec-idx="' + secIdx + '" title="删除此章节">✕</button>' +
           '</div></div>';
 
+        // V32.1: 章节关键词编辑字段
+        const sectionKeywords = (section.keywords || []).join(', ');
+        html += '<div class="section-keywords-row">' +
+          '<span class="keywords-label">🔑 关键词:</span>' +
+          '<input type="text" class="section-keywords-input" data-sec-idx="' + secIdx + '"' +
+          ' value="' + config.escapeHtml(sectionKeywords) + '"' +
+          ' placeholder="用逗号分隔，用于搜索文献" title="编辑章节关键词，用于搜索文献">' +
+          '</div>';
+
         // 段落列表
         html += '<div class="outline-paragraphs">';
         (section.paragraphs || []).forEach(function(para, paraIdx) {
@@ -94,6 +103,13 @@
             ' title="点击编辑段落主题">' + config.escapeHtml(para.topic) + '</div>' +
             '<div class="para-desc" contenteditable="true" data-sec-idx="' + secIdx + '" data-para-idx="' + paraIdx + '"' +
             ' title="点击编辑段落描述（可选）">' + config.escapeHtml(para.description || '点击添加段落描述...') + '</div>' +
+            // V32.1: 段落关键词编辑字段
+            '<div class="para-keywords-row">' +
+            '<span class="keywords-label">🔑</span>' +
+            '<input type="text" class="para-keywords-input" data-sec-idx="' + secIdx + '" data-para-idx="' + paraIdx + '"' +
+            ' value="' + config.escapeHtml((para.keywords || []).join(', ')) + '"' +
+            ' placeholder="关键词，用逗号分隔" title="编辑段落关键词，用于搜索文献">' +
+            '</div>' +
             '<div class="para-meta">' +
             '<span class="para-badge">段落 ' + (paraIdx + 1) + '</span>' +
             (assignedCount > 0
@@ -148,6 +164,25 @@
         });
       });
 
+      // V32.1: 章节关键词编辑
+      config.container.querySelectorAll('.section-keywords-input').forEach(function(el) {
+        el.addEventListener('blur', function() {
+          const secIdx = parseInt(this.dataset.secIdx);
+          const value = this.value.trim();
+          if (state.data.sections[secIdx]) {
+            if (value) {
+              state.data.sections[secIdx].keywords = value.split(',').map(function(k) { return k.trim(); }).filter(function(k) { return k; });
+            } else {
+              state.data.sections[secIdx].keywords = [];
+            }
+            if (config.onOutlineChanged) config.onOutlineChanged();
+          }
+        });
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+        });
+      });
+
       // 删除章节
       config.container.querySelectorAll('.section-btn.del').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
@@ -195,6 +230,26 @@
         });
         el.addEventListener('focus', function() {
           if (this.textContent.trim() === '点击添加段落描述...') this.textContent = '';
+        });
+        el.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+        });
+      });
+
+      // V32.1: 段落关键词编辑
+      config.container.querySelectorAll('.para-keywords-input').forEach(function(el) {
+        el.addEventListener('blur', function() {
+          const secIdx = parseInt(this.dataset.secIdx);
+          const paraIdx = parseInt(this.dataset.paraIdx);
+          const value = this.value.trim();
+          if (state.data.sections[secIdx] && state.data.sections[secIdx].paragraphs[paraIdx]) {
+            if (value) {
+              state.data.sections[secIdx].paragraphs[paraIdx].keywords = value.split(',').map(function(k) { return k.trim(); }).filter(function(k) { return k; });
+            } else {
+              state.data.sections[secIdx].paragraphs[paraIdx].keywords = [];
+            }
+            if (config.onOutlineChanged) config.onOutlineChanged();
+          }
         });
         el.addEventListener('keydown', function(e) {
           if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
