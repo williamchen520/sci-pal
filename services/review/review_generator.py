@@ -1718,7 +1718,7 @@ def search_and_assign_papers(
     print(f"📝 共 {len(search_queries)} 个搜索查询")
 
     # 2. 按每个查询搜索论文
-    all_papers = {}  # paper_id -> paper dict
+    all_papers = {}  # paper_id -> {"paper": paper_dict, "count": 出现次数}
     for i, query in enumerate(search_queries):
         try:
             print(f"  [{i+1}/{len(search_queries)}] 搜索: {query[:50]}...")
@@ -1734,17 +1734,26 @@ def search_and_assign_papers(
                     continue
                 if pid not in all_papers:
                     all_papers[pid] = {
-                        "paper_id": pid,
-                        "title": p.get("paper_title", pid),
-                        "source": p.get("source", "full_text"),
+                        "paper": {
+                            "paper_id": pid,
+                            "title": p.get("paper_title", pid),
+                            "source": p.get("source", "full_text"),
+                        },
+                        "count": 0,
                     }
+                all_papers[pid]["count"] += 1
             print(f"    找到 {len(paragraphs)} 个段落，累计 {len(all_papers)} 篇论文")
         except Exception as e:
             print(f"    ⚠️  搜索失败: {e}")
             continue
 
-    papers = list(all_papers.values())
-    print(f"✅ 搜索完成：共 {len(papers)} 篇论文")
+    # V31.77: 按出现次数排序，取前 max_papers 篇（出现次数越多越相关）
+    sorted_papers = sorted(all_papers.values(), key=lambda x: x["count"], reverse=True)
+    if len(sorted_papers) > max_papers:
+        print(f"📊 搜索到 {len(sorted_papers)} 篇论文，按相关性筛选前 {max_papers} 篇")
+        sorted_papers = sorted_papers[:max_papers]
+    papers = [item["paper"] for item in sorted_papers]
+    print(f"✅ 搜索完成：共 {len(papers)} 篇论文（已限定最多 {max_papers} 篇）")
 
     # 3. 分配论文到章节和段落
     print(f"📋 开始分配论文到章节和段落...")
