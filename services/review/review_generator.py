@@ -234,8 +234,10 @@ class ReviewGenerator:
         # V25.3: 关系抽取器 + 冲突识别 Agent —— 用7b
         from .relation_extractor import RelationExtractor
         from .conflict_detector import ConflictDetector
-        self.relation_extractor = RelationExtractor(self._light_llm)
-        self.conflict_detector = ConflictDetector(self._light_llm)
+        # V31.81: 关系抽取不调用 LLM，只用关键词粗筛（196个证据卡片调用LLM会卡住几小时）
+        self.relation_extractor = RelationExtractor(None)
+        # V31.81: 冲突检测也不调用 LLM，避免卡住
+        self.conflict_detector = ConflictDetector(None)
         # V25.6: 保存最后一次生成的 draft 和 evidence_cards，用于前端点击溯源
         self._last_draft: Optional[ReviewDraft] = None
         self._last_evidence_cards: list[EvidenceCard] = []
