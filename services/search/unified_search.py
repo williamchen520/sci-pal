@@ -38,18 +38,24 @@ class UnifiedSearch:
         cursor = conn.cursor()
 
         # 用 FTS5 全文检索（unified_papers_fts 表只有 paper_id、title、journal、abstract 字段）
-        # V31.66: 把查询里的特殊字符转义，避免 FTS5 语法错误
+        # V31.67: 把查询词拆成单词，用 OR 连接，避免所有单词都必须匹配
         import re
         safe_query = re.sub(r'[^\w\s]', ' ', query)
-        safe_query = ' '.join(safe_query.split())
-        if not safe_query:
-            safe_query = query
+        words = safe_query.split()
+        # 过滤掉停用词
+        stop_words = {'in', 'the', 'of', 'and', 'to', 'for', 'with', 'on', 'at', 'by', 'from', 'as', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought', 'used', 'a', 'an', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'its', 'our', 'their', 'mine', 'yours', 'hers', 'ours', 'theirs', 'what', 'which', 'who', 'whom', 'whose', 'where', 'when', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'because', 'if', 'then', 'else', 'while', 'although', 'though', 'after', 'before', 'since', 'until', 'unless', 'however', 'therefore', 'thus', 'hence', 'moreover', 'furthermore', 'nevertheless', 'nonetheless', 'regardless', 'anyway', 'anyhow', 'besides', 'except', 'including', 'regarding', 'concerning', 'about', 'above', 'below', 'between', 'through', 'during', 'within', 'without', 'along', 'across', 'behind', 'beside', 'beyond', 'inside', 'outside', 'under', 'over', 'underneath', 'upon', 'via', 'per', 'vs', 'etc', 'e.g', 'i.e'}
+        keywords = [w for w in words if w.lower() not in stop_words and len(w) > 1]
+        if keywords:
+            # 用 OR 连接
+            fts_query = ' OR '.join(keywords)
+        else:
+            fts_query = safe_query if safe_query else query
         cursor.execute("""
             SELECT paper_id, title, journal, abstract
             FROM unified_papers_fts
             WHERE unified_papers_fts MATCH ?
             LIMIT ?
-        """, (safe_query, limit))
+        """, (fts_query, limit))
 
         rows = cursor.fetchall()
         conn.close()
