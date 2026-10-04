@@ -1687,14 +1687,14 @@ def search_and_assign_papers(
     max_papers: int = 100,
     retriever=None,
 ) -> tuple[dict, list[dict]]:
-    """V31.75: 按大纲内容搜索论文，然后自动分配给对应的章节和段落。
+    """V31.79: 按大纲内容搜索论文，然后自动分配给对应的章节和段落。
 
-    流程：
-    1. 按综述主题搜索一批论文
-    2. 按每个章节的标题和描述搜索更多论文
-    3. 收集所有搜索到的论文（去重）
-    4. 调用 assign_papers_to_outline 分配论文
-    5. 返回更新后的大纲和论文列表
+    流程（按用户思路重写）：
+    1. 遍历每个章节
+    2. 按章节标题 + 段落主题搜索论文
+    3. 每个章节取排名靠前的论文
+    4. 总数不超过 max_papers
+    5. 直接分配到对应的章节（不需要后面再分配）
 
     Args:
         outline: 大纲 JSON {"sections": [...]}
@@ -1713,64 +1713,97 @@ def search_and_assign_papers(
 
     print(f"🔍 开始按大纲内容搜索论文...")
 
-    # 1. 收集所有搜索查询（综述主题 + 每个章节的标题）
-    search_queries = [topic]
-    for sec in outline.get("sections", []):
+    sections = outline.get("sections", [])
+    num_sections = len(sections)
+    # 每个章节平均分配的论文数
+    papers_per_section = max(1, max_papers // num_sections)
+    print(f"📊 共 {num_sections} 个章节，每章节约 {papers_per_section} 篇论文，总数不超过 {max_papers}")
+
+    all_papers = {}  # paper_id -> paper dict
+    total_assigned = 0
+
+    # 1. 遍历每个章节，按章节关键词搜索
+    for sec_idx, sec in enumerate(sections):
+        sec_id = sec.get("section_id", "")
         sec_title = sec.get("title", "").strip()
-        if sec_title and sec_title not in search_queries:
-            search_queries.append(sec_title)
 
-    print(f"📝 共 {len(search_queries)} 个搜索查询")
+        # 收集章节的搜索关键词：章节标题 + 所有段落的主题
+        search_keywords = [sec_title]
+        for para in sec.get("paragraphs", []):
+            para_topic = para.get("topic", "").strip()
+            if para_topic and para_topic not in search_keywords:
+                search_keywords.append(para_topic)
 
-    # 2. 按每个查询搜索论文
-    all_papers = {}  # paper_id -> {"paper": paper_dict, "count": 出现次数}
-    for i, query in enumerate(search_queries):
+        # 组合成搜索查询（章节标题 + 前几个段落主题）
+        query = sec_title
+        if len(search_keywords) > 1:
+            query += " " + " ".join(search_keywords[1:3])  # 最多加2个段落主题
+
+        print(f"\n  [{sec_idx+1}/{num_sections}] 章节: {sec_title[:40]}")
+        print(f"    搜索查询: {query[:60]}...")
+
+        # 按章节关键词搜索
         try:
-            print(f"  [{i+1}/{len(search_queries)}] 搜索: {query[:50]}...")
             result = retriever.retrieve(
                 query=query,
-                top_paragraphs=max_papers,
+                top_paragraphs=papers_per_section * 2,  # 多搜一些，后面去重
                 top_figures=0,
             )
             paragraphs = result.get("paragraphs", [])
+
+            # 收集这个章节的论文（去重，按搜索排名）
+            sec_paper_ids = []
             for p in paragraphs:
                 pid = p.get("paper_id", "")
                 if not pid:
                     continue
                 if pid not in all_papers:
                     all_papers[pid] = {
-                        "paper": {
-                            "paper_id": pid,
-                            "title": p.get("paper_title", pid),
-                            "source": p.get("source", "full_text"),
-                        },
-                        "count": 0,
+                        "paper_id": pid,
+                        "title": p.get("paper_title", pid),
+                        "source": p.get("source", "full_text"),
                     }
-                all_papers[pid]["count"] += 1
-            print(f"    找到 {len(paragraphs)} 个段落，累计 {len(all_papers)} 篇论文")
+                if pid not in sec_paper_ids:
+                    sec_paper_ids.append(pid)
+                if len(sec_paper_ids) >= papers_per_section:
+                    break
+
+            # 直接分配到这个章节
+            sec["assigned_paper_ids"] = sec_paper_ids
+            total_assigned += len(sec_paper_ids)
+            print(f"    ✅ 分配 {len(sec_paper_ids)} 篇论文到这个章节")
+
+            # 段落级分配：按段落主题匹配
+            for para in sec.get("paragraphs", []):
+                para_topic = para.get("topic", "").strip()
+                para_keywords = set(para_topic.lower().split())
+
+                para_papers = []
+                for pid in sec_paper_ids:
+                    paper = all_papers.get(pid, {})
+                    title = paper.get("title", "")
+                    paper_keywords = set(title.lower().split())
+                    overlap = len(paper_keywords & para_keywords)
+                    if overlap > 0:
+                        para_papers.append(pid)
+
+                # 如果段落没有匹配到论文，就分配这个章节的前2篇
+                if not para_papers and sec_paper_ids:
+                    para_papers = sec_paper_ids[:2]
+
+                para["assigned_paper_ids"] = para_papers
+
         except Exception as e:
             print(f"    ⚠️  搜索失败: {e}")
+            sec["assigned_paper_ids"] = []
             continue
 
-    # V31.77: 按出现次数排序，取前 max_papers 篇（出现次数越多越相关）
-    sorted_papers = sorted(all_papers.values(), key=lambda x: x["count"], reverse=True)
-    if len(sorted_papers) > max_papers:
-        print(f"📊 搜索到 {len(sorted_papers)} 篇论文，按相关性筛选前 {max_papers} 篇")
-        sorted_papers = sorted_papers[:max_papers]
-    papers = [item["paper"] for item in sorted_papers]
-    print(f"✅ 搜索完成：共 {len(papers)} 篇论文（已限定最多 {max_papers} 篇）")
+        # 总数控制：如果已经达到 max_papers，就停止
+        if total_assigned >= max_papers:
+            print(f"\n⚠️  已达到最大论文数 {max_papers}，停止搜索")
+            break
 
-    # 3. 分配论文到章节和段落
-    print(f"📋 开始分配论文到章节和段落...")
-    updated_outline = assign_papers_to_outline(outline, papers, None)
+    papers = list(all_papers.values())
+    print(f"\n✅ 搜索完成：共 {len(papers)} 篇论文，分配 {total_assigned} 篇次")
 
-    # 统计分配结果
-    total_assigned = 0
-    for sec in updated_outline.get("sections", []):
-        sec_assigned = len(sec.get("assigned_paper_ids", []))
-        total_assigned += sec_assigned
-        print(f"  {sec.get('title', '')}: {sec_assigned} 篇论文")
-
-    print(f"✅ 分配完成：共分配 {total_assigned} 篇次")
-
-    return updated_outline, papers
+    return outline, papers
