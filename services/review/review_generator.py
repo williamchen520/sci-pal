@@ -332,8 +332,10 @@ class ReviewGenerator:
             warnings.append(f"📋 使用传入大纲：{len(outline.sections)} 个章节，{total_paragraphs} 个段落。")
 
         # ── Step 3.5: 关系抽取 + 冲突识别（V25.3）──
+        print(f"🔗 开始关系抽取...")
         relations = self.relation_extractor.extract(evidence_cards)
         contradictions = [r for r in relations if r.relation_type.value == "contradicts"]
+        print(f"✅ 关系抽取完成：{len(relations)} 条关系，{len(contradictions)} 条矛盾")
         warnings.append(f"🔗 抽取到 {len(relations)} 条证据间关系（{len(contradictions)} 条矛盾）")
 
         # V31.24: 写正文 + 冲突检测 并行处理
@@ -783,16 +785,21 @@ class ReviewGenerator:
         all_sentences: list[ReviewSentence] = []
         sent_seq = 0
 
-        for section in outline.sections:
+        print(f"✍️  开始撰写正文，共 {len(outline.sections)} 个章节...")
+        for sec_idx, section in enumerate(outline.sections):
             # V31.8: 不管有没有段落级大纲，都按章节写（减少调用次数）
             section_evidence = [
                 evidence_dict[eid] for eid in section.assigned_evidence_ids
                 if eid in evidence_dict
             ]
+            print(f"  [{sec_idx+1}/{len(outline.sections)}] {section.title[:40]}: {len(section_evidence)} 条证据")
             if not section_evidence:
+                print(f"    ⚠️  没有证据，跳过此章节")
                 continue
 
+            print(f"    正在调用 LLM 撰写此章节...")
             section_text = self._write_section(section, section_evidence, review_type=review_type, language=language)
+            print(f"    ✅ 撰写完成，{len(section_text)} 字符")
 
             sentences = self._split_and_link(
                 section_text, section.section_id, section_evidence, sent_seq
