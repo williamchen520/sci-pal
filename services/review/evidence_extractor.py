@@ -203,7 +203,8 @@ class EvidenceExtractor:
                 original_quote=text[:500],
                 paper_id=para["paper_id"],
                 para_id=para["para_id"],
-                section_l1=para.get("section_l1", ""),
+                # V31.68: 修复 section_l1 为 None 的问题
+                section_l1=para.get("section_l1") or "",
                 page=para.get("page", 0),
                 paper_title=para.get("paper_title", ""),
                 confidence=1.0,
