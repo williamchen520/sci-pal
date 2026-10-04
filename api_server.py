@@ -1194,6 +1194,172 @@ def download_status():
         return jsonify({"error": f"查询任务状态失败: {str(e)}"}), 500
 
 
+# ============================================================
+# V33.3: 下载历史、队列管理、失败重试 API
+# ============================================================
+
+@app.route("/api/search/download_history", methods=["GET"])
+def download_history():
+    """
+    V33.3: 获取下载历史记录（按时间倒序）。
+
+    Query params:
+      limit: 返回条数（默认 20，最多 50）
+
+    Returns:
+      {
+        "tasks": [...],  // 任务列表
+        "total": int,
+        "queue_status": { current_task_id, queue_length, queued_task_ids }
+      }
+    """
+    limit = min(int(request.args.get("limit", 20)), 50)
+
+    try:
+        from services.search.online_downloader import get_task_manager
+        manager = get_task_manager()
+        tasks = manager.list_tasks(limit=limit)
+        queue_status = manager.get_queue_status()
+
+        return jsonify({
+            "tasks": tasks,
+            "total": len(tasks),
+            "queue_status": queue_status,
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"获取下载历史失败: {str(e)}"}), 500
+
+
+@app.route("/api/search/download_queue", methods=["GET"])
+def download_queue_status():
+    """
+    V33.3: 获取下载队列状态。
+
+    Returns:
+      {
+        "current_task_id": str | null,
+        "queue_length": int,
+        "queued_task_ids": [...],
+        "current_task": {...} | null  // 当前任务详情
+      }
+    """
+    try:
+        from services.search.online_downloader import get_task_manager
+        manager = get_task_manager()
+        queue_status = manager.get_queue_status()
+
+        # 获取当前任务详情
+        current_task = None
+        if queue_status["current_task_id"]:
+            task = manager.get_task(queue_status["current_task_id"])
+            if task:
+                current_task = task.to_dict()
+
+        return jsonify({
+            **queue_status,
+            "current_task": current_task,
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"获取队列状态失败: {str(e)}"}), 500
+
+
+@app.route("/api/search/retry_download", methods=["POST"])
+def retry_download():
+    """
+    V33.3: 重试下载失败的文献。
+
+    两种模式：
+      1. 指定 task_id：重试该任务中下载失败的 PMCID
+      2. 指定 pmc_ids：直接重试指定的 PMCID 列表
+
+    Request body (JSON):
+      task_id: 任务 ID（可选，与 pmc_ids 二选一）
+      pmc_ids: PMCID 列表（可选，与 task_id 二选一）
+
+    Returns:
+      {
+        "task_id": str,
+        "retry_count": int,
+        "message": str
+      }
+    """
+    data = request.get_json(silent=True) or {}
+    task_id = data.get("task_id", "").strip()
+    pmc_ids = data.get("pmc_ids", [])
+
+    # 如果指定了 task_id，从该任务中获取失败的 PMCID
+    if task_id:
+        try:
+            from services.search.online_downloader import get_task_manager
+            manager = get_task_manager()
+            task = manager.get_task(task_id)
+            if task is None:
+                return jsonify({"error": f"任务不存在: {task_id}"}), 404
+            pmc_ids = task.failed_pmc_ids or []
+            if not pmc_ids:
+                return jsonify({"error": "该任务没有失败的文献"}), 400
+        except Exception as e:
+            return jsonify({"error": f"获取任务失败: {str(e)}"}), 500
+
+    if not pmc_ids:
+        return jsonify({"error": "缺少 pmc_ids 或 task_id 参数"}), 400
+
+    # 规范化 PMCID
+    normalized_ids = []
+    for pid in pmc_ids:
+        pid = str(pid).strip()
+        if not pid:
+            continue
+        if not pid.upper().startswith("PMC"):
+            pid = f"PMC{pid}"
+        normalized_ids.append(pid.upper())
+
+    if not normalized_ids:
+        return jsonify({"error": "PMCID 列表为空"}), 400
+
+    try:
+        from services.search.online_downloader import get_online_downloader
+        downloader = get_online_downloader()
+        new_task_id = downloader.start_download(normalized_ids)
+
+        return jsonify({
+            "task_id": new_task_id,
+            "retry_count": len(normalized_ids),
+            "message": f"已启动重试任务，共 {len(normalized_ids)} 篇文献",
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"启动重试任务失败: {str(e)}"}), 500
+
+
+@app.route("/api/search/clear_download_history", methods=["POST"])
+def clear_download_history():
+    """
+    V33.3: 清空下载历史记录（只保留正在运行的）。
+
+    Returns:
+      { "cleared": int, "message": str }
+    """
+    try:
+        from services.search.online_downloader import get_task_manager
+        manager = get_task_manager()
+        cleared = manager.clear_history()
+
+        return jsonify({
+            "cleared": cleared,
+            "message": f"已清空 {cleared} 条历史记录",
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"清空历史失败: {str(e)}"}), 500
+
+
 @app.route("/api/papers/parse", methods=["POST"])
 def parse_local_paper():
     """V25.14: 触发解析一篇本地未解析的 PDF 文献。

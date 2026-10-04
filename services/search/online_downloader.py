@@ -59,7 +59,7 @@ class DownloadTask:
         self.pmc_ids = pmc_ids
         self.total = len(pmc_ids)
 
-        # 阶段：pending → downloading → importing → indexing → completed / failed
+        # 阶段：pending → queued → downloading → importing → indexing → completed / failed
         self.status = "pending"
         self.current_stage = "pending"
 
@@ -72,6 +72,9 @@ class DownloadTask:
 
         # 新下载的论文 ID（用于增量导入和索引）
         self.new_paper_ids: List[str] = []
+
+        # V33.3: 下载失败的 PMCID 列表（用于重试）
+        self.failed_pmc_ids: List[str] = []
 
         # 错误信息
         self.error: Optional[str] = None
@@ -93,9 +96,11 @@ class DownloadTask:
             "imported": self.imported,
             "indexed": self.indexed,
             "new_paper_count": len(self.new_paper_ids),
+            "failed_pmc_ids": self.failed_pmc_ids,  # V33.3: 失败列表
             "error": self.error,
             "elapsed_seconds": round(elapsed, 1),
             "progress_percent": self._progress_percent(),
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.start_time)),
         }
 
     def _progress_percent(self) -> int:
@@ -113,25 +118,237 @@ class DownloadTask:
 class DownloadTaskManager:
     """
     后台下载任务管理器（单例）。
+
+    V33.3 新增：
+      - 任务持久化：保存到 data/download_tasks.json，重启不丢失
+      - 任务队列：同时只执行一个下载任务（避免 NCBI 限速），其余排队
+      - 失败重试：记录失败的 PMCID，可单独重试
     """
+
+    PERSIST_FILE = Path("data/download_tasks.json")
+    MAX_HISTORY = 50  # 最多保留 50 条历史记录
+
     def __init__(self):
         self.tasks: Dict[str, DownloadTask] = {}
         self._lock = threading.Lock()
+        self._queue: List[str] = []  # 任务队列（task_id 列表）
+        self._current_task_id: Optional[str] = None  # 当前正在执行的任务
+        self._load_from_disk()  # 启动时加载历史任务
+
+    def _load_from_disk(self):
+        """从 JSON 文件加载历史任务（持久化）。"""
+        try:
+            if self.PERSIST_FILE.exists():
+                import json
+                with open(self.PERSIST_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                # 只恢复已完成/失败的任务（正在运行的重启后标记为 failed）
+                for task_data in data.get("tasks", []):
+                    task_id = task_data.get("task_id")
+                    if not task_id:
+                        continue
+                    # 重建 DownloadTask 对象（只恢复关键字段）
+                    task = DownloadTask(task_id, task_data.get("pmc_ids", []))
+                    task.status = task_data.get("status", "failed")
+                    task.current_stage = task_data.get("current_stage", "failed")
+                    task.downloaded = task_data.get("downloaded", 0)
+                    task.download_failed = task_data.get("download_failed", 0)
+                    task.download_skipped = task_data.get("download_skipped", 0)
+                    task.imported = task_data.get("imported", 0)
+                    task.indexed = task_data.get("indexed", 0)
+                    task.new_paper_ids = task_data.get("new_paper_ids", [])
+                    task.failed_pmc_ids = task_data.get("failed_pmc_ids", [])
+                    task.error = task_data.get("error")
+                    task.start_time = task_data.get("start_time", time.time())
+                    task.end_time = task_data.get("end_time")
+                    # 如果重启时任务还在运行，标记为失败
+                    if task.status in ("running", "pending", "queued"):
+                        task.status = "failed"
+                        task.current_stage = "failed"
+                        task.error = "服务重启，任务中断"
+                        task.end_time = time.time()
+                    self.tasks[task_id] = task
+                print(f"📂 加载了 {len(self.tasks)} 条下载历史记录")
+        except Exception as e:
+            print(f"⚠️  加载下载历史失败: {e}")
+
+    def _save_to_disk(self):
+        """保存任务到 JSON 文件（持久化）。"""
+        try:
+            import json
+            self.PERSIST_FILE.parent.mkdir(parents=True, exist_ok=True)
+            # 只保存已完成/失败的任务（不保存正在运行的，避免重启后状态混乱）
+            # 但保留最近 MAX_HISTORY 条
+            all_tasks = sorted(
+                self.tasks.values(),
+                key=lambda t: t.start_time,
+                reverse=True,
+            )[:self.MAX_HISTORY]
+
+            data = {
+                "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "tasks": [
+                    {
+                        "task_id": t.task_id,
+                        "pmc_ids": t.pmc_ids,
+                        "status": t.status,
+                        "current_stage": t.current_stage,
+                        "total": t.total,
+                        "downloaded": t.downloaded,
+                        "download_failed": t.download_failed,
+                        "download_skipped": t.download_skipped,
+                        "imported": t.imported,
+                        "indexed": t.indexed,
+                        "new_paper_ids": t.new_paper_ids,
+                        "failed_pmc_ids": t.failed_pmc_ids,
+                        "error": t.error,
+                        "start_time": t.start_time,
+                        "end_time": t.end_time,
+                    }
+                    for t in all_tasks
+                ],
+            }
+            with open(self.PERSIST_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"⚠️  保存下载历史失败: {e}")
 
     def create_task(self, pmc_ids: List[str]) -> DownloadTask:
+        """创建下载任务。如果当前有任务在运行，新任务进入队列。"""
         task_id = f"dl_{uuid.uuid4().hex[:12]}"
         task = DownloadTask(task_id, pmc_ids)
+
         with self._lock:
             self.tasks[task_id] = task
+
+            # 判断是否需要排队
+            if self._current_task_id is not None:
+                task.status = "queued"
+                task.current_stage = "queued"
+                self._queue.append(task_id)
+                print(f"📋 任务 {task_id} 已加入队列（当前队列长度: {len(self._queue)}）")
+            else:
+                self._current_task_id = task_id
+
+        self._save_to_disk()
         return task
+
+    def mark_task_started(self, task_id: str):
+        """标记任务开始执行。"""
+        with self._lock:
+            self._current_task_id = task_id
+            task = self.tasks.get(task_id)
+            if task:
+                task.status = "running"
+                task.current_stage = "downloading"
+
+    def mark_task_completed(self, task_id: str):
+        """标记任务完成，并启动队列中的下一个任务。"""
+        with self._lock:
+            self._current_task_id = None
+            task = self.tasks.get(task_id)
+            if task:
+                task.status = "completed"
+                task.current_stage = "completed"
+                task.end_time = time.time()
+
+            # 启动队列中的下一个任务
+            next_task_id = None
+            if self._queue:
+                next_task_id = self._queue.pop(0)
+                self._current_task_id = next_task_id
+                next_task = self.tasks.get(next_task_id)
+                if next_task:
+                    next_task.status = "running"
+                    next_task.current_stage = "downloading"
+
+        self._save_to_disk()
+
+        # 启动下一个任务（在锁外执行，避免死锁）
+        if next_task_id:
+            print(f"🔄 启动队列中的下一个任务: {next_task_id}")
+            from services.search.online_downloader import get_online_downloader
+            downloader = get_online_downloader()
+            next_task = self.get_task(next_task_id)
+            if next_task:
+                thread = threading.Thread(
+                    target=downloader._run_download,
+                    args=(next_task,),
+                    daemon=True,
+                )
+                thread.start()
+
+    def mark_task_failed(self, task_id: str, error: str):
+        """标记任务失败，并启动队列中的下一个任务。"""
+        with self._lock:
+            self._current_task_id = None
+            task = self.tasks.get(task_id)
+            if task:
+                task.status = "failed"
+                task.current_stage = "failed"
+                task.error = error
+                task.end_time = time.time()
+
+            # 启动队列中的下一个任务
+            next_task_id = None
+            if self._queue:
+                next_task_id = self._queue.pop(0)
+                self._current_task_id = next_task_id
+                next_task = self.tasks.get(next_task_id)
+                if next_task:
+                    next_task.status = "running"
+                    next_task.current_stage = "downloading"
+
+        self._save_to_disk()
+
+        # 启动下一个任务
+        if next_task_id:
+            print(f"🔄 启动队列中的下一个任务: {next_task_id}")
+            from services.search.online_downloader import get_online_downloader
+            downloader = get_online_downloader()
+            next_task = self.get_task(next_task_id)
+            if next_task:
+                thread = threading.Thread(
+                    target=downloader._run_download,
+                    args=(next_task,),
+                    daemon=True,
+                )
+                thread.start()
 
     def get_task(self, task_id: str) -> Optional[DownloadTask]:
         with self._lock:
             return self.tasks.get(task_id)
 
-    def list_tasks(self) -> List[Dict]:
+    def list_tasks(self, limit: int = 20) -> List[Dict]:
+        """列出历史任务（按时间倒序）。"""
         with self._lock:
-            return [t.to_dict() for t in self.tasks.values()]
+            all_tasks = sorted(
+                self.tasks.values(),
+                key=lambda t: t.start_time,
+                reverse=True,
+            )[:limit]
+            return [t.to_dict() for t in all_tasks]
+
+    def get_queue_status(self) -> Dict:
+        """获取队列状态。"""
+        with self._lock:
+            return {
+                "current_task_id": self._current_task_id,
+                "queue_length": len(self._queue),
+                "queued_task_ids": list(self._queue),
+            }
+
+    def clear_history(self) -> int:
+        """清空历史记录（只保留正在运行的）。"""
+        with self._lock:
+            to_remove = []
+            for task_id, task in self.tasks.items():
+                if task.status in ("completed", "failed") and task_id != self._current_task_id:
+                    to_remove.append(task_id)
+            for task_id in to_remove:
+                del self.tasks[task_id]
+        self._save_to_disk()
+        return len(to_remove)
 
 
 # 全局单例
@@ -174,6 +391,8 @@ class OnlineDownloader:
         """
         启动后台下载任务（异步，立即返回 task_id）。
 
+        如果当前有任务正在执行，新任务会进入队列等待。
+
         Args:
             pmc_ids: PMCID 列表（如 ["PMC1234567", "PMC7654321"]）
 
@@ -181,6 +400,12 @@ class OnlineDownloader:
             task_id: 任务 ID，用于查询进度
         """
         task = get_task_manager().create_task(pmc_ids)
+
+        # 如果任务是 queued 状态，不立即启动（等队列调度）
+        if task.status == "queued":
+            if self.verbose:
+                print(f"📋 下载任务已加入队列: {task.task_id}（{len(pmc_ids)} 篇），当前队列位置: {len(get_task_manager()._queue)}")
+            return task.task_id
 
         # 后台线程执行
         thread = threading.Thread(
@@ -200,8 +425,8 @@ class OnlineDownloader:
         后台执行完整下载流程：下载 → 导入 → 建索引。
         """
         try:
-            task.status = "running"
-            task.current_stage = "downloading"
+            # V33.3: 标记任务开始执行
+            get_task_manager().mark_task_started(task.task_id)
 
             # ===== 阶段1：下载 =====
             if self.verbose:
@@ -231,6 +456,7 @@ class OnlineDownloader:
                     task.new_paper_ids.append(pmc_id)
                 else:
                     task.download_failed += 1
+                    task.failed_pmc_ids.append(pmc_id)  # V33.3: 记录失败的 PMCID
 
             if self.verbose:
                 print(f"\n  ✅ 下载完成: 新下载 {task.downloaded} + 已存在 {task.download_skipped} + 失败 {task.download_failed}")
@@ -257,9 +483,8 @@ class OnlineDownloader:
             self._incremental_index(task)
 
             # ===== 完成 =====
-            task.status = "completed"
-            task.current_stage = "completed"
-            task.end_time = time.time()
+            # V33.3: 使用任务管理器标记完成（会自动启动队列中的下一个任务）
+            get_task_manager().mark_task_completed(task.task_id)
 
             if self.verbose:
                 print(f"\n{'='*60}")
@@ -269,13 +494,14 @@ class OnlineDownloader:
                 print(f"   失败: {task.download_failed} 篇")
                 print(f"   导入: {task.imported} 篇")
                 print(f"   索引: {task.indexed} 篇")
+                if task.failed_pmc_ids:
+                    print(f"   失败列表: {', '.join(task.failed_pmc_ids)}")
                 print(f"   总耗时: {task.end_time - task.start_time:.1f} 秒")
                 print(f"{'='*60}")
 
         except Exception as e:
-            task.status = "failed"
-            task.error = str(e)
-            task.end_time = time.time()
+            # V33.3: 使用任务管理器标记失败（会自动启动队列中的下一个任务）
+            get_task_manager().mark_task_failed(task.task_id, str(e))
             import traceback
             traceback.print_exc()
             if self.verbose:

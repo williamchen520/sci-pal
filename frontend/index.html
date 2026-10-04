@@ -64,6 +64,66 @@
   .progress-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #d97706); border-radius: 4px; transition: width .3s; }
   .progress-text { font-size: 12px; color: #92400e; margin-top: 4px; }
   .stage-badge { display: inline-block; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+  /* V33.3: Toast 通知 */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
+  .toast { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 16px 20px; min-width: 300px; max-width: 400px; border-left: 4px solid #52c41a; animation: toastSlideIn .3s ease-out; }
+  .toast.success { border-left-color: #52c41a; }
+  .toast.error { border-left-color: #ea6668; }
+  .toast.warning { border-left-color: #faad14; }
+  .toast.info { border-left-color: #4f6b9a; }
+  .toast-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .toast-message { font-size: 13px; color: #6b7280; line-height: 1.5; }
+  .toast-actions { margin-top: 10px; display: flex; gap: 8px; }
+  .toast-actions button { padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; }
+  .toast-actions .btn-primary { background: #4f6b9a; color: #fff; }
+  .toast-actions .btn-secondary { background: #e4e3dd; color: #1a1b1c; }
+  .toast-actions .btn-warning { background: #faad14; color: #fff; }
+  @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes toastSlideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+  .toast.hiding { animation: toastSlideOut .3s ease-in forwards; }
+  /* V33.3: 工具栏按钮 */
+  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .toolbar button { padding: 8px 14px; background: #fff; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .2s; }
+  .toolbar button:hover { border-color: var(--accent); background: var(--accent-light); }
+  .toolbar button .badge-count { background: var(--accent); color: #fff; border-radius: 10px; padding: 1px 6px; font-size: 11px; font-weight: 600; }
+  /* V33.3: 模态框 */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 700px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #6b7280; padding: 4px 8px; border-radius: 6px; }
+  .modal-close:hover { background: #f4f3ee; }
+  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+  .modal-footer button { padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
+  /* V33.3: 历史任务列表 */
+  .history-item { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+  .history-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .history-item-title { font-size: 13px; font-weight: 600; }
+  .history-item-status { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .history-item-status.completed { background: #dcfce7; color: #166534; }
+  .history-item-status.failed { background: #fee2e2; color: #991b1b; }
+  .history-item-status.running { background: #dbeafe; color: #1e40af; }
+  .history-item-status.queued { background: #fef3c7; color: #92400e; }
+  .history-item-meta { font-size: 12px; color: #6b7280; display: flex; gap: 12px; flex-wrap: wrap; }
+  .history-item-actions { margin-top: 8px; display: flex; gap: 8px; }
+  .history-item-actions button { padding: 4px 10px; border: 1px solid var(--border); background: #fff; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .history-item-actions button:hover { border-color: var(--accent); }
+  .history-item-actions .retry-btn { color: #92400e; border-color: #fde68a; background: #fffbeb; }
+  /* V33.3: 配置面板 */
+  .config-group { margin-bottom: 20px; }
+  .config-group-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .config-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f4f3ee; }
+  .config-item:last-child { border-bottom: none; }
+  .config-item-label { font-size: 13px; }
+  .config-item-desc { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .config-item input[type="number"] { width: 80px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+  .config-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+  .config-item select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+  /* V33.3: 队列状态提示 */
+  .queue-notice { background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: #92400e; display: flex; align-items: center; gap: 8px; }
+  .queue-notice .spinner { width: 14px; height: 14px; border: 2px solid #fde68a; border-top-color: #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -81,9 +141,21 @@
     </div>
     <span style="font-size:12px;color:var(--text2);">本地数据库 + PubMed + PMC 开放获取全文同时搜，自动去重，新文献可一键下载入库</span>
   </div>
+  <!-- V33.3: 工具栏 -->
+  <div class="toolbar">
+    <button onclick="openHistoryModal()">📋 下载历史 <span class="badge-count" id="historyBadge" style="display:none;">0</span></button>
+    <button onclick="openConfigModal()">⚙️ 设置</button>
+    <button onclick="refreshQueueStatus()" style="margin-left:auto;">🔄 刷新队列</button>
+  </div>
+  <!-- V33.3: 队列状态提示（默认隐藏） -->
+  <div id="queueNotice" style="display:none;"></div>
   <!-- 下载进度条（默认隐藏） -->
   <div id="downloadProgress" style="display:none;"></div>
   <div id="results"></div>
+  <!-- V33.3: Toast 通知容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+  <!-- V33.3: 模态框容器 -->
+  <div id="modalContainer"></div>
   <footer>Sci-Pal V26.0 · 检索 + 图谱 + Agentic + PDF阅读器 + 分块 + 过滤 + 社区 + 综述Agent + RAG问答</footer>
 </div>
 <script>
@@ -358,22 +430,406 @@ function pollDownloadStatus(taskId) {
       if (data.status === 'completed') {
         clearInterval(downloadPollTimer);
         downloadPollTimer = null;
-        if (text) text.textContent = '✅ 下载完成！共 ' + (data.downloaded + data.download_skipped) + ' 篇，新导入 ' + data.imported + ' 篇，索引 ' + data.indexed + ' 篇。3秒后自动刷新...';
+        if (text) text.textContent = '✅ 下载完成！共 ' + (data.downloaded + data.download_skipped) + ' 篇，新导入 ' + data.imported + ' 篇，索引 ' + data.indexed + ' 篇。';
+
+        // V33.3: 用 toast 通知替代 alert
+        const hasFailed = data.failed_pmc_ids && data.failed_pmc_ids.length > 0;
+        showToast({
+          type: hasFailed ? 'warning' : 'success',
+          title: hasFailed ? '⚠️ 下载完成（部分失败）' : '✅ 下载完成！',
+          message: '成功 ' + (data.downloaded + data.download_skipped) + ' 篇，导入 ' + data.imported + ' 篇，索引 ' + data.indexed + ' 篇' + (hasFailed ? '，失败 ' + data.failed_pmc_ids.length + ' 篇' : ''),
+          actions: hasFailed ? [
+            { label: '🔄 重试失败的 (' + data.failed_pmc_ids.length + ')', class: 'btn-warning', onclick: function() { retryFailedDownloads(data.failed_pmc_ids); } },
+            { label: '查看结果', class: 'btn-primary', onclick: function() { hideDownloadProgress(); doSearch(); } }
+          ] : [
+            { label: '查看结果', class: 'btn-primary', onclick: function() { hideDownloadProgress(); doSearch(); } }
+          ],
+          duration: 10000
+        });
+
+        // 3秒后自动刷新
         setTimeout(function() {
           hideDownloadProgress();
-          doSearch();  // 自动重新搜索，刷新结果
+          doSearch();
         }, 3000);
       } else if (data.status === 'failed') {
         clearInterval(downloadPollTimer);
         downloadPollTimer = null;
         if (text) text.textContent = '❌ 下载失败: ' + (data.error || '未知错误');
-        alert('下载失败: ' + (data.error || '未知错误'));
+        // V33.3: 用 toast 通知替代 alert
+        showToast({
+          type: 'error',
+          title: '❌ 下载失败',
+          message: data.error || '未知错误',
+          duration: 8000
+        });
       }
     } catch (e) {
       console.warn('轮询进度异常:', e);
     }
   }, 2000);  // 每2秒轮询一次
 }
+
+// ============================================================
+// V33.3: Toast 通知
+// ============================================================
+
+function showToast(options) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + (options.type || 'info');
+
+  let html = '';
+  if (options.title) html += '<div class="toast-title">' + esc(options.title) + '</div>';
+  if (options.message) html += '<div class="toast-message">' + esc(options.message) + '</div>';
+  if (options.actions && options.actions.length > 0) {
+    html += '<div class="toast-actions">';
+    options.actions.forEach(function(action, idx) {
+      html += '<button class="' + (action.class || 'btn-secondary') + '" data-action="' + idx + '">' + esc(action.label) + '</button>';
+    });
+    html += '</div>';
+  }
+  toast.innerHTML = html;
+
+  // 绑定按钮事件
+  if (options.actions) {
+    toast.querySelectorAll('button').forEach(function(btn, idx) {
+      btn.addEventListener('click', function() {
+        if (options.actions[idx] && options.actions[idx].onclick) {
+          options.actions[idx].onclick();
+        }
+        hideToast(toast);
+      });
+    });
+  }
+
+  container.appendChild(toast);
+
+  // 自动关闭
+  const duration = options.duration || 5000;
+  if (duration > 0) {
+    setTimeout(function() { hideToast(toast); }, duration);
+  }
+
+  return toast;
+}
+
+function hideToast(toast) {
+  if (!toast || toast.classList.contains('hiding')) return;
+  toast.classList.add('hiding');
+  setTimeout(function() {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 300);
+}
+
+// ============================================================
+// V33.3: 下载历史面板
+// ============================================================
+
+function openHistoryModal() {
+  fetch('/api/search/download_history?limit=20')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { showToast({ type: 'error', title: '获取历史失败', message: data.error }); return; }
+
+      let html = '';
+      if (!data.tasks || data.tasks.length === 0) {
+        html = '<div class="empty" style="padding:40px;text-align:center;color:#6b7280;">暂无下载历史</div>';
+      } else {
+        data.tasks.forEach(function(task) {
+          const statusClass = task.status;
+          const statusText = {
+            'completed': '✅ 已完成',
+            'failed': '❌ 失败',
+            'running': '🔄 进行中',
+            'queued': '📋 排队中',
+            'pending': '⏳ 等待中'
+          }[task.status] || task.status;
+
+          html += '<div class="history-item">';
+          html += '<div class="history-item-header">';
+          html += '<span class="history-item-title">' + esc(task.task_id) + '</span>';
+          html += '<span class="history-item-status ' + statusClass + '">' + statusText + '</span>';
+          html += '</div>';
+          html += '<div class="history-item-meta">';
+          html += '<span>📅 ' + (task.created_at || '') + '</span>';
+          html += '<span>📄 共 ' + task.total + ' 篇</span>';
+          html += '<span>✅ 成功 ' + (task.downloaded + task.download_skipped) + '</span>';
+          if (task.download_failed > 0) html += '<span style="color:#ea6668;">❌ 失败 ' + task.download_failed + '</span>';
+          html += '<span>⏱️ ' + task.elapsed_seconds + 's</span>';
+          html += '</div>';
+
+          // 失败的可以重试
+          if (task.failed_pmc_ids && task.failed_pmc_ids.length > 0) {
+            html += '<div class="history-item-actions">';
+            html += '<button class="retry-btn" onclick="retryTaskFailed(\'' + esc(task.task_id) + '\')">🔄 重试失败的 (' + task.failed_pmc_ids.length + ' 篇)</button>';
+            html += '</div>';
+          }
+
+          html += '</div>';
+        });
+      }
+
+      // 队列状态
+      let queueHtml = '';
+      if (data.queue_status && data.queue_status.queue_length > 0) {
+        queueHtml = '<div class="queue-notice"><div class="spinner"></div> 当前有 ' + data.queue_status.queue_length + ' 个任务排队中</div>';
+      }
+
+      showModal({
+        title: '📋 下载历史（共 ' + data.total + ' 条）',
+        body: queueHtml + html,
+        footer: '<button onclick="clearHistory()" style="background:#fee2e2;color:#991b1b;">🗑️ 清空历史</button><button onclick="closeModal()" class="btn-primary">关闭</button>'
+      });
+
+      // 更新历史徽章
+      updateHistoryBadge();
+    })
+    .catch(function(e) {
+      showToast({ type: 'error', title: '获取历史失败', message: e.message });
+    });
+}
+
+function retryTaskFailed(taskId) {
+  if (!confirm('确定重试该任务中下载失败的文献？')) return;
+  closeModal();
+  fetch('/api/search/retry_download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ task_id: taskId })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { showToast({ type: 'error', title: '重试失败', message: data.error }); return; }
+      showToast({ type: 'info', title: '🔄 重试任务已启动', message: data.message, duration: 5000 });
+      // 开始轮询新任务
+      showDownloadProgress(data.retry_count);
+      pollDownloadStatus(data.task_id);
+    })
+    .catch(function(e) {
+      showToast({ type: 'error', title: '重试失败', message: e.message });
+    });
+}
+
+function retryFailedDownloads(pmcIds) {
+  if (!pmcIds || pmcIds.length === 0) return;
+  fetch('/api/search/retry_download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pmc_ids: pmcIds })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { showToast({ type: 'error', title: '重试失败', message: data.error }); return; }
+      showToast({ type: 'info', title: '🔄 重试任务已启动', message: data.message, duration: 5000 });
+      showDownloadProgress(data.retry_count);
+      pollDownloadStatus(data.task_id);
+    })
+    .catch(function(e) {
+      showToast({ type: 'error', title: '重试失败', message: e.message });
+    });
+}
+
+function clearHistory() {
+  if (!confirm('确定清空所有下载历史？（正在运行的任务不会被删除）')) return;
+  fetch('/api/search/clear_download_history', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      showToast({ type: 'success', title: '✅ 已清空', message: data.message, duration: 3000 });
+      closeModal();
+      updateHistoryBadge();
+    })
+    .catch(function(e) {
+      showToast({ type: 'error', title: '清空失败', message: e.message });
+    });
+}
+
+function updateHistoryBadge() {
+  fetch('/api/search/download_history?limit=50')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      const badge = document.getElementById('historyBadge');
+      if (badge && data.total > 0) {
+        badge.textContent = data.total;
+        badge.style.display = 'inline-block';
+      } else if (badge) {
+        badge.style.display = 'none';
+      }
+    })
+    .catch(function() {});
+}
+
+// ============================================================
+// V33.3: 队列状态
+// ============================================================
+
+function refreshQueueStatus() {
+  fetch('/api/search/download_queue')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      const notice = document.getElementById('queueNotice');
+      if (!notice) return;
+
+      if (data.queue_length > 0 || data.current_task) {
+        notice.style.display = 'flex';
+        let html = '<div class="spinner"></div>';
+        if (data.current_task) {
+          html += '当前正在下载: <strong>' + esc(data.current_task.task_id) + '</strong>（' + data.current_task.downloaded + '/' + data.current_task.total + ' 篇）';
+        }
+        if (data.queue_length > 0) {
+          html += '，排队中: <strong>' + data.queue_length + '</strong> 个任务';
+        }
+        notice.innerHTML = html;
+      } else {
+        notice.style.display = 'none';
+      }
+    })
+    .catch(function() {});
+}
+
+// ============================================================
+// V33.3: 配置面板
+// ============================================================
+
+const DEFAULT_CONFIG = {
+  onlineSearchEnabled: true,        // 默认勾选在线搜索
+  onlineMaxResults: 30,             // 在线搜索每个数据库最大结果数
+  hybridTopK: 30,                    // 混合搜索返回最大结果数
+  autoRefreshAfterDownload: true,    // 下载完成后自动刷新
+  downloadConcurrency: 1,            // 下载并发数（队列模式）
+  showToastNotifications: true       // 显示 toast 通知
+};
+
+function loadConfig() {
+  try {
+    const saved = localStorage.getItem('scipal_config');
+    if (saved) {
+      return Object.assign({}, DEFAULT_CONFIG, JSON.parse(saved));
+    }
+  } catch (e) {}
+  return Object.assign({}, DEFAULT_CONFIG);
+}
+
+function saveConfig(config) {
+  try {
+    localStorage.setItem('scipal_config', JSON.stringify(config));
+  } catch (e) {}
+}
+
+function applyConfig() {
+  const config = loadConfig();
+  // 应用到界面
+  const toggle = document.getElementById('onlineSearchToggle');
+  if (toggle) toggle.checked = config.onlineSearchEnabled;
+}
+
+function openConfigModal() {
+  const config = loadConfig();
+
+  const body = '<div class="config-group">' +
+    '<div class="config-group-title">🔍 搜索设置</div>' +
+    '<div class="config-item">' +
+    '<div><div class="config-item-label">默认启用在线搜索</div><div class="config-item-desc">搜索时同时搜索 NCBI PubMed/PMC</div></div>' +
+    '<input type="checkbox" id="cfg_onlineSearchEnabled" ' + (config.onlineSearchEnabled ? 'checked' : '') + '>' +
+    '</div>' +
+    '<div class="config-item">' +
+    '<div><div class="config-item-label">在线搜索最大结果数</div><div class="config-item-desc">每个数据库（PubMed/PMC）最多返回多少条</div></div>' +
+    '<input type="number" id="cfg_onlineMaxResults" value="' + config.onlineMaxResults + '" min="10" max="100">' +
+    '</div>' +
+    '<div class="config-item">' +
+    '<div><div class="config-item-label">混合搜索返回上限</div><div class="config-item-desc">合并去重后最多返回多少篇论文</div></div>' +
+    '<input type="number" id="cfg_hybridTopK" value="' + config.hybridTopK + '" min="10" max="100">' +
+    '</div>' +
+    '</div>' +
+    '<div class="config-group">' +
+    '<div class="config-group-title">📥 下载设置</div>' +
+    '<div class="config-item">' +
+    '<div><div class="config-item-label">下载完成后自动刷新</div><div class="config-item-desc">下载完成后自动重新搜索，显示新文献</div></div>' +
+    '<input type="checkbox" id="cfg_autoRefreshAfterDownload" ' + (config.autoRefreshAfterDownload ? 'checked' : '') + '>' +
+    '</div>' +
+    '<div class="config-item">' +
+    '<div><div class="config-item-label">同时下载任务数</div><div class="config-item-desc">建议设为 1，避免触发 NCBI 限速</div></div>' +
+    '<input type="number" id="cfg_downloadConcurrency" value="' + config.downloadConcurrency + '" min="1" max="3">' +
+    '</div>' +
+    '</div>' +
+    '<div class="config-group">' +
+    '<div class="config-group-title">🔔 通知设置</div>' +
+    '<div class="config-item">' +
+    '<div><div class="config-item-label">显示 Toast 通知</div><div class="config-item-desc">下载完成/失败时弹出通知</div></div>' +
+    '<input type="checkbox" id="cfg_showToastNotifications" ' + (config.showToastNotifications ? 'checked' : '') + '>' +
+    '</div>' +
+    '</div>';
+
+  showModal({
+    title: '⚙️ 设置',
+    body: body,
+    footer: '<button onclick="closeModal()">取消</button><button onclick="saveConfigFromModal()" style="background:#4f6b9a;color:#fff;">💾 保存设置</button>'
+  });
+}
+
+function saveConfigFromModal() {
+  const config = {
+    onlineSearchEnabled: document.getElementById('cfg_onlineSearchEnabled').checked,
+    onlineMaxResults: parseInt(document.getElementById('cfg_onlineMaxResults').value) || 30,
+    hybridTopK: parseInt(document.getElementById('cfg_hybridTopK').value) || 30,
+    autoRefreshAfterDownload: document.getElementById('cfg_autoRefreshAfterDownload').checked,
+    downloadConcurrency: parseInt(document.getElementById('cfg_downloadConcurrency').value) || 1,
+    showToastNotifications: document.getElementById('cfg_showToastNotifications').checked
+  };
+  saveConfig(config);
+  applyConfig();
+  closeModal();
+  showToast({ type: 'success', title: '✅ 设置已保存', message: '配置已保存到本地', duration: 3000 });
+}
+
+// ============================================================
+// V33.3: 模态框通用组件
+// ============================================================
+
+function showModal(options) {
+  const container = document.getElementById('modalContainer');
+  if (!container) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = '<div class="modal">' +
+    '<div class="modal-header">' +
+    '<h3>' + esc(options.title || '') + '</h3>' +
+    '<button class="modal-close" onclick="closeModal()">×</button>' +
+    '</div>' +
+    '<div class="modal-body">' + (options.body || '') + '</div>' +
+    (options.footer ? '<div class="modal-footer">' + options.footer + '</div>' : '') +
+    '</div>';
+
+  // 点击背景关闭
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) closeModal();
+  });
+
+  container.appendChild(modal);
+}
+
+function closeModal() {
+  const container = document.getElementById('modalContainer');
+  if (container) container.innerHTML = '';
+}
+
+// ============================================================
+// V33.3: 页面初始化
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+  // 应用配置
+  applyConfig();
+  // 更新历史徽章
+  updateHistoryBadge();
+  // 刷新队列状态
+  refreshQueueStatus();
+  // 每30秒自动刷新队列状态
+  setInterval(refreshQueueStatus, 30000);
+});
 </script>
 </body>
 </html>
