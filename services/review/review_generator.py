@@ -806,6 +806,8 @@ class ReviewGenerator:
         """
         all_sentences: list[ReviewSentence] = []
         sent_seq = 0
+        # V32.5: 渐进式上下文注入——维护前文摘要，避免章节间重复、保持连贯
+        previous_sections_summary = ""
 
         print(f"✍️  开始撰写正文，共 {len(outline.sections)} 个章节...")
         for sec_idx, section in enumerate(outline.sections):
@@ -820,8 +822,41 @@ class ReviewGenerator:
                 continue
 
             print(f"    正在调用 LLM 撰写此章节...")
-            section_text = self._write_section(section, section_evidence, review_type=review_type, language=language)
+            # V32.5: 传入前文摘要，实现渐进式上下文注入
+            section_text = self._write_section(
+                section, section_evidence,
+                review_type=review_type, language=language,
+                previous_summary=previous_sections_summary,
+                section_index=sec_idx,
+                total_sections=len(outline.sections),
+            )
             print(f"    ✅ 撰写完成，{len(section_text)} 字符")
+
+            # V32.5: 迭代精炼——评审打分，低于60分就修订（最多重试1次）
+            score, review_suggestions = self._review_section(section, section_text, section_evidence, language=language)
+            print(f"    📊 评审得分: {score:.0f}/100")
+            if score < 60.0 and review_suggestions:
+                print(f"    🔄 分数低于60，根据评审建议修订...")
+                # 把评审建议注入到 prompt 里，重新生成
+                revised_text = self._write_section(
+                    section, section_evidence,
+                    review_type=review_type, language=language,
+                    previous_summary=previous_sections_summary,
+                    section_index=sec_idx,
+                    total_sections=len(outline.sections),
+                    feedback=review_suggestions,
+                )
+                if revised_text and len(revised_text) > 50:
+                    section_text = revised_text
+                    print(f"    ✅ 修订完成，{len(section_text)} 字符")
+
+            # V32.5: 更新前文摘要——截取当前章节前 200 字作为摘要，追加到前文摘要里
+            # 为了控制上下文长度，前文摘要最多保留 800 字
+            section_summary = section_text[:200].replace("\n", " ")
+            if previous_sections_summary:
+                previous_sections_summary = (previous_sections_summary + " | " + section_summary)[-800:]
+            else:
+                previous_sections_summary = section_summary
 
             sentences = self._split_and_link(
                 section_text, section.section_id, section_evidence, sent_seq
@@ -960,14 +995,55 @@ class ReviewGenerator:
             print(f"⚠️  段落撰写失败（{paragraph.paragraph_id}）: {e}")
             return ""
 
-    def _write_section(self, section: ReviewSection, evidence: list[EvidenceCard], review_type: str = "narrative", language: str = "en") -> str:
-        """用 LLM 撰写单个章节。V25.7: 根据综述模板类型调整写作风格提示。V25.9: 支持英文/中文。"""
+    def _write_section(
+        self,
+        section: ReviewSection,
+        evidence: list[EvidenceCard],
+        review_type: str = "narrative",
+        language: str = "en",
+        previous_summary: str = "",
+        section_index: int = 0,
+        total_sections: int = 1,
+        feedback: str = "",
+    ) -> str:
+        """用 LLM 撰写单个章节。
+        V25.7: 根据综述模板类型调整写作风格提示。
+        V25.9: 支持英文/中文。
+        V32.5: 章节类型感知 + 渐进式上下文注入 + 证据-声明矩阵 + 迭代精炼（feedback参数）。
+        """
         # 构建证据上下文
         evidence_text = ""
         for card in evidence:
             evidence_text += f"[{card.evidence_id}] ({card.evidence_type.value}) {card.content}\n"
             if card.original_quote:
                 evidence_text += f"  Quote: {card.original_quote[:200]}\n"
+
+        # V32.5: 章节类型感知——根据章节标题判断章节类型，用不同的写作风格
+        section_title_lower = section.title.lower()
+        if any(kw in section_title_lower for kw in ["introduction", "background", "前言", "引言", "背景"]):
+            section_type = "introduction"
+            section_type_hint_en = "This is the INTRODUCTION section. Start with broad context, narrow down to the specific topic, state the review's scope and objectives, and end with a brief roadmap of the review."
+            section_type_hint_zh = "这是引言部分。从宏观背景切入，逐步聚焦到具体主题，明确综述的范围和目标，最后简要介绍综述的结构安排。"
+        elif any(kw in section_title_lower for kw in ["method", "methodology", "approach", "方法", "材料"]):
+            section_type = "methods"
+            section_type_hint_en = "This is the METHODS section. Be precise and structured, describe search strategies, inclusion/exclusion criteria, data extraction, and analysis methods clearly. Use a systematic, objective tone."
+            section_type_hint_zh = "这是方法学部分。要精确、有条理，清晰描述检索策略、纳入排除标准、数据提取和分析方法。使用系统、客观的语气。"
+        elif any(kw in section_title_lower for kw in ["result", "finding", "结果", "发现"]):
+            section_type = "results"
+            section_type_hint_en = "This is the RESULTS section. Present findings objectively, organize by themes or subtopics, report quantitative data where available, and avoid interpretation (save that for Discussion)."
+            section_type_hint_zh = "这是结果部分。客观呈现研究发现，按主题或子主题组织，有定量数据时要报告，避免过度解读（解读放在讨论部分）。"
+        elif any(kw in section_title_lower for kw in ["discussion", "讨论"]):
+            section_type = "discussion"
+            section_type_hint_en = "This is the DISCUSSION section. Interpret the findings, compare across studies, explain contradictions, discuss mechanisms and implications, acknowledge limitations, and suggest future directions."
+            section_type_hint_zh = "这是讨论部分。解读研究发现，跨研究比较，解释矛盾，讨论机制和意义，承认局限性，提出未来方向。"
+        elif any(kw in section_title_lower for kw in ["conclusion", "summary", "perspective", "future", "结论", "总结", "展望"]):
+            section_type = "conclusion"
+            section_type_hint_en = "This is the CONCLUSION section. Summarize the key findings concisely, emphasize the main contributions, discuss broader implications, and end with a forward-looking perspective. Do not introduce new evidence."
+            section_type_hint_zh = "这是结论部分。简明总结主要发现，强调核心贡献，讨论更广泛的意义，以前瞻性视角结尾。不要引入新的证据。"
+        else:
+            section_type = "body"
+            section_type_hint_en = "This is a main body section. Present and synthesize the evidence, organize by logical themes, compare and contrast findings, and build toward the overall narrative."
+            section_type_hint_zh = "这是正文主体部分。呈现和综合证据，按逻辑主题组织，比较和对比不同研究的发现，构建整体叙事。"
 
         # V25.9: 按语言选择 system prompt
         system_prompt = WRITE_SYSTEM_PROMPT_EN if language.lower() == "en" else WRITE_SYSTEM_PROMPT_ZH
@@ -985,14 +1061,42 @@ class ReviewGenerator:
                 "systematic": "Systematic Review",
             }.get(review_type.lower(), "Narrative Review")
 
+            # V32.5: 构建前文摘要上下文（如果有的话）
+            context_block = ""
+            if previous_summary:
+                context_block = (
+                    f"Previous sections summary (for coherence, do NOT repeat this content):\n"
+                    f"{previous_summary}\n\n"
+                )
+
+            # V32.5: 构建评审反馈上下文（如果有的话，这是修订模式）
+            feedback_block = ""
+            if feedback:
+                feedback_block = (
+                    f"## Previous Draft Review Feedback (you are REVISING the draft based on this feedback):\n"
+                    f"{feedback}\n\n"
+                    f"Please address ALL the issues and suggestions above in your revised draft.\n\n"
+                )
+
             user_prompt = (
                 f"Review type: {type_label}\n"
-                f"Writing style: {type_hint}\n\n"
+                f"Writing style: {type_hint}\n"
+                f"Section type: {section_type}\n"
+                f"Section-specific guidance: {section_type_hint_en}\n\n"
+                f"Section position: Section {section_index + 1} of {total_sections}\n\n"
                 f"Section title: {section.title}\n"
                 f"Section description: {section.description}\n\n"
+                f"{context_block}"
+                f"{feedback_block}"
                 f"Available evidence cards:\n{evidence_text}\n\n"
+                f"## Writing Process (Claims-Evidence Matrix):\n"
+                f"Step 1: Identify 3-5 key claims (main points) this section should make.\n"
+                f"Step 2: For each claim, explicitly map which evidence card IDs support it (e.g., Claim 1 ← [ev_001, ev_003]).\n"
+                f"Step 3: Write the section text based ONLY on these evidence-backed claims. Every declarative sentence must trace back to at least one evidence card.\n\n"
                 f"Based on the above evidence cards, write the review text for this section (200-400 words). "
-                f"Every declarative sentence must end with a [evidence_id] citation marker."
+                f"Every declarative sentence must end with a [evidence_id] citation marker. "
+                f"Do NOT repeat content already covered in previous sections. "
+                f"Do NOT make claims that are not supported by the provided evidence cards."
             )
         else:
             type_hint = {
@@ -1007,14 +1111,42 @@ class ReviewGenerator:
                 "systematic": "系统综述型",
             }.get(review_type.lower(), "叙事型综述")
 
+            # V32.5: 构建前文摘要上下文（如果有的话）
+            context_block = ""
+            if previous_summary:
+                context_block = (
+                    f"前文摘要（用于保持连贯，不要重复这些内容）：\n"
+                    f"{previous_summary}\n\n"
+                )
+
+            # V32.5: 构建评审反馈上下文（如果有的话，这是修订模式）
+            feedback_block = ""
+            if feedback:
+                feedback_block = (
+                    f"## 初稿评审反馈（你正在根据此反馈修订初稿）：\n"
+                    f"{feedback}\n\n"
+                    f"请在修订稿中解决上述所有问题和建议。\n\n"
+                )
+
             user_prompt = (
                 f"综述模板类型：{type_label}\n"
-                f"写作风格要求：{type_hint}\n\n"
+                f"写作风格要求：{type_hint}\n"
+                f"章节类型：{section_type}\n"
+                f"章节写作指导：{section_type_hint_zh}\n\n"
+                f"章节位置：第 {section_index + 1} / {total_sections} 章\n\n"
                 f"章节标题：{section.title}\n"
                 f"章节描述：{section.description}\n\n"
+                f"{context_block}"
+                f"{feedback_block}"
                 f"可用证据卡片：\n{evidence_text}\n\n"
+                f"## 写作流程（证据-声明矩阵）：\n"
+                f"第一步：先确定本章要讲的 3-5 个核心要点（声明）。\n"
+                f"第二步：为每个要点明确映射支持它的证据卡片ID（例如：要点1 ← [ev_001, ev_003]）。\n"
+                f"第三步：仅基于这些有证据支撑的要点来撰写正文。每个陈述句都必须能追溯到至少一个证据卡片。\n\n"
                 f"请根据以上证据卡片，撰写本章节的综述正文（200-400字）。"
                 f"每个陈述句末尾必须标注 [证据ID] 引用标记。"
+                f"不要重复前面章节已经讲过的内容。"
+                f"不要做出没有证据卡片支撑的声明。"
             )
 
         try:
@@ -1023,6 +1155,86 @@ class ReviewGenerator:
             print(f"⚠️  章节 {section.title} 撰写失败: {e}")
             # 降级：直接用证据卡片内容拼接
             return "\n".join(f"- {c.content} [{c.evidence_id}]" for c in evidence)
+
+    def _review_section(
+        self,
+        section: ReviewSection,
+        section_text: str,
+        evidence: list[EvidenceCard],
+        language: str = "en",
+    ) -> tuple[float, str]:
+        """
+        V32.5: 用 LLM 当评审，给章节打分并给出修改建议（迭代精炼 + 评分标准引导）。
+        Returns: (score 0-100, revision_suggestions)
+        """
+        evidence_ids = [c.evidence_id for c in evidence]
+        evidence_id_str = ", ".join(evidence_ids[:20])
+
+        if language.lower() == "en":
+            system_prompt = (
+                "You are a strict academic review reviewer. "
+                "Your job is to evaluate the quality of a review section and provide actionable revision suggestions. "
+                "Be critical but constructive. Score honestly—do not inflate scores."
+            )
+            user_prompt = (
+                f"## Section Title: {section.title}\n\n"
+                f"## Section Text:\n{section_text}\n\n"
+                f"## Available Evidence Card IDs: {evidence_id_str}\n\n"
+                f"## Evaluation Rubric (score each 0-100, then compute weighted total):\n"
+                f"1. Relevance (30%): Is the content directly relevant to the section title? Off-topic content = low score.\n"
+                f"2. Evidence Support (30%): Does every claim have evidence support? Are citation markers [ev_xxx] valid and correctly placed? Unsupported claims = low score.\n"
+                f"3. Coherence & Logic (20%): Is the content logically organized, flowing smoothly between ideas?\n"
+                f"4. Academic Writing (10%): Is the language academic, precise, and well-structured?\n"
+                f"5. No Unsupported Speculation (10%): Does the text avoid making claims not backed by the evidence?\n\n"
+                f"## Output Format (strictly follow this):\n"
+                f"SCORE: [total score 0-100]\n"
+                f"ISSUES:\n"
+                f"- [specific issue 1]\n"
+                f"- [specific issue 2]\n"
+                f"SUGGESTIONS:\n"
+                f"- [actionable revision suggestion 1]\n"
+                f"- [actionable revision suggestion 2]\n"
+            )
+        else:
+            system_prompt = (
+                "你是一位严格的学术综述评审专家。"
+                "你的任务是评估综述章节的质量，并给出可执行的修改建议。"
+                "要批判性但有建设性。诚实地打分——不要虚高分数。"
+            )
+            user_prompt = (
+                f"## 章节标题：{section.title}\n\n"
+                f"## 章节正文：\n{section_text}\n\n"
+                f"## 可用证据卡片ID：{evidence_id_str}\n\n"
+                f"## 评分标准（每项 0-100 分，然后计算加权总分）：\n"
+                f"1. 相关性（30%）：内容是否跟章节标题直接相关？跑题内容=低分。\n"
+                f"2. 证据支撑（30%）：每个声明是否都有证据支撑？引用标记 [ev_xxx] 是否有效、位置是否正确？无证据支撑的声明=低分。\n"
+                f"3. 连贯与逻辑（20%）：内容是否逻辑清晰、观点之间过渡流畅？\n"
+                f"4. 学术写作（10%）：语言是否学术、精确、结构良好？\n"
+                f"5. 无无依据推测（10%）：文本是否避免做出没有证据支撑的声明？\n\n"
+                f"## 输出格式（严格遵守）：\n"
+                f"分数：[总分 0-100]\n"
+                f"问题：\n"
+                f"- [具体问题1]\n"
+                f"- [具体问题2]\n"
+                f"建议：\n"
+                f"- [可执行的修改建议1]\n"
+                f"- [可执行的修改建议2]\n"
+            )
+
+        try:
+            review_result = self.llm.chat(system_prompt, user_prompt)
+            # 解析分数
+            import re
+            score_match = re.search(r'(?:SCORE|分数)[：:]\s*(\d+)', review_result, re.IGNORECASE)
+            if score_match:
+                score = float(score_match.group(1))
+            else:
+                # 降级：给一个默认分数
+                score = 70.0
+            return score, review_result
+        except Exception as e:
+            print(f"⚠️  评审失败: {e}")
+            return 70.0, ""  # 评审失败时给默认分数，不阻塞流程
 
     def _split_and_link(
         self,
