@@ -119,8 +119,26 @@ class UnifiedSearch:
             conn.close()
 
         elif source_db == "abstracts.db":
-            # abstracts.db 只有摘要，没有正文段落
-            pass
+            # abstracts.db 只有摘要，把摘要作为段落返回
+            conn = sqlite3.connect(self.abstracts_db)
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                SELECT abstract FROM papers
+                WHERE pmid = ?
+            """, (paper_id.replace("PMID", ""),))
+
+            row = cursor.fetchone()
+            if row:
+                abstract = row[0]
+                if abstract:
+                    paragraphs.append({
+                        "section_title": "Abstract",
+                        "paragraph_index": 0,
+                        "text": abstract,
+                    })
+
+            conn.close()
 
         elif source_db == "xml.db":
             conn = sqlite3.connect(self.xml_db)
