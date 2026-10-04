@@ -281,40 +281,69 @@ class ReviewGenerator:
         """
         warnings: list[str] = []
 
+        # V31.83: 如果 custom_outline 里已经有证据卡片（按大纲搜索并分配时保存的），就直接用
+        custom_evidence_cards = None
+        if custom_outline is not None and isinstance(custom_outline, dict):
+            raw_evidence = custom_outline.get("evidence_cards")
+            if raw_evidence and isinstance(raw_evidence, list) and len(raw_evidence) > 0:
+                from .models import EvidenceCard
+                custom_evidence_cards = []
+                for ev_dict in raw_evidence:
+                    try:
+                        card = EvidenceCard(**ev_dict)
+                        custom_evidence_cards.append(card)
+                    except Exception:
+                        continue
+                if custom_evidence_cards:
+                    print(f"📋 V31.83: 使用 custom_outline 里的证据卡片，共 {len(custom_evidence_cards)} 条（按章节主题搜索的，内容更相关）")
+                    warnings.append(f"📋 使用按大纲搜索分配的证据卡片：{len(custom_evidence_cards)} 条（按章节主题搜索，内容更相关）")
+
         # ── Step 1: 检索 ──
-        paragraphs = self._retrieve(
-            topic,
-            max_papers,
-            include_abstracts=include_abstracts,
-            selected_paper_ids=selected_paper_ids,
-            excluded_paper_ids=excluded_paper_ids,
-        )
-        if not paragraphs:
-            return ReviewOutput(
-                topic=topic,
-                markdown=f"# {topic}\n\n未检索到相关文献。",
-                stats={"total_sentences": 0, "total_evidence": 0},
-                warnings=["未检索到相关文献，请调整主题或增加 max_papers。"],
+        if custom_evidence_cards is not None:
+            # V31.83: 已经有证据卡片了，跳过检索
+            paragraphs = []
+            warnings.append(f"⏭️  跳过检索（使用按大纲搜索分配的证据卡片）")
+        else:
+            paragraphs = self._retrieve(
+                topic,
+                max_papers,
+                include_abstracts=include_abstracts,
+                selected_paper_ids=selected_paper_ids,
+                excluded_paper_ids=excluded_paper_ids,
             )
-        warnings.append(f"📚 检索到 {len(paragraphs)} 个相关段落。")
+            if not paragraphs:
+                return ReviewOutput(
+                    topic=topic,
+                    markdown=f"# {topic}\n\n未检索到相关文献。",
+                    stats={"total_sentences": 0, "total_evidence": 0},
+                    warnings=["未检索到相关文献，请调整主题或增加 max_papers。"],
+                )
+            warnings.append(f"📚 检索到 {len(paragraphs)} 个相关段落。")
 
         # ── Step 2: 证据抽取 ──
-        evidence_cards = self.extractor.extract_from_paragraphs(paragraphs, topic=topic, language=language)
-        # 每篇论文限数
-        evidence_cards = self._limit_evidence_per_paper(evidence_cards)
-        if not evidence_cards:
-            return ReviewOutput(
-                topic=topic,
-                markdown=f"# {topic}\n\n未能从文献中抽取到有效证据。",
-                stats={"total_sentences": 0, "total_evidence": 0},
-                warnings=["证据抽取失败或所有段落均为 boilerplate。"],
-            )
-        warnings.append(f"🔍 抽取到 {len(evidence_cards)} 条证据卡片。")
+        if custom_evidence_cards is not None:
+            # V31.83: 已经有证据卡片了，跳过证据抽取
+            evidence_cards = custom_evidence_cards
+        else:
+            evidence_cards = self.extractor.extract_from_paragraphs(paragraphs, topic=topic, language=language)
+            # 每篇论文限数
+            evidence_cards = self._limit_evidence_per_paper(evidence_cards)
+            if not evidence_cards:
+                return ReviewOutput(
+                    topic=topic,
+                    markdown=f"# {topic}\n\n未能从文献中抽取到有效证据。",
+                    stats={"total_sentences": 0, "total_evidence": 0},
+                    warnings=["证据抽取失败或所有段落均为 boilerplate。"],
+                )
+        warnings.append(f"🔍 共 {len(evidence_cards)} 条证据卡片。")
 
         # ── Step 2.5: 全局短 ID 重映射（V25.1）──
-        # 将长 evidence_id 统一映射为 ev_001, ev_002... 短序号，
-        # 避免 paper_id 含空格/特殊字符导致 LLM 引用标记解析失败。
-        evidence_cards = self._remap_to_short_ids(evidence_cards)
+        # V31.83: 如果用的是 custom_outline 里的证据卡片，就不要做短 ID 重映射
+        # 因为 custom_outline 里的 assigned_evidence_ids 还是原来的长 ID
+        if custom_evidence_cards is None:
+            # 将长 evidence_id 统一映射为 ev_001, ev_002... 短序号，
+            # 避免 paper_id 含空格/特殊字符导致 LLM 引用标记解析失败。
+            evidence_cards = self._remap_to_short_ids(evidence_cards)
         evidence_dict = {c.evidence_id: c for c in evidence_cards}
 
         # ── Step 3: 大纲（V25.2: LLM 大纲生成；V25.8: 支持用户自定义段落级大纲）──
@@ -1696,7 +1725,7 @@ def search_and_assign_papers(
     if retriever is None:
         return outline, []
 
-    print(f"🔍 开始按大纲内容搜索论文...")
+    print(f"🔍 开始按大纲内容搜索论文和证据卡片...")
 
     sections = outline.get("sections", [])
     num_sections = len(sections)
@@ -1705,7 +1734,9 @@ def search_and_assign_papers(
     print(f"📊 共 {num_sections} 个章节，每章节约 {papers_per_section} 篇论文，总数不超过 {max_papers}")
 
     all_papers = {}  # paper_id -> paper dict
+    all_evidence_cards = {}  # evidence_id -> evidence card dict
     total_assigned = 0
+    evidence_seq = 0  # 证据卡片序号
 
     # 1. 遍历每个章节，按章节关键词搜索
     for sec_idx, sec in enumerate(sections):
@@ -1731,13 +1762,14 @@ def search_and_assign_papers(
         try:
             result = retriever.retrieve(
                 query=query,
-                top_paragraphs=papers_per_section * 2,  # 多搜一些，后面去重
+                top_paragraphs=papers_per_section * 3,  # 多搜一些，后面去重
                 top_figures=0,
             )
             paragraphs = result.get("paragraphs", [])
 
-            # 收集这个章节的论文（去重，按搜索排名）
+            # V31.83: 收集这个章节的论文和证据卡片（去重，按搜索排名）
             sec_paper_ids = []
+            sec_evidence_ids = []
             for p in paragraphs:
                 pid = p.get("paper_id", "")
                 if not pid:
@@ -1750,13 +1782,40 @@ def search_and_assign_papers(
                     }
                 if pid not in sec_paper_ids:
                     sec_paper_ids.append(pid)
-                if len(sec_paper_ids) >= papers_per_section:
+
+                # V31.83: 从段落构造证据卡片，直接分配到章节
+                para_id = p.get("para_id", f"{pid}_para_{len(sec_evidence_ids)}")
+                evidence_id = f"ev_{pid}_{para_id}_{evidence_seq}"
+                evidence_seq += 1
+
+                if evidence_id not in all_evidence_cards:
+                    content = p.get("content", "") or p.get("text", "") or p.get("paper_title", pid)
+                    if len(content) > 1000:
+                        content = content[:1000] + "..."
+                    all_evidence_cards[evidence_id] = {
+                        "evidence_id": evidence_id,
+                        "paper_id": pid,
+                        "para_id": para_id,
+                        "paper_title": p.get("paper_title", pid),
+                        "section_l1": p.get("section_l1", ""),
+                        "page": p.get("page", 0),
+                        "content": content,
+                        "original_quote": content[:200],
+                        "confidence": 0.8,
+                        "verified": False,
+                    }
+
+                if evidence_id not in sec_evidence_ids:
+                    sec_evidence_ids.append(evidence_id)
+
+                if len(sec_paper_ids) >= papers_per_section and len(sec_evidence_ids) >= papers_per_section * 2:
                     break
 
-            # 直接分配到这个章节
+            # V31.83: 直接分配论文ID和证据ID到这个章节
             sec["assigned_paper_ids"] = sec_paper_ids
+            sec["assigned_evidence_ids"] = sec_evidence_ids
             total_assigned += len(sec_paper_ids)
-            print(f"    ✅ 分配 {len(sec_paper_ids)} 篇论文到这个章节")
+            print(f"    ✅ 分配 {len(sec_paper_ids)} 篇论文，{len(sec_evidence_ids)} 条证据卡片到这个章节")
 
             # 段落级分配：按段落主题匹配
             for para in sec.get("paragraphs", []):
@@ -1764,6 +1823,7 @@ def search_and_assign_papers(
                 para_keywords = set(para_topic.lower().split())
 
                 para_papers = []
+                para_evidences = []
                 for pid in sec_paper_ids:
                     paper = all_papers.get(pid, {})
                     title = paper.get("title", "")
@@ -1776,11 +1836,25 @@ def search_and_assign_papers(
                 if not para_papers and sec_paper_ids:
                     para_papers = sec_paper_ids[:2]
 
+                # V31.83: 分配证据卡片：匹配论文ID的证据卡片
+                for eid in sec_evidence_ids:
+                    ev = all_evidence_cards.get(eid, {})
+                    if ev.get("paper_id") in para_papers:
+                        para_evidences.append(eid)
+
+                # 如果段落没有匹配到证据卡片，就分配这个章节的前4条
+                if not para_evidences and sec_evidence_ids:
+                    para_evidences = sec_evidence_ids[:4]
+
                 para["assigned_paper_ids"] = para_papers
+                para["assigned_evidence_ids"] = para_evidences
 
         except Exception as e:
             print(f"    ⚠️  搜索失败: {e}")
+            import traceback
+            traceback.print_exc()
             sec["assigned_paper_ids"] = []
+            sec["assigned_evidence_ids"] = []
             continue
 
         # 总数控制：如果已经达到 max_papers，就停止
@@ -1789,6 +1863,11 @@ def search_and_assign_papers(
             break
 
     papers = list(all_papers.values())
-    print(f"\n✅ 搜索完成：共 {len(papers)} 篇论文，分配 {total_assigned} 篇次")
+    evidence_cards = list(all_evidence_cards.values())
+
+    # V31.83: 把证据卡片保存到 outline 里，generate 函数可以直接用
+    outline["evidence_cards"] = evidence_cards
+
+    print(f"\n✅ 搜索完成：共 {len(papers)} 篇论文，{len(evidence_cards)} 条证据卡片，分配 {total_assigned} 篇次")
 
     return outline, papers
