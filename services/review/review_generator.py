@@ -1625,6 +1625,8 @@ def assign_papers_to_outline(
 
     # 2. 为每篇论文计算与每个章节的相似度
     assignments = {}  # paper_id -> section_id
+    section_ids = [sec["section_id"] for sec in outline["sections"]]
+    round_robin_idx = 0  # V31.78: 轮询索引，用于平均分配没有匹配到的论文
     for paper in papers:
         pid = paper.get("paper_id", "")
         title = paper.get("title", "")
@@ -1636,18 +1638,21 @@ def assign_papers_to_outline(
 
         # 计算与每个章节的相似度（关键词重叠数）
         best_section = None
-        best_score = -1  # V31.76: 初始化为 -1，确保即使 overlap=0 也能分配
+        best_score = 0
         for sec_id, sec_keywords in section_keywords.items():
             overlap = len(paper_keywords & sec_keywords)
             if overlap > best_score:
                 best_score = overlap
                 best_section = sec_id
 
-        # 如果没有匹配到任何章节，发配到第一个章节
-        if best_section is None:
-            best_section = outline["sections"][0]["section_id"]
+        # V31.78: 如果没有匹配到任何章节（best_score=0），按轮询方式平均分配
+        if best_section is None or best_score == 0:
+            best_section = section_ids[round_robin_idx % len(section_ids)]
+            round_robin_idx += 1
 
         assignments[pid] = best_section
+
+    print(f"📊 分配统计：关键词匹配 {len(papers) - round_robin_idx} 篇，轮询分配 {round_robin_idx} 篇")
 
     # 3. 更新大纲的 assigned_paper_ids
     for sec in outline["sections"]:
