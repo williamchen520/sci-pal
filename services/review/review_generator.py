@@ -588,24 +588,19 @@ class ReviewGenerator:
                 # V26.0: 如果用户指定了要剔除的论文，跳过
                 if excluded_paper_ids and paper_id in excluded_paper_ids:
                     continue
-                for p in paper.get("paragraphs", []):
-                    p["paper_id"] = paper_id
-                    p["title"] = paper.get("title", "")
-                    paragraphs.append(p)
-
                 # V26.0: 如果用户指定了要选定的论文，只保留这些
                 if selected_paper_ids and paper_id not in selected_paper_ids:
                     continue
-
-                paragraphs.append({
-                    "para_id": p.get("para_id", ""),
-                    "paper_id": paper_id,
-                    "text": p.get("text", ""),
-                    "section_l1": p.get("section_l1", ""),
-                    "page": p.get("page", 0),
-                    "paper_title": p.get("paper_title", ""),
-                    "source": p.get("source", "full_text"),  # V26.0: 标注来源
-                })
+                for para in paper.get("paragraphs", []):
+                    paragraphs.append({
+                        "para_id": para.get("para_id", ""),
+                        "paper_id": paper_id,
+                        "text": para.get("text", ""),
+                        "section_l1": para.get("section_title", ""),
+                        "page": 0,
+                        "paper_title": paper.get("title", ""),
+                        "source": "full_text",  # V26.0: 标注来源
+                    })
 
             # V26.0: 如果需要包含摘要库，也检索摘要库
             if include_abstracts and hasattr(self.retriever, 'abstract_searcher'):
