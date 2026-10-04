@@ -344,8 +344,11 @@ class OutlineGenerator:
         system_prompt = prompts.get(review_type.lower(), NARRATIVE_SYSTEM_PROMPT_EN if language.lower() == "en" else NARRATIVE_SYSTEM_PROMPT_ZH)
 
         # 构建证据摘要（只传必要信息，节省 token）
+        # V31.69: 限制证据卡片数量，最多传 200 个，避免 LLM 处理不了
+        max_evidence_for_outline = 200
+        evidence_for_outline = evidence_cards[:max_evidence_for_outline]
         evidence_summary = []
-        for card in evidence_cards:
+        for card in evidence_for_outline:
             evidence_summary.append({
                 "id": card.evidence_id,
                 "type": card.evidence_type.value,
@@ -375,7 +378,7 @@ class OutlineGenerator:
             user_prompt = (
                 f"Review topic: {topic}\n"
                 f"Review type: {type_label} ({review_type})\n\n"
-                f"Evidence cards ({len(evidence_cards)} total):\n"
+                f"Evidence cards ({len(evidence_for_outline)} shown, {len(evidence_cards)} total):\n"
                 f"{json.dumps(evidence_summary, ensure_ascii=False, indent=2)}"
                 f"{community_hint}\n\n"
                 f"Please generate a {type_label} outline based on the above evidence, with {self.min_sections}-{self.max_sections} sections."
@@ -389,7 +392,7 @@ class OutlineGenerator:
             user_prompt = (
                 f"综述主题：{topic}\n"
                 f"综述模板类型：{type_label}（{review_type}）\n\n"
-                f"证据卡片列表（共 {len(evidence_cards)} 条）：\n"
+                f"证据卡片列表（展示 {len(evidence_for_outline)} 条，共 {len(evidence_cards)} 条）：\n"
                 f"{json.dumps(evidence_summary, ensure_ascii=False, indent=2)}"
                 f"{community_hint}\n\n"
                 f"请根据以上证据生成{type_label}大纲，章节数 {self.min_sections}-{self.max_sections} 个。"
