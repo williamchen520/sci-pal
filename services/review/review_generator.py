@@ -283,20 +283,35 @@ class ReviewGenerator:
 
         # V31.83: 如果 custom_outline 里已经有证据卡片（按大纲搜索并分配时保存的），就直接用
         custom_evidence_cards = None
-        if custom_outline is not None and isinstance(custom_outline, dict):
-            raw_evidence = custom_outline.get("evidence_cards")
-            if raw_evidence and isinstance(raw_evidence, list) and len(raw_evidence) > 0:
-                from .models import EvidenceCard
-                custom_evidence_cards = []
-                for ev_dict in raw_evidence:
-                    try:
-                        card = EvidenceCard(**ev_dict)
-                        custom_evidence_cards.append(card)
-                    except Exception:
-                        continue
-                if custom_evidence_cards:
-                    print(f"📋 V31.83: 使用 custom_outline 里的证据卡片，共 {len(custom_evidence_cards)} 条（按章节主题搜索的，内容更相关）")
-                    warnings.append(f"📋 使用按大纲搜索分配的证据卡片：{len(custom_evidence_cards)} 条（按章节主题搜索，内容更相关）")
+        print(f"🔍 V31.83 调试: custom_outline is None? {custom_outline is None}")
+        if custom_outline is not None:
+            print(f"🔍 V31.83 调试: custom_outline type? {type(custom_outline)}")
+            if isinstance(custom_outline, dict):
+                print(f"🔍 V31.83 调试: custom_outline keys? {list(custom_outline.keys())}")
+                raw_evidence = custom_outline.get("evidence_cards")
+                print(f"🔍 V31.83 调试: evidence_cards is None? {raw_evidence is None}")
+                if raw_evidence is not None:
+                    print(f"🔍 V31.83 调试: evidence_cards type? {type(raw_evidence)}")
+                    if isinstance(raw_evidence, list):
+                        print(f"🔍 V31.83 调试: evidence_cards length? {len(raw_evidence)}")
+                        if len(raw_evidence) > 0:
+                            print(f"🔍 V31.83 调试: first evidence keys? {list(raw_evidence[0].keys()) if isinstance(raw_evidence[0], dict) else type(raw_evidence[0])}")
+                if raw_evidence and isinstance(raw_evidence, list) and len(raw_evidence) > 0:
+                    from .models import EvidenceCard
+                    custom_evidence_cards = []
+                    failed_count = 0
+                    for ev_dict in raw_evidence:
+                        try:
+                            card = EvidenceCard(**ev_dict)
+                            custom_evidence_cards.append(card)
+                        except Exception as e:
+                            failed_count += 1
+                            if failed_count <= 3:
+                                print(f"⚠️  V31.83 调试: EvidenceCard 转换失败: {e}, ev_dict keys: {list(ev_dict.keys()) if isinstance(ev_dict, dict) else type(ev_dict)}")
+                    print(f"🔍 V31.83 调试: 转换成功 {len(custom_evidence_cards)} 条，失败 {failed_count} 条")
+                    if custom_evidence_cards:
+                        print(f"📋 V31.83: 使用 custom_outline 里的证据卡片，共 {len(custom_evidence_cards)} 条（按章节主题搜索的，内容更相关）")
+                        warnings.append(f"📋 使用按大纲搜索分配的证据卡片：{len(custom_evidence_cards)} 条（按章节主题搜索，内容更相关）")
 
         # ── Step 1: 检索 ──
         if custom_evidence_cards is not None:
