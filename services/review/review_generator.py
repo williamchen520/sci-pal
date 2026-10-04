@@ -1742,6 +1742,19 @@ def search_and_assign_papers(
 
     print(f"🔍 开始按大纲内容搜索论文和证据卡片...")
 
+    # V32.4: 从综述主题提取核心关键词，加到每个章节的搜索关键词里
+    # 这样搜索到的文献就会跟综述主题相关
+    STOP_WORDS = {'in', 'from', 'to', 'the', 'of', 'and', 'or', 'a', 'an', 'for', 'with', 'on', 'at', 'by', 'as', 'into', 'via', 'per', 'vs', 'etc'}
+    topic_keywords = []
+    if topic:
+        # 按空格和冒号分割
+        words = topic.replace(':', ' ').replace('-', ' ').split()
+        for w in words:
+            w = w.strip().strip('(),.:;!?')
+            if len(w) >= 3 and w.lower() not in STOP_WORDS:
+                topic_keywords.append(w)
+    print(f"📌 综述主题核心关键词: {topic_keywords}")
+
     sections = outline.get("sections", [])
     num_sections = len(sections)
     # 每个章节平均分配的论文数
@@ -1772,7 +1785,10 @@ def search_and_assign_papers(
             para_keywords_all.extend(para_kw)
 
         # 组合搜索关键词
+        # V32.4: 先加综述主题核心关键词，再加章节关键词，再加段落关键词
         search_keywords = []
+        if topic_keywords:
+            search_keywords.extend(topic_keywords)
         if section_keywords:
             search_keywords.extend(section_keywords)
         if para_keywords_all:
