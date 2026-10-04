@@ -801,21 +801,31 @@
       showMessage('自动解析完成：' + parseResult.success + ' 篇全部成功，开始生成综述...', 'success');
     }
 
+    // V31.83: 构造 customOutline，包含 evidence_cards 和 assigned_evidence_ids
     const customOutline = {
       sections: data.sections.map(function(sec) {
         return {
           title: sec.title,
           description: sec.description || '',
+          assigned_paper_ids: sec.assigned_paper_ids || [],
+          assigned_evidence_ids: sec.assigned_evidence_ids || [],  // V31.83: 章节级证据ID
           paragraphs: (sec.paragraphs || []).map(function(para) {
             return {
               topic: para.topic,
               description: para.description || '',
               assigned_paper_ids: para.assigned_paper_ids || [],
+              assigned_evidence_ids: para.assigned_evidence_ids || [],  // V31.83: 段落级证据ID
             };
           }),
         };
       }),
     };
+
+    // V31.83: 如果 data 里有 evidence_cards（按大纲搜索并分配时保存的），就一起传过去
+    if (data.evidence_cards && Array.isArray(data.evidence_cards) && data.evidence_cards.length > 0) {
+      customOutline.evidence_cards = data.evidence_cards;
+      console.log('V31.83: 传递 evidence_cards，共 ' + data.evidence_cards.length + ' 条');
+    }
 
     showMessage('正在生成综述...（约需 1-3 分钟，请耐心等待）', 'info');
     els.generateReviewBtn.disabled = true;
