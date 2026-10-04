@@ -317,13 +317,7 @@ class OutlineGenerator:
         if not evidence_cards:
             return ReviewOutline(topic=topic, sections=[], total_papers=0, total_evidence=0)
 
-        # 尝试 LLM 生成
-        if self.llm and self.llm.is_available():
-            outline = self._generate_with_llm(topic, evidence_cards, use_communities, review_type, language)
-            if outline and outline.sections:
-                return outline
-
-        # LLM 不可用或生成失败 → 规则版 fallback
+        # V31.70: 直接用规则版生成大纲，不调用 LLM，避免本地模型超时
         return self._generate_rule_based(topic, evidence_cards, language=language)
 
     # ──────────────────────────────────────────
