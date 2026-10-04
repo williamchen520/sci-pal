@@ -704,6 +704,17 @@ class OutlineGenerator:
             section_paper_ids = set()
             section_evidence_ids = set()
 
+            # V31.83: 先从章节级的 assigned_evidence_ids 里取（按大纲搜索并分配时保存的）
+            for eid in sec_data.get("assigned_evidence_ids", []):
+                if eid and (not valid_evidence_ids or eid in valid_evidence_ids):
+                    section_evidence_ids.add(eid)
+                    all_assigned_evidence.add(eid)
+
+            # V31.83: 先从章节级的 assigned_paper_ids 里取
+            for pid in sec_data.get("assigned_paper_ids", []):
+                if pid and (not valid_paper_ids or pid in valid_paper_ids):
+                    section_paper_ids.add(pid)
+
             for j, para_data in enumerate(sec_data.get("paragraphs", [])):
                 if not isinstance(para_data, dict):
                     continue
