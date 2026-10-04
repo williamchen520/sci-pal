@@ -1088,6 +1088,112 @@ def online_search_api():
         return jsonify({"error": f"在线搜索失败: {str(e)}"}), 500
 
 
+# ============================================================
+# V33.2: 在线文献下载 API（异步下载+增量导入+增量建索引）
+# ============================================================
+
+@app.route("/api/search/download_online", methods=["POST"])
+def download_online_papers():
+    """
+    V33.2: 启动在线文献下载任务（异步，后台执行）。
+
+    接收用户勾选的在线文献 PMCID 列表，后台自动：
+      1. 下载 PMC XML 全文（自动过滤只有摘要的）
+      2. 增量导入到 research.db（不清空旧数据）
+      3. 增量建向量索引（只对新论文做 embedding，追加到 chroma）
+
+    Request body (JSON):
+      pmc_ids: ["PMC1234567", "PMC7654321", ...] （必填，PMCID 列表）
+
+    Returns:
+      {
+        "task_id": "dl_abc123...",
+        "status": "running",
+        "total": 10,
+        "message": "下载任务已启动，用 task_id 轮询 /api/search/download_status 获取进度"
+      }
+    """
+    data = request.get_json(silent=True) or {}
+    pmc_ids = data.get("pmc_ids", [])
+
+    if not pmc_ids:
+        return jsonify({"error": "缺少 pmc_ids 参数（PMCID 列表）"}), 400
+
+    # 规范化 PMCID 格式
+    normalized_ids = []
+    for pid in pmc_ids:
+        pid = str(pid).strip()
+        if not pid:
+            continue
+        if not pid.upper().startswith("PMC"):
+            pid = f"PMC{pid}"
+        normalized_ids.append(pid.upper())
+
+    if not normalized_ids:
+        return jsonify({"error": "pmc_ids 列表为空"}), 400
+
+    try:
+        from services.search.online_downloader import get_online_downloader
+        downloader = get_online_downloader()
+        task_id = downloader.start_download(normalized_ids)
+
+        return jsonify({
+            "task_id": task_id,
+            "status": "running",
+            "total": len(normalized_ids),
+            "message": "下载任务已启动，用 task_id 轮询 /api/search/download_status 获取进度",
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"启动下载任务失败: {str(e)}"}), 500
+
+
+@app.route("/api/search/download_status", methods=["GET"])
+def download_status():
+    """
+    V33.2: 查询在线文献下载任务进度。
+
+    Query params:
+      task_id: 任务 ID（必填）
+
+    Returns:
+      {
+        "task_id": "dl_abc123...",
+        "status": "running" | "completed" | "failed",
+        "current_stage": "downloading" | "importing" | "indexing" | "completed",
+        "total": 10,
+        "downloaded": 5,
+        "download_failed": 0,
+        "download_skipped": 2,
+        "imported": 5,
+        "indexed": 5,
+        "new_paper_count": 7,
+        "progress_percent": 75,
+        "elapsed_seconds": 45.2,
+        "error": null
+      }
+    """
+    task_id = request.args.get("task_id", "").strip()
+
+    if not task_id:
+        return jsonify({"error": "缺少 task_id 参数"}), 400
+
+    try:
+        from services.search.online_downloader import get_task_manager
+        manager = get_task_manager()
+        task = manager.get_task(task_id)
+
+        if task is None:
+            return jsonify({"error": f"任务不存在: {task_id}"}), 404
+
+        return jsonify(task.to_dict())
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"查询任务状态失败: {str(e)}"}), 500
+
+
 @app.route("/api/papers/parse", methods=["POST"])
 def parse_local_paper():
     """V25.14: 触发解析一篇本地未解析的 PDF 文献。

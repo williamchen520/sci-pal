@@ -37,6 +37,33 @@
   .loading,.empty { text-align: center; padding: 40px; color: var(--text2); font-size: 14px; }
   .error { text-align: center; padding: 20px; color: #a14e50; font-size: 14px; }
   footer { text-align: center; margin-top: 40px; font-size: 12px; color: var(--text2); }
+  /* V33.2: 混合搜索样式 */
+  .search-options { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-switch { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+  .toggle-switch input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+  .toggle-switch label { font-size: 13px; color: var(--text2); cursor: pointer; }
+  .toggle-switch .badge { display: inline-block; padding: 2px 8px; background: #e0f2fe; color: #0369a1; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .paper-group { margin-bottom: 16px; }
+  .paper-group-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .paper-group-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+  .paper-group-title .count { background: var(--accent-light); color: var(--accent); padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; }
+  .paper-card.online { border-left: 3px solid #f59e0b; background: #fffbeb; }
+  .paper-card.online:hover { border-color: #f59e0b; }
+  .paper-card .source-tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 8px; }
+  .source-tag.local { background: #dcfce7; color: #166534; }
+  .source-tag.online { background: #fef3c7; color: #92400e; }
+  .paper-card-header { display: flex; align-items: flex-start; gap: 8px; }
+  .paper-card-header input[type="checkbox"] { margin-top: 4px; width: 16px; height: 16px; cursor: pointer; accent-color: #f59e0b; flex-shrink: 0; }
+  .download-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius); margin-bottom: 12px; flex-wrap: wrap; }
+  .download-bar .info { font-size: 13px; color: #92400e; flex: 1; }
+  .download-bar button { padding: 8px 16px; background: #f59e0b; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
+  .download-bar button:hover { background: #d97706; }
+  .download-bar button:disabled { background: #d1d5db; cursor: not-allowed; }
+  .progress-container { width: 100%; margin-top: 8px; }
+  .progress-bar { width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #d97706); border-radius: 4px; transition: width .3s; }
+  .progress-text { font-size: 12px; color: #92400e; margin-top: 4px; }
+  .stage-badge { display: inline-block; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -46,32 +73,90 @@
     <input type="text" id="query" placeholder="输入检索问题，如：How does STAT1 regulate the interferon immune response?" autofocus onkeydown="if(event.key==='Enter')doSearch()">
     <button id="searchBtn" onclick="doSearch()">检索</button>
   </div>
+  <!-- V33.2: 混合搜索选项 -->
+  <div class="search-options">
+    <div class="toggle-switch">
+      <input type="checkbox" id="onlineSearchToggle" checked>
+      <label for="onlineSearchToggle">同时搜索在线 NCBI/PMC <span class="badge">混合检索</span></label>
+    </div>
+    <span style="font-size:12px;color:var(--text2);">本地数据库 + PubMed + PMC 开放获取全文同时搜，自动去重，新文献可一键下载入库</span>
+  </div>
+  <!-- 下载进度条（默认隐藏） -->
+  <div id="downloadProgress" style="display:none;"></div>
   <div id="results"></div>
   <footer>Sci-Pal V26.0 · 检索 + 图谱 + Agentic + PDF阅读器 + 分块 + 过滤 + 社区 + 综述Agent + RAG问答</footer>
 </div>
 <script>
 const API = '/api/retrieve';
+const HYBRID_API = '/api/search/hybrid';
+const DOWNLOAD_API = '/api/search/download_online';
+const DOWNLOAD_STATUS_API = '/api/search/download_status';
+
+// 全局状态
+let hybridData = null;  // 混合搜索结果
+let downloadPollTimer = null;
+
 async function doSearch() {
   const q = document.getElementById('query').value.trim();
   if (!q) return;
   const btn = document.getElementById('searchBtn');
   const results = document.getElementById('results');
+  const useOnline = document.getElementById('onlineSearchToggle').checked;
+
   btn.disabled = true;
-  results.innerHTML = '<div class="loading">⏳ 检索中…（向量召回 + FTS + RRF 融合 + Rerank）</div>';
+  results.innerHTML = '<div class="loading">⏳ 检索中…（向量召回 + FTS + RRF 融合 + Rerank' + (useOnline ? ' + 在线NCBI/PMC' : '') + '）</div>';
+
   try {
+    // 1. 本地检索（始终执行）
     const resp = await fetch(API + '?q=' + encodeURIComponent(q) + '&top_paragraphs=6&top_figures=3');
     const data = await resp.json();
     if (data.error) { results.innerHTML = '<div class="error">❌ ' + data.error + '</div>'; return; }
+
+    // 2. 如果勾选了在线搜索，并行执行混合搜索（论文级）
+    hybridData = null;
+    if (useOnline) {
+      try {
+        const hybridResp = await fetch(HYBRID_API + '?q=' + encodeURIComponent(q) + '&top_k=30&use_online=true&online_max=30');
+        hybridData = await hybridResp.json();
+        if (hybridData.error) {
+          console.warn('混合搜索失败:', hybridData.error);
+          hybridData = null;
+        }
+      } catch (e) {
+        console.warn('混合搜索异常:', e);
+        hybridData = null;
+      }
+    }
+
     renderResults(data);
-  } catch (e) { results.innerHTML = '<div class="error">❌ 请求失败: ' + e.message + '</div>'; }
-  finally { btn.disabled = false; }
+  } catch (e) {
+    results.innerHTML = '<div class="error">❌ 请求失败: ' + e.message + '</div>';
+  } finally {
+    btn.disabled = false;
+  }
 }
+
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function highlightHits(text) { let h = esc(text); h = h.replace(/►([\s\S]*?)◄/g, '<span class="hit">$1</span>'); return h; }
+
 function renderResults(data) {
   const results = document.getElementById('results');
   let html = '';
-  if (data.route && data.route.channels) html += '<div class="route-badge">路由: ' + data.route.channels.join(' + ') + '</div>';
+
+  if (data.route && data.route.channels) {
+    html += '<div class="route-badge">路由: ' + data.route.channels.join(' + ') + '</div>';
+  }
+
+  // 混合搜索统计
+  if (hybridData) {
+    html += '<div class="route-badge" style="background:#fef3c7;color:#92400e;">';
+    html += '🌐 混合检索: 本地 ' + (hybridData.local_count || 0) + ' 篇 + 在线新 ' + (hybridData.online_count || 0) + ' 篇';
+    if (hybridData.online_in_local_count) {
+      html += '（在线搜到但已在本地 ' + hybridData.online_in_local_count + ' 篇，自动去重）';
+    }
+    html += '</div>';
+  }
+
   const passages = data.parent_contexts && data.parent_contexts.length > 0 ? data.parent_contexts : data.paragraphs;
   if (passages && passages.length > 0) {
     html += '<div class="section-label">📄 相关段落</div>';
@@ -81,6 +166,7 @@ function renderResults(data) {
       html += '<div class="evidence-card"><div class="meta"><span class="id">[P' + (i+1) + ']</span>' + (section ? '<span>' + esc(section) + '</span>' : '') + (page ? '<span>' + page + '</span>' : '') + '</div><div class="text">' + highlightHits(p.text || '') + '</div></div>';
     });
   }
+
   if (data.figures && data.figures.length > 0) {
     html += '<div class="section-label">🖼️ 相关图表</div>';
     data.figures.forEach(function(f, i) {
@@ -89,6 +175,7 @@ function renderResults(data) {
       html += '<div class="evidence-card"><div class="meta"><span class="id">[F' + (i+1) + ']</span>' + (num ? '<span>' + esc(num) + '</span>' : '') + '</div><div class="text">' + esc(f.caption || '') + '</div>' + img + '</div>';
     });
   }
+
   if (data.tables && data.tables.length > 0) {
     html += '<div class="section-label">📊 相关表格</div>';
     data.tables.forEach(function(t, i) {
@@ -97,12 +184,58 @@ function renderResults(data) {
       html += '<div class="evidence-card"><div class="meta"><span class="id">[T' + (i+1) + ']</span>' + (num ? '<span>' + esc(num) + '</span>' : '') + '</div><div class="text">' + esc(t.caption || '') + '</div>' + md + '</div>';
     });
   }
-  if (data.papers && data.papers.length > 0) {
+
+  // ===== V33.2: 论文结果（本地 + 在线分组显示）=====
+  const localPapers = data.papers || [];
+  const onlinePapers = hybridData ? (hybridData.online_papers || []) : [];
+
+  if (localPapers.length > 0 || onlinePapers.length > 0) {
     html += '<div class="section-label">📚 相关论文</div>';
-    data.papers.forEach(function(p) {
-      html += '<div class="paper-card"><div class="title">' + esc(p.title || '') + '</div><div class="info">' + esc(p.authors || '') + (p.year ? ' · ' + p.year : '') + (p.journal ? ' · ' + esc(p.journal) : '') + '</div></div>';
-    });
+
+    // 在线新文献的下载栏
+    if (onlinePapers.length > 0) {
+      html += '<div class="download-bar">';
+      html += '<div class="info">🌐 找到 <strong>' + onlinePapers.length + '</strong> 篇在线新文献（本地没有），勾选后可一键下载入库</div>';
+      html += '<button onclick="downloadSelectedOnline()">⬇️ 下载选中到本地</button>';
+      html += '</div>';
+    }
+
+    // 本地论文
+    if (localPapers.length > 0) {
+      html += '<div class="paper-group">';
+      html += '<div class="paper-group-header"><div class="paper-group-title">📖 本地文献<span class="count">' + localPapers.length + '</span></div></div>';
+      localPapers.forEach(function(p) {
+        html += '<div class="paper-card">';
+        html += '<div class="title">' + esc(p.title || '') + ' <span class="source-tag local">本地</span></div>';
+        html += '<div class="info">' + esc(p.authors || '') + (p.year ? ' · ' + p.year : '') + (p.journal ? ' · ' + esc(p.journal) : '') + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // 在线新文献（带勾选框）
+    if (onlinePapers.length > 0) {
+      html += '<div class="paper-group">';
+      html += '<div class="paper-group-header"><div class="paper-group-title">🌐 在线新文献（NCBI/PMC）<span class="count">' + onlinePapers.length + '</span></div>';
+      html += '<label style="font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="selectAllOnline" onchange="toggleSelectAllOnline(this)" style="margin-right:4px;">全选</label>';
+      html += '</div>';
+      onlinePapers.forEach(function(p, idx) {
+        const pmcid = p.pmcid || p.paper_id || '';
+        html += '<div class="paper-card online">';
+        html += '<div class="paper-card-header">';
+        html += '<input type="checkbox" class="online-paper-checkbox" data-pmcid="' + esc(pmcid) + '" data-title="' + esc(p.title || '') + '">';
+        html += '<div style="flex:1;">';
+        html += '<div class="title">' + esc(p.title || '') + ' <span class="source-tag online">在线</span>' + (p.has_fulltext ? ' <span class="source-tag local">有全文</span>' : '') + '</div>';
+        html += '<div class="info">' + esc(p.authors || '') + (p.year ? ' · ' + p.year : '') + (p.journal ? ' · ' + esc(p.journal) : '') + (pmcid ? ' · ' + esc(pmcid) : '') + '</div>';
+        if (p.abstract) {
+          html += '<div class="info" style="margin-top:6px;color:#6b7280;font-style:italic;">' + esc(p.abstract.substring(0, 200)) + (p.abstract.length > 200 ? '...' : '') + '</div>';
+        }
+        html += '</div></div></div>';
+      });
+      html += '</div>';
+    }
   }
+
   if (data.graph_neighbors && data.graph_neighbors.length > 0) {
     html += '<div class="section-label">🕸️ 图谱关联论文（CITES/SIMILAR）</div>';
     data.graph_neighbors.forEach(function(g) {
@@ -110,8 +243,136 @@ function renderResults(data) {
       html += '<div class="paper-card"><div class="title">' + esc(g.title || '') + '</div><div class="info">[' + rel + ' conf=' + (g.confidence || 0).toFixed(2) + '] ' + (g.year || '?') + (g.journal ? ' · ' + esc(g.journal) : '') + '</div></div>';
     });
   }
-  if (!passages.length && !data.figures.length && !data.tables.length && !data.papers.length && !(data.graph_neighbors && data.graph_neighbors.length)) html = '<div class="empty">未找到相关结果，试试其他关键词。</div>';
+
+  if (!passages.length && !data.figures.length && !data.tables.length && !localPapers.length && !onlinePapers.length && !(data.graph_neighbors && data.graph_neighbors.length)) {
+    html = '<div class="empty">未找到相关结果，试试其他关键词。</div>';
+  }
+
   results.innerHTML = html;
+}
+
+// ===== V33.2: 在线文献下载功能 =====
+
+function toggleSelectAllOnline(checkbox) {
+  const checkboxes = document.querySelectorAll('.online-paper-checkbox');
+  checkboxes.forEach(function(cb) { cb.checked = checkbox.checked; });
+}
+
+async function downloadSelectedOnline() {
+  const checkboxes = document.querySelectorAll('.online-paper-checkbox:checked');
+  if (checkboxes.length === 0) {
+    alert('请先勾选要下载的在线文献');
+    return;
+  }
+
+  const pmcIds = [];
+  checkboxes.forEach(function(cb) {
+    const pmcid = cb.getAttribute('data-pmcid');
+    if (pmcid) pmcIds.push(pmcid);
+  });
+
+  if (pmcIds.length === 0) {
+    alert('选中的文献没有有效的 PMCID');
+    return;
+  }
+
+  if (!confirm('确定下载 ' + pmcIds.length + ' 篇在线文献到本地？\n\n下载后会自动导入数据库并重建索引，可能需要几分钟。')) {
+    return;
+  }
+
+  // 显示进度条
+  showDownloadProgress(pmcIds.length);
+
+  try {
+    const resp = await fetch(DOWNLOAD_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pmc_ids: pmcIds })
+    });
+    const data = await resp.json();
+
+    if (data.error) {
+      hideDownloadProgress();
+      alert('启动下载失败: ' + data.error);
+      return;
+    }
+
+    // 开始轮询进度
+    pollDownloadStatus(data.task_id);
+  } catch (e) {
+    hideDownloadProgress();
+    alert('下载请求失败: ' + e.message);
+  }
+}
+
+function showDownloadProgress(total) {
+  const container = document.getElementById('downloadProgress');
+  container.style.display = 'block';
+  container.innerHTML = '<div class="download-bar">' +
+    '<div class="info">⬇️ 正在下载 ' + total + ' 篇文献到本地... <span class="stage-badge" id="dlStage">准备中</span></div>' +
+    '<div class="progress-container">' +
+    '<div class="progress-bar"><div class="progress-fill" id="dlProgressFill" style="width:0%"></div></div>' +
+    '<div class="progress-text" id="dlProgressText">0%</div>' +
+    '</div></div>';
+}
+
+function hideDownloadProgress() {
+  document.getElementById('downloadProgress').style.display = 'none';
+  if (downloadPollTimer) {
+    clearInterval(downloadPollTimer);
+    downloadPollTimer = null;
+  }
+}
+
+function pollDownloadStatus(taskId) {
+  if (downloadPollTimer) clearInterval(downloadPollTimer);
+
+  downloadPollTimer = setInterval(async function() {
+    try {
+      const resp = await fetch(DOWNLOAD_STATUS_API + '?task_id=' + encodeURIComponent(taskId));
+      const data = await resp.json();
+
+      if (data.error) {
+        console.warn('查询进度失败:', data.error);
+        return;
+      }
+
+      // 更新进度
+      const fill = document.getElementById('dlProgressFill');
+      const text = document.getElementById('dlProgressText');
+      const stage = document.getElementById('dlStage');
+
+      if (fill) fill.style.width = (data.progress_percent || 0) + '%';
+      if (text) text.textContent = (data.progress_percent || 0) + '% — 下载 ' + (data.downloaded || 0) + '/' + (data.total || 0) + ' · 导入 ' + (data.imported || 0) + ' · 索引 ' + (data.indexed || 0);
+
+      const stageMap = {
+        'downloading': '📥 下载中',
+        'importing': '📥 导入数据库',
+        'indexing': '🔢 建向量索引',
+        'completed': '✅ 完成',
+        'pending': '⏳ 等待中'
+      };
+      if (stage) stage.textContent = stageMap[data.current_stage] || data.current_stage;
+
+      // 完成或失败
+      if (data.status === 'completed') {
+        clearInterval(downloadPollTimer);
+        downloadPollTimer = null;
+        if (text) text.textContent = '✅ 下载完成！共 ' + (data.downloaded + data.download_skipped) + ' 篇，新导入 ' + data.imported + ' 篇，索引 ' + data.indexed + ' 篇。3秒后自动刷新...';
+        setTimeout(function() {
+          hideDownloadProgress();
+          doSearch();  // 自动重新搜索，刷新结果
+        }, 3000);
+      } else if (data.status === 'failed') {
+        clearInterval(downloadPollTimer);
+        downloadPollTimer = null;
+        if (text) text.textContent = '❌ 下载失败: ' + (data.error || '未知错误');
+        alert('下载失败: ' + (data.error || '未知错误'));
+      }
+    } catch (e) {
+      console.warn('轮询进度异常:', e);
+    }
+  }, 2000);  // 每2秒轮询一次
 }
 </script>
 </body>
