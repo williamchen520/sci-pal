@@ -70,6 +70,13 @@ class EvidenceCard(BaseModel):
     confidence_level: ConfidenceLevel = Field(ConfidenceLevel.MEDIUM, description="V25.2: 置信度分层（风控基础）")
     verified: bool = Field(False, description="是否经过引用校验Agent验证")
 
+    # V33.4: 证据来源与匹配元数据（用于去重和综合置信度计算）
+    source_type: str = Field("full_text", description="来源类型：full_text（全文段落）/ abstract（摘要）")
+    match_method: str = Field("hybrid", description="匹配方式：vector（向量检索）/ bm25（全文检索）/ entity（实体匹配）/ hybrid（混合检索）")
+    rerank_score: float = Field(0.0, ge=0.0, le=1.0, description="重排分数（bge-reranker-base 输出，0-1）")
+    dedupe_key: str = Field("", description="去重 key（paper_id + para_id 的哈希，用于精确去重）")
+    retrieval_rank: int = Field(0, description="检索排名（在召回结果中的位置，0 表示未参与排序）")
+
     # V25.2: 句内定位——original_quote 在段落中的字符偏移
     sentence_start: int = Field(-1, description="原文引用在段落中的起始字符偏移（-1表示未定位）")
     sentence_end: int = Field(-1, description="原文引用在段落中的结束字符偏移（-1表示未定位）")
@@ -77,6 +84,40 @@ class EvidenceCard(BaseModel):
     def source_label(self) -> str:
         """返回简短来源标签，用于综述引用标记。"""
         return f"[{self.paper_id}:{self.para_id}]"
+
+    def compute_quality_score(self) -> float:
+        """V33.4: 计算证据综合质量分（0-1），用于生成时按质量排序和低质量过滤。
+
+        计算公式：
+        quality = 0.4 × source_type_weight + 0.3 × match_method_weight + 0.3 × rerank_score
+
+        来源类型权重：
+        - full_text: 1.0（全文段落，最可靠）
+        - abstract: 0.6（摘要，信息有限）
+
+        匹配方式权重：
+        - hybrid: 1.0（混合检索，最全面）
+        - vector: 0.8（向量检索，语义匹配）
+        - bm25: 0.7（全文检索，关键词匹配）
+        - entity: 0.6（实体匹配，精确但可能遗漏）
+        """
+        source_weights = {
+            "full_text": 1.0,
+            "abstract": 0.6,
+        }
+        match_weights = {
+            "hybrid": 1.0,
+            "vector": 0.8,
+            "bm25": 0.7,
+            "entity": 0.6,
+        }
+
+        source_w = source_weights.get(self.source_type, 0.5)
+        match_w = match_weights.get(self.match_method, 0.5)
+        rerank_w = min(max(self.rerank_score, 0.0), 1.0)
+
+        quality = 0.4 * source_w + 0.3 * match_w + 0.3 * rerank_w
+        return round(quality, 4)
 
 
 # ──────────────────────────────────────────────

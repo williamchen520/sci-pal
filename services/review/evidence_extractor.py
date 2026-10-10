@@ -171,19 +171,22 @@ class EvidenceExtractor:
         从一组检索段落中抽取证据卡片。
 
         V31.65: 简化证据抽取逻辑，直接把每个段落作为一个证据卡片，跳过 LLM 证据抽取。
+        V33.4: 增加精确去重（paper_id+para_id）、来源/匹配元数据提取、综合置信度计算、按质量排序。
 
         Args:
             paragraphs: 段落列表，每个 dict 需含 para_id, paper_id, text,
-                       可选 section_l1, page, paper_title
+                       可选 section_l1, page, paper_title, source_type, match_method, rerank_score, retrieval_rank
             topic: 综述主题（用于指导抽取方向，可选）
             language: V25.9: 证据内容语言，"en"（默认，英文）或 "zh"（中文）
 
         Returns:
-            EvidenceCard 列表
+            EvidenceCard 列表（已去重，按综合质量分降序排列）
         """
-        # V31.65: 简化证据抽取逻辑，直接把每个段落作为一个证据卡片
+        # V33.4: 精确去重 —— 基于 paper_id + para_id
+        seen_keys: set[str] = set()
         all_cards: list[EvidenceCard] = []
         seq_counter = 0
+        duplicate_count = 0
 
         for para in paragraphs:
             text = para.get("text", "").strip()
@@ -194,6 +197,19 @@ class EvidenceExtractor:
 
             safe_paper = self._sanitize_id(para["paper_id"])
             safe_para = self._sanitize_id(para["para_id"])
+
+            # V33.4: 精确去重检查
+            dedupe_key = f"{safe_paper}_{safe_para}"
+            if dedupe_key in seen_keys:
+                duplicate_count += 1
+                continue
+            seen_keys.add(dedupe_key)
+
+            # V33.4: 从段落元数据中提取来源/匹配信息（如果检索层传入了的话）
+            source_type = para.get("source_type", "full_text")
+            match_method = para.get("match_method", "hybrid")
+            rerank_score = float(para.get("rerank_score", 0.0))
+            retrieval_rank = int(para.get("retrieval_rank", 0))
 
             card = EvidenceCard(
                 evidence_id=f"ev_{safe_paper}_{safe_para}_{seq_counter}",
@@ -208,11 +224,22 @@ class EvidenceExtractor:
                 page=para.get("page", 0),
                 paper_title=para.get("paper_title", ""),
                 confidence=1.0,
+                # V33.4: 来源/匹配/重排元数据
+                source_type=source_type,
+                match_method=match_method,
+                rerank_score=rerank_score,
+                dedupe_key=dedupe_key,
+                retrieval_rank=retrieval_rank,
             )
             all_cards.append(card)
             seq_counter += 1
 
-        print(f"✅ 简化证据抽取：{len(all_cards)} 个证据卡片")
+        # V33.4: 按综合质量分降序排列（高质量证据优先）
+        all_cards.sort(key=lambda c: c.compute_quality_score(), reverse=True)
+
+        if duplicate_count > 0:
+            print(f"🔍 去重：跳过 {duplicate_count} 个重复段落（基于 paper_id+para_id）")
+        print(f"✅ 简化证据抽取：{len(all_cards)} 个证据卡片（已去重，按质量排序）")
         return all_cards
 
     def _extract_batch(
