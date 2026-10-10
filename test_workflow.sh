@@ -78,6 +78,7 @@ PYTHON_FILES=(
     "services/search/hybrid_retriever.py"
     "services/search/online_downloader.py"
     "download_protocols.py"
+    "download_bioinformatics_methods.py"
 )
 
 for file in "${PYTHON_FILES[@]}"; do
@@ -703,6 +704,58 @@ if python3 download_protocols.py --help 2>/dev/null | grep -q "abstract-dir"; th
     test_pass "Protocol 自定义输出目录参数存在"
 else
     test_fail "Protocol 自定义输出目录参数缺失"
+fi
+
+# -----------------------------------------------------------------------------
+# 阶段 3.8: 生物信息学方法下载脚本测试（V33.8 新增）
+# -----------------------------------------------------------------------------
+
+section_header "阶段 3.8: 生物信息学方法下载脚本测试（V33.8）"
+
+# 测试1: 脚本存在和语法
+if [ -f "download_bioinformatics_methods.py" ]; then
+    if python3 -c "import ast; ast.parse(open('download_bioinformatics_methods.py').read())" 2>/dev/null; then
+        test_pass "download_bioinformatics_methods.py 存在且语法正确"
+    else
+        test_fail "download_bioinformatics_methods.py 语法错误"
+    fi
+else
+    test_fail "download_bioinformatics_methods.py 不存在"
+fi
+
+# 测试2: 帮助信息
+if python3 download_bioinformatics_methods.py --help >/dev/null 2>&1; then
+    test_pass "download_bioinformatics_methods.py --help 正常"
+else
+    test_fail "download_bioinformatics_methods.py --help 失败"
+fi
+
+# 测试3: 来源参数
+if python3 download_bioinformatics_methods.py --help 2>/dev/null | grep -q "dockstore"; then
+    test_pass "生物信息学方法 --source dockstore 参数存在"
+else
+    test_fail "生物信息学方法 --source 参数缺失"
+fi
+
+# 测试4: 主题筛选参数
+if python3 download_bioinformatics_methods.py --help 2>/dev/null | grep -q "genomics"; then
+    test_pass "生物信息学方法 --topic 主题筛选参数存在"
+else
+    test_fail "生物信息学方法 --topic 参数缺失"
+fi
+
+# 测试5: dry-run参数
+if python3 download_bioinformatics_methods.py --help 2>/dev/null | grep -q "dry-run"; then
+    test_pass "生物信息学方法 --dry-run 预览模式参数存在"
+else
+    test_fail "生物信息学方法 --dry-run 参数缺失"
+fi
+
+# 测试6: 调研文档存在
+if [ -f "生物信息学方法数据库调研与建库指南.md" ]; then
+    test_pass "生物信息学方法调研文档存在"
+else
+    test_fail "生物信息学方法调研文档缺失"
 fi
 
 # -----------------------------------------------------------------------------

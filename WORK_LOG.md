@@ -830,3 +830,116 @@ python download_protocols.py --query "ChIP-seq" --dry-run
 7. **P0/P1/P2 都是支撑链路，不改变核心逻辑**——核心检索和生成逻辑保持稳定
 8. **新模块都是全局单例，线程安全**——支持并发访问，不阻塞主流程
 9. **数据层扩展遵循统一流程**——新数据源（Protocol/arXiv/Zotero）都走 下载→解析→建库→建向量索引 四步，检索层零改动
+
+---
+
+## V33.8 — 生物信息学方法（Workflow/Pipeline/Tool）开放API对接 + 调研文档（2026-10-10）
+
+### 背景
+
+在完成湿实验 Protocol（protocols.io/Bio-protocol/PMC）专项下载脚本（V33.7）后，用户进一步要求调研**生物信息学分析方法**类的开放数据库。生物信息学方法（Workflow/Pipeline/Tool）具有高度结构化的特点（机器可读的工作流描述、明确的软件版本和依赖、精确的参数说明、容器化保证可复现），比普通论文中的 Methods 部分更精确、更适合建库。
+
+### 完成内容
+
+#### 1. 新建 `download_bioinformatics_methods.py`（V1.0，约600行）
+
+对接三个开放API平台，批量下载结构化的生物信息学方法元数据：
+
+| 平台 | API类型 | 规模 | 下载类 |
+|------|---------|------|--------|
+| **Dockstore** | GA4GH TRS v2 标准REST API | 数万workflow+tool | `DockstoreDownloader` |
+| **bio.tools** | Django REST API（ELIXIR支持） | 34,459+工具/数据服务 | `BioToolsDownloader` |
+| **nf-core** | GitHub API | 62个curated pipeline（33发布+24开发+5归档） | `NFCoreDownloader` |
+
+**功能特性**：
+- 三个平台统一接口，支持 `--source {all,dockstore,biotools,nfcore}` 选择
+- 支持12个主题筛选（genomics/transcriptomics/proteomics/metabolomics/epigenomics/single_cell/metagenomics/structural_biology/phylogenetics/machine_learning/visualization/statistics）
+- 增量下载、自动限速、错误重试
+- nf-core 自动获取每个pipeline的README文档（增加方法描述内容）
+- 输出结构化JSON，包含名称、描述、标签、作者、许可证、参数、输入输出、链接等
+- 下载清单自动保存（`download_manifest.json`）
+- Windows控制台编码兼容
+
+**使用方法**：
+```bash
+# 下载所有来源（默认各100条）
+python download_bioinformatics_methods.py
+
+# 只下载Dockstore
+python download_bioinformatics_methods.py --source dockstore
+
+# 每个来源下载500条
+python download_bioinformatics_methods.py --max 500
+
+# 按基因组学主题筛选
+python download_bioinformatics_methods.py --topic genomics
+
+# 预览模式
+python download_bioinformatics_methods.py --dry-run
+```
+
+#### 2. 新建《生物信息学方法数据库调研与建库指南.md》
+
+完整的调研文档，包含：
+- 10+个开放数据库的详细汇总（规模、开放获取状态、API、数据格式、特点）
+- 第一梯队：Dockstore、WorkflowHub、nf-core、Snakemake Catalog、Galaxy IWC
+- 第二梯队：bio.tools、Galaxy ToolShed、Bioconda、BioContainers
+- 中国资源：国家生物信息中心（CNCB/NGDC）
+- 建库方案设计（优先级、数据处理流程、核心原则、与湿实验Protocol的互补关系）
+- 后续扩展方向（短期/中期/长期）
+- 完整的API使用示例和参考链接
+
+### 测试验证
+
+- ✅ 语法检查通过
+- ✅ `--help` 正常显示
+- ✅ bio.tools API测试：获取到34,459个工具总数，成功下载50条，工具类型和主题统计正常
+- ✅ Dockstore API测试：成功下载10条workflow
+- ✅ nf-core API测试：GitHub限流等待后成功获取8个pipeline，README获取正常，主要语言Nextflow/Python
+- ✅ 三个来源全部独立测试通过
+
+### 关键技术点
+
+1. **Dockstore GA4GH TRS API**：
+   - 端点：`https://dockstore.org/api/ga4gh/trs/v2/tools`
+   - 支持 `type=workflow` 筛选，`limit`/`offset` 分页
+   - workflow_id 需要URL编码（如 `#workflow/github.com/nf-core/rnaseq`）
+
+2. **bio.tools API**：
+   - 端点：`https://bio.tools/api/t/`
+   - 支持 `page`/`page_size` 分页，`topic`/`toolType` 筛选
+   - 响应格式：`{count, next, previous, list[]}`
+   - EDAM本体分类，元数据丰富（主题、操作、数据类型、格式、许可证）
+
+3. **nf-core GitHub API**：
+   - 端点：`https://api.github.com/orgs/nf-core/repos`
+   - 支持 `sort=updated`、`type=public`、`per_page` 分页
+   - 注意GitHub API限流（未认证60次/小时），限流时等待60秒重试
+   - 排除非pipeline仓库（modules/tools/website/configs等）
+   - 通过README API获取每个pipeline的文档内容
+
+4. **输出目录分离**：生物信息学方法数据单独存放在 `bioinformatics_methods/` 下，按来源分子目录（dockstore/biotools/nfcore）
+
+### 同步更新
+
+- ✅ WORK_LOG.md 追加 V33.8 完整记录
+- ✅ test_workflow.sh 增加阶段3.8（生物信息学方法下载脚本测试，6项）
+- ✅ self_check.py 增加检查6.6（生物信息学方法下载脚本检查，约20项），版本号更新为V33.8
+- ✅ Gitee 提交推送
+
+### 核心原则（继续保持）
+
+1. **检索层不改，只改数据层**——生物信息学方法数据走现有 下载→解析→建库→建向量索引 四步，检索层零改动
+2. **向量库是主程序的数据源**——往里加数据就行，搜索逻辑不用变
+3. **Embedding模型一致**——用跟老库一样的bge-base-en-v1.5，保证向量空间一致
+4. **湿实验Protocol + 生信Workflow互补建库**——合在一起就是完整的"从实验到分析"全流程方法库
+
+### 后续工作
+
+1. 将生物信息学方法数据导入现有建库流程（解析JSON→提取文本→建向量索引）
+2. WorkflowHub API对接（与Dockstore互补，欧洲ELIXIR支持）
+3. Galaxy ToolShed API对接（数千工具XML wrapper）
+4. Bioconda/BioContainers元数据对接
+5. 元数据增强（提取EDAM本体分类、工具类型、输入输出格式等结构化字段）
+6. 方法-论文关联（将生信方法与引用该方法的论文关联）
+7. 前端增加"分析方法"分类筛选

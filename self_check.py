@@ -123,6 +123,7 @@ def check_project_structure():
         "services/review/evidence_extractor.py",
         "services/search/unified_retriever.py",
         "download_protocols.py",
+        "download_bioinformatics_methods.py",
     ]
 
     for f in key_files:
@@ -648,6 +649,111 @@ def check_v337_protocol_downloader():
 
 
 # =============================================================================
+# 检查 6.6: 生物信息学方法下载脚本（V33.8 新增）
+# =============================================================================
+
+def check_v338_bioinformatics_methods():
+    print_header("检查 6.6: 生物信息学方法下载脚本（V33.8）")
+
+    root = get_project_root()
+    script_path = root / "download_bioinformatics_methods.py"
+
+    # 检查1: 文件存在
+    if not script_path.is_file():
+        check_fail("download_bioinformatics_methods.py 不存在")
+        return
+    size = script_path.stat().st_size
+    check_pass(f"download_bioinformatics_methods.py 存在 ({size:,} bytes)")
+
+    # 检查2: 语法正确
+    try:
+        import ast
+        with open(script_path, "r") as f:
+            ast.parse(f.read())
+        check_pass("download_bioinformatics_methods.py 语法正确")
+    except SyntaxError as e:
+        check_fail(f"download_bioinformatics_methods.py 语法错误: {e}")
+        return
+
+    # 检查3: 核心类存在
+    try:
+        with open(script_path, "r") as f:
+            content = f.read()
+
+        required_classes = [
+            "DockstoreDownloader",
+            "BioToolsDownloader",
+            "NFCoreDownloader",
+        ]
+        required_methods = [
+            "get_total_count",
+            "fetch_workflows",
+            "fetch_tools",
+            "fetch_pipelines",
+            "download",
+        ]
+        required_consts = [
+            "DOCKSTORE_API_BASE",
+            "BIOTOOLS_API_BASE",
+            "NFCORE_API_BASE",
+            "BIOINFORMATICS_TOPICS",
+        ]
+
+        for cls in required_classes:
+            if f"class {cls}" in content:
+                check_pass(f"类 {cls} 存在")
+            else:
+                check_fail(f"类 {cls} 缺失")
+
+        for method in required_methods:
+            if f"def {method}" in content:
+                check_pass(f"方法 {method} 存在")
+            else:
+                check_warn(f"方法 {method} 可能缺失（部分类专有）")
+
+        for const in required_consts:
+            if const in content:
+                check_pass(f"常量 {const} 存在")
+            else:
+                check_fail(f"常量 {const} 缺失")
+
+        # 检查4: 主题分类数量
+        topic_count = content.count('"name":')  # 粗略统计
+        if topic_count >= 10:
+            check_pass(f"内置 {topic_count} 个主题分类（≥10）")
+        else:
+            check_warn(f"仅内置 {topic_count} 个主题分类（建议≥10）")
+
+        # 检查5: 关键功能特性
+        features = [
+            ("--source", "来源选择参数"),
+            ("--topic", "主题筛选参数"),
+            ("--max", "数量限制参数"),
+            ("--dry-run", "预览模式参数"),
+            ("--output-dir", "输出目录参数"),
+            ("download_manifest", "下载清单"),
+            ("Windows", "Windows编码兼容"),
+            ("time.sleep", "API限速"),
+        ]
+        for keyword, desc in features:
+            if keyword in content:
+                check_pass(f"功能: {desc}")
+            else:
+                check_warn(f"功能可能缺失: {desc}")
+
+        # 检查6: 调研文档存在
+        doc_path = root / "生物信息学方法数据库调研与建库指南.md"
+        if doc_path.is_file():
+            doc_size = doc_path.stat().st_size
+            check_pass(f"调研文档存在 ({doc_size:,} bytes)")
+        else:
+            check_fail("生物信息学方法调研文档缺失")
+
+    except Exception as e:
+        check_fail(f"生物信息学方法下载脚本验证失败: {e}")
+
+
+# =============================================================================
 # 检查 7: 配置文件
 # =============================================================================
 
@@ -689,7 +795,7 @@ def check_config():
 def main():
     print(f"\n{Colors.CYAN}{Colors.BOLD}")
     print("╔══════════════════════════════════════════════════════════════════╗")
-    print("║           Sci-Pal 系统自检脚本 V33.7                              ║")
+    print("║           Sci-Pal 系统自检脚本 V33.8                              ║")
     print("║           检查时间: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "                          ║")
     print("╚══════════════════════════════════════════════════════════════════╝")
     print(f"{Colors.NC}")
@@ -704,6 +810,7 @@ def main():
     check_ai_models()
     check_v334_features()
     check_v337_protocol_downloader()
+    check_v338_bioinformatics_methods()
     check_config()
 
     # 汇总结果
