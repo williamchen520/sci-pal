@@ -727,3 +727,106 @@ P2 优化聚焦于"让系统可调试、可进化、可维护"的支撑链路，
 6. **EvidenceCard 是增量单位**——不是论文，不是句子，而是 EvidenceCard
 7. **P0/P1/P2 都是支撑链路，不改变核心逻辑**——核心检索和生成逻辑保持稳定
 8. **新模块都是全局单例，线程安全**——支持并发访问，不阻塞主流程
+
+---
+
+## 📅 2026-10-10
+
+### 🧪 新增：实验方法（Protocol）专项批量下载脚本
+
+**文件**：`download_protocols.py`（V1.0，约700行）
+
+#### 背景
+
+调研发现实验方法（Protocols）有多个专门数据库：
+- **Bio-protocol**（5,500+，完全OA，PMC收录，斯坦福2011年创立）
+- **STAR Protocols**（Cell Press，OA，PMC收录）
+- **Nature Protocols**（部分OA）
+- **Methods in Molecular Biology**（Humana Press，部分OA）
+- **Cold Spring Harbor Protocols**（部分OA）
+- **JoVE**（视频实验期刊，部分OA）
+- **protocols.io**（111,900+，有公开API v3，2023年被Springer Nature收购）
+
+按照核心原则——**只加数据层，不改检索层**，Protocol文章下载后走同样的解析→建库→建向量索引流程，主程序一行代码都不用改。
+
+#### 功能特性
+
+1. **6种Protocol专刊支持**：bio-protocol / star-protocols / nature-protocols / methods-mol-biol / csh-protocols / jove
+2. **两种搜索模式**：
+   - 特定期刊筛选（`--journal bio-protocol`）
+   - 通用搜索（主题 + protocols/methods关键词 + free full text过滤）
+3. **批量主题下载**（`--batch`）：内置8大分类60+主题
+   - 分子生物学、细胞生物学、基因组学、蛋白质组学
+   - 免疫学、生物信息学、肿瘤研究、神经科学
+4. **摘要+全文双下载**：
+   - 摘要保存为JSON（`abstracts_protocols/`）
+   - PMC全文XML（`documents_protocols/`）
+5. **自动过滤只有摘要的文章**（检查`<body>`标签）
+6. **增量下载**（已下载的自动跳过）
+7. **NCBI速率限制**（有API Key 0.12秒/请求，无Key 0.35秒/请求）
+8. **重试机制**（3次重试，指数退避）
+9. **Windows编码修复**（强制utf-8，避免cp1252崩溃）
+
+#### 使用方法
+
+```bash
+# 按主题搜索下载所有类型protocol（默认100篇）
+python download_protocols.py --query "single cell RNA sequencing"
+
+# 只下载 Bio-protocol 期刊的
+python download_protocols.py --query "flow cytometry" --journal bio-protocol
+
+# 批量下载内置主题（8大分类60+主题）
+python download_protocols.py --batch
+
+# 批量下载指定分类
+python download_protocols.py --batch-cat "基因组学,蛋白质组学" --max 50
+
+# 只下载摘要，不下载XML
+python download_protocols.py --query "PCR" --no-xml
+
+# 只搜索不下载（预览）
+python download_protocols.py --query "ChIP-seq" --dry-run
+```
+
+#### 测试结果
+
+- ✅ 语法检查通过
+- ✅ 通用搜索正常（single cell RNA sequencing → 20篇）
+- ✅ 特定期刊搜索正常（Bio-protocol + flow cytometry → 10篇）
+- ✅ 完整流程测试通过（western blot + Bio-protocol → 5篇摘要，2篇XML全文，3篇只有摘要被过滤，0失败）
+- ✅ 摘要JSON格式正确（包含pmid/pmcid/doi/title/authors/journal/abstract等字段）
+- ✅ XML全文下载正确（JATS格式，有`<body>`标签）
+
+#### 关键技术点
+
+1. **PubMed搜索语法修正**：
+   - ❌ `protocol[Publication Type]` —— PubMed没有这个Publication Type，搜不到
+   - ❌ `"open access"[Filter]` —— 不是正确的filter语法
+   - ✅ `free full text[Filter]` —— 正确的免费全文过滤
+   - ✅ `"protocols"[Title/Abstract] OR "method"[Title/Abstract]` —— 通用protocol筛选
+
+2. **全文过滤**：下载XML后检查是否有`<body>`标签，只有摘要的文章自动删除
+
+3. **输出目录分离**：Protocol数据单独存放在`abstracts_protocols/`和`documents_protocols/`，不跟普通论文混在一起
+
+#### 后续工作
+
+1. 将Protocol数据导入现有建库流程（import_xml.py + build_vector_index.py）
+2. 考虑是否需要单独建一个protocol分类的向量库collection
+3. protocols.io API对接（有公开API v3，可拉取111,900+方法）
+4. 前端增加"实验方法"分类筛选
+
+---
+
+#### ⚠️ 核心原则（继续保持）
+
+1. **检索层不改，只改数据层**——只更新向量库，主程序搜索逻辑一行都不用改
+2. **综述生成不需要关系抽取和冲突检测**——这些是问答/分析功能用的
+3. **证据锚定生成**——任何结论，没有 EvidenceCard 就禁止写入综述正文
+4. **证据不足时降级，不硬编**——明确标注"直接证据有限"，避免幻觉
+5. **不重建，只追加 + 标记**——旧数据不动，新数据挂上去，冲突用标记不用删除
+6. **EvidenceCard 是增量单位**——不是论文，不是句子，而是 EvidenceCard
+7. **P0/P1/P2 都是支撑链路，不改变核心逻辑**——核心检索和生成逻辑保持稳定
+8. **新模块都是全局单例，线程安全**——支持并发访问，不阻塞主流程
+9. **数据层扩展遵循统一流程**——新数据源（Protocol/arXiv/Zotero）都走 下载→解析→建库→建向量索引 四步，检索层零改动

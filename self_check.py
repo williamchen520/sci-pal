@@ -96,7 +96,7 @@ def check_project_structure():
 
     # 关键目录
     required_dirs = ["services", "frontend", "data", "build_db"]
-    optional_dirs = ["documents_xml", "abstracts_xml", "models", "tests"]
+    optional_dirs = ["documents_xml", "abstracts_xml", "models", "tests", "abstracts_protocols", "documents_protocols"]
 
     for d in required_dirs:
         path = root / d
@@ -122,6 +122,7 @@ def check_project_structure():
         "services/review/review_generator.py",
         "services/review/evidence_extractor.py",
         "services/search/unified_retriever.py",
+        "download_protocols.py",
     ]
 
     for f in key_files:
@@ -550,6 +551,103 @@ def check_v334_features():
 
 
 # =============================================================================
+# 检查 6.5: Protocol 专项下载脚本（V33.7 新增）
+# =============================================================================
+
+def check_v337_protocol_downloader():
+    print_header("检查 6.5: Protocol 专项下载脚本（V33.7）")
+
+    root = get_project_root()
+    script_path = root / "download_protocols.py"
+
+    # 检查1: 文件存在
+    if not script_path.is_file():
+        check_fail("download_protocols.py 不存在")
+        return
+    size = script_path.stat().st_size
+    check_pass(f"download_protocols.py 存在 ({size:,} bytes)")
+
+    # 检查2: 语法正确
+    try:
+        import ast
+        with open(script_path, "r") as f:
+            ast.parse(f.read())
+        check_pass("download_protocols.py 语法正确")
+    except SyntaxError as e:
+        check_fail(f"download_protocols.py 语法错误: {e}")
+        return
+
+    # 检查3: 核心类和方法存在
+    try:
+        with open(script_path, "r") as f:
+            content = f.read()
+
+        required_classes = ["ProtocolDownloader"]
+        required_methods = [
+            "search_pubmed",
+            "fetch_abstracts",
+            "fetch_pmc_xml",
+            "download_by_topic",
+            "download_batch",
+            "_check_xml_has_body",
+        ]
+        required_consts = ["PROTOCOL_JOURNALS", "BATCH_TOPICS"]
+
+        for cls in required_classes:
+            if f"class {cls}" in content:
+                check_pass(f"类 {cls} 存在")
+            else:
+                check_fail(f"类 {cls} 缺失")
+
+        for method in required_methods:
+            if f"def {method}" in content:
+                check_pass(f"方法 {method} 存在")
+            else:
+                check_fail(f"方法 {method} 缺失")
+
+        for const in required_consts:
+            if const in content:
+                check_pass(f"常量 {const} 存在")
+            else:
+                check_fail(f"常量 {const} 缺失")
+
+        # 检查4: 支持的期刊数量
+        journal_count = content.count('"pmc_journal_title"')
+        if journal_count >= 6:
+            check_pass(f"支持 {journal_count} 种 Protocol 专刊（≥6）")
+        else:
+            check_warn(f"仅支持 {journal_count} 种 Protocol 专刊（建议≥6）")
+
+        # 检查5: 批量主题分类数量
+        category_count = content.count('": [')  # 粗略统计分类
+        if category_count >= 6:
+            check_pass(f"内置 {category_count} 个批量主题分类（≥6）")
+        else:
+            check_warn(f"仅内置 {category_count} 个批量主题分类（建议≥6）")
+
+        # 检查6: 关键功能特性
+        features = [
+            ("free full text[Filter]", "免费全文过滤（正确语法）"),
+            ("filter_no_fulltext", "只有摘要过滤开关"),
+            ("--journal", "特定期刊筛选参数"),
+            ("--batch", "批量下载参数"),
+            ("--dry-run", "预览模式参数"),
+            ("--no-xml", "仅下载摘要参数"),
+            ("MAX_RETRIES", "重试机制"),
+            ("RATE_LIMIT", "NCBI速率限制"),
+            ("Windows", "Windows编码兼容"),
+        ]
+        for keyword, desc in features:
+            if keyword in content:
+                check_pass(f"功能: {desc}")
+            else:
+                check_warn(f"功能缺失: {desc}")
+
+    except Exception as e:
+        check_fail(f"Protocol 下载脚本验证失败: {e}")
+
+
+# =============================================================================
 # 检查 7: 配置文件
 # =============================================================================
 
@@ -591,7 +689,7 @@ def check_config():
 def main():
     print(f"\n{Colors.CYAN}{Colors.BOLD}")
     print("╔══════════════════════════════════════════════════════════════════╗")
-    print("║           Sci-Pal 系统自检脚本 V33.4                              ║")
+    print("║           Sci-Pal 系统自检脚本 V33.7                              ║")
     print("║           检查时间: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "                          ║")
     print("╚══════════════════════════════════════════════════════════════════╝")
     print(f"{Colors.NC}")
@@ -605,6 +703,7 @@ def main():
     check_databases()
     check_ai_models()
     check_v334_features()
+    check_v337_protocol_downloader()
     check_config()
 
     # 汇总结果

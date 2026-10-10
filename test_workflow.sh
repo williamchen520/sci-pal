@@ -77,6 +77,7 @@ PYTHON_FILES=(
     "services/search/online_search.py"
     "services/search/hybrid_retriever.py"
     "services/search/online_downloader.py"
+    "download_protocols.py"
 )
 
 for file in "${PYTHON_FILES[@]}"; do
@@ -650,6 +651,58 @@ print('导出与分享功能模块测试通过')
     test_pass "P2-6: 导出与分享功能模块（export_manager.py）正常"
 else
     test_fail "P2-6: 导出与分享功能模块测试失败"
+fi
+
+# -----------------------------------------------------------------------------
+# 阶段 3.7: Protocol 专项下载脚本测试（V33.7 新增）
+# -----------------------------------------------------------------------------
+
+section_header "阶段 3.7: Protocol 专项下载脚本测试（V33.7）"
+
+# 测试1: 脚本存在和语法
+if [ -f "download_protocols.py" ]; then
+    if python3 -c "import ast; ast.parse(open('download_protocols.py').read())" 2>/dev/null; then
+        test_pass "download_protocols.py 存在且语法正确"
+    else
+        test_fail "download_protocols.py 语法错误"
+    fi
+else
+    test_fail "download_protocols.py 不存在"
+fi
+
+# 测试2: 帮助信息
+if python3 download_protocols.py --help >/dev/null 2>&1; then
+    test_pass "download_protocols.py --help 正常"
+else
+    test_fail "download_protocols.py --help 失败"
+fi
+
+# 测试3: dry-run 通用搜索（不实际下载）
+if python3 download_protocols.py --query "PCR" --max 5 --dry-run 2>/dev/null | grep -q "找到"; then
+    test_pass "Protocol 通用搜索 dry-run 正常（能搜到结果）"
+else
+    test_fail "Protocol 通用搜索 dry-run 失败"
+fi
+
+# 测试4: dry-run 特定期刊搜索
+if python3 download_protocols.py --query "flow cytometry" --journal bio-protocol --max 5 --dry-run 2>/dev/null | grep -q "找到"; then
+    test_pass "Protocol 特定期刊（Bio-protocol）搜索 dry-run 正常"
+else
+    test_fail "Protocol 特定期刊搜索 dry-run 失败"
+fi
+
+# 测试5: 检查内置批量主题
+if python3 download_protocols.py --help 2>/dev/null | grep -q "batch"; then
+    test_pass "Protocol 批量下载（--batch）参数存在"
+else
+    test_fail "Protocol 批量下载参数缺失"
+fi
+
+# 测试6: 检查输出目录参数
+if python3 download_protocols.py --help 2>/dev/null | grep -q "abstract-dir"; then
+    test_pass "Protocol 自定义输出目录参数存在"
+else
+    test_fail "Protocol 自定义输出目录参数缺失"
 fi
 
 # -----------------------------------------------------------------------------
