@@ -6,9 +6,10 @@ V25.4 - 统一 LLM 接入层（支持本地 Ollama 和云端 OpenAI 兼容 API�
 
 环境变量配置:
     # 本地 Ollama（默认）
+    # V33.9: 重量模型改用 7b Q4_K_M 量化版（8GB显存可跑，质量接近FP16）
     SCIPAL_LLM_PROVIDER=ollama
-    SCIPAL_LLM_MODEL=qwen2.5:14b
-    SCIPAL_LLM_LIGHT_MODEL=qwen2.5:7b
+    SCIPAL_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
+    SCIPAL_LLM_LIGHT_MODEL=qwen2.5:3b
 
     # 阿里云通义千问（OpenAI 兼容模式）
     SCIPAL_LLM_PROVIDER=openai
@@ -330,8 +331,8 @@ def create_llm_client(
         # V31.21: light model 用 3B（生成大纲，快）
         model_name = os.environ.get("SCIPAL_LLM_LIGHT_MODEL", "qwen2.5:3b")
     else:
-        # V31.21: heavy model 用 7B（写正文，质量好）
-        model_name = os.environ.get("SCIPAL_LLM_MODEL", "qwen2.5:7b")
+        # V33.9: heavy model 用 7b Q4_K_M 量化版（8GB显存可跑，写正文质量好）
+        model_name = os.environ.get("SCIPAL_LLM_MODEL", "qwen2.5:7b-instruct-q4_K_M")
 
     if provider == "openai":
         host = os.environ.get(

@@ -107,8 +107,9 @@ class QAService:
             )
         else:
             # Ollama 本地模式
+            # V33.9: 改用 7b Q4_K_M 量化版（8GB显存可跑）
             host = os.environ.get("SCIPAL_LLM_HOST", "http://localhost:11434")
-            model = os.environ.get("SCIPAL_LLM_MODEL", "qwen2.5:14b")
+            model = os.environ.get("SCIPAL_LLM_MODEL", "qwen2.5:7b-instruct-q4_K_M")
             return LLMClient(
                 provider="ollama",
                 model=model,

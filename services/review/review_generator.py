@@ -222,8 +222,8 @@ class ReviewGenerator:
         self.use_llm_verification = use_llm_verification
         self.db_path = db_path  # V25.7: 保存数据库路径，用于查询论文元数据做参考文献格式化
         # V25.4 优化：轻量任务（证据抽取/关系抽取/冲突识别）用轻量模型
-        # （从环境变量 SCIPAL_LLM_LIGHT_MODEL 读取，本地默认 qwen2.5:7b，云端默认 qwen-turbo）
-        # 只有大纲生成和撰写保留重模型（需要更强的语言组织能力）
+        # （从环境变量 SCIPAL_LLM_LIGHT_MODEL 读取，本地默认 qwen2.5:3b，云端默认 qwen-turbo）
+        # V33.9: 重模型改用 7b Q4_K_M 量化版（8GB显存可跑），只有大纲生成和撰写保留重模型
         from .llm_client import create_llm_client
         self._light_llm = create_llm_client(light=True, timeout=300, max_retries=2)
         self.extractor = EvidenceExtractor(self._light_llm)

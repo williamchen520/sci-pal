@@ -943,3 +943,68 @@ python download_bioinformatics_methods.py --dry-run
 5. 元数据增强（提取EDAM本体分类、工具类型、输入输出格式等结构化字段）
 6. 方法-论文关联（将生信方法与引用该方法的论文关联）
 7. 前端增加"分析方法"分类筛选
+
+---
+
+## V33.9 — LLM 模型配置优化：7b Q4 量化版适配 8GB 显存（2026-10-11）
+
+### 背景
+
+用户显卡为 RTX 4060 8GB。原配置中重量模型为 `qwen2.5:7b`（FP16，~8GB显存），加上常驻的 Embedding（~1.5GB）和 Reranker（~1.2GB），总显存需求 ~10.7GB，**8GB 显存装不下**，会导致 OOM 或回退 CPU 运行。
+
+### 修改内容
+
+将重量模型默认值从 `qwen2.5:7b`（FP16）改为 `qwen2.5:7b-instruct-q4_K_M`（Q4量化）：
+
+| 模型 | 精度 | 显存需求 | 常驻+LLM合计 | 8GB显存 |
+|------|------|---------|-------------|---------|
+| qwen2.5:7b | FP16 | ~8GB | ~10.7GB | ❌ 爆显存 |
+| qwen2.5:7b-instruct-q4_K_M | Q4量化 | ~4.5GB | ~7.2GB | ✅ 可跑 |
+
+量化版质量与 FP16 差距在 3-5% 以内，几乎感知不到，但显存省一半。
+
+### 修改的文件
+
+1. **services/review/llm_client.py**
+   - 文档注释：默认模型改为 `qwen2.5:7b-instruct-q4_K_M`
+   - `create_llm_client()` 函数：heavy model 默认值从 `qwen2.5:7b` 改为 `qwen2.5:7b-instruct-q4_K_M`
+   - 轻量模型保持 `qwen2.5:3b` 不变（生成大纲，速度优先）
+
+2. **services/review/review_generator.py**
+   - 注释更新：轻量模型默认值说明从 `qwen2.5:7b` 修正为 `qwen2.5:3b`
+   - 增加 V33.9 量化版说明
+
+3. **services/qa/qa_service.py**
+   - Ollama 本地模式默认模型从 `qwen2.5:14b` 改为 `qwen2.5:7b-instruct-q4_K_M`
+
+4. **.env.example**
+   - 增加 Ollama 本地配置示例（含量化版模型名）
+
+### 用户需要执行的操作
+
+```bash
+# 1. 下载 7b Q4_K_M 量化版模型
+ollama pull qwen2.5:7b-instruct-q4_K_M
+
+# 2. （可选）删掉原来的 FP16 版 7b，节省磁盘空间
+ollama rm qwen2.5:7b
+
+# 3. 重启 api_server.py 即可生效
+```
+
+### 显存账本（优化后）
+
+| 模块 | 显存占用 |
+|------|---------|
+| bge-base-en-v1.5 (Embedding) | ~1.5GB |
+| bge-reranker-base (重排) | ~1.2GB |
+| qwen2.5:7b-instruct-q4_K_M (LLM) | ~4.5GB |
+| **合计** | **~7.2GB / 8GB** |
+
+剩余 ~0.8GB 余量，安全。如果后续做 Embedding/Reranker 按需加载，还能再省 2.7GB 给 LLM。
+
+### 核心原则
+
+- 轻量任务（生成大纲、证据抽取）用 3b，速度快
+- 重量任务（写综述正文、问答）用 7b Q4，质量好
+- 两个模型分时复用，不会同时加载，Ollama 自动管理显存
