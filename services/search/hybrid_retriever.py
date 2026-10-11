@@ -1,17 +1,20 @@
 """
-Hybrid Retriever: 混合检索（本地 + 在线 NCBI/PMC）
-V1.0 - 混合检索系统 P0 模块
+Hybrid Retriever: 混合检索（本地 + 在线 NCBI/PMC + Protocols.io 实验方法）
+V1.1 - 增加 Protocols.io 实验方法搜索源
 
-同时搜索本地数据库和在线 NCBI PubMed/PMC，结果合并、三级去重、统一排序。
+同时搜索本地数据库、在线 NCBI PubMed/PMC 和 protocols.io 实验协议，
+结果合并、三级去重、统一排序。
 
 核心原则：检索层接口不变，只增加数据来源。
 本地检索逻辑完全复用，在线检索作为额外数据源并行执行。
 
-去重策略（三级）：
+论文去重策略（三级）：
   1. PMCID（最精确，PMC 全文 ID）
   2. PMID（PubMed ID）
   3. DOI（数字对象标识符）
 任一匹配即认为是同一篇论文，优先保留本地版本。
+
+Protocols.io 实验方法作为独立结果返回（跟论文是不同类型内容，不混合去重）。
 """
 
 import sqlite3
@@ -20,6 +23,7 @@ from typing import Dict, List, Optional, Tuple
 
 from services.search.hybrid_search import HybridSearch
 from services.search.online_search import OnlineSearcher, OnlineSearchResult
+from services.search.protocols_io_client import ProtocolsIOClient
 
 
 # 本地数据库路径（跟 api_server.py 保持一致）
@@ -45,10 +49,14 @@ class HybridRetriever:
         self,
         use_online: bool = True,
         online_max_results: int = 30,
+        use_protocols_io: bool = True,
+        protocols_io_max_results: int = 10,
         verbose: bool = True,
     ):
         self.use_online = use_online
         self.online_max_results = online_max_results
+        self.use_protocols_io = use_protocols_io
+        self.protocols_io_max_results = protocols_io_max_results
         self.verbose = verbose
 
         # 本地检索器（复用现有 HybridSearch）
@@ -73,6 +81,24 @@ class HybridRetriever:
                 self.online_searcher = None
         else:
             self.online_searcher = None
+
+        # Protocols.io 实验方法检索器（V1.1 新增）
+        if use_protocols_io:
+            try:
+                self.protocols_io_client = ProtocolsIOClient()
+                if self.protocols_io_client.is_enabled:
+                    if self.verbose:
+                        print("✅ 混合检索器：Protocols.io 实验方法检索已加载")
+                else:
+                    if self.verbose:
+                        print("ℹ️  混合检索器：Protocols.io 未启用（未配置 token，可通过 SCIPAL_PROTOCOLS_IO_TOKEN 启用）")
+                    self.protocols_io_client = None
+            except Exception as e:
+                if self.verbose:
+                    print(f"⚠️  混合检索器：Protocols.io 加载失败: {e}")
+                self.protocols_io_client = None
+        else:
+            self.protocols_io_client = None
 
         # 本地论文 ID 集合（用于快速判断是否在本地）
         self._local_paper_ids: Optional[set] = None
@@ -264,60 +290,102 @@ class HybridRetriever:
                 print(f"  ⚠️  在线搜索失败: {e}")
             return []
 
+    def _search_protocols_io(self, query: str, max_results: int) -> List[Dict]:
+        """
+        Protocols.io 实验方法搜索（V1.1 新增）。
+        返回统一格式的协议字典列表。
+        """
+        if self.protocols_io_client is None:
+            return []
+
+        try:
+            results = self.protocols_io_client.search_and_format(
+                query,
+                max_results=max_results,
+            )
+            # 给每个结果加一个默认分数（protocols.io 按 activity 排序，靠前的分数高）
+            for i, r in enumerate(results):
+                r["score"] = max(0.1, 1.0 - i * 0.05)
+            return results
+        except Exception as e:
+            if self.verbose:
+                print(f"  ⚠️  Protocols.io 搜索失败: {e}")
+            return []
+
     def search_papers(
         self,
         query: str,
         top_k: int = 20,
         use_online: Optional[bool] = None,
         online_max_results: Optional[int] = None,
+        use_protocols_io: Optional[bool] = None,
+        protocols_io_max_results: Optional[int] = None,
     ) -> Dict:
         """
-        混合搜索论文：本地 + 在线同时搜索，合并去重，统一排序。
+        混合搜索：本地 + 在线论文 + Protocols.io 实验方法，合并去重，统一排序。
 
         Args:
             query: 搜索关键词
-            top_k: 返回的最大结果数
-            use_online: 是否使用在线搜索（None 用初始化时的设置）
+            top_k: 返回的最大论文数
+            use_online: 是否使用在线论文搜索（None 用初始化时的设置）
             online_max_results: 在线搜索每个数据库的最大结果数
+            use_protocols_io: 是否使用 Protocols.io 实验方法搜索（None 用初始化时的设置）
+            protocols_io_max_results: Protocols.io 最大结果数
 
         Returns:
             {
                 "query": str,
-                "total": int,              # 合并去重后的总数
+                "total": int,              # 合并去重后的论文总数
                 "local_count": int,        # 本地论文数
                 "online_count": int,       # 在线新论文数（不在本地的）
                 "online_in_local_count": int,  # 在线搜索到但已在本地的数量
                 "papers": List[Dict],      # 合并后的论文列表（按 score 降序）
                 "local_papers": List[Dict], # 仅本地论文
                 "online_papers": List[Dict], # 仅在线新论文（不在本地的）
+                "protocols": List[Dict],   # Protocols.io 实验方法列表（V1.1 新增）
+                "protocols_count": int,    # 实验方法数量
             }
         """
         if use_online is None:
             use_online = self.use_online
         if online_max_results is None:
             online_max_results = self.online_max_results
+        if use_protocols_io is None:
+            use_protocols_io = self.use_protocols_io and self.protocols_io_client is not None
+        if protocols_io_max_results is None:
+            protocols_io_max_results = self.protocols_io_max_results
 
         if self.verbose:
-            print(f"\n🔍 混合检索: '{query}' (top_k={top_k}, online={use_online})")
+            print(f"\n🔍 混合检索: '{query}' (top_k={top_k}, online={use_online}, protocols_io={use_protocols_io})")
 
-        # 并行搜索本地和在线（提速）
+        # 并行搜索本地、在线论文、Protocols.io（提速）
         local_results: List[Dict] = []
         online_results: List[Dict] = []
+        protocols_results: List[Dict] = []
 
-        if use_online and self.online_searcher is not None:
-            # 并行执行
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                local_future = executor.submit(self._search_local, query, top_k)
-                online_future = executor.submit(self._search_online, query, online_max_results)
+        # 收集需要并行执行的任务
+        tasks = {}
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            tasks["local"] = executor.submit(self._search_local, query, top_k)
 
-                local_results = local_future.result()
-                online_results = online_future.result()
-        else:
-            local_results = self._search_local(query, top_k)
+            if use_online and self.online_searcher is not None:
+                tasks["online"] = executor.submit(self._search_online, query, online_max_results)
+
+            if use_protocols_io and self.protocols_io_client is not None:
+                tasks["protocols"] = executor.submit(self._search_protocols_io, query, protocols_io_max_results)
+
+            # 收集结果
+            local_results = tasks["local"].result()
+            if "online" in tasks:
+                online_results = tasks["online"].result()
+            if "protocols" in tasks:
+                protocols_results = tasks["protocols"].result()
 
         if self.verbose:
             print(f"  📚 本地搜索: {len(local_results)} 篇")
             print(f"  🌐 在线搜索: {len(online_results)} 篇")
+            if protocols_results:
+                print(f"  🧪 Protocols.io 实验方法: {len(protocols_results)} 条")
 
         # 统计在线论文中已在本地的数量
         online_in_local = sum(1 for r in online_results if r.get("in_local_db"))
@@ -349,6 +417,8 @@ class HybridRetriever:
 
         if self.verbose:
             print(f"  ✅ 合并去重后: {len(merged)} 篇 (本地 {len(local_results)} + 在线新 {len(online_new)})")
+            if protocols_results:
+                print(f"  ✅ Protocols.io 实验方法: {len(protocols_results)} 条（独立返回，不与论文混合）")
 
         return {
             "query": query,
@@ -359,6 +429,8 @@ class HybridRetriever:
             "papers": merged,
             "local_papers": local_results,
             "online_papers": online_new,
+            "protocols": protocols_results,
+            "protocols_count": len(protocols_results),
         }
 
 

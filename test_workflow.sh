@@ -759,6 +759,107 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# 阶段 3.9: LLM 量化模型配置检查（V33.9 新增）
+# -----------------------------------------------------------------------------
+
+section_header "阶段 3.9: LLM 量化模型配置检查（V33.9）"
+
+# 测试1: llm_client.py 重量模型默认值为量化版
+if grep -q "qwen2.5:7b-instruct-q4_K_M" services/review/llm_client.py; then
+    test_pass "llm_client.py 重量模型默认值为 7b Q4 量化版"
+else
+    test_fail "llm_client.py 重量模型未配置为量化版"
+fi
+
+# 测试2: qa_service.py Ollama 本地模式默认值为量化版
+if grep -q "qwen2.5:7b-instruct-q4_K_M" services/qa/qa_service.py; then
+    test_pass "qa_service.py Ollama 本地模式默认值为 7b Q4 量化版"
+else
+    test_fail "qa_service.py 未配置量化版模型"
+fi
+
+# 测试3: 轻量模型保持 3b 不变
+if grep -q 'SCIPAL_LLM_LIGHT_MODEL.*qwen2.5:3b' services/review/llm_client.py; then
+    test_pass "轻量模型保持 qwen2.5:3b 不变"
+else
+    test_fail "轻量模型配置异常"
+fi
+
+# 测试4: .env.example 包含 Ollama 配置示例
+if grep -q "SCIPAL_LLM_PROVIDER=ollama" .env.example; then
+    test_pass ".env.example 包含 Ollama 本地配置示例"
+else
+    test_fail ".env.example 缺少 Ollama 配置示例"
+fi
+
+# -----------------------------------------------------------------------------
+# 阶段 3.10: Protocols.io API 对接测试（V33.10 新增）
+# -----------------------------------------------------------------------------
+
+section_header "阶段 3.10: Protocols.io API 对接测试（V33.10）"
+
+# 测试1: protocols_io_client.py 存在且语法正确
+if [ -f "services/search/protocols_io_client.py" ]; then
+    if python3 -c "import ast; ast.parse(open('services/search/protocols_io_client.py').read())" 2>/dev/null; then
+        test_pass "protocols_io_client.py 存在且语法正确"
+    else
+        test_fail "protocols_io_client.py 语法错误"
+    fi
+else
+    test_fail "protocols_io_client.py 不存在"
+fi
+
+# 测试2: 核心类存在
+if python3 -c "
+import ast
+tree = ast.parse(open('services/search/protocols_io_client.py').read())
+classes = [n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
+assert 'ProtocolsIOClient' in classes, '缺少 ProtocolsIOClient'
+assert 'ProtocolsIOResult' in classes, '缺少 ProtocolsIOResult'
+print('OK')
+" 2>/dev/null; then
+    test_pass "核心类 ProtocolsIOClient / ProtocolsIOResult 存在"
+else
+    test_fail "核心类缺失"
+fi
+
+# 测试3: 核心方法存在
+if python3 -c "
+import ast
+tree = ast.parse(open('services/search/protocols_io_client.py').read())
+methods = [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]
+assert 'search' in methods, '缺少 search 方法'
+assert 'get_protocol' in methods, '缺少 get_protocol 方法'
+assert 'search_and_format' in methods, '缺少 search_and_format 方法'
+print('OK')
+" 2>/dev/null; then
+    test_pass "核心方法 search / get_protocol / search_and_format 存在"
+else
+    test_fail "核心方法缺失"
+fi
+
+# 测试4: hybrid_retriever.py 已集成 Protocols.io
+if grep -q "protocols_io" services/search/hybrid_retriever.py; then
+    test_pass "hybrid_retriever.py 已集成 Protocols.io 搜索源"
+else
+    test_fail "hybrid_retriever.py 未集成 Protocols.io"
+fi
+
+# 测试5: 混合检索返回结果包含 protocols 字段
+if grep -q '"protocols"' services/search/hybrid_retriever.py; then
+    test_pass "混合检索返回结果包含 protocols 字段"
+else
+    test_fail "混合检索返回结果缺少 protocols 字段"
+fi
+
+# 测试6: 环境变量配置说明存在
+if grep -q "SCIPAL_PROTOCOLS_IO_TOKEN" services/search/protocols_io_client.py; then
+    test_pass "Protocols.io token 环境变量配置说明存在"
+else
+    test_fail "缺少 token 环境变量配置"
+fi
+
+# -----------------------------------------------------------------------------
 # 阶段 4: 配置和依赖检查
 # -----------------------------------------------------------------------------
 

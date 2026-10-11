@@ -754,6 +754,146 @@ def check_v338_bioinformatics_methods():
 
 
 # =============================================================================
+# 检查 6.7: LLM 量化模型配置（V33.9 新增）
+# =============================================================================
+
+def check_v339_llm_quantization():
+    print_header("检查 6.7: LLM 量化模型配置（V33.9）")
+
+    root = get_project_root()
+
+    try:
+        # 检查1: llm_client.py 重量模型默认值为量化版
+        llm_client_path = root / "services" / "review" / "llm_client.py"
+        if llm_client_path.is_file():
+            content = llm_client_path.read_text(encoding="utf-8")
+            if "qwen2.5:7b-instruct-q4_K_M" in content:
+                check_pass("llm_client.py 重量模型默认值为 7b Q4 量化版")
+            else:
+                check_fail("llm_client.py 重量模型未配置为量化版")
+        else:
+            check_fail("llm_client.py 不存在")
+
+        # 检查2: qa_service.py Ollama 本地模式默认值为量化版
+        qa_path = root / "services" / "qa" / "qa_service.py"
+        if qa_path.is_file():
+            content = qa_path.read_text(encoding="utf-8")
+            if "qwen2.5:7b-instruct-q4_K_M" in content:
+                check_pass("qa_service.py Ollama 本地模式默认值为量化版")
+            else:
+                check_fail("qa_service.py 未配置量化版模型")
+        else:
+            check_fail("qa_service.py 不存在")
+
+        # 检查3: 轻量模型保持 3b 不变
+        if llm_client_path.is_file():
+            content = llm_client_path.read_text(encoding="utf-8")
+            if 'qwen2.5:3b' in content:
+                check_pass("轻量模型保持 qwen2.5:3b 不变（生成大纲，速度优先）")
+            else:
+                check_fail("轻量模型配置异常")
+
+        # 检查4: .env.example 包含 Ollama 配置示例
+        env_example = root / ".env.example"
+        if env_example.is_file():
+            content = env_example.read_text(encoding="utf-8")
+            if "SCIPAL_LLM_PROVIDER=ollama" in content:
+                check_pass(".env.example 包含 Ollama 本地配置示例")
+            else:
+                check_fail(".env.example 缺少 Ollama 配置示例")
+        else:
+            check_warn(".env.example 不存在")
+
+    except Exception as e:
+        check_fail(f"LLM 量化配置检查失败: {e}")
+
+
+# =============================================================================
+# 检查 6.8: Protocols.io API 对接（V33.10 新增）
+# =============================================================================
+
+def check_v3310_protocols_io():
+    print_header("检查 6.8: Protocols.io API 对接（V33.10）")
+
+    root = get_project_root()
+
+    try:
+        # 检查1: protocols_io_client.py 存在
+        client_path = root / "services" / "search" / "protocols_io_client.py"
+        if client_path.is_file():
+            client_size = client_path.stat().st_size
+            check_pass(f"protocols_io_client.py 存在 ({client_size:,} bytes)")
+        else:
+            check_fail("protocols_io_client.py 不存在")
+            return
+
+        # 检查2: 语法正确
+        import ast
+        try:
+            tree = ast.parse(client_path.read_text(encoding="utf-8"))
+            check_pass("protocols_io_client.py 语法正确")
+        except SyntaxError as e:
+            check_fail(f"protocols_io_client.py 语法错误: {e}")
+            return
+
+        # 检查3: 核心类存在
+        classes = [n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
+        if "ProtocolsIOClient" in classes:
+            check_pass("类 ProtocolsIOClient 存在")
+        else:
+            check_fail("类 ProtocolsIOClient 不存在")
+        if "ProtocolsIOResult" in classes:
+            check_pass("类 ProtocolsIOResult 存在")
+        else:
+            check_fail("类 ProtocolsIOResult 不存在")
+
+        # 检查4: 核心方法存在
+        methods = [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]
+        for method_name in ["search", "get_protocol", "search_and_format"]:
+            if method_name in methods:
+                check_pass(f"方法 {method_name} 存在")
+            else:
+                check_fail(f"方法 {method_name} 不存在")
+
+        # 检查5: 环境变量配置说明
+        content = client_path.read_text(encoding="utf-8")
+        if "SCIPAL_PROTOCOLS_IO_TOKEN" in content:
+            check_pass("Protocols.io token 环境变量配置说明存在")
+        else:
+            check_fail("缺少 token 环境变量配置说明")
+
+        # 检查6: hybrid_retriever.py 已集成
+        hybrid_path = root / "services" / "search" / "hybrid_retriever.py"
+        if hybrid_path.is_file():
+            hybrid_content = hybrid_path.read_text(encoding="utf-8")
+            if "protocols_io" in hybrid_content:
+                check_pass("hybrid_retriever.py 已集成 Protocols.io 搜索源")
+            else:
+                check_fail("hybrid_retriever.py 未集成 Protocols.io")
+            if '"protocols"' in hybrid_content:
+                check_pass("混合检索返回结果包含 protocols 字段")
+            else:
+                check_fail("混合检索返回结果缺少 protocols 字段")
+        else:
+            check_fail("hybrid_retriever.py 不存在")
+
+        # 检查7: 缓存机制
+        if "cache_dir" in content or "_cache_get" in content:
+            check_pass("Protocols.io 客户端内置缓存机制")
+        else:
+            check_warn("Protocols.io 客户端缺少缓存机制")
+
+        # 检查8: 重试机制
+        if "max_retries" in content or "RETRY_DELAY" in content:
+            check_pass("Protocols.io 客户端内置重试机制")
+        else:
+            check_warn("Protocols.io 客户端缺少重试机制")
+
+    except Exception as e:
+        check_fail(f"Protocols.io API 对接检查失败: {e}")
+
+
+# =============================================================================
 # 检查 7: 配置文件
 # =============================================================================
 
@@ -795,7 +935,7 @@ def check_config():
 def main():
     print(f"\n{Colors.CYAN}{Colors.BOLD}")
     print("╔══════════════════════════════════════════════════════════════════╗")
-    print("║           Sci-Pal 系统自检脚本 V33.8                              ║")
+    print("║           Sci-Pal 系统自检脚本 V33.10                             ║")
     print("║           检查时间: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "                          ║")
     print("╚══════════════════════════════════════════════════════════════════╝")
     print(f"{Colors.NC}")
@@ -811,6 +951,8 @@ def main():
     check_v334_features()
     check_v337_protocol_downloader()
     check_v338_bioinformatics_methods()
+    check_v339_llm_quantization()
+    check_v3310_protocols_io()
     check_config()
 
     # 汇总结果

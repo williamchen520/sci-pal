@@ -1008,3 +1008,91 @@ ollama rm qwen2.5:7b
 - 轻量任务（生成大纲、证据抽取）用 3b，速度快
 - 重量任务（写综述正文、问答）用 7b Q4，质量好
 - 两个模型分时复用，不会同时加载，Ollama 自动管理显存
+
+---
+
+## V33.10 — Protocols.io API 对接：实验方法实时搜索（2026-10-11）
+
+### 背景
+
+用户提出关键架构洞察："网上做的 Protocol 本身做得挺好的，我们是不是可以直接拿来用，而不是再造轮子嵌入到系统里？"
+
+经调研确认：
+- **protocols.io** 已有完整 REST API v3 + 官方 MCP Server + Advanced AI 功能
+- 25k+ 公开协议，结构化数据（步骤/试剂/材料/时间字段化）
+- 被 Springer Nature 收购，持续维护
+- 完全不需要下载数据建库，直接 API 实时调用
+
+### 核心原则
+
+**能对接的就对接，必须自建的才自建。** 不重复造轮子。
+
+三层混合架构：
+1. **直接对接**（不下载，实时调用）：protocols.io API
+2. **API实时检索**（不建向量库，调对方搜索API）：Dockstore/bio.tools/nf-core/NCBI
+3. **本地建库**（下载→解析→建向量索引）：PubMed摘要/PMC全文/Bio-protocol(via PMC)
+
+### 修改内容
+
+#### 1. 新建 `services/search/protocols_io_client.py`（V1.0，约500行）
+
+Protocols.io API 客户端，功能：
+- `ProtocolsIOResult` 类：统一格式的搜索结果（跟论文格式兼容）
+- `ProtocolsIOClient` 类：API 客户端
+  - `search()` — 搜索公开协议（支持关键词、排序、分页）
+  - `get_protocol()` — 获取协议详情（含完整步骤/试剂）
+  - `search_and_format()` — 搜索并返回字典列表（混合检索直接用）
+  - 内置缓存（7天有效）、限速（0.5秒/请求）、重试（3次）
+- 便捷函数：`search_protocols_io()`、`is_protocols_io_available()`
+- 命令行测试入口：`python protocols_io_client.py "western blot" 5`
+- Windows 控制台编码兼容
+
+API 端点：
+- 搜索：`GET /protocols?filter=public&key=<query>&page_size=<n>&order_field=activity`
+- 详情：`GET /protocols/<id>`
+- 认证：`Authorization: Bearer <ACCESS_TOKEN>`
+
+#### 2. 修改 `services/search/hybrid_retriever.py`（V1.0 → V1.1）
+
+集成 Protocols.io 为第三个搜索源：
+- `__init__` 增加 `use_protocols_io`、`protocols_io_max_results` 参数
+- 新增 `_search_protocols_io()` 方法
+- `search_papers()` 增加 `use_protocols_io`、`protocols_io_max_results` 参数
+- 三路并行搜索（本地 + 在线NCBI + Protocols.io），ThreadPoolExecutor max_workers=3
+- 返回结果增加 `protocols` 和 `protocols_count` 字段
+- **论文检索接口完全不变**（向后兼容），Protocols.io 结果独立返回，不与论文混合去重
+
+### 用户需要做的配置
+
+```bash
+# 1. 注册 protocols.io 账号
+#    https://www.protocols.io
+
+# 2. 在 Settings → API 中创建 Client Access Token
+
+# 3. 设置环境变量（Windows PowerShell）
+$env:SCIPAL_PROTOCOLS_IO_TOKEN="your_token_here"
+
+# 4. 重启 api_server.py 即可生效
+#    未设置 token 时自动跳过，不影响现有功能
+```
+
+### 设计决策
+
+1. **Protocols.io 结果独立返回，不与论文混合** — 实验方法跟论文是不同类型内容，分开更清晰，前端可以分别展示"论文"和"实验方法"标签页
+2. **不下载数据，不建向量库** — protocols.io 自己有搜索和AI，直接调API，零存储成本
+3. **检索层接口不变** — 论文搜索的返回格式完全不变，只是多了一个 `protocols` 字段，旧代码不受影响
+4. **可选启用** — 没配置 token 时自动跳过，不影响现有功能
+
+### 显存/资源影响
+
+- **0MB 显存增加** — 纯 API 调用，不加载任何 AI 模型
+- **~50MB 内存增加** — 客户端实例 + 缓存
+- 完全不影响 RTX 4060 8GB 的显存分配
+
+### 后续可扩展
+
+- 前端搜索页增加"实验方法"标签页，展示 protocols.io 结果
+- 综述生成时自动检索相关实验方法作为补充材料
+- 实验设计功能直接调用 protocols.io 搜索 + 详情
+- 对接 protocols.io MCP Server（如果后续用 MCP 框架）
