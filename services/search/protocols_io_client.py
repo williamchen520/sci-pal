@@ -84,6 +84,14 @@ class ProtocolsIOResult:
         self.source = source
         self.is_protocol = is_protocol
 
+        # 兼容论文格式的 year 字段
+        self.year = None
+        if published_on and published_on > 0:
+            try:
+                self.year = time.gmtime(published_on).tm_year
+            except Exception:
+                pass
+
     def to_dict(self) -> Dict:
         """转为字典，方便 JSON 序列化和混合检索处理。"""
         return {
@@ -136,8 +144,8 @@ class ProtocolsIOResult:
             description=item.get("description", "") or "",
             doi=item.get("doi", "") or "",
             uri=item.get("uri", "") or "",
-            url=f"https://www.protocols.io/view/{item.get('uri', '')}",
-            number_of_steps=item.get("number_of_steps", 0),
+            url=item.get("url", "") or f"https://www.protocols.io/view/{item.get('uri', '')}",
+            number_of_steps=item.get("number_of_steps") or 0,
             published_on=published_on,
             created_on=item.get("created_on"),
             creator_name=creator.get("name", ""),
