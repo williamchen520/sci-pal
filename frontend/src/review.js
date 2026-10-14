@@ -309,6 +309,11 @@
       html += '<div class="evidence-card">';
       html += '<div class="ev-header">';
       html += `<span class="ev-id">${escapeHtml(ev.evidence_id || '')}</span>`;
+      // V33.17: 摘要证据标记（该论文无全文，摘要当证据）
+      const isAbstractEv = ev.source_type === 'abstract' || ev.source === 'abstract';
+      if (isAbstractEv) {
+        html += `<span class="ev-type" title="来自摘要库（该论文无全文）" style="background:#fef3c7;color:#92400e;">📄 摘要</span>`;
+      }
       html += `<span class="ev-type">${escapeHtml(ev.evidence_type || 'fact')}</span>`;
       html += '</div>';
 

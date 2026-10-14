@@ -58,6 +58,15 @@
         const sourceBadge = source === 'abstract'
           ? '<span class="source-badge abstract" title="摘要库">摘要</span>'
           : '<span class="source-badge fulltext" title="全文库">全文</span>';
+        // V33.17: 证据数区分全文/摘要
+        const fulltextEv = paper.fulltext_evidence_count || 0;
+        const abstractEv = paper.abstract_evidence_count || 0;
+        let evText = (paper.evidence_count || 0) + ' 条证据';
+        if (fulltextEv > 0 && abstractEv > 0) {
+          evText += '（全文' + fulltextEv + '+摘要' + abstractEv + '）';
+        } else if (abstractEv > 0 && !fulltextEv) {
+          evText += '（摘要）';
+        }
         html +=
           '<div class="paper-item' +
           (isAssigned ? ' assigned' : '') +
@@ -68,7 +77,7 @@
           '<div class="paper-check">' + (isAssigned ? '✓' : '') + '</div>' +
           '<div class="paper-info">' +
           '<div class="paper-title">' + config.escapeHtml(paper.title || paper.paper_id) + ' ' + sourceBadge + '</div>' +
-          '<div class="paper-meta">' + (paper.evidence_count || 0) + ' 条证据 · ' + config.escapeHtml(paper.paper_id) + '</div>' +
+          '<div class="paper-meta">' + evText + ' · ' + config.escapeHtml(paper.paper_id) + '</div>' +
           '</div>' +
           '<button class="view-btn" data-paper-id="' + config.escapeHtml(paper.paper_id) + '" data-source="' + config.escapeHtml(source) + '" title="查看详细内容">👁️</button>' +
           '</div>';
