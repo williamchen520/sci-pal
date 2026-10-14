@@ -64,6 +64,13 @@
   .progress-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #d97706); border-radius: 4px; transition: width .3s; }
   .progress-text { font-size: 12px; color: #92400e; margin-top: 4px; }
   .stage-badge { display: inline-block; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+  /* V33.11: 实验方法（Protocols.io）样式 */
+  .protocol-card { border-left: 3px solid #10b981; background: #ecfdf5; }
+  .protocol-card:hover { border-color: #10b981; }
+  .protocol-card .desc { font-size: 12px; color: #6b7280; margin-top: 6px; line-height: 1.5; }
+  .protocol-card .link { display: inline-block; margin-top: 8px; font-size: 12px; color: #059669; text-decoration: none; font-weight: 600; }
+  .protocol-card .link:hover { text-decoration: underline; }
+  .source-tag.protocol { background: #d1fae5; color: #065f46; }
   /* V33.3: Toast 通知 */
   .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
   .toast { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 16px 20px; min-width: 300px; max-width: 400px; border-left: 4px solid #52c41a; animation: toastSlideIn .3s ease-out; }
@@ -223,6 +230,9 @@ function renderResults(data) {
   if (hybridData) {
     html += '<div class="route-badge" style="background:#fef3c7;color:#92400e;">';
     html += '🌐 混合检索: 本地 ' + (hybridData.local_count || 0) + ' 篇 + 在线新 ' + (hybridData.online_count || 0) + ' 篇';
+    if (hybridData.protocols_count) {
+      html += ' + 实验方法 ' + hybridData.protocols_count + ' 条';
+    }
     if (hybridData.online_in_local_count) {
       html += '（在线搜到但已在本地 ' + hybridData.online_in_local_count + ' 篇，自动去重）';
     }
@@ -308,6 +318,26 @@ function renderResults(data) {
     }
   }
 
+  // ===== V33.11: 实验方法（Protocols.io）=====
+  const protocols = hybridData ? (hybridData.protocols || []) : [];
+  if (protocols.length > 0) {
+    html += '<div class="paper-group">';
+    html += '<div class="paper-group-header"><div class="paper-group-title">🧪 实验方法（Protocols.io）<span class="count">' + protocols.length + '</span></div></div>';
+    protocols.forEach(function(p) {
+      html += '<div class="paper-card protocol-card">';
+      html += '<div class="title">' + esc(p.title || '') + ' <span class="source-tag protocol">方法</span></div>';
+      html += '<div class="info">' + esc(p.authors || '') + (p.year ? ' · ' + p.year : '') + '</div>';
+      if (p.description) {
+        html += '<div class="desc">' + esc(p.description.substring(0, 150)) + (p.description.length > 150 ? '...' : '') + '</div>';
+      }
+      if (p.url) {
+        html += '<a class="link" href="' + esc(p.url) + '" target="_blank" rel="noopener">🔗 查看原文 →</a>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
   if (data.graph_neighbors && data.graph_neighbors.length > 0) {
     html += '<div class="section-label">🕸️ 图谱关联论文（CITES/SIMILAR）</div>';
     data.graph_neighbors.forEach(function(g) {
@@ -316,7 +346,7 @@ function renderResults(data) {
     });
   }
 
-  if (!passages.length && !data.figures.length && !data.tables.length && !localPapers.length && !onlinePapers.length && !(data.graph_neighbors && data.graph_neighbors.length)) {
+  if (!passages.length && !data.figures.length && !data.tables.length && !localPapers.length && !onlinePapers.length && !protocols.length && !(data.graph_neighbors && data.graph_neighbors.length)) {
     html = '<div class="empty">未找到相关结果，试试其他关键词。</div>';
   }
 
