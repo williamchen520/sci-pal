@@ -1995,6 +1995,30 @@ def run_db_migrations():
             conn.commit()
             print("🔧 数据库迁移完成: 新增 supplementary_files 表")
 
+        # V33.12: 检查 tasks 表是否存在，不存在则创建
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tasks'")
+        if not cursor.fetchone():
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                task_id TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'running',
+                progress_text TEXT DEFAULT '',
+                progress_pct REAL DEFAULT 0,
+                params TEXT,
+                result TEXT,
+                error TEXT,
+                created_at TEXT,
+                started_at TEXT,
+                finished_at TEXT
+            )
+            ''')
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_type ON tasks(type)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_tasks_created ON tasks(created_at)")
+            conn.commit()
+            print("🔧 数据库迁移完成: 新增 tasks 表（统一任务表）")
+
         conn.close()
     except Exception as e:
         print(f"⚠️  数据库迁移跳过（不影响运行）: {e}")
