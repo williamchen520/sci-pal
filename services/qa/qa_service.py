@@ -15,6 +15,7 @@ from typing import Dict, List, Any, Optional
 
 from services.search.unified_retriever import UnifiedRetriever
 from services.review.llm_client import LLMClient, LLMError
+from services.ai.rag_validator import RAGValidator
 
 
 # ============================================================
@@ -78,6 +79,8 @@ class QAService:
         self.top_figures = top_figures
         self.temperature = temperature
         self._llm: Optional[LLMClient] = None
+        # V33.14: RAG 防幻觉校验（引用覆盖率，QA 场景不要求每个证据都被引用）
+        self.validator = RAGValidator(coverage_threshold=0.8)
 
     @property
     def llm(self) -> LLMClient:
@@ -258,6 +261,47 @@ class QAService:
                 "llm_model": self.llm.model,
             }
 
+        # Step 3.5: RAG 防幻觉校验（V33.14 新增）
+        print("🛡️  Step 3.5: RAG validation...")
+        envelope_text = str(envelope)
+        required_item_ids = list(set(re.findall(r'\[([TPFRCG]\d+)\]', envelope_text)))
+        validation_info = {
+            "coverage": 1.0,
+            "passed": True,
+            "missing": [],
+            "retried": False,
+            "message": "",
+        }
+
+        if required_item_ids:
+            validation = self.validator.validate(answer, required_item_ids)
+            print(f"  📊 {validation['message']}")
+
+            if not validation["passed"] and validation["missing"]:
+                print(f"  ⚠️  Retrying LLM call with missing items hint...")
+                retry_user_prompt = self.validator.build_retry_prompt(
+                    user_prompt, validation["missing"]
+                )
+                try:
+                    answer = self.llm.chat(
+                        system_prompt=system_prompt,
+                        user_prompt=retry_user_prompt,
+                        temperature=self.temperature,
+                    )
+                    validation_info["retried"] = True
+                    validation = self.validator.validate(answer, required_item_ids)
+                    print(f"  📊 After retry: {validation['message']}")
+                except Exception as e:
+                    print(f"  ⚠️  Retry failed: {e}")
+
+            validation_info = {
+                "coverage": float(validation["coverage"]),
+                "passed": validation["passed"],
+                "missing": validation["missing"],
+                "retried": validation_info["retried"],
+                "message": validation["message"],
+            }
+
         # Step 4: 解析引用
         print("📝 Step 4: Parsing citations...")
         citations = parse_citations(answer)
@@ -277,6 +321,7 @@ class QAService:
                 "tables": len(retrieval_result.get("tables", [])),
                 "papers": len(retrieval_result.get("papers", [])),
             },
+            "validation": validation_info,
         }
 
         if include_diagnostics:

@@ -59,8 +59,9 @@ class RAGValidator:
     
     def _extract_citations(self, text: str) -> set:
         """Extract all cited item IDs from AI output"""
-        # Match patterns like [T01], [P02], [F03], [C04]
-        pattern = r'\[([TPFC]\d{2})\]'
+        # Match patterns like [T1], [P02], [F3], [C04], [R7], [G6]
+        # V33.14: align with qa_service.CITATION_PATTERN (R/C/G added, digits variable length)
+        pattern = r'\[([TPFRCG]\d+)\]'
         matches = re.findall(pattern, text)
         return set(matches)
     
