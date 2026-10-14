@@ -22,6 +22,11 @@
   .search-box button { padding: 12px 24px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 15px; cursor: pointer; transition: opacity .2s; }
   .search-box button:hover { opacity: .88; }
   .search-box button:disabled { opacity: .5; cursor: not-allowed; }
+  /* V33.15: 语音输入按钮 */
+  .search-box button.voice-btn { padding: 12px 16px; font-size: 18px; }
+  .search-box button.voice-btn.recording { background: #dc2626; animation: voicePulse 1.2s infinite; }
+  .search-box button.voice-btn:disabled { background: #9ca3af; cursor: not-allowed; opacity: 1; }
+  @keyframes voicePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
   .route-badge { display: inline-block; padding: 3px 10px; background: var(--accent-light); color: var(--accent); border-radius: 20px; font-size: 12px; margin-bottom: 16px; }
   .section-label { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
   .evidence-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
@@ -139,6 +144,8 @@
   <div class="search-box">
     <input type="text" id="query" placeholder="输入检索问题，如：How does STAT1 regulate the interferon immune response?" autofocus onkeydown="if(event.key==='Enter')doSearch()">
     <button id="searchBtn" onclick="doSearch()">检索</button>
+    <!-- V33.15: 语音输入按钮 -->
+    <button id="voiceBtn" class="voice-btn" onclick="toggleVoiceRecognition()" title="语音输入（zh-CN）">🎤</button>
   </div>
   <!-- V33.2: 混合搜索选项 -->
   <div class="search-options">
@@ -847,6 +854,59 @@ function closeModal() {
 }
 
 // ============================================================
+// V33.15: 语音输入（Web Speech API / zh-CN）
+// ============================================================
+
+let voiceRecognition = null;
+let isRecording = false;
+
+function initVoiceInput() {
+  const btn = document.getElementById('voiceBtn');
+  if (!btn) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    btn.disabled = true;
+    btn.title = '当前浏览器不支持 Web Speech API';
+    return;
+  }
+  voiceRecognition = new SR();
+  voiceRecognition.lang = 'zh-CN';
+  voiceRecognition.interimResults = false;
+  voiceRecognition.maxAlternatives = 1;
+  voiceRecognition.onresult = function(ev) {
+    const transcript = ev.results[0][0].transcript;
+    document.getElementById('query').value = transcript;
+    doSearch();
+  };
+  voiceRecognition.onerror = function(ev) {
+    console.error('Voice recognition error:', ev.error);
+    alert('语音识别失败：' + ev.error);
+  };
+  voiceRecognition.onend = function() {
+    isRecording = false;
+    btn.classList.remove('recording');
+    btn.textContent = '🎤';
+  };
+}
+
+function toggleVoiceRecognition() {
+  const btn = document.getElementById('voiceBtn');
+  if (!voiceRecognition || !btn) return;
+  if (isRecording) {
+    try { voiceRecognition.stop(); } catch (e) {}
+  } else {
+    try {
+      voiceRecognition.start();
+      isRecording = true;
+      btn.classList.add('recording');
+      btn.textContent = '🔴';
+    } catch (e) {
+      console.error('start() error:', e);
+    }
+  }
+}
+
+// ============================================================
 // V33.3: 页面初始化
 // ============================================================
 
@@ -859,6 +919,8 @@ document.addEventListener('DOMContentLoaded', function() {
   refreshQueueStatus();
   // 每30秒自动刷新队列状态
   setInterval(refreshQueueStatus, 30000);
+  // V33.15: 初始化语音输入
+  initVoiceInput();
 });
 </script>
 </body>
