@@ -208,8 +208,15 @@ def retrieve():
 
     try:
         retriever = get_retriever()
-        # V31.61: 从旧的 retriever.retrieve(...) 改成新的 retriever.search_papers(...)
-        result = retriever.search_papers(q, limit=top_paragraphs)
+        # V33.10 fix: UnifiedRetriever 的方法是 retrieve()，不是 search_papers()
+        # search_papers 是 HybridRetriever 的方法（用于 /api/search/hybrid）
+        result = retriever.retrieve(
+            query=q,
+            paper_id=paper_id,
+            top_paragraphs=top_paragraphs,
+            top_figures=top_figures,
+            filters=filters,
+        )
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": f"Retrieval failed: {str(e)}"}), 500
