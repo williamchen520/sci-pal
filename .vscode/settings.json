@@ -1,0 +1,40 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/venv_sciPal_py312/Scripts/python.exe",
+  "python.terminal.activateEnvironment": true,
+  "files.encoding": "utf8",
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "editor.formatOnSave": false,
+  "editor.rulers": [120],
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": true,
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": false,
+  "python.linting.pylintEnabled": false,
+  "[python]": {
+    "editor.tabSize": 4
+  },
+  "[javascript]": {
+    "editor.tabSize": 2
+  },
+  "[html]": {
+    "editor.tabSize": 2
+  },
+  "[css]": {
+    "editor.tabSize": 2
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/data/chroma": true,
+    "**/data/chroma_abstracts": true,
+    "**/documents_xml": true,
+    "**/abstracts_xml": true,
+    "**/data/*.db": true
+  }
+}

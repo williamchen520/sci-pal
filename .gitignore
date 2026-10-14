@@ -23,11 +23,20 @@ venv/
 .venv/
 
 # IDE
-.vscode/
+# .vscode/ 不忽略，提交配置供团队共享
 .idea/
 *.swp
 *.swo
 *~
+
+# 向量库和数据目录（不提交到Git）
+data/chroma/
+data/chroma_abstracts/
+data/protocols_io_cache/
+documents_xml/
+abstracts_xml/
+documents_protocols/
+bioinformatics_methods/
 
 # 临时文件
 *.zip

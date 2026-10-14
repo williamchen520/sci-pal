@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Sci-Pal API 服务",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/api_server.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SCIPAL_PROTOCOLS_IO_TOKEN": "${env:SCIPAL_PROTOCOLS_IO_TOKEN}",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "justMyCode": false
+    },
+    {
+      "name": "运行自检脚本",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/self_check.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  ]
+}
