@@ -69,3 +69,5 @@ documents/**/*.png
 
 # 本地环境变量启动脚本（含个人路径/密钥）
 qwen.txt
+#推送安全配置文件
+.codebuddy/
