@@ -292,7 +292,30 @@ def init_database():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_entities_type ON entities(entity_type);')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_entities_name ON entities(normalized_name);')
     print("  ✅ Entities indexes (L3)")
-    
+
+    # ============================================================
+    # Tasks table (V33.12: 统一任务表)
+    # ============================================================
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS tasks (
+        task_id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'running',
+        progress_text TEXT DEFAULT '',
+        progress_pct REAL DEFAULT 0,
+        params TEXT,
+        result TEXT,
+        error TEXT,
+        created_at TEXT,
+        started_at TEXT,
+        finished_at TEXT
+    )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_tasks_type ON tasks(type);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_tasks_created ON tasks(created_at);')
+    print("  ✅ Tasks table")
+
     # Commit and close
     conn.commit()
     conn.close()

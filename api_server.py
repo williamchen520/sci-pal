@@ -174,6 +174,40 @@ def health():
     })
 
 
+# ---------------------------------------------------------------------------
+# V33.12: Unified Task API
+# ---------------------------------------------------------------------------
+@app.route("/api/tasks", methods=["GET"])
+def list_unified_tasks():
+    """List all tasks with optional filters: type, status, limit."""
+    from services.unified_task_manager import list_tasks
+    task_type = request.args.get("type")
+    status = request.args.get("status")
+    limit = int(request.args.get("limit", 50))
+    tasks = list_tasks(task_type=task_type, status=status, limit=limit)
+    return jsonify({"tasks": tasks, "count": len(tasks)})
+
+
+@app.route("/api/tasks/<task_id>", methods=["GET"])
+def get_unified_task(task_id):
+    """Get task details by ID."""
+    from services.unified_task_manager import get_task
+    task = get_task(task_id)
+    if not task:
+        return jsonify({"error": "task not found"}), 404
+    return jsonify(task)
+
+
+@app.route("/api/tasks/<task_id>/events", methods=["GET"])
+def task_sse_events(task_id):
+    """SSE stream for real-time task progress."""
+    from services.unified_task_manager import subscribe
+    def generate():
+        for event, data in subscribe(task_id):
+            yield f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+    return Response(generate(), mimetype="text/event-stream")
+
+
 @app.route("/api/retrieve", methods=["GET", "POST"])
 def retrieve():
     """

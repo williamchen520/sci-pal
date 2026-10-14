@@ -231,6 +231,13 @@ class DownloadTaskManager:
                 self._current_task_id = task_id
 
         self._save_to_disk()
+
+        # V33.12: 同步到统一任务表（用同一个 task_id）
+        try:
+            from services.unified_task_manager import create_task as _ut_create
+            _ut_create("download", {"pmc_ids": pmc_ids}, task_id=task_id)
+        except:
+            pass
         return task
 
     def mark_task_started(self, task_id: str):
@@ -263,6 +270,13 @@ class DownloadTaskManager:
                     next_task.current_stage = "downloading"
 
         self._save_to_disk()
+
+        # V33.12: 同步到统一任务表
+        try:
+            from services.unified_task_manager import complete_task as _ut_complete
+            _ut_complete(task_id, {"downloaded": task.total_papers if task else 0})
+        except:
+            pass
 
         # 启动下一个任务（在锁外执行，避免死锁）
         if next_task_id:
@@ -300,6 +314,13 @@ class DownloadTaskManager:
                     next_task.current_stage = "downloading"
 
         self._save_to_disk()
+
+        # V33.12: 同步到统一任务表
+        try:
+            from services.unified_task_manager import fail_task as _ut_fail
+            _ut_fail(task_id, error)
+        except:
+            pass
 
         # 启动下一个任务
         if next_task_id:
