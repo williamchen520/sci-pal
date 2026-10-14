@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sci-Pal 核心数据流图 — 从数据下载到前端</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'PingFang SC','Segoe UI',Roboto,Arial,sans-serif; background: #f4f3ee; color: #1a1b1c; line-height: 1.6; padding: 20px; }
+  .container { max-width: 1400px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 24px; color: #4f6b9a; margin-bottom: 8px; }
+  .subtitle { text-align: center; font-size: 13px; color: #6b7280; margin-bottom: 30px; }
+
+  /* 阶段标题 */
+  .stage { margin-bottom: 30px; }
+  .stage-title { font-size: 16px; font-weight: 700; color: #fff; padding: 10px 16px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 10px; }
+  .stage-title .num { background: rgba(255,255,255,0.2); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .stage-body { background: #fff; border: 1px solid #e4e3dd; border-top: none; border-radius: 0 0 8px 8px; padding: 16px; }
+
+  /* 阶段颜色 */
+  .stage-1 .stage-title { background: linear-gradient(135deg, #4f6b9a, #6b8cce); }
+  .stage-2 .stage-title { background: linear-gradient(135deg, #2d7a4f, #4caf7a); }
+  .stage-3 .stage-title { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+  .stage-4 .stage-title { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .stage-5 .stage-title { background: linear-gradient(135deg, #dc2626, #ef4444); }
+  .stage-6 .stage-title { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+
+  /* 文件卡片 */
+  .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .file-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; border-left: 3px solid #4f6b9a; }
+  .file-card.download { border-left-color: #4f6b9a; }
+  .file-card.import { border-left-color: #2d7a4f; }
+  .file-card.build { border-left-color: #8b5cf6; }
+  .file-card.index { border-left-color: #d97706; }
+  .file-card.search { border-left-color: #dc2626; }
+  .file-card.frontend { border-left-color: #0891b2; }
+  .file-name { font-family: 'Consolas','Monaco',monospace; font-size: 12px; font-weight: 700; color: #4f6b9a; margin-bottom: 4px; }
+  .file-desc { font-size: 12px; color: #4b5563; line-height: 1.5; }
+  .file-tag { display: inline-block; padding: 1px 6px; background: #e0e7ff; color: #4338ca; border-radius: 4px; font-size: 10px; margin-right: 4px; margin-top: 4px; }
+
+  /* 箭头 */
+  .arrow { text-align: center; font-size: 24px; color: #9ca3af; margin: 10px 0; }
+
+  /* 数据存储 */
+  .storage-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+  .storage-item { flex: 1; min-width: 200px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; }
+  .storage-name { font-weight: 700; font-size: 13px; color: #92400e; margin-bottom: 4px; }
+  .storage-path { font-family: 'Consolas','Monaco',monospace; font-size: 11px; color: #78350f; }
+  .storage-desc { font-size: 11px; color: #92400e; margin-top: 4px; }
+
+  /* 算法标签 */
+  .algo-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .algo-tag { padding: 4px 10px; background: #fce7f3; color: #9d174d; border-radius: 12px; font-size: 11px; font-weight: 600; }
+
+  /* 图例 */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔬 Sci-Pal 核心数据流图</h1>
+  <p class="subtitle">从数据下载 → 建库 → 建索引 → 检索 → 生成 → 前端展示的完整流水线（每个 py 文件的作用）</p>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#4f6b9a;"></div>数据下载</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2d7a4f;"></div>数据导入</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;"></div>数据库构建</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d97706;"></div>向量索引</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#dc2626;"></div>检索/生成</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0891b2;"></div>前端/API</div>
+  </div>
+
+  <!-- ==================== 阶段1：数据下载 ==================== -->
+  <div class="stage stage-1">
+    <div class="stage-title"><span class="num">1</span> 数据下载层 — 从 NCBI/OpenAlex 获取原始文献</div>
+    <div class="stage-body">
+      <div class="file-grid">
+        <div class="file-card download">
+          <div class="file-name">download_pmc_xml.py</div>
+          <div class="file-desc">PMC 全文 XML 下载器。通过 NCBI E-utilities (EFetch) 下载 JATS 格式 XML 全文。支持：自动过滤只有摘要无正文的文章（检查 &lt;body&gt; 标签）、断点续传、限速、批量下载。</div>
+          <span class="file-tag">NCBI EFetch</span><span class="file-tag">JATS XML</span><span class="file-tag">全文过滤</span>
+        </div>
+        <div class="file-card download">
+          <div class="file-name">download_pubmed_abstracts.py</div>
+          <div class="file-desc">PubMed 摘要批量下载。通过 ESearch 搜 PMID → ESummary 批量取元数据 → EFetch 取摘要。输出 JSON 格式，含标题/作者/摘要/期刊/年份/DOI/PMID。</div>
+          <span class="file-tag">PubMed</span><span class="file-tag">摘要</span><span class="file-tag">JSON</span>
+        </div>
+        <div class="file-card download">
+          <div class="file-name">download_openalex.py</div>
+          <div class="file-desc">OpenAlex 批量下载脚本。OpenAlex 是免费学术数据库，覆盖 2 亿+论文。支持按主题/作者/机构/期刊搜索下载元数据和摘要。</div>
+          <span class="file-tag">OpenAlex</span><span class="file-tag">2亿+论文</span>
+        </div>
+        <div class="file-card download">
+          <div class="file-name">batch_download_pmc.py</div>
+          <div class="file-desc">PMC 一键批量下载脚本。预置 5 大分类 42 个主题（免疫学/癌症/基因组学/分子生物学/顶刊 Cell/Nature/Science 等），每主题最多 100 篇，自动调用 download_pmc_xml.py。</div>
+          <span class="file-tag">批量</span><span class="file-tag">42主题</span><span class="file-tag">5大分类</span>
+        </div>
+        <div class="file-card download">
+          <div class="file-name">fetch_from_ncbi.py</div>
+          <div class="file-desc">NCBI 数据获取工具封装。统一封装 ESearch/ESummary/EFetch/EPost 等 API，处理限速（有 API Key 10次/秒，无 Key 3次/秒）、重试、缓存。</div>
+          <span class="file-tag">E-utilities</span><span class="file-tag">限速</span><span class="file-tag">重试</span>
+        </div>
+        <div class="file-card download">
+          <div class="file-name">fetch_metadata.py</div>
+          <div class="file-desc">论文元数据补全工具。根据 PMID/DOI/PMCID 从 NCBI 补全缺失的标题/作者/期刊/年份等元数据。</div>
+          <span class="file-tag">元数据</span><span class="file-tag">补全</span>
+        </div>
+      </div>
+      <div class="storage-row">
+        <div class="storage-item">
+          <div class="storage-name">📄 PMC 全文 XML</div>
+          <div class="storage-path">documents_xml/*.xml</div>
+          <div class="storage-desc">JATS 格式全文，含标题/摘要/正文/图表/参考文献</div>
+        </div>
+        <div class="storage-item">
+          <div class="storage-name">📝 PubMed 摘要 JSON</div>
+          <div class="storage-path">abstracts_xml/*.json</div>
+          <div class="storage-desc">按主题分类的摘要数据，含元数据</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+
+  <!-- ==================== 阶段2：数据导入 ==================== -->
+  <div class="stage stage-2">
+    <div class="stage-title"><span class="num">2</span> 数据导入层 — 解析 XML/JSON，写入 SQLite</div>
+    <div class="stage-body">
+      <div class="file-grid">
+        <div class="file-card import">
+          <div class="file-name">import_xml_v2.py</div>
+          <div class="file-desc">【主力】JATS XML 解析导入器。解析 XML 提取：标题/作者/摘要/关键词/段落(含章节层级)/图表/参考文献。写入 papers 表和 paragraphs 表，parse_engine='xml'。支持增量导入（INSERT OR REPLACE）。</div>
+          <span class="file-tag">JATS解析</span><span class="file-tag">段落切分</span><span class="file-tag">增量导入</span>
+        </div>
+        <div class="file-card import">
+          <div class="file-name">import_xml.py</div>
+          <div class="file-desc">【旧版】XML 导入器（v1），已被 import_xml_v2.py 替代，保留兼容。</div>
+          <span class="file-tag">旧版</span><span class="file-tag">兼容</span>
+        </div>
+        <div class="file-card import">
+          <div class="file-name">build_abstracts_db.py</div>
+          <div class="file-desc">摘要库构建器。读取 abstracts_xml/*.json，写入独立的 abstracts.db（FTS5 全文索引 + 向量索引）。使用 bge-base-en-v1.5 做 embedding。</div>
+          <span class="file-tag">摘要库</span><span class="file-tag">FTS5</span><span class="file-tag">向量索引</span>
+        </div>
+        <div class="file-card import">
+          <div class="file-name">import_zotero_metadata.py</div>
+          <div class="file-desc">Zotero 元数据导入器。从 Zotero 导出的 CSV/JSON 导入论文元数据。</div>
+          <span class="file-tag">Zotero</span><span class="file-tag">元数据</span>
+        </div>
+        <div class="file-card import">
+          <div class="file-name">build_db/parsers/</div>
+          <div class="file-desc">PDF 解析器集合：parser_orchestrator（调度器）、docling_parser、grobid_parser、mineru_parser、pdfplumber_parser。支持多种 PDF 解析引擎，自动选择最优。</div>
+          <span class="file-tag">PDF解析</span><span class="file-tag">多引擎</span>
+        </div>
+      </div>
+      <div class="storage-row">
+        <div class="storage-item">
+          <div class="storage-name">🗄️ 全文数据库</div>
+          <div class="storage-path">data/research.db</div>
+          <div class="storage-desc">SQLite，含 papers/paragraphs/figures/tables/citations 等表</div>
+        </div>
+        <div class="storage-item">
+          <div class="storage-name">📚 摘要数据库</div>
+          <div class="storage-path">data/abstracts.db</div>
+          <div class="storage-desc">SQLite，独立的摘要库，含 FTS5 全文索引</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+
+  <!-- ==================== 阶段3：数据库构建 ==================== -->
+  <div class="stage stage-3">
+    <div class="stage-title"><span class="num">3</span> 数据库构建层 — 建表/索引/图谱/社区</div>
+    <div class="stage-body">
+      <div class="file-grid">
+        <div class="file-card build">
+          <div class="file-name">build_db/build_database.py</div>
+          <div class="file-desc">数据库初始化脚本。创建所有表结构：papers/paragraphs/figures/tables/citations/sentences/chunks/communities 等。定义索引和外键关系。</div>
+          <span class="file-tag">建表</span><span class="file-tag">Schema</span>
+        </div>
+        <div class="file-card build">
+          <div class="file-name">build_db/build_fts.py</div>
+          <div class="file-desc">FTS5 全文索引构建。为 paragraphs 表构建 SQLite FTS5 虚拟表，支持布尔搜索/短语搜索/前缀搜索。用于关键词精确匹配。</div>
+          <span class="file-tag">FTS5</span><span class="file-tag">全文检索</span><span class="file-tag">布尔搜索</span>
+        </div>
+        <div class="file-card build">
+          <div class="file-name">build_db/build_paper_graph.py</div>
+          <div class="file-desc">论文引用图谱构建。解析参考文献，建立 CITES（引用）和 SIMILAR（相似）关系边。写入 paper_graph 表，用于图谱扩展检索。</div>
+          <span class="file-tag">引用图谱</span><span class="file-tag">CITES</span><span class="file-tag">SIMILAR</span>
+        </div>
+        <div class="file-card build">
+          <div class="file-name">build_db/build_communities.py</div>
+          <div class="file-desc">论文社区发现。基于引用图谱使用 Louvain 算法进行社区检测，将论文聚类成主题社区。用于社区级检索和浏览。</div>
+          <span class="file-tag">Louvain</span><span class="file-tag">社区检测</span><span class="file-tag">聚类</span>
+        </div>
+        <div class="file-card build">
+          <div class="file-name">build_db/build_chunks.py</div>
+          <div class="file-desc">文本分块器。将长段落切分成固定大小的 chunk（含重叠），用于更精细的向量检索。支持按句子/段落/固定字数分块。</div>
+          <span class="file-tag">分块</span><span class="file-tag">Chunk</span><span class="file-tag">重叠</span>
+        </div>
+        <div class="file-card build">
+          <div class="file-name">build_db/build_sentences.py</div>
+          <div class="file-desc">句子级切分。将段落切分成句子，写入 sentences 表。用于句子级证据定位和引用校验。</div>
+          <span class="file-tag">句子切分</span><span class="file-tag">证据定位</span>
+        </div>
+        <div class="file-card build">
+          <div class="file-name">build_db/build_citation_index.py</div>
+          <div class="file-desc">引用索引构建。解析文内引用标记（如 [1]、(Smith et al., 2020)），建立句子-参考文献的对应关系。用于引用溯源。</div>
+          <span class="file-tag">引用索引</span><span class="file-tag">文内引用</span>
+        </div>
+        <div class="file-card build">
+          <div class="file-name">build_db/dedup_papers.py</div>
+          <div class="file-desc">论文去重工具。基于 DOI/PMID/标题相似度去重，避免重复论文入库。</div>
+          <span class="file-tag">去重</span><span class="file-tag">DOI匹配</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+
+  <!-- ==================== 阶段4：向量索引 ==================== -->
+  <div class="stage stage-4">
+    <div class="stage-title"><span class="num">4</span> 向量索引层 — Embedding + ChromaDB 向量库</div>
+    <div class="stage-body">
+      <div class="file-grid">
+        <div class="file-card index">
+          <div class="file-name">build_paragraph_vector_index.py</div>
+          <div class="file-desc">【主力】段落级向量索引构建。读取 paragraphs 表，用 bge-base-en-v1.5 模型做 embedding，写入 ChromaDB（collection: sci_pal_paragraphs）。支持增量追加（collection.add）。</div>
+          <span class="file-tag">段落向量</span><span class="file-tag">bge-base</span><span class="file-tag">ChromaDB</span>
+        </div>
+        <div class="file-card index">
+          <div class="file-name">build_vector_index.py</div>
+          <div class="file-desc">【旧版】向量索引构建（v1），已被 build_paragraph_vector_index.py 替代。</div>
+          <span class="file-tag">旧版</span>
+        </div>
+        <div class="file-card index">
+          <div class="file-name">build_abstracts_db.py</div>
+          <div class="file-desc">摘要向量索引构建。为 abstracts.db 构建独立的 ChromaDB 向量库（data/chroma_abstracts/），用于摘要库语义检索。</div>
+          <span class="file-tag">摘要向量</span><span class="file-tag">独立库</span>
+        </div>
+        <div class="file-card index">
+          <div class="file-name">services/search/reranker.py</div>
+          <div class="file-desc">Cross-Encoder 重排序器。使用 bge-reranker-base 模型对向量+FTS 召回的候选结果进行精排。输入 query+段落，输出相关性分数，提升检索精度。</div>
+          <span class="file-tag">Rerank</span><span class="file-tag">Cross-Encoder</span><span class="file-tag">bge-reranker</span>
+        </div>
+      </div>
+      <div class="algo-row">
+        <span class="algo-tag">Embedding 模型: BAAI/bge-base-en-v1.5 (768维)</span>
+        <span class="algo-tag">Rerank 模型: BAAI/bge-reranker-base</span>
+        <span class="algo-tag">向量库: ChromaDB (HNSW 索引, 余弦相似度)</span>
+        <span class="algo-tag">批量 embedding (batch_size=256)</span>
+        <span class="algo-tag">增量追加 (collection.add, 不重建)</span>
+      </div>
+      <div class="storage-row">
+        <div class="storage-item">
+          <div class="storage-name">🔢 全文向量库</div>
+          <div class="storage-path">data/chroma/</div>
+          <div class="storage-desc">ChromaDB，collection: sci_pal_paragraphs，HNSW 索引</div>
+        </div>
+        <div class="storage-item">
+          <div class="storage-name">🔢 摘要向量库</div>
+          <div class="storage-path">data/chroma_abstracts/</div>
+          <div class="storage-desc">ChromaDB，独立的摘要向量库</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+
+  <!-- ==================== 阶段5：检索与生成 ==================== -->
+  <div class="stage stage-5">
+    <div class="stage-title"><span class="num">5</span> 检索与生成层 — 混合检索 + 综述生成 + QA</div>
+    <div class="stage-body">
+      <h4 style="margin-bottom:10px;color:#dc2626;">5.1 检索模块 (services/search/)</h4>
+      <div class="file-grid">
+        <div class="file-card search">
+          <div class="file-name">unified_retriever.py</div>
+          <div class="file-desc">【核心】统一检索器。串联完整检索流水线：查询路由 → 混合搜索(向量+FTS) → Rerank重排 → MMR去重 → 上下文扩展(small-to-big) → 图谱扩展 → 摘要库检索。输出结构化 evidence envelope。</div>
+          <span class="file-tag">统一检索</span><span class="file-tag">流水线</span><span class="file-tag">Envelope</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">hybrid_search.py</div>
+          <div class="file-desc">混合搜索核心。向量检索(ChromaDB) + FTS5全文检索，用 RRF (Reciprocal Rank Fusion) 算法融合两路结果。支持多查询扩展(Multi-Query)、动态权重、MMR多样性选择。</div>
+          <span class="file-tag">向量+FTS</span><span class="file-tag">RRF融合</span><span class="file-tag">Multi-Query</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">query_router.py</div>
+          <div class="file-desc">查询路由器。根据查询类型（事实型/方法型/综述型/比较型）选择不同的检索策略和权重。用 scispacy NER 提取关键实体做实体增强检索。</div>
+          <span class="file-tag">查询路由</span><span class="file-tag">NER实体</span><span class="file-tag">策略选择</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">context_expander.py</div>
+          <div class="file-desc">上下文扩展器。Small-to-Big 策略：检索命中精确段落(chunk)后，扩展到其父章节(section)，提供更完整的上下文。用 ►◄ 标记命中位置。</div>
+          <span class="file-tag">Small-to-Big</span><span class="file-tag">上下文扩展</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">graph_traverser.py</div>
+          <div class="file-desc">图谱遍历器。基于论文引用图谱(CITES/SIMILAR)，从命中论文出发扩展查找相关论文，补充向量检索可能遗漏的关联文献。</div>
+          <span class="file-tag">图谱扩展</span><span class="file-tag">CITES</span><span class="file-tag">SIMILAR</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">mmr_diversifier.py</div>
+          <div class="file-desc">MMR 多样性选择器。Maximal Marginal Relevance 算法，在相关性和多样性之间平衡，避免返回的段落内容重复。</div>
+          <span class="file-tag">MMR</span><span class="file-tag">多样性</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">abstract_search.py</div>
+          <div class="file-desc">摘要库检索器。独立检索 abstracts.db（FTS5 + 向量），作为全文检索的补充。当全文库结果不足时，从摘要库补充候选论文。</div>
+          <span class="file-tag">摘要检索</span><span class="file-tag">补充检索</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">online_search.py</div>
+          <div class="file-desc">【V33.1】在线搜索模块。封装 NCBI E-utilities，同时搜 PubMed+PMC。ESearch搜ID → ESummary批量取元数据。内置限速、本地缓存、3次重试。</div>
+          <span class="file-tag">在线搜索</span><span class="file-tag">NCBI</span><span class="file-tag">PubMed/PMC</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">hybrid_retriever.py</div>
+          <div class="file-desc">【V33.1】混合检索器。并行搜索本地+在线，三级去重(PMCID→PMID→DOI)，统一排序。本地论文标 source=local，在线新论文标 source=online。</div>
+          <span class="file-tag">本地+在线</span><span class="file-tag">三级去重</span><span class="file-tag">并行搜索</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">online_downloader.py</div>
+          <div class="file-desc">【V33.2】在线下载器。异步下载PMC XML → 增量导入DB → 增量建索引。三阶段进度跟踪(下载40%+导入30%+索引30%)。任务队列管理，同时只跑1个任务。</div>
+          <span class="file-tag">异步下载</span><span class="file-tag">增量导入</span><span class="file-tag">任务队列</span>
+        </div>
+      </div>
+
+      <h4 style="margin:20px 0 10px;color:#dc2626;">5.2 综述生成模块 (services/review/)</h4>
+      <div class="file-grid">
+        <div class="file-card search">
+          <div class="file-name">review_generator.py</div>
+          <div class="file-desc">【核心】综述生成主流程。串联：主题→检索→证据抽取→大纲生成→分章节撰写→引用校验→Markdown输出。V32.5新增：分章节生成+渐进式上下文注入+章节类型感知+证据-声明矩阵+迭代精炼评审。</div>
+          <span class="file-tag">综述生成</span><span class="file-tag">分章节</span><span class="file-tag">证据约束</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">evidence_extractor.py</div>
+          <div class="file-desc">证据抽取器。用 LLM 从检索到的段落中抽取结构化证据卡片(EvidenceCard)，含：证据类型/章节/关键发现/实验方法/样本量/结论。简化证据抽取模式(不调LLM，直接用段落做证据卡片)。</div>
+          <span class="file-tag">证据抽取</span><span class="file-tag">EvidenceCard</span><span class="file-tag">LLM</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">outline_generator.py</div>
+          <div class="file-desc">大纲生成器。根据证据卡片自动生成综述大纲(章节/段落)，或接受用户自定义大纲。支持大纲模板(系统综述型/叙事型/方法学型)。每章节有关键词用于按大纲搜索文献。</div>
+          <span class="file-tag">大纲生成</span><span class="file-tag">模板</span><span class="file-tag">自定义</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">citation_verifier.py</div>
+          <div class="file-desc">引用校验器。确定性校验：检查每个引用标记是否存在、引用的证据是否支撑该句子。可选 LLM 深度校验：判断引用是否恰当、是否有断章取义。</div>
+          <span class="file-tag">引用校验</span><span class="file-tag">确定性</span><span class="file-tag">LLM深度</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">llm_client.py</div>
+          <div class="file-desc">LLM 客户端。支持 Ollama (qwen2.5:3b/7b) 和云端 OpenAI 兼容 API。统一接口，自动重试，流式输出。</div>
+          <span class="file-tag">LLM</span><span class="file-tag">Ollama</span><span class="file-tag">OpenAI兼容</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">relation_extractor.py</div>
+          <div class="file-desc">关系抽取器（问答/分析功能用）。抽取论文间的实验条件对比、方法对比、结论冲突等关系。V31.82 综述生成已跳过此步骤。</div>
+          <span class="file-tag">关系抽取</span><span class="file-tag">问答用</span>
+        </div>
+        <div class="file-card search">
+          <div class="file-name">conflict_detector.py</div>
+          <div class="file-desc">冲突检测器（问答/分析功能用）。检测不同论文间的结论矛盾、方法差异。V31.82 综述生成已跳过。</div>
+          <span class="file-tag">冲突检测</span><span class="file-tag">问答用</span>
+        </div>
+      </div>
+
+      <h4 style="margin:20px 0 10px;color:#dc2626;">5.3 QA 模块 (services/qa/)</h4>
+      <div class="file-grid">
+        <div class="file-card search">
+          <div class="file-name">qa_service.py</div>
+          <div class="file-desc">RAG 学术问答服务。基于统一检索器获取证据，用 LLM 生成带引用的回答。支持多轮对话、证据溯源、关系抽取、冲突检测。</div>
+          <span class="file-tag">RAG问答</span><span class="file-tag">多轮对话</span><span class="file-tag">证据溯源</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+
+  <!-- ==================== 阶段6：API与前端 ==================== -->
+  <div class="stage stage-6">
+    <div class="stage-title"><span class="num">6</span> API 与前端层 — Flask API + 多页面前端</div>
+    <div class="stage-body">
+      <h4 style="margin-bottom:10px;color:#0891b2;">6.1 API 层</h4>
+      <div class="file-grid">
+        <div class="file-card frontend">
+          <div class="file-name">api_server.py</div>
+          <div class="file-desc">【核心】Flask API 服务器。统一入口，端口5000。提供：检索API(/api/retrieve)、综述API(/api/review/*)、问答API、论文API、混合搜索API(/api/search/hybrid、/api/search/online)、下载API(/api/search/download_online、/api/search/download_status)、历史/队列/重试API。</div>
+          <span class="file-tag">Flask</span><span class="file-tag">REST API</span><span class="file-tag">统一入口</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">routes/</div>
+          <div class="file-desc">路由模块：ai_routes.py(AI相关)、paper_routes.py(论文管理)、search_routes.py(搜索)、writing_routes.py(写作)。按功能模块化路由。</div>
+          <span class="file-tag">路由模块化</span>
+        </div>
+      </div>
+
+      <h4 style="margin:20px 0 10px;color:#0891b2;">6.2 前端页面 (frontend/)</h4>
+      <div class="file-grid">
+        <div class="file-card frontend">
+          <div class="file-name">index.html</div>
+          <div class="file-desc">【主页】搜索页。单文件应用(HTML+CSS+JS)。功能：关键词搜索、混合检索(本地+在线NCBI/PMC)、结果展示(段落/图表/表格/论文/图谱关联)、在线文献勾选下载、下载进度展示、下载历史面板、配置面板、Toast通知。</div>
+          <span class="file-tag">搜索主页</span><span class="file-tag">混合检索</span><span class="file-tag">下载管理</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">review.html</div>
+          <div class="file-desc">综述生成页。三栏布局：大纲编辑器(左) + 相关论文列表(中) + PDF阅读器(右)。功能：大纲模板选择/编辑、按大纲搜索并分配论文、生成综述、引用溯源点击定位PDF。</div>
+          <span class="file-tag">综述生成</span><span class="file-tag">三栏布局</span><span class="file-tag">大纲编辑</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">qa.html</div>
+          <div class="file-desc">RAG 问答页。多轮对话界面，回答带引用标记，可点击溯源到原文段落。支持关系对比、冲突检测。</div>
+          <span class="file-tag">RAG问答</span><span class="file-tag">多轮对话</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">compare.html</div>
+          <div class="file-desc">双栏对比页。左右两篇论文并排展示，支持同步滚动、差异高亮。用于论文对比阅读。</div>
+          <span class="file-tag">双栏对比</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">viewer.html</div>
+          <div class="file-desc">PDF 阅读器页。独立 PDF 阅读器，支持批注、高亮、目录导航。</div>
+          <span class="file-tag">PDF阅读器</span>
+        </div>
+      </div>
+
+      <h4 style="margin:20px 0 10px;color:#0891b2;">6.3 前端 JS 模块 (frontend/src/)</h4>
+      <div class="file-grid">
+        <div class="file-card frontend">
+          <div class="file-name">outline_editor.js</div>
+          <div class="file-desc">大纲编辑器核心。大纲模板定义(系统综述型/叙事型/方法学型)、章节/段落增删改、关键词编辑、保存/加载大纲、按大纲搜索并分配论文、生成综述触发。</div>
+          <span class="file-tag">大纲编辑</span><span class="file-tag">模板</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">outline_core.js</div>
+          <div class="file-desc">大纲核心数据结构。章节/段落数据模型、关键词字段渲染、事件绑定。</div>
+          <span class="file-tag">大纲核心</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">review.js</div>
+          <div class="file-desc">综述页主逻辑。综述生成、结果渲染、引用溯源、PDF联动定位。</div>
+          <span class="file-tag">综述逻辑</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">pdf_viewer.js</div>
+          <div class="file-desc">PDF 阅读器。基于 pdf.js，支持翻页、缩放、搜索、高亮、批注。</div>
+          <span class="file-tag">PDF.js</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">paper_list.js</div>
+          <div class="file-desc">论文列表组件。论文卡片渲染、分配到段落、勾选下载。</div>
+          <span class="file-tag">论文列表</span>
+        </div>
+        <div class="file-card frontend">
+          <div class="file-name">paper_importer.js</div>
+          <div class="file-desc">文献导入器。支持从本地文件/Zotero/EndNote导入文献。</div>
+          <span class="file-tag">文献导入</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:30px;padding:20px;background:#fff;border-radius:8px;border:1px solid #e4e3dd;">
+    <p style="font-size:14px;color:#6b7280;">
+      <strong>📊 总计：</strong> 6 大阶段 · 60+ Python 模块 · 5 个前端页面 · 6 个前端 JS 模块 · 4 个数据存储 · 3 大 AI 模型 (Embedding/Rerank/LLM)
+    </p>
+  </div>
+</div>
+</body>
+</html>

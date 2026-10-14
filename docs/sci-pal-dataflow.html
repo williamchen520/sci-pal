@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Sci-Pal 核心数据流图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #f5f7fa;
+    padding: 20px;
+    color: #1a1b1e;
+  }
+  .container { max-width: 1400px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 6px;
+    color: #1a365d;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 24px;
+  }
+  .flow-container {
+    position: relative;
+    padding: 20px 0;
+  }
+  .phase {
+    margin-bottom: 30px;
+  }
+  .phase-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px 8px 0 0;
+    display: inline-block;
+  }
+  .phase-1 .phase-title { background: #d97706; }
+  .phase-2 .phase-title { background: #2563eb; }
+  .phase-3 .phase-title { background: #4f46e5; }
+  .phase-4 .phase-title { background: #db2777; }
+  .phase-5 .phase-title { background: #ea580c; }
+  .phase-6 .phase-title { background: #0891b2; }
+  .phase-body {
+    background: white;
+    border: 2px solid;
+    border-radius: 0 12px 12px 12px;
+    padding: 16px;
+  }
+  .phase-1 .phase-body { border-color: #d97706; }
+  .phase-2 .phase-body { border-color: #2563eb; }
+  .phase-3 .phase-body { border-color: #4f46e5; }
+  .phase-4 .phase-body { border-color: #db2777; }
+  .phase-5 .phase-body { border-color: #ea580c; }
+  .phase-6 .phase-body { border-color: #0891b2; }
+  .step-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #1a365d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-box {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+  }
+  .step-box.core {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    font-weight: 700;
+  }
+  .step-box.output {
+    background: #f0fdf4;
+    border-color: #86efac;
+  }
+  .arrow {
+    color: #9ca3af;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .phase-arrow {
+    text-align: center;
+    color: #6b7280;
+    font-size: 20px;
+    margin: -15px 0;
+    position: relative;
+    z-index: 1;
+  }
+  .detail-note {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 6px;
+    padding-left: 34px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .col-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1a365d;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  @media (max-width: 900px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔄 Sci-Pal 核心数据流图 — 从数据下载到综述生成</h1>
+  <p class="subtitle">6 个阶段，完整调用链路，展示每个模块的输入输出和调用关系</p>
+
+  <!-- 阶段1：数据采集与入库 -->
+  <div class="phase phase-1">
+    <div class="phase-title">📚 阶段 1：数据采集与入库（离线，只改数据层）</div>
+    <div class="phase-body">
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-box core">download_pubmed_abstracts.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box">PubMed API 搜索+下载</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">abstracts_xml/*.json</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-box core">download_pmc_xml.py / download_pmc_v2.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box">PMC OA API 下载全文 XML</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">papers_xml/*.xml</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-box core">download_openalex.py 🆕</div>
+        <div class="arrow">→</div>
+        <div class="step-box">OpenAlex API（2亿+免费）</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">data/openalex_*.jsonl</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">4</div>
+        <div class="step-box">import_xml.py / import_xml_v2.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box">解析 XML + 提取段落</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">research.db（全文 SQLite）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">5</div>
+        <div class="step-box core">build_abstracts_db.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box">加载所有 JSON + bge-base 生成向量</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">abstracts.db + chroma_abstracts/ + FTS5索引</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">6</div>
+        <div class="step-box">build_vector_index.py / build_paragraph_vector_index.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box">全文段落分块 + 生成向量</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">chroma/（全文向量库）</div>
+      </div>
+      <div class="detail-note">💡 核心原则：只更新数据库/向量库，检索层和主程序代码一行都不用改！新数据自动被检索覆盖。</div>
+    </div>
+  </div>
+
+  <div class="phase-arrow">▼ ▼ ▼</div>
+
+  <!-- 阶段2：大纲加载与编辑 -->
+  <div class="phase phase-2">
+    <div class="phase-title">📋 阶段 2：大纲加载与编辑（前端交互）</div>
+    <div class="phase-body">
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-box core">outline_editor.js · 选择模板</div>
+        <div class="arrow">→</div>
+        <div class="step-box">OUTLINE_TEMPLATES（Systematic/Narrative/Methodological）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-box core">outline_editor.js · 加载已保存大纲</div>
+        <div class="arrow">→</div>
+        <div class="step-box">GET /api/review/outline/saved/{name}</div>
+        <div class="arrow">→</div>
+        <div class="step-box">outline_store.py 读取</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-box core">outline_core.js · 编辑大纲</div>
+        <div class="arrow">→</div>
+        <div class="step-box">增删章节/段落 + 编辑关键词（keywords字段）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">4</div>
+        <div class="step-box">保存大纲</div>
+        <div class="arrow">→</div>
+        <div class="step-box">POST /api/review/outline/saved</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">outline_store.py 持久化</div>
+      </div>
+      <div class="detail-note">💡 V32.1 改造：去掉了"自动生成大纲"按钮，改用预设模板 + 可编辑大纲，用户完全掌控结构。</div>
+    </div>
+  </div>
+
+  <div class="phase-arrow">▼ ▼ ▼</div>
+
+  <!-- 阶段3：按大纲搜索并分配 -->
+  <div class="phase phase-3">
+    <div class="phase-title">🔍 阶段 3：按大纲搜索并分配论文（核心检索流程）</div>
+    <div class="phase-body">
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-box core">前端点击"按大纲搜索并分配"</div>
+        <div class="arrow">→</div>
+        <div class="step-box">POST /api/review/search_and_assign</div>
+        <div class="arrow">→</div>
+        <div class="step-box core">review_generator.search_and_assign_papers()</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-box">V32.4 主题核心关键词自动注入</div>
+        <div class="arrow">→</div>
+        <div class="step-box">从综述主题提取核心词（去停用词）→ 加到每章搜索词最前面</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-box">逐章节搜索（for each section）</div>
+        <div class="arrow">→</div>
+        <div class="step-box core">unified_retriever.retrieve(query=章节标题+关键词)</div>
+      </div>
+      <div class="detail-note" style="padding-left: 34px;">
+        <strong>检索内部流程（unified_retriever）：</strong><br>
+        query_expander（查询扩展）→ scispacy NER 提取实体 → Entity Boost（实体加权检索）→ 
+        hybrid_search（向量召回 chroma + FTS5 全文召回）→ reranker（bge-reranker-base 重排序）→ 
+        MMR diversifier（多样性去重）→ abstract_search（摘要库补充搜索）→ 返回 top N 段落
+      </div>
+      <div class="step-row">
+        <div class="step-num">4</div>
+        <div class="step-box core">evidence_extractor（简化证据抽取）</div>
+        <div class="arrow">→</div>
+        <div class="step-box">从检索到的段落提取 EvidenceCard</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">evidence_cards 列表</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">5</div>
+        <div class="step-box">分配到章节+段落</div>
+        <div class="arrow">→</div>
+        <div class="step-box">assigned_evidence_ids 写入每个 section/paragraph</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">6</div>
+        <div class="step-box">总数限定（max_papers）</div>
+        <div class="arrow">→</div>
+        <div class="step-box">按相关性排序，取 top N，不超过用户设定的最大论文数</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">7</div>
+        <div class="step-box output">返回 custom_outline（含 sections + evidence_cards）</div>
+        <div class="arrow">→</div>
+        <div class="step-box">前端保存到 currentOutline，显示论文列表</div>
+      </div>
+      <div class="detail-note">💡 V31.82：综述生成完全跳过关系抽取和冲突检测（这些是问答功能用的，综述不需要）。</div>
+    </div>
+  </div>
+
+  <div class="phase-arrow">▼ ▼ ▼</div>
+
+  <!-- 阶段4：综述生成（V32.5 三大升级） -->
+  <div class="phase phase-4">
+    <div class="phase-title">✍️ 阶段 4：综述生成（V32.5 三大升级核心）</div>
+    <div class="phase-body">
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-box core">前端点击"生成综述（英文）"</div>
+        <div class="arrow">→</div>
+        <div class="step-box">POST /api/review/generate（含 custom_outline）</div>
+        <div class="arrow">→</div>
+        <div class="step-box core">review_generator.generate()</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-box">V31.83 检测 custom_outline.evidence_cards</div>
+        <div class="arrow">→</div>
+        <div class="step-box">有证据卡片 → 跳过检索，直接用按大纲搜索分配的证据</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-box core">_write_draft() 逐章节生成循环</div>
+      </div>
+      <div class="detail-note" style="padding-left: 34px;">
+        <strong>每章节内部流程（V32.5 三大升级）：</strong>
+      </div>
+      <div class="two-col" style="margin-top: 8px;">
+        <div>
+          <div class="col-title">📝 生成阶段（_write_section）</div>
+          <div class="step-row" style="margin-bottom: 6px;">
+            <div class="step-num">a</div>
+            <div class="step-box">章节类型感知：判断 Intro/Methods/Results/Discussion/Conclusion → 不同写作风格指导 🆕</div>
+          </div>
+          <div class="step-row" style="margin-bottom: 6px;">
+            <div class="step-num">b</div>
+            <div class="step-box">渐进式上下文注入：传入 previous_sections_summary（前文摘要，最多800字）→ 避免重复 🆕</div>
+          </div>
+          <div class="step-row" style="margin-bottom: 6px;">
+            <div class="step-num">c</div>
+            <div class="step-box">证据-声明矩阵：先列3-5个核心要点，每个要点映射证据ID，再基于有证据支撑的要点写正文 🆕</div>
+          </div>
+          <div class="step-row" style="margin-bottom: 6px;">
+            <div class="step-num">d</div>
+            <div class="step-box">llm_client → Ollama qwen2.5:7b 生成章节正文（200-400词）</div>
+          </div>
+        </div>
+        <div>
+          <div class="col-title">🔄 评审修订阶段（_review_section）🆕</div>
+          <div class="step-row" style="margin-bottom: 6px;">
+            <div class="step-num">e</div>
+            <div class="step-box">5维评分标准：相关性30% + 证据支撑30% + 连贯逻辑20% + 学术写作10% + 无无依据推测10%</div>
+          </div>
+          <div class="step-row" style="margin-bottom: 6px;">
+            <div class="step-num">f</div>
+            <div class="step-box">LLM 当评审专家，打分 + 列出问题 + 修改建议</div>
+          </div>
+          <div class="step-row" style="margin-bottom: 6px;">
+            <div class="step-num">g</div>
+            <div class="step-box">分数 &lt; 60 → 把评审建议作为 feedback 注入 prompt，重新生成（最多重试1次）</div>
+          </div>
+          <div class="step-row" style="margin-bottom: 6px;">
+            <div class="step-num">h</div>
+            <div class="step-box">分数 ≥ 60 → 通过，进入下一章节</div>
+          </div>
+        </div>
+      </div>
+      <div class="step-row" style="margin-top: 10px;">
+        <div class="step-num">4</div>
+        <div class="step-box">_split_and_link()</div>
+        <div class="arrow">→</div>
+        <div class="step-box">拆分句子 + 提取 [ev_xxx] 引用标记 + 关联证据ID</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">5</div>
+        <div class="step-box">_auto_cite_sentences()</div>
+        <div class="arrow">→</div>
+        <div class="step-box">自动补全缺失的引用（基于语义匹配证据卡片）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">6</div>
+        <div class="step-box">更新前文摘要</div>
+        <div class="arrow">→</div>
+        <div class="step-box">截取当前章节前200字 → 追加到 previous_sections_summary（最多800字）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">7</div>
+        <div class="step-box output">ReviewDraft（所有章节句子 + 引用关联）</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-arrow">▼ ▼ ▼</div>
+
+  <!-- 阶段5：格式化与存储 -->
+  <div class="phase phase-5">
+    <div class="phase-title">📄 阶段 5：格式化与存储</div>
+    <div class="phase-body">
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-box core">citation_formatter.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box">引用格式化（APA / Nature / Vancouver 三种风格）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-box">citation_verifier.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box">引用验证（检查引用ID是否有效、是否对应正确论文）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-box">sentence_locator.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box">句子原文定位（点击引用跳转到原文PDF对应位置）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">4</div>
+        <div class="step-box">review_store.py</div>
+        <div class="arrow">→</div>
+        <div class="step-box output">持久化存储综述（review_id + 完整内容 + 引用列表）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">5</div>
+        <div class="step-box output">返回 ReviewOutput（Markdown 全文 + 参考文献 + 统计 + 警告）</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-arrow">▼ ▼ ▼</div>
+
+  <!-- 阶段6：前端展示与交互 -->
+  <div class="phase phase-6">
+    <div class="phase-title">🖥️ 阶段 6：前端展示与交互</div>
+    <div class="phase-body">
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-box core">review.js 接收生成结果</div>
+        <div class="arrow">→</div>
+        <div class="step-box">渲染综述正文（三栏布局：大纲 | 正文 | PDF）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-box">点击正文引用标记 [1]</div>
+        <div class="arrow">→</div>
+        <div class="step-box">sentence_locator 定位 → pdf_viewer.js 打开对应论文PDF并滚动到位置</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-box">paper_list.js</div>
+        <div class="arrow">→</div>
+        <div class="step-box">显示相关论文列表（标题/作者/期刊/年份/证据数）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">4</div>
+        <div class="step-box">pdf_annotator.js</div>
+        <div class="arrow">→</div>
+        <div class="step-box">PDF 标注（高亮/笔记，关联到综述句子）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">5</div>
+        <div class="step-box">supplementary_manager.js</div>
+        <div class="arrow">→</div>
+        <div class="step-box">补充材料管理（表格/图表/数据集）</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">6</div>
+        <div class="step-box">resizer.js</div>
+        <div class="arrow">→</div>
+        <div class="step-box">三栏布局拖拽调整（大纲宽度 | 正文宽度 | PDF宽度）</div>
+      </div>
+      <div class="detail-note">💡 右上角实时统计：句子数 / 证据数 / 通过率（引用验证通过率）</div>
+    </div>
+  </div>
+
+  <!-- 总结 -->
+  <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 12px; border: 1px solid #93c5fd;">
+    <h3 style="font-size: 15px; color: #1e40af; margin-bottom: 10px;">🎯 架构核心设计原则总结</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; line-height: 1.6;">
+      <div><strong>1. 数据层与检索层解耦：</strong>只更新数据库/向量库，检索层和主程序代码一行都不用改，新数据自动被覆盖。</div>
+      <div><strong>2. 大纲先行 + 大纲引导检索：</strong>用户完全掌控大纲结构，每章节用自己的关键词搜索，确保内容跟标题相关。</div>
+      <div><strong>3. 证据-声明矩阵：</strong>每个声明必须有证据支撑，杜绝 LLM 凭空编内容，所有引用可追溯到原文。</div>
+      <div><strong>4. 迭代精炼 + 评分引导：</strong>生成后自动评审打分，不达标就修订，确保输出质量。</div>
+      <div><strong>5. 全本地部署：</strong>Embedding + Reranker + LLM 全部本地运行，数据不出本机，无 API 费用。</div>
+      <div><strong>6. 不用多智能体架构：</strong>有精确数据库不需要推理协商，用确定性流程 + 评分标准更可控、更高效。</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

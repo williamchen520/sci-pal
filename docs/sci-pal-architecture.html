@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Sci-Pal 系统完整架构图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #f5f7fa;
+    padding: 20px;
+    color: #1a1b1e;
+  }
+  .container { max-width: 1400px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #1a365d;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 24px;
+  }
+  .layer {
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    position: relative;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .layer-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .layer-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .layer-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .layer-desc {
+    font-size: 11px;
+    color: #6b7280;
+    margin-left: auto;
+  }
+  .modules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .module {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.08);
+    white-space: nowrap;
+  }
+  .module.core {
+    font-weight: 700;
+    border-width: 2px;
+  }
+  .module-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .group-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .arrow-down {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 18px;
+    margin: -4px 0;
+    line-height: 1;
+  }
+  /* 层颜色 */
+  .layer-1 { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+  .layer-1 .layer-num { background: #d97706; }
+  .layer-2 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+  .layer-2 .layer-num { background: #2563eb; }
+  .layer-3 { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+  .layer-3 .layer-num { background: #059669; }
+  .layer-4 { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); }
+  .layer-4 .layer-num { background: #4f46e5; }
+  .layer-5 { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
+  .layer-5 .layer-num { background: #db2777; }
+  .layer-6 { background: linear-gradient(135deg, #fed7aa, #fdba74); }
+  .layer-6 .layer-num { background: #ea580c; }
+  .layer-7 { background: linear-gradient(135deg, #e5e7eb, #d1d5db); }
+  .layer-7 .layer-num { background: #4b5563; }
+  .layer-8 { background: linear-gradient(135deg, #cffafe, #a5f3fc); }
+  .layer-8 .layer-num { background: #0891b2; }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: white;
+    padding: 14px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+  }
+  .stat-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1a365d;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧬 Sci-Pal 科研文献 RAG 系统 — 完整架构图</h1>
+  <p class="subtitle">从数据源到前端，8 层架构，60+ 模块，全本地部署（Embedding + Reranker + LLM 均本地运行）</p>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-num">8</div>
+      <div class="stat-label">架构层次</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">60+</div>
+      <div class="stat-label">功能模块</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">4</div>
+      <div class="stat-label">本地 AI 模型</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">3</div>
+      <div class="stat-label">数据库类型</div>
+    </div>
+  </div>
+
+  <!-- 第8层：前端层 -->
+  <div class="layer layer-8">
+    <div class="layer-header">
+      <div class="layer-num">8</div>
+      <div class="layer-title">🖥️ 前端层 Frontend Layer</div>
+      <div class="layer-desc">用户交互界面 · 10 个 JS 模块</div>
+    </div>
+    <div class="modules">
+      <div class="module core">review.html · 综述生成主页面</div>
+      <div class="module core">review.js · 综述主逻辑</div>
+      <div class="module core">outline_editor.js · 大纲编辑器（模板/编辑/关键词）</div>
+      <div class="module">outline_core.js · 大纲核心逻辑</div>
+      <div class="module">paper_list.js · 论文列表展示</div>
+      <div class="module">paper_importer.js · 论文导入</div>
+      <div class="module">pdf_viewer.js · PDF 查看器</div>
+      <div class="module">pdf_annotator.js · PDF 标注</div>
+      <div class="module">resizer.js · 三栏布局调整</div>
+      <div class="module">supplementary_manager.js · 补充材料管理</div>
+      <div class="module">review.css · 样式系统</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">▼</div>
+
+  <!-- 第7层：API 层 -->
+  <div class="layer layer-7">
+    <div class="layer-header">
+      <div class="layer-num">7</div>
+      <div class="layer-title">🔌 API 层 API Layer</div>
+      <div class="layer-desc">Flask RESTful API · 端口 5000</div>
+    </div>
+    <div class="modules">
+      <div class="module core">api_server.py · Flask API 服务器（主入口）</div>
+      <div class="module">app.py · 应用入口</div>
+      <div class="module">/api/review/outline · 大纲生成/保存/加载</div>
+      <div class="module">/api/review/generate · 综述生成</div>
+      <div class="module">/api/review/search_and_assign · 按大纲搜索并分配</div>
+      <div class="module">/api/review/running_task · 任务状态查询</div>
+      <div class="module">/api/papers/* · 论文 CRUD</div>
+      <div class="module">/api/papers/*/pdf · PDF 访问</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">▼</div>
+
+  <!-- 第6层：生成层 -->
+  <div class="layer layer-6">
+    <div class="layer-header">
+      <div class="layer-num">6</div>
+      <div class="layer-title">✍️ 生成层 Generation Layer</div>
+      <div class="layer-desc">综述生成核心 · V32.5 三大升级 · services/review/</div>
+    </div>
+    <div class="modules">
+      <div class="module core">review_generator.py · 综述生成器（核心）</div>
+      <div class="module">├─ 分章节生成 + 渐进式上下文注入 🆕</div>
+      <div class="module">├─ 章节类型感知（Intro/Methods/Results/Discussion/Conclusion）🆕</div>
+      <div class="module">├─ 证据-声明矩阵（Claims-Evidence Matrix）🆕</div>
+      <div class="module">├─ 迭代精炼 + 5维评分标准引导（_review_section）🆕</div>
+      <div class="module">├─ _write_draft · 逐章节撰写循环</div>
+      <div class="module">├─ _write_section · 单章节撰写</div>
+      <div class="module">├─ _split_and_link · 句子拆分+引用关联</div>
+      <div class="module">└─ _auto_cite_sentences · 自动引用补全</div>
+      <div class="module">llm_client.py · LLM 客户端（Ollama）</div>
+      <div class="module">outline_generator.py · 大纲生成器</div>
+      <div class="module">outline_store.py · 大纲存储管理</div>
+      <div class="module">review_store.py · 综述存储</div>
+      <div class="module">task_manager.py · 异步任务管理</div>
+      <div class="module">citation_formatter.py · 引用格式化（APA/Nature/Vancouver）</div>
+      <div class="module">citation_verifier.py · 引用验证</div>
+      <div class="module">sentence_locator.py · 句子原文定位</div>
+      <div class="module">models.py · 数据模型（EvidenceCard/ReviewSection/ReviewOutline）</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">▼</div>
+
+  <!-- 第5层：证据处理层 -->
+  <div class="layer layer-5">
+    <div class="layer-header">
+      <div class="layer-num">5</div>
+      <div class="layer-title">🧩 证据处理层 Evidence Processing Layer</div>
+      <div class="layer-desc">证据抽取/关系/冲突 · 综述跳过关系抽取</div>
+    </div>
+    <div class="modules">
+      <div class="module core">evidence_extractor.py · 证据抽取器</div>
+      <div class="module">├─ 简化证据抽取（综述用，快速）</div>
+      <div class="module">└─ 完整证据抽取（问答用，详细）</div>
+      <div class="module">relation_extractor.py · 关系抽取（问答/分析用，综述跳过 V31.82）</div>
+      <div class="module">conflict_detector.py · 冲突检测（问答/分析用，综述跳过 V31.82）</div>
+      <div class="module">EvidenceCard · 证据卡片模型（evidence_id/type/content/original_quote）</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">▼</div>
+
+  <!-- 第4层：检索层 -->
+  <div class="layer layer-4">
+    <div class="layer-header">
+      <div class="layer-num">4</div>
+      <div class="layer-title">🔍 检索层 Retrieval Layer</div>
+      <div class="layer-desc">统一检索 · 混合召回 · 重排序 · 20 个模块 · services/search/</div>
+    </div>
+    <div class="modules">
+      <div class="module core">unified_retriever.py · 统一检索器（主入口）</div>
+      <div class="module">unified_search.py · 统一搜索</div>
+      <div class="module">hybrid_search.py / hybrid_search_v2.py · 混合搜索（向量+FTS）</div>
+      <div class="module">abstract_search.py · 摘要库专项搜索</div>
+      <div class="module">agentic_search.py · 智能体搜索</div>
+      <div class="module">query_router.py · 查询路由分发</div>
+      <div class="module">query_expander.py · 查询扩展（同义词/相关词）</div>
+      <div class="module">fts_query_builder.py · FTS5 查询构建器</div>
+      <div class="module core">reranker.py · 重排序（BAAI/bge-reranker-base 本地）</div>
+      <div class="module">mmr_diversifier.py · MMR 多样性选择（去重）</div>
+      <div class="module">chunker.py · 文本分块器</div>
+      <div class="module">context_expander.py · 上下文扩展</div>
+      <div class="module">abbreviation_expander.py · 缩写展开</div>
+      <div class="module">boilerplate_filter.py · 模板语句过滤</div>
+      <div class="module">reference_filter.py · 参考文献过滤</div>
+      <div class="module">graph_traverser.py · 知识图谱遍历</div>
+      <div class="module">retrieval_diagnostics.py · 检索诊断工具</div>
+      <div class="module">Entity Boost · 实体增强检索（scispacy NER 提取关键词加权）</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">▼</div>
+
+  <!-- 第3层：AI 模型层 -->
+  <div class="layer layer-3">
+    <div class="layer-header">
+      <div class="layer-num">3</div>
+      <div class="layer-title">🤖 AI 模型层 AI Model Layer</div>
+      <div class="layer-desc">全本地部署 · 4 个模型 · 无需联网</div>
+    </div>
+    <div class="modules">
+      <div class="module core">BAAI/bge-base-en-v1.5 · Embedding 向量模型（本地 D:\models\）</div>
+      <div class="module core">BAAI/bge-reranker-base · Reranker 重排序模型（本地 D:\models\）</div>
+      <div class="module core">Ollama qwen2.5:7b · LLM 生成模型（主力，本地 http://localhost:11434）</div>
+      <div class="module">Ollama qwen2.5:3b · LLM 轻量模型（快速任务，本地）</div>
+      <div class="module">scispacy en_ner_bc5cdr_md · NER 实体识别（生物医学实体提取）</div>
+      <div class="module">services/ai/ai_service.py · AI 服务封装</div>
+      <div class="module">services/ai/envelope_builder.py · Prompt 信封构建</div>
+      <div class="module">services/ai/rag_validator.py · RAG 结果验证</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">▼</div>
+
+  <!-- 第2层：数据存储层 -->
+  <div class="layer layer-2">
+    <div class="layer-header">
+      <div class="layer-num">2</div>
+      <div class="layer-title">💾 数据存储层 Data Storage Layer</div>
+      <div class="layer-desc">3 种数据库 · SQLite + ChromaDB + FTS5</div>
+    </div>
+    <div class="modules">
+      <div class="module core">research.db · 全文 SQLite 数据库（papers/paragraphs/evidence 等表）</div>
+      <div class="module core">abstracts.db · 摘要 SQLite 数据库（papers + papers_fts FTS5 虚拟表）</div>
+      <div class="module core">chroma/ · 全文向量库（ChromaDB Persistent，段落级向量）</div>
+      <div class="module core">chroma_abstracts/ · 摘要向量库（ChromaDB Persistent，摘要级向量）</div>
+      <div class="module">FTS5 全文索引 · SQLite 内置全文搜索引擎（标题/摘要/作者/期刊）</div>
+      <div class="module">data/ 目录 · 所有数据文件统一管理</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">▼</div>
+
+  <!-- 第1层：数据源层 -->
+  <div class="layer layer-1">
+    <div class="layer-header">
+      <div class="layer-num">1</div>
+      <div class="layer-title">📚 数据源层 Data Source Layer</div>
+      <div class="layer-desc">4 大数据源 · 下载/导入/索引构建 · 15 个脚本</div>
+    </div>
+    <div class="modules">
+      <div class="module-group">
+        <div class="group-label">PubMed（摘要）</div>
+        <div class="module core">download_pubmed_abstracts.py · PubMed 摘要批量下载</div>
+      </div>
+      <div class="module-group">
+        <div class="group-label">PMC（全文 XML）</div>
+        <div class="module">download_pmc_xml.py · PMC 全文 XML 下载</div>
+        <div class="module">download_pmc_v2.py · PMC 下载 V2（增强版）</div>
+      </div>
+      <div class="module-group">
+        <div class="group-label">OpenAlex（2亿+免费）</div>
+        <div class="module core">download_openalex.py · OpenAlex 批量下载（关键词/期刊/断点续传）🆕</div>
+      </div>
+      <div class="module-group">
+        <div class="group-label">Zotero / NCBI</div>
+        <div class="module">import_zotero_metadata.py · Zotero 元数据导入</div>
+        <div class="module">fetch_from_ncbi.py · NCBI 数据抓取</div>
+        <div class="module">fetch_metadata.py · 元数据补全</div>
+      </div>
+      <div class="module-group">
+        <div class="group-label">导入脚本</div>
+        <div class="module">import_xml.py · XML 全文导入 V1</div>
+        <div class="module">import_xml_v2.py · XML 全文导入 V2</div>
+        <div class="module">backfill_paper_metadata.py · 论文元数据回填</div>
+      </div>
+      <div class="module-group">
+        <div class="group-label">索引构建</div>
+        <div class="module core">build_abstracts_db.py · 摘要库构建（SQLite+FTS+向量）</div>
+        <div class="module">build_vector_index.py · 全文向量索引构建</div>
+        <div class="module">build_paragraph_vector_index.py · 段落向量索引构建</div>
+      </div>
+      <div class="module-group">
+        <div class="group-label">数据处理</div>
+        <div class="module">batch_parse_new_papers.py · 新论文批量解析</div>
+        <div class="module">diagnose_abstract_sections.py · 摘要结构诊断</div>
+        <div class="module">check_parse_status.py · 解析状态检查</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 其他服务 -->
+  <div style="margin-top: 20px; padding: 16px; background: white; border-radius: 10px; border: 1px solid #e5e7eb;">
+    <h3 style="font-size: 14px; margin-bottom: 10px; color: #1a365d;">🔧 其他专项服务（独立模块）</h3>
+    <div class="modules">
+      <div class="module">services/qa/qa_service.py · 问答服务（关系抽取+冲突检测）</div>
+      <div class="module">services/query/search_service.py · 查询搜索服务</div>
+      <div class="module">services/writing/writing_service.py · 写作辅助服务</div>
+      <div class="module">services/pdf/annotator.py · PDF 标注服务</div>
+      <div class="module">services/l3/ · L3 推理层（预留）</div>
+      <div class="module">services/user/ · 用户服务（预留）</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#d97706;"></div>数据源层</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2563eb;"></div>数据存储层</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#059669;"></div>AI 模型层</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4f46e5;"></div>检索层</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#db2777;"></div>证据处理层</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ea580c;"></div>生成层</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4b5563;"></div>API 层</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0891b2;"></div>前端层</div>
+    <div class="legend-item"><strong>加粗边框</strong> = 核心模块</div>
+  </div>
+
+</div>
+</body>
+</html>

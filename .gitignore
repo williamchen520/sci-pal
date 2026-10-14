@@ -50,3 +50,22 @@ uploads/
 # 源PDF文件（不提交到Git）
 documents/*.pdf
 documents/**/*.pdf
+
+# 实际虚拟环境目录名（7GB+，绝不入库）
+venv_sciPal_py312/
+
+# 整个运行时数据目录：向量库、模型、sqlite db、jsonl缓存
+data/
+
+# 根目录参考资料 PDF（科研写作书、测试论文样本）
+/*.pdf
+
+# 论文抽图运行时产物（从已解析 PDF 抽出的图）
+documents/*.png
+documents/**/*.png
+
+# 大图原始素材（已在 docs/ 下有 pdf/jpg 版本）
+*.tif
+
+# 本地环境变量启动脚本（含个人路径/密钥）
+qwen.txt

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 V25.18 从 NCBI PubMed 批量抓取论文元数据（abstract、authors、affiliations 等）
@@ -15,6 +16,7 @@ V25.18 从 NCBI PubMed 批量抓取论文元数据（abstract、authors、affili
 NCBI API key 申请（免费，可提高速率到10次/秒）:
   https://www.ncbi.nlm.nih.gov/account/settings/ -> API Key
 """
+
 
 import argparse
 import json

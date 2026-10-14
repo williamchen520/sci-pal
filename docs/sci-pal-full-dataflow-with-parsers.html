@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sci-Pal 超完整数据流图 — 从PDF解析到前端展示（含6大解析引擎细节）</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'PingFang SC','Segoe UI',Roboto,Arial,sans-serif; background: #f4f3ee; color: #1a1b1c; line-height: 1.6; padding: 20px; }
+  .container { max-width: 1500px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 24px; color: #7c2d12; margin-bottom: 8px; }
+  .subtitle { text-align: center; font-size: 13px; color: #6b7280; margin-bottom: 30px; }
+
+  /* 阶段 */
+  .stage { margin-bottom: 24px; }
+  .stage-title { font-size: 15px; font-weight: 700; color: #fff; padding: 10px 16px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 10px; }
+  .stage-title .num { background: rgba(255,255,255,0.25); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .stage-body { background: #fff; border: 1px solid #e4e3dd; border-top: none; border-radius: 0 0 8px 8px; padding: 14px; }
+
+  .stage-1 .stage-title { background: linear-gradient(135deg, #7c2d12, #c2410c); }
+  .stage-2 .stage-title { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+  .stage-3 .stage-title { background: linear-gradient(135deg, #15803d, #22c55e); }
+  .stage-4 .stage-title { background: linear-gradient(135deg, #b45309, #f59e0b); }
+  .stage-5 .stage-title { background: linear-gradient(135deg, #be123c, #f43f5e); }
+  .stage-6 .stage-title { background: linear-gradient(135deg, #0e7490, #06b6d4); }
+
+  /* 解析引擎卡片 */
+  .parser-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .parser-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; border-left: 3px solid #3b82f6; }
+  .parser-card.primary { border-left-color: #3b82f6; background: #eff6ff; }
+  .parser-card.metadata { border-left-color: #22c55e; background: #f0fdf4; }
+  .parser-card.alternative { border-left-color: #a855f7; background: #faf5ff; }
+  .parser-card.table { border-left-color: #06b6d4; background: #ecfeff; }
+  .parser-card.optimizer { border-left-color: #f43f5e; background: #fdf2f8; }
+  .parser-name { font-weight: 700; font-size: 12px; color: #1e293b; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
+  .parser-badge { font-size: 9px; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+  .badge-primary { background: #dbeafe; color: #1e40af; }
+  .badge-optional { background: #fef3c7; color: #92400e; }
+  .badge-alt { background: #f3e8ff; color: #6b21a8; }
+  .badge-spec { background: #cffafe; color: #155e75; }
+  .parser-file { font-family: 'Consolas','Monaco',monospace; font-size: 10px; color: #64748b; margin-bottom: 4px; }
+  .parser-desc { font-size: 11px; color: #475569; line-height: 1.5; }
+  .parser-algo { font-size: 10px; color: #0f766e; background: #ccfbf1; padding: 4px 6px; border-radius: 4px; margin-top: 4px; }
+
+  /* 文件卡片 */
+  .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .file-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; border-left: 3px solid #4f6b9a; }
+  .file-name { font-family: 'Consolas','Monaco',monospace; font-size: 11px; font-weight: 700; color: #4f6b9a; margin-bottom: 3px; }
+  .file-desc { font-size: 11px; color: #4b5563; line-height: 1.5; }
+  .file-tag { display: inline-block; padding: 1px 5px; background: #e0e7ff; color: #4338ca; border-radius: 3px; font-size: 9px; margin-right: 3px; margin-top: 3px; }
+
+  /* 数据存储 */
+  .storage-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .storage-item { flex: 1; min-width: 180px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 10px; }
+  .storage-name { font-weight: 700; font-size: 12px; color: #92400e; margin-bottom: 2px; }
+  .storage-path { font-family: 'Consolas','Monaco',monospace; font-size: 10px; color: #78350f; }
+  .storage-desc { font-size: 10px; color: #92400e; margin-top: 2px; }
+
+  /* 箭头 */
+  .arrow { text-align: center; font-size: 22px; color: #9ca3af; margin: 8px 0; }
+  .arrow-label { text-align: center; font-size: 11px; color: #6b7280; margin-top: -4px; margin-bottom: 8px; }
+
+  /* 输出字段 */
+  .output-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-top: 10px; }
+  .output-field { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 8px; }
+  .output-field-title { font-weight: 700; font-size: 11px; color: #166534; margin-bottom: 3px; }
+  .output-field-content { font-size: 10px; color: #15803d; font-family: 'Consolas','Monaco',monospace; line-height: 1.7; }
+
+  /* 算法标签 */
+  .algo-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .algo-tag { padding: 3px 8px; background: #fce7f3; color: #9d174d; border-radius: 10px; font-size: 10px; font-weight: 600; }
+
+  /* 流程图内联 */
+  .flow-inline { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  .flow-node { background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .flow-arrow { color: #9ca3af; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔬 Sci-Pal 超完整数据流图</h1>
+  <p class="subtitle">从 PDF 文件输入 → 6大解析引擎 → 标准化输出 → 建库 → 建索引 → 检索 → 生成 → 前端展示（含PDF解析器全部细节）</p>
+
+  <!-- ==================== 阶段1：PDF 解析 ==================== -->
+  <div class="stage stage-1">
+    <div class="stage-title"><span class="num">1</span> PDF 解析层 — 6大解析引擎协同工作</div>
+    <div class="stage-body">
+      <!-- 输入 -->
+      <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:10px; margin-bottom:12px;">
+        <strong style="color:#9a3412; font-size:13px;">📥 输入：</strong>
+        <span style="font-size:12px; color:#78350f;">本地 PDF 文件 / PMC 下载的 XML（XML 直接走 import_xml_v2.py，不经过解析器）</span>
+      </div>
+
+      <!-- 调度器 -->
+      <div style="background:#fff7ed; border:2px solid #fb923c; border-radius:8px; padding:12px; margin-bottom:12px;">
+        <div style="font-weight:700; font-size:13px; color:#9a3412; margin-bottom:6px;">🎼 解析器调度器 (parser_orchestrator.py)</div>
+        <div style="font-size:11px; color:#78350f; line-height:1.7;">
+          <strong>V3 架构：Docling 主力 + GROBID 增强（可选）</strong><br>
+          • Docling 负责：段落 / 图表 / 表格 / 章节层级（正文结构主力）<br>
+          • GROBID 负责：元数据（标题/作者/期刊/DOI/年份）+ 结构化参考文献（补充增强）<br>
+          • GROBID 可选：服务没运行时静默回退到只用 Docling，不崩溃<br>
+          • <strong>标题合理性校验算法：</strong>全大写检测(>85%) / 联盟后缀检测 / 截断检测 / 过短过长检测 → 可疑时用替代标题
+        </div>
+      </div>
+
+      <div class="arrow">⬇️ 并行调度 ⬇️</div>
+
+      <!-- 6大解析引擎 -->
+      <div class="parser-grid">
+        <div class="parser-card primary">
+          <div class="parser-name">🏆 Docling <span class="parser-badge badge-primary">主力</span></div>
+          <div class="parser-file">docling_parser.py</div>
+          <div class="parser-desc">
+            <strong>管线配置：</strong>OCR OFF / 表格结构 ON / 布局检测 ON / 标题层级 ON(优先PDF书签)<br>
+            <strong>提取：</strong>TextItem / SectionHeaderItem / TableItem / FigureItem
+          </div>
+          <div class="parser-algo"><strong>算法：</strong>HierarchicalChunker 分层分块（按章节层级，保留section_l1/l2上下文）</div>
+        </div>
+        <div class="parser-card metadata">
+          <div class="parser-name">📋 GROBID <span class="parser-badge badge-optional">可选增强</span></div>
+          <div class="parser-file">grobid_parser.py</div>
+          <div class="parser-desc">
+            <strong>服务：</strong>http://localhost:8070 (TEI XML)<br>
+            <strong>提取：</strong>元数据(标题/作者/DOI/期刊/年份/卷期) + 结构化参考文献(作者/标题/期刊/年份/DOI)
+          </div>
+          <div class="parser-algo"><strong>算法：</strong>DOI正则提取(10.\d{4,9}/...) + 空格OCR修复 + 尾部清理</div>
+        </div>
+        <div class="parser-card alternative">
+          <div class="parser-name">🔄 MinerU <span class="parser-badge badge-alt">备选</span></div>
+          <div class="parser-file">mineru_parser.py</div>
+          <div class="parser-desc">
+            <strong>学术PDF最佳整体解析器</strong><br>
+            <strong>懒加载：</strong>启动不加载，首次调用才 import magic_pdf<br>
+            <strong>提取：</strong>paragraphs / figures / metadata（标准化输出）
+          </div>
+          <div class="parser-algo"><strong>技术：</strong>版面分析 + 公式识别(LaTeX) + 表格识别 + 阅读顺序推断 + 中英文混合优化</div>
+        </div>
+        <div class="parser-card table">
+          <div class="parser-name">📊 pdfplumber <span class="parser-badge badge-spec">专用</span></div>
+          <div class="parser-file">pdfplumber_parser.py</div>
+          <div class="parser-desc">
+            <strong>复杂表格专用提取器</strong><br>
+            逐页 page.extract_tables()，只处理表格，不处理正文
+          </div>
+          <div class="parser-algo"><strong>算法：</strong>空表过滤(<2行跳过) + 自动编号(paper_id_tab001) + 页码记录</div>
+        </div>
+        <div class="parser-card optimizer">
+          <div class="parser-name">⚡ Journal Optimizer</div>
+          <div class="parser-file">journal_optimizer.py</div>
+          <div class="parser-desc">
+            <strong>顶刊专项优化（后处理）</strong><br>
+            DOI前缀识别期刊家族，覆盖50+子刊
+          </div>
+          <div class="parser-algo"><strong>优化：</strong>期刊特定标题识别 + 卷期页码提取 + 章节类型归一化 + 双栏布局提示</div>
+        </div>
+        <div class="parser-card" style="border-left-color:#64748b; background:#f8fafc;">
+          <div class="parser-name">📐 BaseParser</div>
+          <div class="parser-file">base_parser.py</div>
+          <div class="parser-desc">
+            <strong>抽象基类(ABC)</strong><br>
+            定义统一接口：parse(pdf_path, paper_id) → Dict / get_parser_name() → str
+          </div>
+          <div class="parser-algo" style="background:#f1f5f9; color:#475569;"><strong>作用：</strong>确保所有解析器输出格式一致，调度器可直接合并</div>
+        </div>
+      </div>
+
+      <div class="arrow">⬇️ 合并为标准化输出 ⬇️</div>
+
+      <!-- 标准化输出 -->
+      <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px;">
+        <div style="font-weight:700; font-size:13px; color:#166534; margin-bottom:8px;">📦 标准化输出（统一Dict格式）</div>
+        <div class="output-fields">
+          <div class="output-field">
+            <div class="output-field-title">📄 metadata</div>
+            <div class="output-field-content">paper_id / title / authors / journal / year / doi / pmid / pmcid / volume / issue / pages / abstract</div>
+          </div>
+          <div class="output-field">
+            <div class="output-field-title">📝 paragraphs</div>
+            <div class="output-field-content">para_id / paper_id / text / section_l1 / section_l2 / section_level / paragraph_index / page_number</div>
+          </div>
+          <div class="output-field">
+            <div class="output-field-title">🖼️ figures</div>
+            <div class="output-field-content">figure_id / paper_id / caption / image_path / page_number / section_l1 / section_l2</div>
+          </div>
+          <div class="output-field">
+            <div class="output-field-title">📊 tables</div>
+            <div class="output-field-content">table_id / paper_id / caption / table_data(二维数组) / page_number / section_l1 / section_l2</div>
+          </div>
+          <div class="output-field">
+            <div class="output-field-title">📚 citations</div>
+            <div class="output-field-content">citation_id / paper_id / ref_index / authors / title / journal / year / volume / pages / doi / raw_text</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+  <div class="arrow-label">写入 SQLite 数据库（XML 全文直接走 import_xml_v2.py，跳过解析器）</div>
+
+  <!-- ==================== 阶段2：数据导入与建库 ==================== -->
+  <div class="stage stage-2">
+    <div class="stage-title"><span class="num">2</span> 数据导入与建库层 — 写入 SQLite + 构建各种索引</div>
+    <div class="stage-body">
+      <div class="file-grid">
+        <div class="file-card" style="border-left-color:#22c55e;">
+          <div class="file-name">import_xml_v2.py</div>
+          <div class="file-desc">【主力】JATS XML 解析导入器。解析 PMC 下载的 XML，提取段落/章节/图表/参考文献，写入 research.db。支持增量导入(INSERT OR REPLACE)。</div>
+          <span class="file-tag">JATS解析</span><span class="file-tag">增量导入</span>
+        </div>
+        <div class="file-card" style="border-left-color:#22c55e;">
+          <div class="file-name">build_abstracts_db.py</div>
+          <div class="file-desc">摘要库构建器。读取 abstracts_xml/*.json，写入独立的 abstracts.db（FTS5 + 向量索引）。embedding 模型 bge-base-en-v1.5。</div>
+          <span class="file-tag">摘要库</span><span class="file-tag">FTS5</span>
+        </div>
+        <div class="file-card" style="border-left-color:#3b82f6;">
+          <div class="file-name">build_db/build_database.py</div>
+          <div class="file-desc">数据库初始化。创建所有表：papers/paragraphs/figures/tables/citations/sentences/chunks/paper_graph/communities 等。</div>
+          <span class="file-tag">建表</span><span class="file-tag">Schema</span>
+        </div>
+        <div class="file-card" style="border-left-color:#3b82f6;">
+          <div class="file-name">build_db/build_fts.py</div>
+          <div class="file-desc">FTS5 全文索引构建。为 paragraphs 表建 FTS5 虚拟表，支持布尔搜索/短语搜索/前缀搜索/NEAR操作。BM25 排序。</div>
+          <span class="file-tag">FTS5</span><span class="file-tag">BM25</span>
+        </div>
+        <div class="file-card" style="border-left-color:#a855f7;">
+          <div class="file-name">build_db/build_paper_graph.py</div>
+          <div class="file-desc">论文引用图谱构建。解析参考文献，建立 CITES(引用) 和 SIMILAR(相似) 关系边。用于图谱扩展检索。</div>
+          <span class="file-tag">引用图谱</span><span class="file-tag">CITES</span>
+        </div>
+        <div class="file-card" style="border-left-color:#a855f7;">
+          <div class="file-name">build_db/build_communities.py</div>
+          <div class="file-desc">论文社区发现。基于引用图谱用 Louvain 算法做社区检测，将论文聚类成主题社区。</div>
+          <span class="file-tag">Louvain</span><span class="file-tag">社区检测</span>
+        </div>
+        <div class="file-card" style="border-left-color:#f59e0b;">
+          <div class="file-name">build_db/build_chunks.py</div>
+          <div class="file-desc">文本分块器。将长段落切分成固定大小 chunk（含重叠），用于更精细的向量检索。</div>
+          <span class="file-tag">分块</span><span class="file-tag">重叠</span>
+        </div>
+        <div class="file-card" style="border-left-color:#f59e0b;">
+          <div class="file-name">build_db/build_sentences.py</div>
+          <div class="file-desc">句子级切分。将段落切分成句子，写入 sentences 表。用于句子级证据定位和引用校验。</div>
+          <span class="file-tag">句子切分</span>
+        </div>
+        <div class="file-card" style="border-left-color:#06b6d4;">
+          <div class="file-name">build_db/build_citation_index.py</div>
+          <div class="file-desc">引用索引构建。解析文内引用标记([1]/(Smith,2020))，建立句子-参考文献对应关系。用于引用溯源。</div>
+          <span class="file-tag">引用索引</span>
+        </div>
+        <div class="file-card" style="border-left-color:#ef4444;">
+          <div class="file-name">build_db/dedup_papers.py</div>
+          <div class="file-desc">论文去重工具。基于 DOI/PMID/标题相似度去重，避免重复论文入库。</div>
+          <span class="file-tag">去重</span>
+        </div>
+      </div>
+      <div class="storage-row">
+        <div class="storage-item">
+          <div class="storage-name">🗄️ 全文数据库 research.db</div>
+          <div class="storage-path">data/research.db (SQLite + FTS5)</div>
+          <div class="storage-desc">10+ 表：papers/paragraphs/figures/tables/citations/sentences/chunks/paper_graph/communities</div>
+        </div>
+        <div class="storage-item">
+          <div class="storage-name">📚 摘要数据库 abstracts.db</div>
+          <div class="storage-path">data/abstracts.db (SQLite + FTS5)</div>
+          <div class="storage-desc">独立摘要库，PubMed 摘要数据</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+  <div class="arrow-label">对段落做 Embedding，写入 ChromaDB 向量库</div>
+
+  <!-- ==================== 阶段3：向量索引 ==================== -->
+  <div class="stage stage-3">
+    <div class="stage-title"><span class="num">3</span> 向量索引层 — Embedding + ChromaDB + Rerank 模型</div>
+    <div class="stage-body">
+      <div class="file-grid">
+        <div class="file-card" style="border-left-color:#22c55e;">
+          <div class="file-name">build_paragraph_vector_index.py</div>
+          <div class="file-desc">【主力】段落级向量索引构建。读取 paragraphs 表，用 bge-base-en-v1.5 做 embedding(768维)，写入 ChromaDB(collection: sci_pal_paragraphs)。支持增量追加(collection.add)。</div>
+          <span class="file-tag">段落向量</span><span class="file-tag">bge-base</span><span class="file-tag">增量</span>
+        </div>
+        <div class="file-card" style="border-left-color:#22c55e;">
+          <div class="file-name">build_abstracts_db.py</div>
+          <div class="file-desc">摘要向量索引构建。为 abstracts.db 建独立的 ChromaDB 向量库(data/chroma_abstracts/)。</div>
+          <span class="file-tag">摘要向量</span><span class="file-tag">独立库</span>
+        </div>
+        <div class="file-card" style="border-left-color:#f59e0b;">
+          <div class="file-name">services/search/reranker.py</div>
+          <div class="file-desc">Cross-Encoder 重排序器。用 bge-reranker-base 对候选(query, paragraph)对打分，0-1相关性分数。粗排前50-100条精排到前10-20条。</div>
+          <span class="file-tag">Rerank</span><span class="file-tag">Cross-Encoder</span>
+        </div>
+      </div>
+      <div class="algo-row">
+        <span class="algo-tag">Embedding: BAAI/bge-base-en-v1.5 (768维)</span>
+        <span class="algo-tag">Rerank: BAAI/bge-reranker-base (Cross-Encoder)</span>
+        <span class="algo-tag">向量库: ChromaDB (HNSW索引, 余弦相似度)</span>
+        <span class="algo-tag">批量编码 batch_size=256</span>
+        <span class="algo-tag">增量追加 collection.add (不重建)</span>
+      </div>
+      <div class="storage-row">
+        <div class="storage-item">
+          <div class="storage-name">🔢 全文向量库 chroma/</div>
+          <div class="storage-path">data/chroma/ (ChromaDB)</div>
+          <div class="storage-desc">collection: sci_pal_paragraphs，HNSW索引，768维向量</div>
+        </div>
+        <div class="storage-item">
+          <div class="storage-name">🔢 摘要向量库 chroma_abstracts/</div>
+          <div class="storage-path">data/chroma_abstracts/ (ChromaDB)</div>
+          <div class="storage-desc">独立摘要向量库</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+  <div class="arrow-label">用户查询 → 统一检索流水线</div>
+
+  <!-- ==================== 阶段4：检索引擎 ==================== -->
+  <div class="stage stage-4">
+    <div class="stage-title"><span class="num">4</span> 检索引擎层 — 混合检索 + Rerank + 扩展 + 在线搜索</div>
+    <div class="stage-body">
+      <!-- 检索流水线 -->
+      <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:12px; margin-bottom:12px;">
+        <div style="font-weight:700; font-size:13px; color:#92400e; margin-bottom:8px;">🔍 统一检索流水线 (unified_retriever.py)</div>
+        <div class="flow-inline">
+          <span class="flow-node">1.查询路由</span><span class="flow-arrow">→</span>
+          <span class="flow-node">2.混合搜索</span><span class="flow-arrow">→</span>
+          <span class="flow-node">3.Rerank精排</span><span class="flow-arrow">→</span>
+          <span class="flow-node">4.MMR去重</span><span class="flow-arrow">→</span>
+          <span class="flow-node">5.上下文扩展</span><span class="flow-arrow">→</span>
+          <span class="flow-node">6.图谱扩展</span><span class="flow-arrow">→</span>
+          <span class="flow-node">7.摘要库补充</span>
+        </div>
+        <div style="font-size:11px; color:#78350f; margin-top:6px;">
+          输出：结构化 evidence envelope（段落+图表+表格+论文+图谱关联）
+        </div>
+      </div>
+
+      <div class="file-grid">
+        <div class="file-card" style="border-left-color:#dc2626;">
+          <div class="file-name">unified_retriever.py</div>
+          <div class="file-desc">【核心】统一检索器。串联完整检索流水线，输出结构化 evidence envelope。</div>
+          <span class="file-tag">统一检索</span><span class="file-tag">流水线</span>
+        </div>
+        <div class="file-card" style="border-left-color:#dc2626;">
+          <div class="file-name">hybrid_search.py</div>
+          <div class="file-desc">混合搜索核心。向量检索(ChromaDB) + FTS5全文检索，RRF融合(k=60)。支持Multi-Query扩展、动态权重、MMR多样性。</div>
+          <span class="file-tag">向量+FTS</span><span class="file-tag">RRF融合</span>
+        </div>
+        <div class="file-card" style="border-left-color:#f59e0b;">
+          <div class="file-name">query_router.py</div>
+          <div class="file-desc">查询路由器。scispacy NER提取关键实体(基因/蛋白/疾病)，做实体增强检索。按查询类型选择策略。</div>
+          <span class="file-tag">NER</span><span class="file-tag">实体增强</span>
+        </div>
+        <div class="file-card" style="border-left-color:#06b6d4;">
+          <div class="file-name">context_expander.py</div>
+          <div class="file-desc">上下文扩展器。Small-to-Big策略：命中段落(chunk)→扩展到父章节(section)，用►◄标记命中位置。</div>
+          <span class="file-tag">Small-to-Big</span>
+        </div>
+        <div class="file-card" style="border-left-color:#a855f7;">
+          <div class="file-name">graph_traverser.py</div>
+          <div class="file-desc">图谱遍历器。沿CITES/SIMILAR边扩展查找相关论文，补充向量检索遗漏的关联文献。最多2跳。</div>
+          <span class="file-tag">图谱扩展</span>
+        </div>
+        <div class="file-card" style="border-left-color:#22c55e;">
+          <div class="file-name">mmr_diversifier.py</div>
+          <div class="file-desc">MMR多样性选择器。Maximal Marginal Relevance，在相关性和多样性间平衡，避免内容重复。</div>
+          <span class="file-tag">MMR</span>
+        </div>
+        <div class="file-card" style="border-left-color:#3b82f6;">
+          <div class="file-name">abstract_search.py</div>
+          <div class="file-desc">摘要库检索器。独立检索 abstracts.db(FTS5+向量)，作为全文检索的补充。</div>
+          <span class="file-tag">摘要检索</span>
+        </div>
+        <div class="file-card" style="border-left-color:#0ea5e9;">
+          <div class="file-name">online_search.py (V33.1)</div>
+          <div class="file-desc">NCBI在线搜索。ESearch搜ID→ESummary批量取元数据。同时搜PubMed+PMC。限速(有Key10次/秒)+缓存(24h)+3次重试。</div>
+          <span class="file-tag">在线搜索</span><span class="file-tag">NCBI</span>
+        </div>
+        <div class="file-card" style="border-left-color:#0ea5e9;">
+          <div class="file-name">hybrid_retriever.py (V33.1)</div>
+          <div class="file-desc">本地+在线并行搜索。ThreadPoolExecutor并行。三级去重(PMCID→PMID→DOI)，本地优先。统一排序。</div>
+          <span class="file-tag">本地+在线</span><span class="file-tag">三级去重</span>
+        </div>
+        <div class="file-card" style="border-left-color:#0ea5e9;">
+          <div class="file-name">online_downloader.py (V33.2)</div>
+          <div class="file-desc">在线下载器。异步下载PMC XML→增量导入DB→增量建索引。三阶段进度(下载40%+导入30%+索引30%)。任务队列(同时只跑1个)。</div>
+          <span class="file-tag">异步下载</span><span class="file-tag">增量</span><span class="file-tag">队列</span>
+        </div>
+        <div class="file-card" style="border-left-color:#64748b;">
+          <div class="file-name">boilerplate_filter.py + reference_filter.py</div>
+          <div class="file-desc">结果清洗。去除页眉页脚/作者信息/版权声明等样板文本；过滤参考文献条目。</div>
+          <span class="file-tag">过滤</span><span class="file-tag">清洗</span>
+        </div>
+      </div>
+      <div class="algo-row">
+        <span class="algo-tag">向量检索: 余弦相似度 (HNSW)</span>
+        <span class="algo-tag">全文检索: FTS5 (BM25)</span>
+        <span class="algo-tag">结果融合: RRF (k=60)</span>
+        <span class="algo-tag">重排序: Cross-Encoder (bge-reranker)</span>
+        <span class="algo-tag">多样性: MMR</span>
+        <span class="algo-tag">上下文: Small-to-Big</span>
+        <span class="algo-tag">图谱: CITES/SIMILAR 2跳扩展</span>
+        <span class="algo-tag">去重: 三级 (PMCID/PMID/DOI)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+  <div class="arrow-label">证据卡片 → 综述生成 / QA问答</div>
+
+  <!-- ==================== 阶段5：生成与应用 ==================== -->
+  <div class="stage stage-5">
+    <div class="stage-title"><span class="num">5</span> 生成与应用层 — 综述生成 + QA问答 + 引用校验</div>
+    <div class="stage-body">
+      <div class="file-grid">
+        <div class="file-card" style="border-left-color:#be123c;">
+          <div class="file-name">review_generator.py</div>
+          <div class="file-desc">【核心】综述生成主流程。V32.5五大升级：①分章节生成+渐进式上下文注入 ②章节类型感知(intro/methods/results/discussion/conclusion) ③证据-声明矩阵 ④迭代精炼+5维评分(相关性30%+证据30%+逻辑20%+写作10%+无臆测10%，低于60分重试) ⑤引用铁律(每句必须有[evidence_id])。</div>
+          <span class="file-tag">综述生成</span><span class="file-tag">分章节</span><span class="file-tag">迭代精炼</span>
+        </div>
+        <div class="file-card" style="border-left-color:#be123c;">
+          <div class="file-name">evidence_extractor.py</div>
+          <div class="file-desc">证据抽取器。LLM从段落抽取结构化证据卡片(EvidenceCard)，含类型/章节/关键发现/方法/样本量/结论。简化模式直接用段落做证据卡片。</div>
+          <span class="file-tag">证据抽取</span><span class="file-tag">EvidenceCard</span>
+        </div>
+        <div class="file-card" style="border-left-color:#be123c;">
+          <div class="file-name">outline_generator.py</div>
+          <div class="file-desc">大纲生成器。3种模板(系统综述/叙事型/方法学型)，每章节有关键词用于按大纲搜索文献。V32.4自动注入主题核心关键词。</div>
+          <span class="file-tag">大纲模板</span><span class="file-tag">关键词注入</span>
+        </div>
+        <div class="file-card" style="border-left-color:#16a34a;">
+          <div class="file-name">citation_verifier.py</div>
+          <div class="file-desc">引用校验器。两层校验：①确定性校验(引用标记存在性/有效性) ②可选LLM深度校验(引用恰当性/断章取义检测)。</div>
+          <span class="file-tag">确定性校验</span><span class="file-tag">LLM深度校验</span>
+        </div>
+        <div class="file-card" style="border-left-color:#7c3aed;">
+          <div class="file-name">llm_client.py</div>
+          <div class="file-desc">LLM客户端。支持Ollama(qwen2.5:3b轻量/7b重量)和云端OpenAI兼容API。自动重试、流式输出。</div>
+          <span class="file-tag">Ollama</span><span class="file-tag">Qwen2.5</span>
+        </div>
+        <div class="file-card" style="border-left-color:#0891b2;">
+          <div class="file-name">qa_service.py</div>
+          <div class="file-desc">RAG问答服务。基于统一检索器获取证据，LLM生成带引用回答。支持多轮对话、证据溯源、关系抽取、冲突检测。</div>
+          <span class="file-tag">RAG问答</span><span class="file-tag">多轮对话</span>
+        </div>
+        <div class="file-card" style="border-left-color:#64748b;">
+          <div class="file-name">relation_extractor.py + conflict_detector.py</div>
+          <div class="file-desc">关系抽取+冲突检测（问答/分析功能用）。V31.82综述生成已完全跳过这两步。</div>
+          <span class="file-tag">问答用</span>
+        </div>
+        <div class="file-card" style="border-left-color:#64748b;">
+          <div class="file-name">models.py + review_store.py + task_manager.py</div>
+          <div class="file-desc">数据模型(EvidenceCard/ReviewDraft/ReviewOutput等) + 综述结果暂存(TTL 3600s) + 任务管理器。</div>
+          <span class="file-tag">数据模型</span><span class="file-tag">暂存</span>
+        </div>
+      </div>
+      <div class="algo-row">
+        <span class="algo-tag">分章节生成 + 渐进式上下文注入(前章200字)</span>
+        <span class="algo-tag">章节类型感知 (6种写作风格)</span>
+        <span class="algo-tag">证据-声明矩阵 (先列要点再写)</span>
+        <span class="algo-tag">5维评分迭代精炼 (低于60分重试)</span>
+        <span class="algo-tag">引用铁律 (每句必须有[evidence_id])</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">⬇️</div>
+  <div class="arrow-label">REST API → 前端展示</div>
+
+  <!-- ==================== 阶段6：API与前端 ==================== -->
+  <div class="stage stage-6">
+    <div class="stage-title"><span class="num">6</span> API 与前端层 — Flask API + 5个页面 + 6个JS模块</div>
+    <div class="stage-body">
+      <div class="file-grid">
+        <div class="file-card" style="border-left-color:#0891b2;">
+          <div class="file-name">api_server.py</div>
+          <div class="file-desc">【核心】Flask API服务器，端口5000。懒加载所有服务。20+ API接口：检索/综述/问答/论文/混合搜索/在线下载/下载历史/队列/重试。</div>
+          <span class="file-tag">Flask</span><span class="file-tag">20+ API</span><span class="file-tag">懒加载</span>
+        </div>
+        <div class="file-card" style="border-left-color:#0891b2;">
+          <div class="file-name">frontend/index.html</div>
+          <div class="file-desc">【主页】搜索页。单文件应用。关键词搜索、混合检索(本地+在线)、结果展示、在线文献勾选下载、下载进度、历史面板、配置面板、Toast通知。</div>
+          <span class="file-tag">搜索主页</span><span class="file-tag">混合检索</span>
+        </div>
+        <div class="file-card" style="border-left-color:#0891b2;">
+          <div class="file-name">frontend/review.html</div>
+          <div class="file-desc">综述生成页。三栏布局：大纲编辑器(左)+论文列表(中)+PDF阅读器(右)。大纲模板选择/编辑、按大纲搜索分配、生成综述、引用溯源定位PDF。</div>
+          <span class="file-tag">综述生成</span><span class="file-tag">三栏布局</span>
+        </div>
+        <div class="file-card" style="border-left-color:#0891b2;">
+          <div class="file-name">frontend/qa.html</div>
+          <div class="file-desc">RAG问答页。多轮对话界面，回答带引用标记，可点击溯源到原文段落。</div>
+          <span class="file-tag">RAG问答</span>
+        </div>
+        <div class="file-card" style="border-left-color:#0891b2;">
+          <div class="file-name">frontend/compare.html + viewer.html</div>
+          <div class="file-desc">双栏对比页(左右两篇论文并排，同步滚动) + 独立PDF阅读器页(批注/高亮/目录)。</div>
+          <span class="file-tag">双栏对比</span><span class="file-tag">PDF阅读器</span>
+        </div>
+        <div class="file-card" style="border-left-color:#7c3aed;">
+          <div class="file-name">frontend/src/outline_editor.js + outline_core.js</div>
+          <div class="file-desc">大纲编辑器核心。3种模板定义、章节/段落增删改、关键词编辑、保存/加载、按大纲搜索分配、生成综述触发。</div>
+          <span class="file-tag">大纲编辑</span><span class="file-tag">3种模板</span>
+        </div>
+        <div class="file-card" style="border-left-color:#7c3aed;">
+          <div class="file-name">frontend/src/pdf_viewer.js + paper_list.js</div>
+          <div class="file-desc">PDF阅读器(基于pdf.js，翻页/缩放/搜索/高亮/批注) + 论文列表组件(卡片渲染/分配到段落/勾选下载)。</div>
+          <span class="file-tag">pdf.js</span><span class="file-tag">论文列表</span>
+        </div>
+        <div class="file-card" style="border-left-color:#7c3aed;">
+          <div class="file-name">frontend/src/review.js + paper_importer.js + resizer.js + supplementary_manager.js + pdf_annotator.js</div>
+          <div class="file-desc">综述页主逻辑(生成/渲染/溯源) + 文献导入器(Zotero/EndNote) + 分栏拖拽调整 + 补充材料管理 + PDF批注。</div>
+          <span class="file-tag">综述逻辑</span><span class="file-tag">文献导入</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 底部统计 ==================== -->
+  <div style="margin-top:30px; background: linear-gradient(135deg, #7c2d12, #c2410c); color: #fff; border-radius: 12px; padding: 24px; text-align: center;">
+    <h2 style="font-size: 20px; margin-bottom: 16px;">📊 完整数据流总览</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; text-align: left;">
+      <div>
+        <div style="font-size: 26px; font-weight: 700;">6层</div>
+        <div style="font-size: 11px; opacity: 0.8;">数据流向</div>
+      </div>
+      <div>
+        <div style="font-size: 26px; font-weight: 700;">6个</div>
+        <div style="font-size: 11px; opacity: 0.8;">PDF解析引擎</div>
+      </div>
+      <div>
+        <div style="font-size: 26px; font-weight: 700;">60+</div>
+        <div style="font-size: 11px; opacity: 0.8;">Python模块</div>
+      </div>
+      <div>
+        <div style="font-size: 26px; font-weight: 700;">5个</div>
+        <div style="font-size: 11px; opacity: 0.8;">前端页面</div>
+      </div>
+      <div>
+        <div style="font-size: 26px; font-weight: 700;">4个</div>
+        <div style="font-size: 11px; opacity: 0.8;">AI模型</div>
+      </div>
+      <div>
+        <div style="font-size: 26px; font-weight: 700;">8个</div>
+        <div style="font-size: 11px; opacity: 0.8;">数据存储</div>
+      </div>
+    </div>
+    <div style="margin-top: 16px; font-size: 12px; opacity: 0.9;">
+      <strong>完整路径：</strong>PDF文件 → 6大解析引擎 → 标准化输出 → 写入SQLite → 建FTS5/图谱/社区索引 → Embedding写入ChromaDB → 统一检索流水线(7步) → 证据卡片 → 综述生成/QA → Flask API → 前端展示
+    </div>
+  </div>
+</div>
+</body>
+</html>
