@@ -161,9 +161,8 @@ SCIPAL_LLM_LIGHT_MODEL=qwen2.5:3b
 # SCIPAL_LLM_MODEL=qwen-plus
 # SCIPAL_LLM_LIGHT_MODEL=qwen-turbo
 
-# 在线检索（脚本内置默认值，可用环境变量覆盖，不要把密钥写进仓库）
-NCBI_API_KEY=your_ncbi_api_key
-NCBI_EMAIL=your_email@example.com
+# Protocols.io 实时方法检索（可选，需要 Token）
+# NCBI PubMed/PMC 当前用脚本内置默认凭证，暂未走环境变量，无需配置
 SCIPAL_PROTOCOLS_IO_TOKEN=your_protocols_io_token
 ```
 
