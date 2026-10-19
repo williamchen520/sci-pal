@@ -1,7 +1,7 @@
 # Sci-Pal Windows 安装手册（逐行详解版）
 
-> 本文档把安装过程拆成最小步骤，每一行命令都解释清楚在干什么。
-> 适合没有 Windows 开发经验的用户。
+> 当前版本基线 V33.13。本文档把安装过程拆成最小步骤，每一行命令都解释清楚在干什么。
+> 适合没有 Windows 开发经验的用户；快速版见 [README-WINDOWS.md](README-WINDOWS.md)。
 
 ---
 
@@ -56,7 +56,7 @@ pip list                 # 看当前环境装了哪些包
 
 ### 第1步：装 Python
 
-**做什么**：从 python.org 下载安装 Python 3.11
+**做什么**：从 python.org 下载安装 Python 3.11 或 3.12
 
 **为什么**：我们的代码是 Python 写的，需要 Python 解释器才能跑
 
@@ -65,7 +65,7 @@ pip list                 # 看当前环境装了哪些包
   - PATH 是 Windows 的一个环境变量，里面记录了"去哪里找可执行程序"
   - 不勾的话，cmd 里输入 `python` 会提示"不是内部或外部命令"
   - 因为 Windows 不知道 python.exe 在哪
-- 装完后打开 cmd，输入 `python --version`，显示 `Python 3.11.x` 就成功了
+- 装完后打开 cmd，输入 `python --version`，显示 `Python 3.11.x` 或 `3.12.x` 就成功了
 
 ### 第2步：打开 cmd，进入项目目录
 
@@ -139,10 +139,10 @@ pip install -r requirements.txt
 | Flask | Web 框架 | 提供网页服务和 API 接口 |
 | flask-cors | 跨域支持 | 前端 JS 调用后端 API 时需要 |
 | Werkzeug | Flask 的底层依赖 | Flask 自动需要 |
-| chromadb | 向量数据库 | 存储 17397 条段落向量，做语义检索 |
-| sentence-transformers | 文本转向量 | 把段落文字变成 768 维向量 |
+| chromadb | 向量数据库 | 存储段落/摘要向量，做语义检索（规模以本地库为准） |
+| sentence-transformers | 文本转向量 | 用 BAAI/bge-base-en-v1.5 把段落文字变成向量；另装 bge-reranker-base 做重排 |
 | PyMuPDF | PDF 处理 | 读取 PDF 页面、提取元数据 |
-| requests | HTTP 请求 | 调用 DeepSeek API、查询 Crossref/NCBI |
+| requests | HTTP 请求 | 调用 LLM API、查询 NCBI/Protocols.io 等在线服务 |
 | pydantic | 数据验证 | 确保 API 返回的数据格式正确 |
 | networkx | 图谱算法 | 计算论文引用网络、社区发现 |
 | tqdm | 进度条 | 建库时显示进度 |
@@ -181,12 +181,22 @@ if not exist documents mkdir documents
 - 创建 `documents/` 文件夹（放 PDF）
 - 如果有旧电脑备份，把 `research.db` 放到 `data/`，把 PDF 放到 `documents/`
 
-### 第8步：设置环境变量
+### 第8步：设置 LLM 环境变量（二选一）
 
-**做什么**：
+**路线 A：本地 Ollama（V33.9 推荐，8GB 显存）**
+
+先安装 Ollama 并拉取模型，然后：
+
 ```cmd
-set TRANSFORMERS_OFFLINE=1
-set HF_HUB_OFFLINE=1
+set SCIPAL_LLM_PROVIDER=ollama
+set SCIPAL_LLM_HOST=http://localhost:11434
+set SCIPAL_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
+set SCIPAL_LLM_LIGHT_MODEL=qwen2.5:3b
+```
+
+**路线 B：OpenAI 兼容云端（DeepSeek / DashScope / OpenAI）**
+
+```cmd
 set SCIPAL_LLM_PROVIDER=openai
 set SCIPAL_LLM_BASE_URL=https://api.deepseek.com/v1
 set SCIPAL_LLM_API_KEY=你的API_Key
@@ -195,23 +205,27 @@ set SCIPAL_LLM_MODEL=deepseek-chat
 
 **每个变量的含义**：
 
-| 变量 | 值 | 作用 |
-|------|-----|------|
-| TRANSFORMERS_OFFLINE | 1 | 不让 transformers 联网下载模型（模型已在本地缓存） |
-| HF_HUB_OFFLINE | 1 | 不让 HuggingFace 联网（同上，双保险） |
-| SCIPAL_LLM_PROVIDER | openai | 告诉系统用 OpenAI 兼容格式的 API |
-| SCIPAL_LLM_BASE_URL | https://api.deepseek.com/v1 | DeepSeek 的 API 地址 |
-| SCIPAL_LLM_API_KEY | 你的Key | 身份验证，没有这个调不了 API |
-| SCIPAL_LLM_MODEL | deepseek-chat | 用 DeepSeek 的聊天模型 |
+| 变量 | 作用 |
+|------|------|
+| SCIPAL_LLM_PROVIDER | `ollama` 走本地，`openai` 走兼容云端 |
+| SCIPAL_LLM_HOST | Ollama 地址（默认 http://localhost:11434） |
+| SCIPAL_LLM_MODEL | 重量模型：写综述、问答（本地必须 Q4 量化） |
+| SCIPAL_LLM_LIGHT_MODEL | 轻量模型：大纲、证据抽取、引用验证 |
+| SCIPAL_LLM_BASE_URL | 云端 API 地址（路线 B） |
+| SCIPAL_LLM_API_KEY | 云端身份密钥（路线 B） |
 
-**为什么要 OFFLINE 模式**：
-- 我们的模型（all-mpnet-base-v2、bge-reranker-base）已经下载到本地了
-- 如果不设 OFFLINE，程序启动时会尝试联网检查模型更新
-- 网络不好时会卡住或报错
-- 设了 OFFLINE 就直接用本地模型，不联网，启动更快更稳
+**关于 OFFLINE 模式（可选）**：
 
-> 注意：`set` 命令只在当前 cmd 窗口有效。关了窗口再开要重新设。
-> 所以我们把这些写进 `start.bat`，每次启动自动设置。
+```cmd
+set TRANSFORMERS_OFFLINE=1
+set HF_HUB_OFFLINE=1
+```
+
+- 只有当 embedding（`bge-base-en-v1.5`）和 reranker（`bge-reranker-base`）已在本地缓存、不想联网检查更新时才打开。
+- **首次安装/建库请保持关闭**，否则模型下载不下来。
+- 这些变量已写进 `start.bat`（默认注释状态），每次启动自动生效，不用手动 `set`。
+
+> 注意：`set` 只在当前 cmd 窗口有效，关窗后失效；所以统一写进 `start.bat` 或 `.env`。
 
 ### 第9步：启动服务
 
@@ -226,8 +240,8 @@ python api_server.py
 - 启动时会加载：
   1. SQLite 数据库（research.db）
   2. Chroma 向量索引（data/chroma/）
-  3. embedding 模型（all-mpnet-base-v2）
-  4. rerank 模型（bge-reranker-base）
+  3. embedding 模型（BAAI/bge-base-en-v1.5）
+  4. rerank 模型（BAAI/bge-reranker-base）
 - 全部加载完后，显示 "Running on http://127.0.0.1:5000"
 
 **为什么必须单线程**：
@@ -280,15 +294,15 @@ pause                                        ← 暂停，等用户看结果
 chcp 65001 >nul
 title Sci-Pal 科研文献助手
 
-REM ── LLM 配置 ──                             ← REM=注释，不执行
-set SCIPAL_LLM_PROVIDER=openai               ← 设置环境变量
-set SCIPAL_LLM_BASE_URL=https://api.deepseek.com/v1
-set SCIPAL_LLM_API_KEY=你的Key
-set SCIPAL_LLM_MODEL=deepseek-chat
+REM ── LLM 配置（默认本地 Ollama，云端用注释切换）──
+set SCIPAL_LLM_PROVIDER=ollama              ← ollama=本地 / openai=云端
+set SCIPAL_LLM_HOST=http://localhost:11434
+set SCIPAL_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
+set SCIPAL_LLM_LIGHT_MODEL=qwen2.5:3b
 
-REM ── 模型离线模式 ──
-set TRANSFORMERS_OFFLINE=1
-set HF_HUB_OFFLINE=1
+REM ── 模型离线模式（可选，默认注释）──
+REM set TRANSFORMERS_OFFLINE=1
+REM set HF_HUB_OFFLINE=1
 
 if not exist "venv_sciPal\Scripts\activate.bat" (
     echo [提示] 先运行 install.bat            ← 没装环境就提示
@@ -316,8 +330,8 @@ pause                                        ← 服务停止后才会到这行
 ### Q: 为什么不直接用全局 Python 装包，非要搞虚拟环境？
 A: 因为你以后可能装别的 Python 项目，包版本会冲突。虚拟环境是行业标准做法，每个项目独立。
 
-### Q: 为什么要设 TRANSFORMERS_OFFLINE=1？
-A: 不设的话，每次启动程序都会尝试联网检查模型更新。你的模型已经在本地了，联网检查只会拖慢启动，网络不好还会报错。
+### Q: 什么时候才需要设 TRANSFORMERS_OFFLINE=1？
+A: 这是**可选项，不是必须**。当 embedding/reranker 模型已在本地缓存、且不想每次启动联网检查更新时再打开；首次安装或需要下载模型时保持关闭，否则模型拉不下来。
 
 ### Q: 为什么 Flask 要用单线程？
 A: PyTorch（sentence-transformers 用的深度学习框架）在 Flask 多线程模式下可能死锁。这是 PyTorch + Flask 的已知问题，单线程是标准解法。个人用单线程完全够。
@@ -362,13 +376,16 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 if not exist data mkdir data
 if not exist documents mkdir documents
 
-:: 第7步：设置环境变量（改成你自己的Key）
-set TRANSFORMERS_OFFLINE=1
-set HF_HUB_OFFLINE=1
-set SCIPAL_LLM_PROVIDER=openai
-set SCIPAL_LLM_BASE_URL=https://api.deepseek.com/v1
-set SCIPAL_LLM_API_KEY=sk-xxxxxx
-set SCIPAL_LLM_MODEL=deepseek-chat
+:: 第7步：设置 LLM（默认本地 Ollama；云端见下方注释）
+set SCIPAL_LLM_PROVIDER=ollama
+set SCIPAL_LLM_HOST=http://localhost:11434
+set SCIPAL_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
+set SCIPAL_LLM_LIGHT_MODEL=qwen2.5:3b
+:: 云端路线（DeepSeek）：
+:: set SCIPAL_LLM_PROVIDER=openai
+:: set SCIPAL_LLM_BASE_URL=https://api.deepseek.com/v1
+:: set SCIPAL_LLM_API_KEY=sk-xxxxxx
+:: set SCIPAL_LLM_MODEL=deepseek-chat
 
 :: 第8步：启动
 python api_server.py
