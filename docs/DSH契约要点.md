@@ -180,8 +180,9 @@ export function apply(ctx: Context) {
 | 3 | 必须声明 `parameters` 与 `output.schema` | 正确，但**漏了必填的 `output.render`** | ⚠️ 缺一项 |
 | 4 | `execute` 只返回 canonical 值；基础设施 throw，业务非理想仍返回值 | S2 原文一字不差 | ✅ 正确 |
 | 5 | `export default class extends Service` | S4 确认「也可以是 Service 子类」，但**没给具体写法** | ⚠️ 方向对，细节未证实 |
-| 6 | `package.json` 的 `dsh.bundle.patch` + `cordis.patch.yml` | S1–S5 **五份文档里一次都没出现** | ❌ 未证实 |
-| 7 | `dsh plugin --profile web add link:$(pwd)/...` | 官方出现的是 `... add github:fsrmqi/dsh-research-kit`；**`link:` 前缀未证实** | ⚠️ 部分证实 |
+| 6a | `cordis.patch.yml` | **存在于本机** `~/.dsh/profiles/desktop/cordis.patch.yml`——但它是 **profile 的补丁层**，不是插件自带的文件 | ✅ 存在，但**归属说错了** |
+| 6b | `package.json` 的 `dsh.bundle.patch` | 五份文档未出现；本机 `package.json` 实际字段是 **`dsh.profile.bundles`**，不是 `dsh.bundle.patch` | ❌ 字段名错 |
+| 7 | `dsh plugin --profile web add link:$(pwd)/...` | 命令形态对，但 **profile 名在本机是 `desktop` 不是 `web`**；`link:` 前缀未证实 | ⚠️ 部分证实 |
 | 8 | `dsh --profile web --dump-config` | 五份文档中未出现 | ⚠️ 未证实 |
 | 9 | inject 漏写 → PENDING 卡死 | S4「等待这些服务就绪才启动」 | ✅ 实质正确 |
 | 10 | **优先复用 `dsh-research-kit`，工作量小一个量级** | 见第 6 节 | ❌ **重大误判** |
@@ -210,6 +211,42 @@ export function apply(ctx: Context) {
 **唯一真正值得复用的一点**：它自带的 **stdio MCP Server**（文献检索、证据管理、研究运行、审阅）
 兼容 Codex / Claude Code / Zed 等宿主 —— 也就是说生态位与我们打算做的 SciPal MCP Server 是**同类**。
 可以参考它的工具划分方式，但**不能指望它替我们干检索**。
+
+---
+
+## 6.5 本机 DSH 安装实况（2026-10-24 实测）
+
+| 项 | 实测 |
+|---|---|
+| 形态 | **DSH Desktop**（Electron 桌面版），**不是 CLI** |
+| `dsh` 命令 | **不在 PATH 里**（`which dsh` 为空）→ 只能用 `npx -p @deepseek-ai/dsh dsh …` 或桌面 UI |
+| Node.js | v22.22.2（≥ 22.6，满足要求） |
+| 配置根 | `C:\Users\chenwei\.dsh\` |
+| **profile 名** | **`desktop`**（不是玄木说的 `web`） |
+| profile 目录 | `C:\Users\chenwei\.dsh\profiles\desktop\` |
+| 已有 bundle | `@deepseek-ai/dsh-base`、`@deepseek-ai/dsh-web-app`（在 `package.json` 的 `dsh.profile.bundles`） |
+| `profiles/node_modules` | **当前为空**（bundle 尚未落地到此，或装在别处） |
+
+### 三个文件的真实内容（原文照录）
+
+**`cordis.yml`** —— 空数组，**官方明示不要改它**：
+> 「dsh profile root — an empty entry list. The tree is composed as patches:
+> each bundle in package.json's `dsh.profile.bundles`, then `cordis.patch.yml`, then any
+> `--patch` overlays. **Edit `cordis.patch.yml`, not this file.**」
+
+**`cordis.patch.yml`** —— 空数组，这是**我们要写的地方**：
+> 「Your patch layer for this dsh profile, applied **after every bundle layer**:
+> a top-level YAML array of loader patch entries (id-targeted config overrides, disables,
+> and insert lists; `!!js` expressions allowed).」
+
+**`package.json`**：
+```json
+"dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"] } }
+```
+
+→ **结论：在本机加一个 MCP 服务器，正确做法是往 `cordis.patch.yml` 里追加一条
+`@deepseek-ai/dsh-mcp-client` 条目**（与 S1「在目标 Cordis 作用域中，为每台服务器配置一个
+`@deepseek-ai/dsh-mcp-client` 条目」完全吻合），而不是去动 `cordis.yml` 或 bundle。
 
 ---
 
