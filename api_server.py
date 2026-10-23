@@ -2036,4 +2036,19 @@ if __name__ == "__main__":
     print(f"   DB: {DB_PATH}")
     print(f"   Frontend: {FRONTEND_DIR}")
     run_db_migrations()
+
+    # V33.13: 启动时预热模型，避免第一次请求超时
+    print("🔥 启动预热：加载模型...")
+    try:
+        get_retriever()
+        print("  ✅ 检索模型已加载")
+    except Exception as e:
+        print(f"  ⚠️ 检索模型预热失败: {e}")
+    try:
+        get_llm_client()
+        print("  ✅ LLM 客户端已加载")
+    except Exception as e:
+        print(f"  ⚠️ LLM 预热失败: {e}")
+    print("🔥 预热完成，启动服务")
+
     app.run(host=host, port=port, debug=debug, threaded=False)

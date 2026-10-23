@@ -206,7 +206,8 @@ class EvidenceExtractor:
             seen_keys.add(dedupe_key)
 
             # V33.4: 从段落元数据中提取来源/匹配信息（如果检索层传入了的话）
-            source_type = para.get("source_type", "full_text")
+            # V33.17: 兼容旧的 "source" 字段（full_text / abstract），优先读 source_type
+            source_type = para.get("source_type") or para.get("source") or "full_text"
             match_method = para.get("match_method", "hybrid")
             rerank_score = float(para.get("rerank_score", 0.0))
             retrieval_rank = int(para.get("retrieval_rank", 0))

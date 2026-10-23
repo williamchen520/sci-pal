@@ -530,17 +530,27 @@ class ReviewGenerator:
             pid = p.get("paper_id", "")
             if not pid:
                 continue
+            src = p.get("source", "full_text")
             if pid not in paper_map:
                 paper_map[pid] = {
                     "paper_id": pid,
                     "title": p.get("paper_title", pid),
-                    "source": p.get("source", "full_text"),
+                    "source": src,
                     "evidence_count": 0,
+                    "fulltext_evidence_count": 0,  # V33.17: 全文证据数
+                    "abstract_evidence_count": 0,  # V33.17: 摘要证据数
                 }
-        # 统计每篇论文的证据数量
+            elif src == "full_text":
+                # V33.17: 同一篇论文既有全文段落又有摘要时，论文级 source 标全文
+                paper_map[pid]["source"] = "full_text"
+        # 统计每篇论文的证据数量（V33.17: 区分全文/摘要）
         for c in evidence_cards:
             if c.paper_id in paper_map:
                 paper_map[c.paper_id]["evidence_count"] += 1
+                if getattr(c, "source_type", "full_text") == "abstract":
+                    paper_map[c.paper_id]["abstract_evidence_count"] += 1
+                else:
+                    paper_map[c.paper_id]["fulltext_evidence_count"] += 1
         papers = list(paper_map.values())
         paper_ids = list(paper_map.keys())  # V26.1: 保留 paper_ids 变量，兼容后面的代码
 
@@ -645,17 +655,26 @@ class ReviewGenerator:
                     "page": p.get("page", 0),
                     "paper_title": p.get("paper_title", ""),
                     "source": p.get("source", "full_text"),  # V26.0: 标注来源
+                    "source_type": "full_text",  # V33.17: 证据抽取层读这个字段
                 })
 
             # V26.0: 如果需要包含摘要库，也检索摘要库
+            # V33.17: 摘要回退 + DOI 去重——摘要命中若对应全文库论文，归到全文 paper_id 名下
             if include_abstracts and hasattr(self.retriever, 'abstract_searcher'):
                 try:
                     abstract_results = self.retriever.abstract_searcher.search(
                         topic, top_k=max_papers
                     )
+                    doi_map = _get_fulltext_doi_map()  # V33.17
                     for a in abstract_results:
                         # V26.0: 摘要库返回的是 pmid，不是 paper_id
                         paper_id = a.get("paper_id", "") or a.get("pmid", "")
+
+                        # V33.17: DOI 去重——全文库里有同一篇论文时，
+                        # 摘要证据合并到全文 paper_id 名下（一篇论文只有一个身份）
+                        doi = (a.get("doi", "") or "").strip().lower()
+                        if doi and doi in doi_map:
+                            paper_id = doi_map[doi]
 
                         # V26.0: 如果用户指定了要剔除的论文，跳过
                         if excluded_paper_ids and paper_id in excluded_paper_ids:
@@ -665,14 +684,20 @@ class ReviewGenerator:
                         if selected_paper_ids and paper_id not in selected_paper_ids:
                             continue
 
+                        # V33.17: 避免同一篇论文的摘要重复添加
+                        para_id = f"abstract_{a.get('pmid', '') or paper_id}"
+                        if any(p["paper_id"] == paper_id and p["para_id"] == para_id for p in paragraphs):
+                            continue
+
                         paragraphs.append({
-                            "para_id": f"abstract_{paper_id}",
+                            "para_id": para_id,
                             "paper_id": paper_id,
                             "text": a.get("abstract", ""),
                             "section_l1": "Abstract",
                             "page": 0,
                             "paper_title": a.get("title", ""),
                             "source": "abstract",  # V26.0: 标注是摘要
+                            "source_type": "abstract",  # V33.17: 证据抽取层读这个字段
                         })
                 except Exception as e:
                     print(f"⚠️  摘要库检索失败: {e}")
@@ -2087,6 +2112,41 @@ def assign_papers_to_outline(
     return outline
 
 
+# ──────────────────────────────────────────────
+# V33.17: 摘要回退支持 —— 全文库 DOI 映射
+# ──────────────────────────────────────────────
+
+_FULLTEXT_DOI_MAP: Optional[dict[str, str]] = None
+
+
+def _get_fulltext_doi_map() -> dict[str, str]:
+    """V33.17: 从 research.db 加载 DOI → paper_id 映射（模块级缓存）。
+
+    用于摘要回退去重：摘要库命中时，如果该 DOI 在全文库有 PDF/XML 全文，
+    则把摘要证据归到全文 paper_id 名下（同一篇论文只有一个身份），
+    避免同一篇论文以 pmid 和 paper_id 两个身份重复出现。
+    """
+    global _FULLTEXT_DOI_MAP
+    if _FULLTEXT_DOI_MAP is None:
+        doi_map: dict[str, str] = {}
+        try:
+            db_path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
+            if db_path.exists():
+                conn = sqlite3.connect(str(db_path))
+                rows = conn.execute(
+                    "SELECT paper_id, doi FROM papers "
+                    "WHERE doi IS NOT NULL AND TRIM(doi) != ''"
+                ).fetchall()
+                conn.close()
+                for paper_id, doi in rows:
+                    doi_map[doi.strip().lower()] = paper_id
+        except Exception as e:
+            print(f"⚠️  V33.17: 加载全文 DOI 映射失败: {e}")
+        _FULLTEXT_DOI_MAP = doi_map
+        print(f"✅ V33.17: 全文库 DOI 映射已加载（{len(doi_map)} 篇）")
+    return _FULLTEXT_DOI_MAP
+
+
 def search_and_assign_papers(
     outline: dict,
     topic: str,
@@ -2234,6 +2294,7 @@ def search_and_assign_papers(
                         "original_quote": content[:200],
                         "confidence": 0.8,
                         "verified": False,
+                        "source_type": "full_text",  # V33.17: 全文证据
                     }
 
                 if evidence_id not in sec_evidence_ids:
@@ -2241,6 +2302,75 @@ def search_and_assign_papers(
 
                 if len(sec_paper_ids) >= papers_per_section and len(sec_evidence_ids) >= papers_per_section * 2:
                     break
+
+            # V33.17: 摘要回退 —— 无全文段落的论文，把摘要当作一条证据
+            # 规则：
+            #   1) 摘要命中且全文库无同 DOI 论文 → 摘要当一条证据（paper.source = abstract）
+            #   2) 摘要命中且全文库有同 DOI 论文 → 摘要证据合并到全文 paper_id 名下（去重）
+            #   3) 纯摘要论文数量上限 papers_per_section，避免章节论文数爆炸
+            abstracts = []
+            abstract_searcher = getattr(retriever, "abstract_searcher", None)
+            if abstract_searcher is not None:
+                try:
+                    abstracts = abstract_searcher.search(query, top_k=papers_per_section * 3)
+                except Exception as e:
+                    print(f"    ⚠️  V33.17 摘要库检索失败: {e}")
+                    abstracts = []
+
+            if abstracts:
+                doi_map = _get_fulltext_doi_map()
+                abstract_added = 0
+                for a in abstracts:
+                    pmid = (a.get("pmid", "") or a.get("paper_id", "") or "").strip()
+                    if not pmid:
+                        continue
+                    abstract_text = (a.get("abstract", "") or "").strip()
+                    if len(abstract_text) < 50:
+                        continue  # 摘要太短，没有证据价值
+
+                    # DOI 去重：全文库里有同一篇论文 → 归到全文 paper_id 名下
+                    doi = (a.get("doi", "") or "").strip().lower()
+                    fulltext_pid = doi_map.get(doi, "") if doi else ""
+                    if fulltext_pid:
+                        target_pid = fulltext_pid
+                    else:
+                        # 纯摘要论文数量上限控制
+                        if len(sec_paper_ids) >= papers_per_section * 2:
+                            break
+                        target_pid = pmid
+
+                    if target_pid not in all_papers:
+                        all_papers[target_pid] = {
+                            "paper_id": target_pid,
+                            "title": a.get("title", target_pid),
+                            "source": "full_text" if fulltext_pid else "abstract",  # V33.17: 标注来源
+                        }
+                    if target_pid not in sec_paper_ids:
+                        sec_paper_ids.append(target_pid)
+
+                    para_id = f"abstract_{pmid}"
+                    evidence_id = f"ev_{target_pid}_{para_id}_{evidence_seq}"
+                    evidence_seq += 1
+                    if evidence_id not in all_evidence_cards:
+                        content = abstract_text[:1000] + ("..." if len(abstract_text) > 1000 else "")
+                        all_evidence_cards[evidence_id] = {
+                            "evidence_id": evidence_id,
+                            "paper_id": target_pid,
+                            "para_id": para_id,
+                            "paper_title": a.get("title", target_pid),
+                            "section_l1": "Abstract",
+                            "page": 0,
+                            "content": content,
+                            "original_quote": content[:200],
+                            "confidence": 0.6,  # V33.17: 摘要证据置信度低于全文段落
+                            "verified": False,
+                            "source_type": "abstract",  # V33.17: 标注摘要证据
+                        }
+                    if evidence_id not in sec_evidence_ids:
+                        sec_evidence_ids.append(evidence_id)
+                    abstract_added += 1
+                if abstract_added:
+                    print(f"    📄 V33.17 摘要回退：补充 {abstract_added} 条摘要证据")
 
             # V31.83: 直接分配论文ID和证据ID到这个章节
             sec["assigned_paper_ids"] = sec_paper_ids
@@ -2293,12 +2423,28 @@ def search_and_assign_papers(
             print(f"\n⚠️  已达到最大论文数 {max_papers}，停止搜索")
             break
 
+    # V33.17: 统计每篇论文的证据数（区分全文/摘要，供前端显示）
+    evidence_counts: dict[str, dict[str, int]] = defaultdict(lambda: {"fulltext": 0, "abstract": 0})
+    for ev in all_evidence_cards.values():
+        if ev.get("source_type") == "abstract":
+            evidence_counts[ev["paper_id"]]["abstract"] += 1
+        else:
+            evidence_counts[ev["paper_id"]]["fulltext"] += 1
+    for pid, paper in all_papers.items():
+        c = evidence_counts.get(pid)
+        paper["evidence_count"] = (c["fulltext"] + c["abstract"]) if c else 0
+        paper["fulltext_evidence_count"] = c["fulltext"] if c else 0
+        paper["abstract_evidence_count"] = c["abstract"] if c else 0
+
     papers = list(all_papers.values())
     evidence_cards = list(all_evidence_cards.values())
 
     # V31.83: 把证据卡片保存到 outline 里，generate 函数可以直接用
     outline["evidence_cards"] = evidence_cards
 
-    print(f"\n✅ 搜索完成：共 {len(papers)} 篇论文，{len(evidence_cards)} 条证据卡片，分配 {total_assigned} 篇次")
+    abstract_paper_count = sum(1 for p in papers if p.get("source") == "abstract")
+    abstract_evidence_count = sum(c["abstract"] for c in evidence_counts.values())
+    print(f"\n✅ 搜索完成：共 {len(papers)} 篇论文（其中摘要库论文 {abstract_paper_count} 篇），"
+          f"{len(evidence_cards)} 条证据卡片（其中摘要证据 {abstract_evidence_count} 条），分配 {total_assigned} 篇次")
 
     return outline, papers
