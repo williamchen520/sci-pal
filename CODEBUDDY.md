@@ -98,7 +98,6 @@ docs/                      # 所有项目文档（.md + .html 架构图）
 - `documents/*.pdf`、`documents/*.png` — 源 PDF 和抽出的图
 - `*.tif` — 大图原始素材
 - `qwen.txt` — 本地环境变量脚本（含个人路径）
-- `sci-pal-scaffold/` — 早期代码脚手架存档（已被主目录代码取代，不要参考）
 
 ---
 
