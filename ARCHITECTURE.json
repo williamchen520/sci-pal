@@ -1,0 +1,327 @@
+{
+  "schema_version": "1.0",
+  "generated_for": "V33.13",
+  "project": {
+    "name": "Sci-Pal",
+    "display_name": "Sci-Pal 科研文献 RAG 助手",
+    "version": "V33.13",
+    "description": "本地化部署的科研文献检索与综述生成系统：确定性检索层（向量+FTS5/BM25+RRF+Cross-Encoder Rerank+查询路由+小到大扩展+多查询+MMR），生成式 LLM 为可选表达层；支持本地检索、按大纲分配论文生成综述、RAG 问答、NCBI 在线检索下载、Protocols.io 实时方法对接。",
+    "language": "zh-CN / English technical",
+    "license": "internal",
+    "repository": "https://gitee.com/williamsucas/sci-pal.git",
+    "branch": "master"
+  },
+  "runtime": {
+    "python": "3.12",
+    "venv_name": "venv_sciPal_py312",
+    "backend": "Flask 3.0.3",
+    "frontend": "vanilla HTML/CSS/JS, no framework; PDF.js",
+    "entrypoint": "api_server.py",
+    "host": "0.0.0.0",
+    "port": 5000,
+    "default_url": "http://127.0.0.1:5000"
+  },
+  "tech_stack": {
+    "backend": ["Flask==3.0.3", "flask-cors==4.0.1", "Werkzeug==3.0.3", "pydantic==2.8.2", "networkx==3.3"],
+    "retrieval": ["chromadb==0.5.5", "sentence-transformers==3.0.1", "SQLite FTS5/BM25", "RRF", "Cross-Encoder Rerank"],
+    "pdf": ["PyMuPDF==1.24.10", "pypdf==5.0.1", "pdfplumber==0.11.4", "docling>=2.0 (optional deep parser)"],
+    "llm": ["Ollama (default local)", "OpenAI-compatible API (optional cloud)"],
+    "other": ["requests==2.32.3", "python-dotenv==1.0.1", "pyarrow==17.0.0", "tqdm"]
+  },
+  "models": [
+    {
+      "id": "light_llm",
+      "name": "qwen2.5:3b",
+      "provider": "ollama",
+      "role": "lightweight tasks: outline generation, evidence extraction, citation verification",
+      "vram_gb": 2.0,
+      "quantization": "default"
+    },
+    {
+      "id": "heavy_llm",
+      "name": "qwen2.5:7b-instruct-q4_K_M",
+      "provider": "ollama",
+      "role": "heavy tasks: review writing, Q&A",
+      "vram_gb": 4.5,
+      "quantization": "Q4_K_M (FP16 OOM on 8GB)"
+    },
+    {
+      "id": "embedding",
+      "name": "BAAI/bge-base-en-v1.5",
+      "provider": "sentence-transformers",
+      "role": "semantic embeddings for paragraphs and abstracts",
+      "vram_gb": 1.5
+    },
+    {
+      "id": "reranker",
+      "name": "BAAI/bge-reranker-base",
+      "provider": "sentence-transformers",
+      "role": "Cross-Encoder reranking",
+      "vram_gb": 1.2,
+      "config_note": "config.json must contain \"model_type\":\"bert\" or it reports Unrecognized model"
+    }
+  ],
+  "total_vram_gb": 7.2,
+  "target_vram_budget_gb": 8.0,
+  "three_layer_data_architecture": [
+    {
+      "tier": 1,
+      "name": "direct_api",
+      "mode": "real-time API call, never persisted",
+      "sources": ["Protocols.io"]
+    },
+    {
+      "tier": 2,
+      "name": "online_real_time",
+      "mode": "search API at query time, no local vector store",
+      "sources": ["NCBI PubMed/PMC online search", "Dockstore", "bio.tools", "nf-core"]
+    },
+    {
+      "tier": 3,
+      "name": "local_built_store",
+      "mode": "download -> parse -> SQLite + ChromaDB",
+      "sources": ["PMC full-text JATS XML", "PubMed abstracts", "OpenAlex metadata", "Bio-protocol"]
+    }
+  ],
+  "storage": {
+    "relational": {
+      "engine": "SQLite",
+      "path": "data/research.db",
+      "holds": ["paper metadata", "section structure", "evidence cards", "tasks", "annotations", "supplementary links"]
+    },
+    "abstract_db": {
+      "engine": "SQLite",
+      "path": "data/abstracts.db"
+    },
+    "semantic": {
+      "engine": "ChromaDB",
+      "path_fulltext": "data/chroma/",
+      "collection_fulltext": "sci_pal_paragraphs",
+      "path_abstracts": "data/chroma_abstracts/",
+      "join_key": "paper_id"
+    },
+    "cache": {
+      "protocols_io": "data/protocols_io_cache/"
+    },
+    "templates": {
+      "outlines": "data/outlines/ (7 preset chapter templates, must not be deleted)"
+    }
+  },
+  "layers": [
+    {"id": "api", "files": ["api_server.py"], "responsibility": "Flask routing, static serving, request dispatch"},
+    {
+      "id": "search",
+      "directory": "services/search/",
+      "modules": [
+        {"file": "unified_retriever.py", "responsibility": "Unified retrieval: one query -> evidence envelope (paragraphs/figures/tables/neighbors); fixed interface retrieve()"},
+        {"file": "hybrid_search.py", "responsibility": "Vector + FTS5(BM25) recall with RRF fusion"},
+        {"file": "hybrid_search_v2.py", "responsibility": "Hybrid search variant V2"},
+        {"file": "hybrid_retriever.py", "responsibility": "Three-way hybrid: local + NCBI online + Protocols.io, dedup and unified ranking; fixed interface search_papers()"},
+        {"file": "online_search.py", "responsibility": "NCBI PubMed/PMC online search with rate limit, cache, retry"},
+        {"file": "online_downloader.py", "responsibility": "Async online paper download, incremental import, incremental indexing"},
+        {"file": "protocols_io_client.py", "responsibility": "Protocols.io API client, 7-day cache, rate limit, retry; never builds local store"},
+        {"file": "reranker.py", "responsibility": "Cross-Encoder rerank of fused candidate pool"},
+        {"file": "query_router.py", "responsibility": "Rule-based channel routing (qa/citation/figure/method)"},
+        {"file": "query_expander.py", "responsibility": "Multi-query rewriting + optional HyDE"},
+        {"file": "context_expander.py", "responsibility": "Small-to-big expansion: hit paragraph -> whole section"},
+        {"file": "mmr_diversifier.py", "responsibility": "Maximal Marginal Relevance dedup/diversify"},
+        {"file": "graph_traverser.py", "responsibility": "CITES/SIMILAR graph traversal for paper discovery"},
+        {"file": "agentic_search.py", "responsibility": "Agentic multi-hop retrieval"},
+        {"file": "retrieval_observability.py", "responsibility": "Retrieval pipeline observability/tracing"},
+        {"file": "retrieval_diagnostics.py", "responsibility": "Transparent inspectable retrieval diagnostics"},
+        {"file": "sentence_relation_classifier.py", "responsibility": "Sentence relation classification (Q&A/analysis, not review)"},
+        {"file": "abbreviation_expander.py", "responsibility": "Academic abbreviation expansion dictionary"},
+        {"file": "abstract_search.py", "responsibility": "Abstract-store vector + FTS search parallel to fulltext"},
+        {"file": "boilerplate_filter.py", "responsibility": "Line-level front-matter/boilerplate cleaning"},
+        {"file": "chunker.py", "responsibility": "Section-aware greedy chunking"},
+        {"file": "fts_query_builder.py", "responsibility": "Enhanced FTS5 query builder"},
+        {"file": "reference_filter.py", "responsibility": "High-precision reference-entry filter"}
+      ]
+    },
+    {
+      "id": "review",
+      "directory": "services/review/",
+      "modules": [
+        {"file": "review_generator.py", "responsibility": "Main review engine: per-chapter generation with progressive context injection"},
+        {"file": "evidence_extractor.py", "responsibility": "Evidence card extraction, dedup, confidence"},
+        {"file": "evidence_card_incremental_manager.py", "responsibility": "Incremental evidence card maintenance"},
+        {"file": "llm_client.py", "responsibility": "Unified LLM access: Ollama local or OpenAI-compatible cloud, light/heavy model split"},
+        {"file": "outline_generator.py", "responsibility": "Outline generation (optional)"},
+        {"file": "outline_store.py", "responsibility": "Outline save/load/delete in data/outlines/"},
+        {"file": "citation_formatter.py", "responsibility": "CSL-based reference formatting"},
+        {"file": "citation_verifier.py", "responsibility": "Citation verification against evidence"},
+        {"file": "sentence_locator.py", "responsibility": "Locate sentence to source PDF page"},
+        {"file": "user_feedback.py", "responsibility": "User feedback closed loop"},
+        {"file": "impact_analyzer.py", "responsibility": "Change impact analysis + local recompute"},
+        {"file": "export_manager.py", "responsibility": "Export and share review"},
+        {"file": "task_manager.py", "responsibility": "Review task management"},
+        {"file": "review_store.py", "responsibility": "Review result staging"},
+        {"file": "relation_extractor.py", "responsibility": "Inter-evidence relation extraction (Q&A/analysis only, skipped by review)"},
+        {"file": "conflict_detector.py", "responsibility": "Conflict detection (Q&A/analysis only, skipped by review)"},
+        {"file": "models.py", "responsibility": "Pydantic data models for review"}
+      ]
+    },
+    {
+      "id": "other_services",
+      "modules": [
+        {"file": "services/qa/qa_service.py", "responsibility": "RAG Q&A service"},
+        {"file": "services/ai/ai_service.py", "responsibility": "AI service"},
+        {"file": "services/ai/envelope_builder.py", "responsibility": "Evidence envelope builder"},
+        {"file": "services/ai/rag_validator.py", "responsibility": "RAG answer validation"},
+        {"file": "services/pdf/annotator.py", "responsibility": "PDF annotation"},
+        {"file": "services/data/version_manager.py", "responsibility": "Data version management and incremental sync"},
+        {"file": "services/utils/retry_utils.py", "responsibility": "Unified retry/error handling"},
+        {"file": "services/utils/structured_logger.py", "responsibility": "Structured logging/monitoring"}
+      ]
+    }
+  ],
+  "frontend_pages": [
+    {"file": "index.html", "purpose": "local literature retrieval home"},
+    {"file": "review.html", "purpose": "review generation and preview with sentence traceability"},
+    {"file": "qa.html", "purpose": "AI academic Q&A"},
+    {"file": "viewer.html", "purpose": "PDF.js reader"},
+    {"file": "compare.html", "purpose": "two-column paper comparison"},
+    {"file": "tasks.html", "purpose": "task list over SSE"}
+  ],
+  "pipelines": {
+    "retrieval": [
+      "query_router selects channel",
+      "query_expander produces multi-query / optional HyDE",
+      "hybrid_search recalls via Chroma vector + SQLite FTS5(BM25)",
+      "RRF(K=60) fuses rankings; multi-query score accumulation",
+      "context_expander grows hit paragraph to whole section",
+      "reranker Cross-Encoder re-ranks",
+      "mmr_diversifier dedups",
+      "optional graph_traverser / agentic_search multi-hop",
+      "unified_retriever returns evidence envelope"
+    ],
+    "hybrid_online": [
+      "hybrid_retriever runs local + NCBI online + Protocols.io in parallel",
+      "three-level dedup",
+      "unified ranking"
+    ],
+    "review_generation": [
+      "select preset outline template",
+      "edit chapter keywords",
+      "search_and_assign: search per chapter and assign papers",
+      "generate chapter by chapter with progressive context",
+      "evidence-claim matrix validation",
+      "iterative refinement with 5-dim scoring",
+      "each sentence bound to evidence card, traceable to PDF page"
+    ],
+    "online_download": [
+      "online_search returns candidates",
+      "online_downloader queues async download",
+      "incremental parse + index",
+      "queue/status/history/retry via /api/search/*"
+    ]
+  },
+  "api_endpoints": [
+    {"group": "health", "method": "GET", "path": "/api/health", "purpose": "service and version check"},
+    {"group": "local_retrieval", "method": "GET", "path": "/api/retrieve", "purpose": "unified retrieval envelope"},
+    {"group": "local_retrieval", "method": "POST", "path": "/api/retrieve", "purpose": "unified retrieval envelope"},
+    {"group": "local_retrieval", "method": "GET", "path": "/api/agentic/search", "purpose": "agentic multi-hop"},
+    {"group": "local_retrieval", "method": "POST", "path": "/api/agentic/search", "purpose": "agentic multi-hop"},
+    {"group": "local_retrieval", "method": "GET", "path": "/api/communities", "purpose": "detected communities"},
+    {"group": "local_retrieval", "method": "GET", "path": "/api/graph/stats", "purpose": "graph statistics"},
+    {"group": "hybrid_online", "method": "GET", "path": "/api/search/hybrid", "purpose": "local + NCBI + Protocols hybrid"},
+    {"group": "hybrid_online", "method": "POST", "path": "/api/search/hybrid", "purpose": "local + NCBI + Protocols hybrid"},
+    {"group": "hybrid_online", "method": "GET", "path": "/api/search/online", "purpose": "NCBI PubMed/PMC online search"},
+    {"group": "hybrid_online", "method": "POST", "path": "/api/search/online", "purpose": "NCBI PubMed/PMC online search"},
+    {"group": "hybrid_online", "method": "POST", "path": "/api/search/download_online", "purpose": "async online download + ingest"},
+    {"group": "hybrid_online", "method": "GET", "path": "/api/search/download_queue", "purpose": "download queue"},
+    {"group": "hybrid_online", "method": "GET", "path": "/api/search/download_status", "purpose": "download status"},
+    {"group": "hybrid_online", "method": "GET", "path": "/api/search/download_history", "purpose": "download history"},
+    {"group": "hybrid_online", "method": "POST", "path": "/api/search/retry_download", "purpose": "retry a failed download"},
+    {"group": "hybrid_online", "method": "POST", "path": "/api/search/clear_download_history", "purpose": "clear download history"},
+    {"group": "papers", "method": "GET", "path": "/api/papers", "purpose": "paper list"},
+    {"group": "papers", "method": "GET", "path": "/api/papers/local", "purpose": "local-library papers"},
+    {"group": "papers", "method": "POST", "path": "/api/papers/import", "purpose": "import paper"},
+    {"group": "papers", "method": "POST", "path": "/api/papers/parse", "purpose": "parse submitted file"},
+    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>", "purpose": "paper detail"},
+    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/pdf", "purpose": "serve PDF"},
+    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/graph", "purpose": "graph neighbors"},
+    {"group": "papers", "method": "POST", "path": "/api/papers/<paper_id>/annotate", "purpose": "add annotation"},
+    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/annotations", "purpose": "list annotations"},
+    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/supplementary", "purpose": "list supplementary"},
+    {"group": "papers", "method": "POST", "path": "/api/papers/<paper_id>/supplementary", "purpose": "add supplementary"},
+    {"group": "papers", "method": "POST", "path": "/api/papers/<paper_id>/supplementary/link", "purpose": "link supplementary"},
+    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/supplementary/<supp_id>/download", "purpose": "download supplementary"},
+    {"group": "papers", "method": "DELETE", "path": "/api/papers/<paper_id>/supplementary/<supp_id>", "purpose": "remove supplementary"},
+    {"group": "review", "method": "GET", "path": "/api/review/generate", "purpose": "review generation (async task)"},
+    {"group": "review", "method": "POST", "path": "/api/review/generate", "purpose": "review generation (async task)"},
+    {"group": "review", "method": "GET", "path": "/api/review/outline", "purpose": "get outline"},
+    {"group": "review", "method": "POST", "path": "/api/review/outline", "purpose": "generate/edit outline"},
+    {"group": "review", "method": "POST", "path": "/api/review/outline/save", "purpose": "save outline"},
+    {"group": "review", "method": "GET", "path": "/api/review/outline/saved", "purpose": "list saved outlines"},
+    {"group": "review", "method": "GET", "path": "/api/review/outline/saved/<name>", "purpose": "load saved outline"},
+    {"group": "review", "method": "DELETE", "path": "/api/review/outline/saved/<name>", "purpose": "delete saved outline"},
+    {"group": "review", "method": "POST", "path": "/api/review/search_and_assign", "purpose": "search per chapter and assign papers"},
+    {"group": "review", "method": "POST", "path": "/api/review/assign_papers", "purpose": "assign papers to chapters"},
+    {"group": "review", "method": "GET", "path": "/api/review/<review_id>", "purpose": "review detail"},
+    {"group": "review", "method": "GET", "path": "/api/review/<review_id>/sentence/<sentence_id>", "purpose": "sentence-to-evidence trace"},
+    {"group": "review", "method": "GET", "path": "/api/review/llm_status", "purpose": "LLM availability/status"},
+    {"group": "review", "method": "GET", "path": "/api/review/running_task", "purpose": "current running review task"},
+    {"group": "review", "method": "GET", "path": "/api/review/task/<task_id>", "purpose": "task status"},
+    {"group": "review", "method": "POST", "path": "/api/review/cancel/<task_id>", "purpose": "cancel task"},
+    {"group": "qa", "method": "POST", "path": "/api/qa/ask", "purpose": "RAG Q&A"},
+    {"group": "qa", "method": "GET", "path": "/api/qa/status", "purpose": "Q&A status"},
+    {"group": "tasks", "method": "GET", "path": "/api/tasks", "purpose": "unified task table"},
+    {"group": "tasks", "method": "GET", "path": "/api/tasks/<task_id>", "purpose": "single task"},
+    {"group": "tasks", "method": "GET", "path": "/api/tasks/<task_id>/events", "purpose": "SSE event stream"},
+    {"group": "abstracts", "method": "GET", "path": "/api/abstracts/list", "purpose": "abstract library list"},
+    {"group": "abstracts", "method": "GET", "path": "/api/abstracts/<paper_id>", "purpose": "abstract by paper"}
+  ],
+  "env_vars": [
+    {"name": "SCIPAL_LLM_PROVIDER", "required": false, "default": "ollama", "secret": false, "values": ["ollama", "openai"], "description": "LLM backend selector"},
+    {"name": "SCIPAL_LLM_HOST", "required": false, "default": "http://localhost:11434", "secret": false, "description": "Ollama host"},
+    {"name": "SCIPAL_LLM_MODEL", "required": false, "default": "qwen2.5:7b-instruct-q4_K_M", "secret": false, "description": "heavy model for review/Q&A"},
+    {"name": "SCIPAL_LLM_LIGHT_MODEL", "required": false, "default": "qwen2.5:3b", "secret": false, "description": "light model for outline/evidence/verification"},
+    {"name": "SCIPAL_LLM_BASE_URL", "required": false, "default": "", "secret": false, "description": "OpenAI-compatible endpoint (cloud provider)"},
+    {"name": "SCIPAL_LLM_API_KEY", "required": false, "default": "", "secret": true, "description": "OpenAI-compatible API key (cloud provider)"},
+    {"name": "SCIPAL_PROTOCOLS_IO_TOKEN", "required": false, "default": "", "secret": true, "description": "Protocols.io developer token; required to enable tier-1 real-time search"},
+    {"name": "SCIPAL_PROTOCOLS_IO_ENABLED", "required": false, "default": "true", "secret": false, "description": "set false to disable Protocols.io"},
+    {"name": "SCIPAL_LLM_TIMEOUT", "required": false, "default": "1800", "secret": false, "description": "LLM request timeout seconds"},
+    {"name": "SCIPAL_LLM_MAX_RETRIES", "required": false, "default": "1", "secret": false, "description": "LLM retry count"},
+    {"name": "SCIPAL_LLM_TEMPERATURE", "required": false, "default": "0.3", "secret": false, "description": "LLM sampling temperature"},
+    {"name": "HOST", "required": false, "default": "0.0.0.0", "secret": false, "description": "Flask bind host"},
+    {"name": "PORT", "required": false, "default": "5000", "secret": false, "description": "Flask port"},
+    {"name": "DATABASE_PATH", "required": false, "default": "data/research.db", "secret": false, "description": "SQLite main DB path"}
+  ],
+  "config_notes": [
+    "online_search.py currently uses built-in default NCBI email/api_key constants and does NOT read NCBI_API_KEY/NCBI_EMAIL from environment; they are only overridable via constructor arguments. Do not commit the built-in key.",
+    ".env.example still lists legacy AI_* prefix variables; the live code reads SCIPAL_* prefix (see env_vars). Treat code as authoritative.",
+    "Protocols.io token is the only tier-1 credential; NCBI works with the built-in fallback at lower rate limits."
+  ],
+  "download_scripts": [
+    {"file": "download_pubmed_abstracts.py", "tier": 3, "purpose": "batch PubMed abstracts -> abstract library"},
+    {"file": "download_pmc_xml.py", "tier": 3, "purpose": "PMC full-text JATS XML batch download, filter abstract-only"},
+    {"file": "batch_download_pmc.py", "tier": 3, "purpose": "incremental PMC XML download by topic"},
+    {"file": "download_openalex.py", "tier": 3, "purpose": "OpenAlex 200M+ metadata/abstract, resume support"},
+    {"file": "download_protocols.py", "tier": 3, "purpose": "Protocol special-issue batch download"},
+    {"file": "download_bioinformatics_methods.py", "tier": 2, "purpose": "Dockstore/bio.tools/nf-core real-time metadata, no vector store"},
+    {"file": "fetch_from_ncbi.py", "tier": 3, "purpose": "NCBI PubMed metadata batch fetch"}
+  ],
+  "build_db_scripts_dir": "build_db/",
+  "hard_constraints": [
+    "Do not change UnifiedRetriever.retrieve() signature; new data source added internally only",
+    "Do not change HybridRetriever.search_papers() signature",
+    "research.db schema changes must go through migration",
+    "Never delete the 7 preset chapter templates in data/outlines/",
+    "Review generation must skip relation extraction and conflict detection (those serve Q&A/analysis)",
+    "Do not introduce multi-agent architecture",
+    "Protocols.io is real-time API only; never download and build a local store for it",
+    "After code changes, sync WORK_LOG.md, test_workflow.sh and self_check.py"
+  ],
+  "git": {
+    "commit_format": "V33.x: brief description; pure docs use docs: prefix",
+    "push_branch": "master",
+    "remote": "gitee"
+  },
+  "test_commands": {
+    "self_check": "python self_check.py",
+    "workflow": "bash test_workflow.sh",
+    "syntax": "python -m py_compile api_server.py",
+    "start": "python api_server.py"
+  }
+}

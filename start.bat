@@ -2,19 +2,28 @@
 chcp 65001 >nul
 title Sci-Pal 科研文献助手
 echo ============================================================
-echo   Sci-Pal 科研文献助手 V26.2
+echo   Sci-Pal 科研文献助手 V33.13
 echo ============================================================
 echo.
 
-REM ── LLM 配置（改成你自己的）──────────────────────────────────
-set SCIPAL_LLM_PROVIDER=openai
-set SCIPAL_LLM_BASE_URL=https://api.deepseek.com/v1
-set SCIPAL_LLM_API_KEY=在这里填你的DeepSeek_API_Key
-set SCIPAL_LLM_MODEL=deepseek-chat
+REM ── LLM 配置（二选一，默认本地 Ollama）──────────────────────
+REM 路线 A：本地 Ollama（推荐，需先安装 Ollama 并拉取模型）
+set SCIPAL_LLM_PROVIDER=ollama
+set SCIPAL_LLM_HOST=http://localhost:11434
+set SCIPAL_LLM_MODEL=qwen2.5:7b-instruct-q4_K_M
+set SCIPAL_LLM_LIGHT_MODEL=qwen2.5:3b
 
-REM ── 模型离线模式（不联网下载模型）────────────────────────────
-set TRANSFORMERS_OFFLINE=1
-set HF_HUB_OFFLINE=1
+REM 路线 B：OpenAI 兼容云端（DeepSeek / DashScope / OpenAI）
+REM 切到本路线时，把上面 SCIPAL_LLM_PROVIDER 改为 openai，并取消下面注释
+REM set SCIPAL_LLM_PROVIDER=openai
+REM set SCIPAL_LLM_BASE_URL=https://api.deepseek.com/v1
+REM set SCIPAL_LLM_API_KEY=在这里填你的API_Key
+REM set SCIPAL_LLM_MODEL=deepseek-chat
+
+REM ── 模型离线模式（可选）─────────────────────────────────────
+REM 已有本地模型缓存、不想联网检查更新时再打开；首装请保持注释
+REM set TRANSFORMERS_OFFLINE=1
+REM set HF_HUB_OFFLINE=1
 
 REM ── 检查虚拟环境 ────────────────────────────────────────────
 if not exist "venv_sciPal\Scripts\activate.bat" (
