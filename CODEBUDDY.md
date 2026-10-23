@@ -31,7 +31,7 @@
   - 在线搜索 NCBI PubMed/PMC 并下载入库
   - 实时对接 Protocols.io 实验方法（只搜不下载）
 - **技术栈**：Python 3.12 + Flask + ChromaDB + Ollama（本地 LLM）+ scispacy + 原生 JS
-- **当前版本**：V33.13（见 `VERSION` 文件）
+- **当前版本**：V33.17（见 `VERSION` 文件）
 
 ---
 
