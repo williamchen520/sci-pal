@@ -169,7 +169,7 @@ def health():
     return jsonify({
         "status": "ok",
         "service": "sci-pal",
-        "version": "V25.14",
+        "version": "V33.17",
         "db_exists": DB_PATH.exists(),
     })
 
@@ -1959,6 +1959,9 @@ def run_db_migrations():
     """启动时自动检查并添加缺失的数据库字段，幂等安全。"""
     if not DB_PATH.exists():
         return
+    # V33.17: 函数内局部导入（项目风格）。此前缺失导致 name 'sqlite3' is not defined，
+    # 异常被下面 try/except 吞掉，迁移从未真正执行过。
+    import sqlite3
     try:
         conn = sqlite3.connect(str(DB_PATH))
         cursor = conn.cursor()
@@ -2032,7 +2035,7 @@ if __name__ == "__main__":
     host = os.environ.get("SCIPAL_HOST", "0.0.0.0")
     port = int(os.environ.get("SCIPAL_PORT", "5000"))
     debug = os.environ.get("SCIPAL_DEBUG", "0") == "1"
-    print(f"🧪 Sci-Pal API V25.17 — http://{host}:{port}")
+    print(f"🧪 Sci-Pal API V33.17 — http://{host}:{port}")
     print(f"   DB: {DB_PATH}")
     print(f"   Frontend: {FRONTEND_DIR}")
     run_db_migrations()
