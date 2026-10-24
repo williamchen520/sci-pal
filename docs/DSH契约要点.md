@@ -226,6 +226,9 @@ export function apply(ctx: Context) {
 | profile 目录 | `C:\Users\chenwei\.dsh\profiles\desktop\` |
 | 已有 bundle | `@deepseek-ai/dsh-base`、`@deepseek-ai/dsh-web-app`（在 `package.json` 的 `dsh.profile.bundles`） |
 | `profiles/node_modules` | **当前为空**（bundle 尚未落地到此，或装在别处） |
+| MCP 配置入口 | ❌ **桌面端无 MCP/工具配置 UI**（用户 2026-10-24 实测确认）→ **只能手改 `cordis.patch.yml`** |
+| 是否可离线改配置 | ✅ 可以，且**应当在 DSH 关闭时改**（开着改可能被退出时的状态写回覆盖） |
+| 验证方式 | ⚠️ **必须启动 DSH 后由人肉眼看工具列表** —— 无 CLI，agent 无法自助验证 |
 
 ### 三个文件的真实内容（原文照录）
 
