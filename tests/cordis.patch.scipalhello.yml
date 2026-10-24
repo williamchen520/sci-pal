@@ -1,19 +1,72 @@
 # Your patch layer for this dsh profile, applied after every bundle layer:
 # a top-level YAML array of loader patch entries (id-targeted config
 # overrides, disables, and insert lists; `!!js` expressions allowed).
+#
+# ---------------------------------------------------------------------------
+# v2（2026-10-24 修正）—— 相对 v1 只有两处改动，但都是致命的：
+#
+#   1. 新增 MCP 服务器条目必须包在 `insert:` 里。
+#      v1 写成了顶层 `- id: mcp-scipalhello`，而该 id 在 bundle 层不存在，
+#      被 DSH 判定为 "targets that match no row" → warn 并跳过。
+#      实测日志：[warn] patch: entry "mcp-scipalhello" not found
+#
+#   2. `failOnStartupError: false` → `true`。
+#      false 是默认值，后果是启动失败时静默跳过，不给任何提示。
+#      诊断阶段必须设 true，让失败显式暴露。
+#
+# 依据：随 DSH 安装发布的官方模板
+#   app.asar → dsh/node_modules/@deepseek-ai/dsh-agent-preset/skills/
+#              cordis-plugin-development/templates/mcp/cordis.patch.yml
+#   （已解包到 docs/DSH官方参考/dsh-agent-preset/skills/cordis-plugin-development/）
+# ---------------------------------------------------------------------------
+
 - id: locale
   name: "@deepseek-ai/dsh-client-locale"
   config:
     preference: en
-- id: mcp-scipalhello
-  name: '@deepseek-ai/dsh-mcp-client'
+
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
   config:
-    serverName: scipalhello
-    transport: stdio
-    command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
-    args: ['D:/sciPal/tests/mcp_ping_server.py']
-    cwd: 'D:/sciPal'
-    env:
-      PYTHONUTF8: '1'
-    toolCallTimeoutMs: 60000
-    failOnStartupError: false
+    provider: deepseek-account
+    model: deepseek-flash
+    reasoningEffort: high
+
+- id: ui-settings-account
+  name: "@deepseek-ai/dsh-client-ui-settings-account"
+  config:
+    version: 1
+    step: done
+    purpose: null
+    process: standard
+    completion: skipped
+    usage: compact
+    developerTools: false
+
+- id: ui-chat
+  name: "@deepseek-ai/dsh-client-ui-chat"
+  config:
+    transcriptView: standard
+    performanceUsage: compact
+
+- id: ui-settings
+  name: "@deepseek-ai/dsh-client-ui-settings"
+  config:
+    enabled: false
+
+# ===== SciPal MCP 服务器（唯一新增内容）=====
+# 关键点：用 insert 追加，不是顶层 id 覆盖
+- insert:
+    - id: mcp-scipalhello
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: scipalhello
+        transport: stdio
+        command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+        args: ['D:/sciPal/tests/mcp_ping_server.py']
+        cwd: 'D:/sciPal'
+        env:
+          PYTHONUTF8: '1'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: true
+# 工具出现形式：mcp__scipalhello__ping

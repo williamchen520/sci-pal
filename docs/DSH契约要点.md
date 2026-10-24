@@ -4,6 +4,73 @@
 > 凡本文写明的字段，均可在对应原文中查到；凡本文标注「未证实」的，说明官方原文里找不到，**不要按传闻实施**。
 > 采集时间：2026-10-24 ｜ 采集人：WorkBuddy
 
+---
+
+## ⚠️ 重大更正（2026-10-24 二次核对，优先级高于正文）
+
+第一次核对只看 GitHub 文档，有两处判断错了。二次核对改为**直接解包本机 DSH 安装（`app.asar`，182 MB）**，拿到了随安装发布的官方原文，据此更正：
+
+### 更正 1：新增 MCP 服务器必须用 `insert:`，不能直接写顶层 id
+
+官方模板 `skills/cordis-plugin-development/templates/mcp/cordis.patch.yml` 原文照录：
+
+```yaml
+- insert:
+    - id: demo-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: demo
+        transport: streamable-http
+        url: http://127.0.0.1:3000/mcp
+        failOnStartupError: true
+```
+
+官方 `cordis-composition-reference` 的 loader 方言原文：
+
+> - `insert: [rows]` appends rows; with an `id` naming an existing `group: true` row, the rows are appended inside that group's `config` list.
+> - A patch with an `id` and no `insert` targets the existing row with that id. ...
+> - **Non-insert patches without a nonempty `id`, and targets that match no row, are warned about and skipped.**
+
+**我们第一版写的正是「有 id、无 insert、且 id 不存在」→ 被 warn 并跳过。** 实测日志原文：
+
+```
+[warn] patch: entry "mcp-scipalhello" not found [host.kernel.root]
+```
+
+⚠️ 正文第 3.1 节照录的 S5「最小配置」是**最终组合结果**的形态，不是 patch 层的写法。**照它写会失败。**
+
+### 更正 2：`failOnStartupError` 必须是 `true`
+
+官方模板写 `true`，我们第一版写 `false`（那是默认值）。`false` 的后果是**失败静默**——不报错、不提示，工具列表里就是没有。这正是这次「查不出原因」的根源。诊断期间务必设 `true`。
+
+### 更正 3：`@deepseek-ai/dsh-mcp-client` 本机**已存在**，不需要联网安装
+
+它就打包在 Electron 应用内：
+
+```
+app.asar → dsh/node_modules/@deepseek-ai/dsh-mcp-client/
+├── README.zh.md   (17,063 B，官方中文说明)
+├── lib/index.js   (35,041 B)
+└── package.json   version 0.2.1-rc.2
+```
+
+`version 0.2.1-rc.2` 与 CLI 版本完全一致。之前「`profiles/desktop/node_modules` 里没有」的判断来自看错了目录——那个目录只放**用户后装的**包，随安装发布的包不在这里。
+
+✅ 已把官方原文解包到仓库：`docs/DSH官方参考/`（18 个文件），CodeBuddy 直接读原文即可，不要再猜。
+
+### 更正 4：官方不鼓励手写 `cordis.patch.yml`
+
+`SKILL.md` 原文：
+
+> For implementation, use ordinary workspace files to author a bundle, then `plugin_manager` with `action: install_bundle` and the absolute package directory as `target` ...
+> **Do not write the profile's `package.json` or `cordis.patch.yml`**, create packages under `$DSH_HOME`, or run pnpm in the profile directory.
+
+正确姿势：在工作区写 bundle → 用 `plugin_manager` 的 `install_bundle` 安装。
+但 `plugin_manager` 是 **DSH 运行时内部工具**，CodeBuddy 没有；而 `desktop` profile 又被 Electron 独占、CLI 管不了。
+**结论：从外部只能手改 YAML**（有备份 + 冻结分支兜底，风险可控），但必须用 `insert:` 写法。
+
+---
+
 ## 0. 文档来源
 
 | 编号 | 内容 | 地址 |
