@@ -1,27 +1,31 @@
 # SciPal MCP bundle —— 配置型 bundle（零代码）
 #
-# 来源：阶段五-A 从手写的 ~/.dsh/profiles/desktop/cordis.patch.yml 中抽出，
-#       结构照官方 templates/mcp（只保留 SciPal 两个 MCP server 条目，
-#       locale / agent-default-model 等 profile 层条目不属于本 bundle）。
+# 来源：阶段五-A 从手写的 ~/.dsh/profiles/desktop/cordis.patch.yml 中抽出；
+#       阶段五-B 按「科研业务流」拆成 search / generate 两个 server（+ 零依赖哨兵）。
 #
 # ---------------------------------------------------------------------------
 # 保留的三条铁律（v1/v2 踩出来的）：
 #   1. 新增条目必须包在 `insert:` 里。写成顶层 `- id: xxx` 会被判定为
 #      "targets that match no row" → warn 并跳过，且不报错（静默失败）。
 #      实测日志：[warn] patch: entry "mcp-scipalhello" not found
-#   2. `failOnStartupError: true`。默认值 false 会让启动失败静默跳过。
-#   3. 要在 DSH 关闭时改；启动后 DSH 会回写本文件。
+#   2. `failOnStartupError` 按条目分开定，不要一刀切：
+#        · 哨兵 scipalhello        → true（它零依赖，起不来就是配置层坏了，要响）
+#        · search / generate       → false（依赖 Flask，设 true 会在 Flask 未起时
+#                                    让整个 MCP client 拒绝激活、把哨兵一起拖没）
+#   3. 本文件在仓库里（bundle 层），不是 profile 的 patch —— 改它不需要重装 bundle
+#      （link 安装），但必须完全退出 DSH 重启才生效。
 # ---------------------------------------------------------------------------
 
-# ===== SciPal MCP 服务器（两个，故意的）=====
-# 同时挂 scipalhello（哨兵）与 scipal（真实），是为了让下一次故障能一眼定位：
+# ===== SciPal MCP 服务器（三个：哨兵 + search + generate）=====
+# 哨兵 scipalhello 零依赖（不碰 Flask、不 import 任何 SciPal 模块），只要 MCP 通道
+# 活着它就一定在，用于把故障域切开：
 #
-#   哨兵出现 + 真实出现  → 全通
-#   哨兵出现 + 真实消失  → SciPal 侧问题（脚本 / Flask / 超时）
-#   哨兵消失 + 真实消失  → DSH 侧或配置层问题（insert 写法 / 环境清洗 / 启动失败）
+#   哨兵在 + 两个 server 的 health 都在                → 全通
+#   哨兵在 + 某个 server 消失 / 其 health 报连不上     → 该 server 或 Flask 侧问题
+#   哨兵不在 + 全部不在                                → DSH 侧或配置层问题
 #
-# 哨兵零依赖（不碰 Flask、不 import 任何 SciPal 模块），只要 MCP 通道活着它就一定在。
 - insert:
+    # ── 哨兵（诊断基准，勿删）──────────────────────────────────────────────
     - id: mcp-scipalhello
       name: '@deepseek-ai/dsh-mcp-client'
       config:
@@ -35,13 +39,14 @@
         toolCallTimeoutMs: 60000
         failOnStartupError: true
 
-    - id: mcp-scipal
+    # ── 检索 / 下载（scipal-search）─────────────────────────────────────────
+    - id: mcp-scipal-search
       name: '@deepseek-ai/dsh-mcp-client'
       config:
-        serverName: scipal
+        serverName: scipal-search
         transport: stdio
         command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
-        args: ['D:/sciPal/mcp_server/scipal_server.py']
+        args: ['D:/sciPal/mcp_server/search_server.py']
         cwd: 'D:/sciPal'
         env:
           PYTHONUTF8: '1'
@@ -52,17 +57,48 @@
           no_proxy: '127.0.0.1,localhost'
           NO_PROXY: '127.0.0.1,localhost'
         toolCallTimeoutMs: 60000
-        # scipal 依赖 Flask，Flask 没起时启动阶段可能连不上 → 设 false 只影响这一个
-        # server，不至于让整个 MCP client 拒绝激活、把哨兵也一起拖没。
-        # 代价是失败不显式，所以必须靠哨兵对照着看。
+        # false 的理由：这两条 server 依赖 Flask，Flask 没起时启动阶段可能连不上。
+        # 若设 true，它启动失败会让整个 MCP client 拒绝激活，把哨兵也一起拖没，
+        # 诊断能力归零。代价是「失败不显式」——由哨兵 + 各自 health 工具 + 进程计数兜。
         failOnStartupError: false
-# 工具出现形式：
-#   mcp__scipalhello__ping              ← 哨兵
-#   mcp__scipal__health
-#   mcp__scipal__search_papers
-#   mcp__scipal__get_paper
-#   mcp__scipal__get_abstract
-#   mcp__scipal__task_status
+
+    # ── 综述 / 大纲（scipal-generate，只读 + 轮询壳）────────────────────────
+    - id: mcp-scipal-generate
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: scipal-generate
+        transport: stdio
+        command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+        args: ['D:/sciPal/mcp_server/generate_server.py']
+        cwd: 'D:/sciPal'
+        env:
+          PYTHONUTF8: '1'
+          no_proxy: '127.0.0.1,localhost'
+          NO_PROXY: '127.0.0.1,localhost'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: false
+
+# ── 工具出现形式（重启 DSH 后应有 13 个 mcp__ 工具 = 1 + 6 + 6）──────────────
+# 哨兵：
+#   mcp__scipalhello__ping
+# scipal-search（6）：
+#   mcp__scipal-search__health
+#   mcp__scipal-search__search_hybrid
+#   mcp__scipal-search__search_online
+#   mcp__scipal-search__get_paper
+#   mcp__scipal-search__download_online_papers     ← 立即返回 task_id
+#   mcp__scipal-search__download_status            ← 轮询下载进度
+# scipal-generate（6，只读 + 轮询，不触发任何生成）：
+#   mcp__scipal-generate__health
+#   mcp__scipal-generate__list_saved_outlines
+#   mcp__scipal-generate__get_saved_outline
+#   mcp__scipal-generate__get_review
+#   mcp__scipal-generate__paper_citation_graph
+#   mcp__scipal-generate__review_task_status
+#
 # 前置：SciPal Flask 需先启动（python api_server.py，端口 5000）。
-#       未启动时 scipal 的工具会返回明确错误文本，不会崩。
+#       未启动时工具会返回明确错误文本，不会崩。
 #       可用 scripts/sciPal_watchdog.py 常驻守护，或安装其计划任务。
+#
+# 说明：旧的单进程 server（mcp_server/scipal_server.py → serverName `scipal`）已移除，
+#       该文件仍保留在仓库中作为回退入口，改 args 指回去即可恢复。

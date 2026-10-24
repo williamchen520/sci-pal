@@ -1,5 +1,12 @@
 """SciPal MCP Server —— 单进程薄转发（阶段三 · 首个增量）。
 
+⚠️ DEPRECATED（阶段五-B）：
+    本文件已被下面两个按业务流拆分的 server 取代，仅作为**回退入口**保留，暂勿删除。
+      · mcp_server/search_server.py    → serverName `scipal-search`
+      · mcp_server/generate_server.py  → serverName `scipal-generate`
+    两边的公共 HTTP 传输层已抽到 mcp_server/_forward.py（逻辑与本文件逐字一致）。
+    回退方式：把 packages/dsh-scipal/cordis.patch.yml 的 args 指回本文件即可。
+
 设计裁决（见 docs/DSH契约要点.md §8.2）
     只起一个 MCP server 进程，**不承载任何业务逻辑**，把工具调用转发到 SciPal 已有的
     Flask API。原因是 embedding / reranker / ChromaDB 都是进程级资源，本机 8GB 显存
