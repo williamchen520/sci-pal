@@ -164,8 +164,9 @@ from _forward import _call, _path_segment   # noqa: E402
 1. `packages/dsh-scipal/README.md` 的工具清单换成新的 3 server 结构，并写一节 **「变更 bundle 后的生效方式」**：
    **link 安装 → 改包内文件即可，不必重装；但必须完全退出 DSH 再重启**（本机构型无 HMR，profile 只在启动时应用）。
 2. `packages/dsh-scipal/INSTALL.md` 步骤 4 的期望清单同步更新，并补一句：
-   新 server 挂载成功的硬判据 = 含 `mcp_` 的 `python.exe` 子进程从 2 个变成 **4 个**（search + generate 各自
-   fork 一层 venv 启动器，所以看到的是 4 个进程 / 2 条命令）。
+   新 server 挂载成功的硬判据 = 命令行含 `mcp_` 的 `python.exe` 进程总数**从 4 变成 6**
+   （每条 server 命令都会出两层进程：venv 启动器 + 它 fork 的系统 python；
+   现在 2 条命令 = 4 个进程，拆完 3 条命令 = 6 个进程，父进程链最终指向 `DeepSeek Harness.exe`）。
 3. **README「还原」一节的过时数字顺手改掉**：现仍写"当前 profile 4209 字节 / 6 条顶层条目 / insert 在 64–98 行"，
    现状是 **916 B / 5 条 `- id:` / 无 insert / 无 serverName**。
    🔴 其中"`tests/cordis.patch.yml.bak`（297B）整体还原会抹掉 `ui-settings-account` 账户状态"这条风险提示**必须保留**。
@@ -199,4 +200,4 @@ from _forward import _call, _path_segment   # noqa: E402
    新条目是否都在 `- insert:` 块内 —— 这三处我一定会抽验。
 
 patch 生效那一步由用户做（完全退出 DSH 再重启），之后我接手验证：会话里问工具清单 +
-我这侧数 `python.exe` 里含 `mcp_` 的进程是否变成 4 个。
+我这侧数 `python.exe` 里含 `mcp_` 的进程是否从 4 个变成 6 个（3 条命令 × 2 层进程）。
