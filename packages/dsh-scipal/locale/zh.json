@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "SciPal 文献工具",
+    "description": "接入 SciPal 本地 MCP 服务器，让智能体可检索本地论文库、读取论文详情与摘要、并通过本地 SciPal API 轮询长任务。内含零依赖哨兵服务器用于故障隔离。"
+  }
+}

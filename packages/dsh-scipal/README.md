@@ -30,21 +30,54 @@
    及其上方 `# ===== SciPal MCP 服务器（两个，故意的）=====` 起的注释段）
 4. 保存，然后安装 bundle（见下节）
 
-### 还原命令（改坏了就用这个）
+### 还原（改坏了怎么办）
 
-不装 bundle、想回到手写配置时，用仓库里的备份整文件还原：
+🔴 **不要用 `tests/cordis.patch.yml.bak` 整体还原。** 它只有 **297 字节**，内容仅为：
+
+```yaml
+- id: locale
+  name: "@deepseek-ai/dsh-client-locale"
+  config:
+    preference: en
+```
+
+而当前 profile 是 **4209 字节 / 6 条顶层条目**，整体还原会一并抹掉：
+
+| # | id | 会被抹掉的内容 |
+|---|---|---|
+| 0 | `locale` | `preference: en` |
+| 1 | `agent-default-model` | 模型选择：`deepseek-account` / `deepseek-flash` / `reasoningEffort: high` |
+| 2 | **`ui-settings-account`** | 🔴 **DSH 账户引导状态**：`step: done`、`purpose`、`process`、`completion: skipped`、`usage: compact`、`developerTools` |
+| 3 | `ui-chat` | 界面偏好：`transcriptView: standard`、`performanceUsage: compact` |
+| 4 | `ui-settings` | `enabled: false` |
+| 5 | `insert` | 两条 MCP（`scipalhello` / `scipal`）← **只有这条该被删** |
+
+第 2 条是**用户状态**（账户引导），不是可重建的配置 —— 丢了不会自动恢复。
+
+**推荐做法：只删第 5 条 `insert` 块，保留第 0–4 条。**
+本机实测该块为第 **64–98** 行（行号以 `scripts/precheck_dsh_bundle.py` 输出为准，它会实时扫描）。
+
+**推荐的还原源：`tests/backups/`** —— 由体检脚本每次运行时生成的**完整快照**（含全部 6 条）：
+
+```powershell
+# 1) 看看有哪些备份
+Get-ChildItem D:\sciPal\tests\backups\
+
+# 2) 用其中一份还原（文件名换成实际的）
+Copy-Item "D:\sciPal\tests\backups\cordis.patch.yml.20261024-174734.bak" "$env:USERPROFILE\.dsh\profiles\desktop\cordis.patch.yml" -Force
+```
+
+`tests/cordis.patch.yml.bak`（297 B 基线）**仅当要彻底重置 profile**、且明确接受丢失账户状态时才用：
 
 ```powershell
 Copy-Item "D:\sciPal\tests\cordis.patch.yml.bak" "$env:USERPROFILE\.dsh\profiles\desktop\cordis.patch.yml" -Force
 ```
 
-> `tests/cordis.patch.yml.bak` 是阶段零 A 保存的**原始基线**（只有 `- id: locale` 一条）。
-> 若你在手写阶段之后又加过其他 profile 条目（如 `agent-default-model`、`ui-*`），
-> 这个还原会一并抹掉 —— 请先用 `Copy-Item` 把当前文件另存一份再还原。
-
 ---
 
 ## 安装
+
+> 逐步人工操作原文见 **[`INSTALL.md`](./INSTALL.md)**（含步骤 0 的清理与体检、pending build scripts 警告）。
 
 安装动作由 **DSH 运行时**执行，本仓库的 CodeBuddy 没有 `plugin_manager`，无法代劳：
 
@@ -70,10 +103,20 @@ mcp__scipal__task_status
 
 ## 卸载
 
-在 DSH 会话中让 agent 调用 `plugin_manager` 的移除/卸载动作，指向本 bundle（或走 UI）。
-卸载后如需恢复手写配置，用上面的「还原命令」。
+在 DSH 会话里让 agent 调用 `plugin_manager`（官方 `references/host-plugin.md:70`）：
 
-> 卸载**不会**删除 `~/.dsh/profiles/desktop/cordis.patch.yml`，也不会动 SciPal 仓库。
+```text
+用 plugin_manager 执行 action: remove_bundle，
+移除 @local/dsh-scipal（目录 D:/sciPal/packages/dsh-scipal）
+```
+
+卸载后：
+
+- `~/.dsh/profiles/desktop/cordis.patch.yml` **不会**被删除，SciPal 仓库也不会被改动。
+- 若想回到「手写配置」的老状态：把两条 MCP `insert` 重新加回 profile patch，
+  或从 `tests/backups/cordis.patch.yml.<时间戳>.bak` 里抄回第 5 条（该备份含全部 6 条）。
+- 🔴 **不要**用 297 B 的 `tests/cordis.patch.yml.bak` 整体覆盖 —— 会丢账户状态，详见上一节。
+- 卸载后重启 DSH，`mcp__scipal*` 工具应消失。
 
 ---
 
@@ -96,8 +139,10 @@ mcp__scipal__task_status
 packages/dsh-scipal/
 ├── package.json        # dsh.bundle.patch → ./cordis.patch.yml
 ├── cordis.patch.yml    # 两个 server 的 insert 条目（含三条铁律注释）
-├── locale/en.json      # 插件列表里显示的名称与描述
+├── locale/en.json      # 英文展示名与描述
+├── locale/zh.json      # 中文展示名与描述（用户语言）
 ├── icon.svg            # 原创图标（文献页 + 检索放大镜）
+├── INSTALL.md          # 人工安装步骤（在 DSH 会话里逐字执行）
 └── README.md           # 本文
 ```
 
