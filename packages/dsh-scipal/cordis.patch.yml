@@ -1,0 +1,68 @@
+# SciPal MCP bundle —— 配置型 bundle（零代码）
+#
+# 来源：阶段五-A 从手写的 ~/.dsh/profiles/desktop/cordis.patch.yml 中抽出，
+#       结构照官方 templates/mcp（只保留 SciPal 两个 MCP server 条目，
+#       locale / agent-default-model 等 profile 层条目不属于本 bundle）。
+#
+# ---------------------------------------------------------------------------
+# 保留的三条铁律（v1/v2 踩出来的）：
+#   1. 新增条目必须包在 `insert:` 里。写成顶层 `- id: xxx` 会被判定为
+#      "targets that match no row" → warn 并跳过，且不报错（静默失败）。
+#      实测日志：[warn] patch: entry "mcp-scipalhello" not found
+#   2. `failOnStartupError: true`。默认值 false 会让启动失败静默跳过。
+#   3. 要在 DSH 关闭时改；启动后 DSH 会回写本文件。
+# ---------------------------------------------------------------------------
+
+# ===== SciPal MCP 服务器（两个，故意的）=====
+# 同时挂 scipalhello（哨兵）与 scipal（真实），是为了让下一次故障能一眼定位：
+#
+#   哨兵出现 + 真实出现  → 全通
+#   哨兵出现 + 真实消失  → SciPal 侧问题（脚本 / Flask / 超时）
+#   哨兵消失 + 真实消失  → DSH 侧或配置层问题（insert 写法 / 环境清洗 / 启动失败）
+#
+# 哨兵零依赖（不碰 Flask、不 import 任何 SciPal 模块），只要 MCP 通道活着它就一定在。
+- insert:
+    - id: mcp-scipalhello
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: scipalhello
+        transport: stdio
+        command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+        args: ['D:/sciPal/tests/mcp_ping_server.py']
+        cwd: 'D:/sciPal'
+        env:
+          PYTHONUTF8: '1'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: true
+
+    - id: mcp-scipal
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: scipal
+        transport: stdio
+        command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+        args: ['D:/sciPal/mcp_server/scipal_server.py']
+        cwd: 'D:/sciPal'
+        env:
+          PYTHONUTF8: '1'
+          # 本机有 http_proxy=127.0.0.1:52819，且 DSH 的 stdio 环境清洗
+          # 只删 /KEY|PASSWORD|SECRET|TOKEN|DSH_*/i，清不掉 http_proxy。
+          # 不设 no_proxy 时，访问 127.0.0.1:5000 会绕经本机代理 —— 代理一挂，
+          # Flask 明明活着工具也会失败。显式绕过，消除这层无关依赖。
+          no_proxy: '127.0.0.1,localhost'
+          NO_PROXY: '127.0.0.1,localhost'
+        toolCallTimeoutMs: 60000
+        # scipal 依赖 Flask，Flask 没起时启动阶段可能连不上 → 设 false 只影响这一个
+        # server，不至于让整个 MCP client 拒绝激活、把哨兵也一起拖没。
+        # 代价是失败不显式，所以必须靠哨兵对照着看。
+        failOnStartupError: false
+# 工具出现形式：
+#   mcp__scipalhello__ping              ← 哨兵
+#   mcp__scipal__health
+#   mcp__scipal__search_papers
+#   mcp__scipal__get_paper
+#   mcp__scipal__get_abstract
+#   mcp__scipal__task_status
+# 前置：SciPal Flask 需先启动（python api_server.py，端口 5000）。
+#       未启动时 scipal 的工具会返回明确错误文本，不会崩。
+#       可用 scripts/sciPal_watchdog.py 常驻守护，或安装其计划任务。

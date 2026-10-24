@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "SciPal Literature Tools",
+    "description": "Connects SciPal's local MCP servers so the agent can search the paper library, read paper details and abstracts, and poll long-running jobs through the local SciPal API. A zero-dependency sentinel server is included for fault isolation."
+  }
+}
