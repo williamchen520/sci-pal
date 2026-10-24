@@ -4,8 +4,8 @@
 
 **它不承载任何业务逻辑**：所有工具只做一次 HTTP 转发，不 import SciPal 内部模块。
 
-当前挂载 **3 个 stdio 服务 / 共 13 个工具**：
-`scipalhello`（哨兵 1）+ `scipal-search`（6）+ `scipal-generate`（6）。
+当前挂载 **3 个 stdio 服务 / 共 15 个工具**：
+`scipalhello`（哨兵 1）+ `scipal-search`（6）+ `scipal-generate`（8）。
 
 ---
 
@@ -41,7 +41,7 @@
 |---|---|
 | `_forward.py` | 公共薄转发层：HTTP 请求 + 错误映射，**零业务逻辑** |
 | `search_server.py` | 检索类 server `scipal-search`（6 工具） |
-| `generate_server.py` | 生成/查询类 server `scipal-generate`（6 工具） |
+| `generate_server.py` | 生成/查询类 server `scipal-generate`（8 工具） |
 | `scipal_server.py` | **旧单进程 server（5 工具），已从 bundle 摘除，保留作回退**，不要重新挂载 |
 | `selftest.py` | 自检：拉起 3 个独立 stdio 子进程跑完整协议链路，逐工具 PASS/FAIL |
 | `README.md` | 本文 |
@@ -90,21 +90,28 @@ cd d:\sciPal
 ```
 
 退出码 `0` = PASS，`1` = FAIL。自检**真实拉起 3 个 stdio 子进程并真实调 HTTP**，
-共 20 条断言，逐工具打 PASS/FAIL：
+共 **22 条断言**，逐工具打 PASS/FAIL：
 
-| server | 工具数 | 断言 |
-|---|---|---|
-| `scipal-search` | 6 | `tools/list` 恰好 6 个 + `health` 200 |
-| `scipal-generate` | 6 | `tools/list` 恰好 6 个 + `health` 200 |
-| `scipalhello`（哨兵） | 1 | `ping` 返回 `{"ok":true}` |
-| 参数透传 | — | 不存在的 id → 404、空 `pmc_ids` → 400 |
+| server | 工具数 | 断言数 | 说明 |
+|---|---|---|---|
+| `scipal`（legacy 回退入口） | 5 | 6 | `tools/list` 1 + 5 次调用 |
+| `scipal-search` | 6 | 7 | `tools/list` 1 + 6 次调用 |
+| `scipal-generate` | 8 | 9 | `tools/list` 1 + 8 次调用 |
+| **合计** | **19** | **22** | 哨兵由 `tests/mcp_ping_server.py --selftest` 单独验证 |
+
+特殊断言（阶段五-C C-1）：
+
+- `generate_outline`：**必须 <10 s 返回且含 `task_id`**（这是「异步」的判据，不是看 `is_error`）
+- `cancel_review_task`：用不存在的 id，**期望 `status=404`**（业务错误算通过）
+- `generate_outline` 放在 `scipal-generate` 的最后一条跑 —— 它起的大纲任务会把单线程 Flask 饿住，
+  放在最后不拖累其它断言
 
 > **业务性 400/404 不算失败**：它证明链路通、参数名对，只是数据不存在。
 > 只有 `unknown tool` / 连不上才算失败。
 
 ---
 
-## 5. 工具清单（13 个）
+## 5. 工具清单（15 个）
 
 ### 5.1 `scipal-search`（6）
 
@@ -117,7 +124,7 @@ cd d:\sciPal
 | `download_online_papers` | `POST /api/search/download_online` | `pmc_ids`(必填) → **立即返 `task_id`** |
 | `download_status` | `GET /api/search/download_status` | `task_id`(必填) |
 
-### 5.2 `scipal-generate`（6）
+### 5.2 `scipal-generate`（8）
 
 | MCP 工具 | 对应路由 | 入参 |
 |---|---|---|
@@ -127,11 +134,20 @@ cd d:\sciPal
 | `get_review` | `GET /api/review/<id>` | `review_id`(必填) |
 | `paper_citation_graph` | `GET /api/papers/<id>/graph` | `paper_id`(必填) / `relation`=all / `direction`=both / `max_hops`=1(钳 1-3) / `max_total`=10 |
 | `review_task_status` | `GET /api/review/task/<id>` | `task_id`(必填) |
+| `generate_outline` | `POST /api/review/outline` | `topic`(必填) / `max_papers`=20 / `review_type`=narrative / `language`=en → **立即返 `task_id`** |
+| `cancel_review_task` | `POST /api/review/cancel/<id>` | `task_id`(必填)；不存在/已结束 → 404 |
 
-> ⚠️ **本 server 只做「只读 + 轮询」**：`/api/review/generate`、`/api/review/outline`（生成）、
-> `/api/agentic/search`、`/api/qa/ask`、`/api/papers/parse` 全部是**同步阻塞**且耗时远超
-> MCP 的 `toolCallTimeoutMs`（60 s），在 Flask 侧补出 job 提交端点之前**不挂工具**。
-> 异步化属阶段五-C，未做。
+> ⚠️ **能力边界（阶段五-C C-1 更正）**：
+>
+> - ✅ `generate_outline` **可提交**：`POST /api/review/outline` 自 V26.3 起就是**异步**的 —
+>   服务端建任务后**立即返回 `task_id`**（实测 **~0.13 s**），用 `review_task_status` 轮询
+>   （建议间隔 **≥5 s**）。
+> - ❌ `POST /api/review/generate`（综述正文）仍是**同步**实现：一次返回整篇 markdown，分钟级、
+>   无 task_id。异步化属阶段五-C 的 **C-2**，需用户单独批准，本 server **不挂**。
+> - ❌ 同样不挂：`/api/agentic/search`、`/api/qa/ask`、`/api/papers/parse`（均为同步）。
+>
+> Flask 是单线程（`app.run(threaded=False)`）：大纲任务跑起来时 `/api/health` 实测会被饿到
+> **20 s 以上**，任务结束立刻恢复 —— 所以**轮询不要秒级连打**。
 
 ### 5.3 `scipalhello`（1）
 
@@ -237,7 +253,48 @@ server 数 : 3    断言总数 : 20    PASS : 20    FAIL : 0    RESULT : PASS
 ```
 
 > legacy `scipal` 仍被 selftest 覆盖（作回退验证），但**不挂进 bundle**，
-> 所以线上工具数是 13 而不是 20。
+> 所以线上工具数是 **15**，而 selftest 覆盖的工具数是 **19**（22 条断言）。
+
+### 7.0.1 阶段五-C C-1（异步大纲接入，2026-10-24 21:33 实测）
+
+`selftest.py`：**3 server / 22 断言 / 全 PASS / exit 0**，`scipal-generate` 期望 **8** 个工具。
+
+```text
+[server] scipal-generate  (generate_server.py)
+  [PASS] tools/list  8 个，与期望一致
+  [PASS] health / list_saved_outlines / get_saved_outline / get_review /
+         paper_citation_graph / review_task_status
+  [PASS] cancel_review_task       status=404（期望 404，业务错误算通过）
+  [PASS] generate_outline         耗时=0.03s task_id=d0df378f-846e-4bc1-88e7-456eec91e422（要求 <10s 且非空）
+
+server 数 : 3    断言总数 : 22    PASS : 22    FAIL : 0    RESULT : PASS
+```
+
+`generate_outline` 经 MCP 转发的完整返回（实测 **0.036 s**，异步判据成立）：
+
+```json
+{
+  "ok": true,
+  "status": 200,
+  "data": {
+    "task_id": "99e830a4-6c96-4ee1-ac9b-dcf04f37c71a"
+  }
+}
+```
+
+`cancel_review_task`（不存在的 id，业务性 404，`is_error=False`）：
+
+```json
+{
+  "ok": false,
+  "status": 404,
+  "detail": {
+    "error": "Task not found or already finished"
+  }
+}
+```
+
+> 同一路由直连 Flask 实测：`POST /api/review/outline` **0.097 s** → `{"task_id":"0b3d2257-5131-4ff0-9926-45b021310868"}`。
 
 ### 7.1 历史记录：单进程时代（2026-10-24 阶段三，`tools/list`）
 
