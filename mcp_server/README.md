@@ -146,8 +146,10 @@ cd d:\sciPal
 >   无 task_id。异步化属阶段五-C 的 **C-2**，需用户单独批准，本 server **不挂**。
 > - ❌ 同样不挂：`/api/agentic/search`、`/api/qa/ask`、`/api/papers/parse`（均为同步）。
 >
-> Flask 是单线程（`app.run(threaded=False)`）：大纲任务跑起来时 `/api/health` 实测会被饿到
-> **20 s 以上**，任务结束立刻恢复 —— 所以**轮询不要秒级连打**。
+> **轮询节奏**：模型**冷加载**时（首次调用，约 +1.5 GB）`/api/health` 实测会被饿到 **20 s 以上**；
+> **模型热之后**同一个任务 5–7 s 跑完，同期 health 稳定在 **0.006 ~ 0.039 s**（05:02 复测 35 次采样）。
+> 所以：**先随便调一次把冷加载熬过去，之后正常轮询即可；间隔仍建议 ≥5 s**（Flask 是
+> `app.run(threaded=False)` 单线程 server，一次同步重请求会让所有请求排队）。
 
 ### 5.3 `scipalhello`（1）
 
@@ -364,7 +366,8 @@ server 数 : 3    断言总数 : 22    PASS : 22    FAIL : 0    RESULT : PASS
 | 单次 HTTP 超时 45 s | 留 15 s 余量给 MCP 的 60 s 上限；更长的任务必须走 job 句柄 + 轮询 |
 | `use_online=True` 可能超时 | 在线检索走 NCBI，网络慢时仍可能触及 45 s；纯在线检索用 `search_online`（默认每个库 20 条） |
 | **重型生成能力未挂载** | `review/generate`、`agentic/search`、`qa/ask`、`papers/parse` 都是**同步阻塞**，超 60 s，当前不暴露为工具（异步化属阶段五-C 的 C-2，需业务代码改动）。⚠️ 例外：**大纲生成 `POST /api/review/outline` 自 V26.3 起就是异步的**（立即返 `task_id`），**已于 C-1 挂载为 `generate_outline` + `cancel_review_task`** |
-| 异步任务也会拖慢请求循环 | `app.run(threaded=False)`（`api_server.py:2057`）= **单线程**；实测大纲任务运行期间 `/api/health` 被饿到 **21.4 s / 21.8 s**，任务结束后回到 0.03 s。轮询间隔与 MCP 超时都要按这个量级留余量 |
+| **冷启动会把请求循环饿住（一次性）** | 模型**首次加载**时（embedding / reranker，约 +1.5 GB，实测进程 1.47 → 2.94 GB），实测 `/api/health` 被饿到 **21.4 s / 21.8 s**。这是**冷启动一次性**，不是异步本身的问题：**模型热之后**，大纲任务跑完只要 5–7 s，同期连续 35 次 health 采样全在 **0.006 ~ 0.039 s**（2026-10-25 05:02 复测）。第一次用工具前先碰一下 health 或检索，把冷加载熬过去，再也不要套着 20 s 余量做设计 |
+| **单线程 server 才是真瓶颈** | `app.run(threaded=False)`（`api_server.py:2057`）= **同一时刻只处理一个请求**。任何人调一次同步重路由（`review/generate`、`agentic/search`、`qa/ask`），轮询请求就全排队。这与上面的 GIL 冷启动是**两回事**，解法是 `threaded=True` + 给共享的 ReviewGenerator 做隔离（见 C-2 工单） |
 | 长任务无同步等待 | DSH 不支持 task-based execution，本设计一律「立即返回句柄 + 轮询」（`download_online_papers` → `download_status`） |
 | `search_hybrid` 结果体量 | 默认 `top_k=10`；大结果会占用较多上下文，按需调小 |
 | 每 server ≤ 8 工具 | 约束是**模型上下文与选择准确率**，不是显存（MCP 进程不加载模型，≈68 MB/个） |
