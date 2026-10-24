@@ -69,6 +69,41 @@ DSH 启动后会回写 profile patch，开着改会被覆盖。
 
 ---
 
+## 步骤 0.7（2026-10-24 实测补充：装 bundle 前先做「重启验伪」）
+
+**为什么需要这一步**：步骤 0 是「完全退出后改盘上 patch」，但 DSH 是常驻进程，
+**清场前的旧进程哪怕还在内存里，也会把旧 patch（含 `mcp-scipal` / `mcp-scipalhello`）继续挂成活跃 MCP**。
+本机实测时间线：
+
+```
+18:22  清场（cordis.patch.yml → 916B / 5 行 / 无 MCP）
+18:26  DSH 仍报「6 个 mcp__ 工具活跃」（旧进程，18:22 前就起了）
+18:32  DeepSeek Harness.exe 全部重建 → 用清场后的 patch 重新 compose
+```
+
+也就是说：**不重启，你就分不清「这 6 个工具是旧配置残留」还是「bundle 已生效」**。
+误判的后果 = 装 bundle 后 serverName 重名 → 加载直接报错。
+
+**操作**（在开启 Full access、DSH 已正常进会话后，步骤 1 之前做）：
+
+```
+列出你现在能用的所有以 mcp__ 开头的工具。没有就直说 0 个，不许从日志猜。
+```
+
+判读：
+
+- **答 0 个** → 清场对运行态已生效，bundle 可以安全装（不会重名）。
+- **仍答 6 个**（scipal 5 + scipalhello 1）→ 还有我们没找到的配置源
+  （例如别的 patch overlay、`--patch` 传参、本机已装过的 bundle 残留、或 DSH_HOME 级配置）。
+  **此时先停下来挖配置源，不要进步骤 2**，否则必然加载报错。
+
+> 旁证：若模型答「没有 `plugin_manager`」，别急着信它「工具不存在」——
+> 先查会话缓存 `~/.dsh/storages/session_projcache/sessions/session-*.json` 里的
+> `permissions.preset`：是 `workspace-write` 而非 `full` 的话，就是权限不够，不是工具缺席
+> （见步骤 0.5）。
+
+---
+
 ## 步骤 1（在 DSH 会话里，对模型说）
 
 ```
