@@ -52,8 +52,13 @@ agent 无法自助验证「工具是否出现在模型工具列表」。
 官方明令**禁止**手写 profile 的 `package.json` / `cordis.patch.yml`（`SKILL.md:8,10`）。
 所以步骤 3 的「删手写条目」是**清场**（避免重名），不是安装动作本身。
 
+> **当前状态（2026-10-24 18:15 实测）**：体检脚本退出码 **1**，冲突条目在
+> **profile 第 65–76 行**（`mcp-scipalhello`）与 **第 78–98 行**（`mcp-scipal`），
+> 建议**整块删除第 64–98 行**。脚本已自动备份到 `tests/backups/`（已入库 3 份，md5 相同）。
+
 步骤：
 1. **完全退出 DSH**（开着改配置会被退出时的状态写回覆盖）。
+   脚本自己也会检测并警告「DSH 正在运行」。
 2. 备份 `~/.dsh/profiles/desktop/cordis.patch.yml`（仓库外，git 救不回来）。
    建议用 E-2 交付的 `scripts/precheck_dsh_bundle.py`（会存到仓库内的 `tests/backups/`）。
 3. **只删掉手写的 `mcp-scipalhello` / `mcp-scipal` 两条 `insert`**
@@ -123,11 +128,12 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 - 版本指针已统一为 V33.17，历史注释保留；`run_db_migrations()` 已补 `import sqlite3`。
 - 验收：`/api/health` → `V33.17`，banner → `Sci-Pal API V33.17`，`self_check.py` 110/1/121 无回归。
-- 遗留工单 C 已迁出独立成文：
+- **工单 C 已完成**（`2f6607f`）：C-0 误导文案已修、C-1 确认废弃、C-2 版本守卫已加（自检 111/1/122）。
+- **✅ `app.py` 已于 2026-10-24 删除**（`f0beca4`）：用户点头后执行，六处入口文档措辞同步改为「已删除」。
+  `routes/` 暂保留（待单独确认），**`config/settings.py` 绝不能删**
+  —— 它另被 `build_db/db_writer.py`（`api_server.py` 引 6 处）与 `database/init_db.py` 引用。
 
-> 📋 **`docs/工单-C-app-py入口.md`** —— `app.py` 是第二个 Flask 入口，
-> `/api/health` 仍返回 `v0.6.0`；含端口冲突 / 路由缺失 / 孤儿 blueprint 三条硬证据，
-> 以及最高优先级项 `build_db/seed_test_data.py:211` 的误导文案。
+> 📋 **`docs/工单-C-app-py入口.md`**（已完成）—— 含端口冲突 / 路由缺失 / 孤儿 blueprint 三条硬证据。
 
 1. **版本指针三处统一**：`api_server.py:172`（`/api/health` 返回 `V25.14`）、
    `api_server.py:2035`（banner `V25.17`）、`VERSION`（`V33.17`）
@@ -138,15 +144,23 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 ---
 
-### 🟢 2.5 【CodeBuddy】文档治理
+### ✅ 2.5 文档治理 —— **已执行**（`f0beca4`）
 
-> 📋 **详细工单见 [`docs/工单-文档治理.md`](./工单-文档治理.md)**
-> （含实测的重复清单、判据、以及「只出清单不执行删除」的红线）。
+> 📋 **清单见 [`docs/文档治理-清单.md`](./文档治理-清单.md)**（判定依据与引用统计）。
 
-- 同字节重复 4 组（`README-WINDOWS.md`、`WINDOWS-INSTALL-GUIDE.md`、`WORKLOG.md`、`docs/接口.md`）
-- 内容不同需判定 3 组（`ARCHITECTURE.md`、`README.md`、`docs/架构.md` vs `架构总览.md`）
-- 怪名文件 `docs/P2 优先级分类+6幅架构图索引+明天工作计划）.md`
+已执行（用户 2026-10-24 点头）：
+
+| 动作 | 对象 |
+|---|---|
+| 删除（与另一份同字节） | `docs/README-WINDOWS.md`、`docs/WINDOWS-INSTALL-GUIDE.md`、`docs/WORKLOG.md`、`docs/接口.md` |
+| `git mv` 改名 | 怪名 P2 文件 → `docs/P2-优先级分类与架构图索引.md` |
+| 标「历史快照」 | `docs/ARCHITECTURE.md`（根版是超集，多 V33.14 NLI 章节 13 行） |
+| 版本同步 | `docs/README.md` V33.13 → V33.17 |
+| 补约定 | `docs/协作约定.md` §3.1 文档落位 |
+
+- **两份都保留**：`README.md`（根正文 vs docs 索引页）、`docs/架构.md` 与 `docs/架构总览.md`（详版 vs 摘要，均在阅读清单）
 - ⚠️ **更正**：`AGENTS.md` / `WORK_LOG.md` / `AI_CONTEXT.md` / `CODEBUDDY.md` **只在根目录，无副本**，不要动
+- 遗留：`api_server.py:2` docstring 写 `V25.8`（守卫故意不覆盖，是文档说明不是运行时指针）
 
 ---
 
