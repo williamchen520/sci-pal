@@ -114,10 +114,15 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 ---
 
-### 🟢 2.4 【CodeBuddy】阶段四-B：小修（已拖很久）
+### ✅ 2.4 【CodeBuddy】阶段四-B：小修 —— **已完成并验收**
 
-> 📋 **详细工单见 [`docs/工单-下一步.md`](./工单-下一步.md)**
-> （含精确行号、修法、风险提示、验收标准；并说明本轮为何不拆 server）。
+- 版本指针已统一为 V33.17，历史注释保留；`run_db_migrations()` 已补 `import sqlite3`。
+- 验收：`/api/health` → `V33.17`，banner → `Sci-Pal API V33.17`，`self_check.py` 110/1/121 无回归。
+- 遗留工单 C 已迁出独立成文：
+
+> 📋 **`docs/工单-C-app-py入口.md`** —— `app.py` 是第二个 Flask 入口，
+> `/api/health` 仍返回 `v0.6.0`；含端口冲突 / 路由缺失 / 孤儿 blueprint 三条硬证据，
+> 以及最高优先级项 `build_db/seed_test_data.py:211` 的误导文案。
 
 1. **版本指针三处统一**：`api_server.py:172`（`/api/health` 返回 `V25.14`）、
    `api_server.py:2035`（banner `V25.17`）、`VERSION`（`V33.17`）
@@ -130,10 +135,13 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 ### 🟢 2.5 【CodeBuddy】文档治理
 
-- 根与 `docs/` **两套** md：`AGENTS.md` / `ARCHITECTURE.md` / `WORK_LOG.md` / `WORKLOG.md` 重复
-- `docs/` 里有 `- Copy` / `(1)` 副本，还有个文件名带右括号的怪文件
-  `docs/P2 优先级分类+6幅架构图索引+明天工作计划）.md`
-- 改文档前先确认「哪一份是活的」
+> 📋 **详细工单见 [`docs/工单-文档治理.md`](./工单-文档治理.md)**
+> （含实测的重复清单、判据、以及「只出清单不执行删除」的红线）。
+
+- 同字节重复 4 组（`README-WINDOWS.md`、`WINDOWS-INSTALL-GUIDE.md`、`WORKLOG.md`、`docs/接口.md`）
+- 内容不同需判定 3 组（`ARCHITECTURE.md`、`README.md`、`docs/架构.md` vs `架构总览.md`）
+- 怪名文件 `docs/P2 优先级分类+6幅架构图索引+明天工作计划）.md`
+- ⚠️ **更正**：`AGENTS.md` / `WORK_LOG.md` / `AI_CONTEXT.md` / `CODEBUDDY.md` **只在根目录，无副本**，不要动
 
 ---
 
