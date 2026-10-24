@@ -1,0 +1,19 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+- id: locale
+  name: "@deepseek-ai/dsh-client-locale"
+  config:
+    preference: en
+- id: mcp-scipalhello
+  name: '@deepseek-ai/dsh-mcp-client'
+  config:
+    serverName: scipalhello
+    transport: stdio
+    command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+    args: ['D:/sciPal/tests/mcp_ping_server.py']
+    cwd: 'D:/sciPal'
+    env:
+      PYTHONUTF8: '1'
+    toolCallTimeoutMs: 60000
+    failOnStartupError: false
