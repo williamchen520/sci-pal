@@ -35,6 +35,40 @@ DSH 启动后会回写 profile patch，开着改会被覆盖。
 
 ---
 
+## 步骤 0.5（2026-10-24 实测补充：先确认 `plugin_manager` 可用）
+
+**实测情况**：在 DSH 会话里问模型，它回答「当前会话没有 `plugin_manager` 这个工具」，
+只列出 `mcp__scipal__*` 和 `mcp__scipalhello__ping`。
+
+但**这不代表它不存在**。官方 `SKILL.md:10` 原文：
+
+> Every `plugin_manager` action, including `list_plugins` and `list_bundles`,
+> also **needs approval without Full access** ……
+
+即：它是**需要授权**才暴露的工具。本机证据也支持这点 ——
+`~/.dsh/profiles/desktop/.plugin-manager/logs/` 下有 3 次真实操作记录
+（09:13 / 09:16 / 15:38），最近一次用 pnpm 卸载了 `@fegnze/dsh-capability-manager`
+（日志末尾：`dependencies: - @fegnze/dsh-capability-manager 0.2.1`）。
+**说明这套机制在跑，只是当前会话没拿到授权。**
+
+所以先做这两件事：
+
+1. **在 DSH 里开启 Full access（或等价的权限开关）**，然后重试步骤 1。
+2. 若一时找不到开关，先用**免授权**的替代工具做基线核查（官方 `SKILL.md:25` 指明
+   `cordis_inspect_query` 是 approval-free 的）：
+
+```
+用 cordis_inspect_list 列出当前所有 cordis 行，
+再用 cordis_inspect_query 查询是否存在 serverName 为 scipal 或 scipalhello 的行。
+只报告你真实调用工具得到的结果；如果你没有这些工具，就直说没有，不要从日志猜测。
+```
+
+> ⚠️ 官方明确：**判断变更是否生效要看 `install_bundle` 返回的 `application` / `warnings`，
+> 不要看日志、进程列表或页面启动载荷**（`SKILL.md:25`）。
+> 确认新行用 `cordis_inspect_query`，而不是 `list_plugins`。
+
+---
+
 ## 步骤 1（在 DSH 会话里，对模型说）
 
 ```
@@ -43,6 +77,10 @@ DSH 启动后会回写 profile patch，开着改会被覆盖。
 ```
 
 目的：确认安装前基线，装完可对比。
+
+> 🔴 如果模型仍然说没有这个工具，**不要让它凭日志编造清单**（实测它就编了一次：
+> 声称「scipal 5 个 + scipalhello 1 个工具活跃」，但当时 `python.exe` 子进程**一个都没有**，
+> 与事实矛盾）。此时应回到步骤 0.5 解决授权问题。
 
 ---
 
@@ -66,7 +104,18 @@ target 为 D:/sciPal/packages/dsh-scipal
 
 ## 步骤 4（验证）
 
-在 DSH 会话里问模型：
+> ⚠️ **前置**：`scipal` 这 5 个工具依赖 SciPal Flask（端口 5000）。
+> 验证前确认它在跑（见 2.2：装计划任务，或临时 `python api_server.py`）。
+> Flask 没起时 `scipal` 会失败而哨兵仍在 —— 别误判成配置问题。
+
+**首选验证**（官方推荐，免授权、看真实 cordis 行）：
+
+```
+用 cordis_inspect_query 查询 serverName 为 scipal 和 scipalhello 的 MCP 行是否存在，
+并报告它们的 transport / command / failOnStartupError。
+```
+
+**次选验证**（问工具面）：
 
 ```
 你现在有哪些 mcp__ 开头的工具？
