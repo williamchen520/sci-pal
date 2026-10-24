@@ -45,6 +45,13 @@ agent 无法自助验证「工具是否出现在模型工具列表」。
 
 **这是阶段五-A 的真正验收**——「可安装/可卸载」这个目标，只有装上才知道成不成立。
 
+> 📋 配套：`docs/工单-bundle收尾.md`（CodeBuddy 侧：补 zh locale、写只读 precheck 脚本、
+> 写 INSTALL.md 四步原文、README 补卸载章节）。
+
+**官方唯一认可的安装方式是 DSH 会话内调 `plugin_manager` `action: install_bundle`**，
+官方明令**禁止**手写 profile 的 `package.json` / `cordis.patch.yml`（`SKILL.md:8,10`）。
+所以步骤 3 的「删手写条目」是**清场**（避免重名），不是安装动作本身。
+
 步骤：
 1. **完全退出 DSH**（开着改配置会被退出时的状态写回覆盖）。
 2. 备份 `~/.dsh/profiles/desktop/cordis.patch.yml`（仓库外，git 救不回来）。
