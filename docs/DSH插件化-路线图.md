@@ -55,10 +55,15 @@ agent 无法自助验证「工具是否出现在模型工具列表」。
 步骤：
 1. **完全退出 DSH**（开着改配置会被退出时的状态写回覆盖）。
 2. 备份 `~/.dsh/profiles/desktop/cordis.patch.yml`（仓库外，git 救不回来）。
-3. **删掉里面手写的 `mcp-scipalhello` / `mcp-scipal` 两条 `insert`**
+   建议用 E-2 交付的 `scripts/precheck_dsh_bundle.py`（会存到仓库内的 `tests/backups/`）。
+3. **只删掉手写的 `mcp-scipalhello` / `mcp-scipal` 两条 `insert`**
    —— 🔴 **不删会重名冲突，加载直接报错**（官方明示：两个配置用同一 server name，后者加载失败）。
-4. 安装 bundle：走 DSH 插件安装 UI 指向 `D:\sciPal\packages\dsh-scipal`，
-   或让 DSH 会话里的 agent 调 `plugin_manager` `action: install_bundle`（`target` 为绝对目录）。
+   🔴 **不要整体还原 `tests/cordis.patch.yml.bak`**（只有 297B 的阶段零基线）。
+   当前文件是 4209B / 6 条：locale、agent-default-model、
+   **ui-settings-account（账户状态）**、ui-chat、ui-settings、insert(两条 MCP)。
+   整体还原会**连 DSH 账户状态和界面偏好一起抹掉** —— 只删最后那个 `insert` 块即可。
+4. 安装 bundle：在 DSH 会话里让 agent 调 `plugin_manager` `action: install_bundle`，
+   `target` = `D:\sciPal\packages\dsh-scipal`（这是官方唯一认可的方式，见 §2.1 开头）。
 5. **完全退出再重启 DSH**（重载会复用旧子进程）。
 6. 验证：新会话问模型「你有哪些 `mcp__` 工具」，应出现
    `mcp__scipalhello__ping` + `mcp__scipal__{health,search_papers,get_paper,get_abstract,task_status}`。
@@ -142,6 +147,23 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 - 内容不同需判定 3 组（`ARCHITECTURE.md`、`README.md`、`docs/架构.md` vs `架构总览.md`）
 - 怪名文件 `docs/P2 优先级分类+6幅架构图索引+明天工作计划）.md`
 - ⚠️ **更正**：`AGENTS.md` / `WORK_LOG.md` / `AI_CONTEXT.md` / `CODEBUDDY.md` **只在根目录，无副本**，不要动
+
+---
+
+## 2.0 📌 当前派单顺序（2026-10-24 更新）
+
+三张工单**互不依赖，可以并行**；但按「链路靠前的先做」排优先级：
+
+| 优先级 | 工单 | 文件 | 为什么 |
+|---|---|---|---|
+| **P0** | bundle 收尾 E-1 ~ E-5 | `docs/工单-bundle收尾.md` | 卡着 2.1 实装（人等脚本才能安全清场） |
+| **P1** | 工单 C（`app.py` 入口处置） | `docs/工单-C-app-py入口.md` | 独立；含一条真会坑人的误导文案 |
+| **P2** | 文档治理 | `docs/工单-文档治理.md` | 独立；只出清单不执行删除 |
+
+> ⚠️ **派单时必须显式写「本工单现在就执行」**。
+> 2026-10-24 踩过：CodeBuddy 看到工单文件是新出现的未跟踪文件，当成「下一轮」，
+> 转而把自己早先的提交 `2457e85` 报成本次成果 → 白等一轮。
+> 可见 `docs/阶段五A-验收报告.md` 第三节。
 
 ---
 
