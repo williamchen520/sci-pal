@@ -351,13 +351,24 @@ export function apply(ctx: Context) {
 **结论：Python 侧一行不改，DSH 能拉起 stdio 子进程并把工具注册进模型工具列表。**
 路线 A 的前提条件成立，玄木方案里的「换语言重写」彻底作废。
 
-### 8.2 阶段三裁决：**A-1 单进程薄转发**
+### 8.2 阶段三裁决：**A-1 薄转发**（「单进程」已于阶段五-B 修订为按业务流拆分）
 
-在原始路线 A（"每个域一个 MCP Server"）之上再收一步：
+> **MCP 侧不承载任何业务逻辑，只把 MCP 工具调用转发到 SciPal 已有的 Flask API。**
 
-> **只做一个 MCP server 进程，它不承载任何业务逻辑，只把 MCP 工具调用转发到 SciPal 已有的 Flask API。**
+> 🔴 **2026-10-24 修订（阶段五-B 实测推翻了下文「只做一个 server」的结论，请以下面这段为准）**
+>
+> 原文用「显存」论证不能拆 server，**前提是错的**：只有 import 了业务模块的进程才会加载模型，
+> 而薄转发的 MCP 进程**一个模型都不加载**。实测单个 MCP server 常驻 ≈ **68 MB**，
+> 模型仍然只存在于 5000 端口那**一个** Flask 进程里 —— 拆 server **不复制模型**，VRAM 不变。
+>
+> 真正的约束是**模型上下文与工具选择准确率**：单 server 塞的工具越多，上下文越挤、选错越多。
+> 故实际做法是 **按业务流拆、每 server ≤ 8 个工具**（现为 `scipal-search` 6 + `scipal-generate` 6
+> + 哨兵 `scipalhello` 1，共 13）。命名空间因此是多前缀（`mcp__scipal-search__*`），
+> 不再是单一 `mcp__scipal__*`。
+>
+> 下方原始论证保留作历史记录，**不要再据此把 server 合并回一个**。
 
-**为什么不再按域拆成多个 server —— 决定性约束是显存：**
+**原始论证（2026-10-24 早期，结论已被推翻）：**
 
 | 事实 | 后果 |
 |---|---|
@@ -365,13 +376,15 @@ export function apply(ctx: Context) {
 | 本机 RTX 4060 **8 GB** | 装不下第二份，更别说 9 份 |
 | Flask 进程本来就常驻并已加载全部模型 | 转发是**零增量成本**；新起进程是**全量成本** |
 
-**故：单进程 + 扁平命名空间**（`mcp__scipal__<tool>`），宁可粗，不要碎。
+**故（原始结论，已作废）：单进程 + 扁平命名空间**（`mcp__scipal__<tool>`），宁可粗，不要碎。
 
-**两条硬性设计约束：**
+**三条硬性设计约束（约束 1、2 仍有效，新增 3）：**
 
-1. **MCP server 必须是纯 HTTP 客户端** —— 禁止 `from services...`、禁止 sys.path 注入。
-   一旦 import 了 SciPal 内部模块，就会把模型一起加载进子进程，单进程设计立刻失效。
+1. **MCP server 必须是纯 HTTP 客户端** —— 禁止 `from services...`、禁止 sys.path 注入项目根。
+   一旦 import 了 SciPal 内部模块，就会把模型一起加载进子进程，「轻薄转发」立刻失效。
+   （唯一允许的 `sys.path.insert` 是把 `mcp_server/` 自己插进去，用于 `import _forward`。）
 2. **不许改 Flask 业务代码** —— 需要新能力就调现有路由；路由不够再加，但那是另一张工单。
+3. **绝不向 stdout 打印** —— stdio 模式下 stdout 是 JSON-RPC 通道，一行 `print()` 就毁掉协议。
 
 **长任务处理**：MCP 的 `toolCallTimeoutMs` 只有 60 秒，且**不支持 task-based execution**。
 SciPal 现成有轮询设施（`/api/tasks/<id>`、`/api/review/task/<id>`、`/api/search/download_status`），
