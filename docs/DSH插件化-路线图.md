@@ -109,6 +109,9 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 ### 🟢 2.4 【CodeBuddy】阶段四-B：小修（已拖很久）
 
+> 📋 **详细工单见 [`docs/工单-下一步.md`](./工单-下一步.md)**
+> （含精确行号、修法、风险提示、验收标准；并说明本轮为何不拆 server）。
+
 1. **版本指针三处统一**：`api_server.py:172`（`/api/health` 返回 `V25.14`）、
    `api_server.py:2035`（banner `V25.17`）、`VERSION`（`V33.17`）
    → 统一为 V33.17，**保留所有 `# V25.xx` 历史注释**。
