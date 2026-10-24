@@ -333,3 +333,46 @@ export function apply(ctx: Context) {
 
 **待办前置（阶段零）**：先用官方最小配置跑通一个现成 MCP server，验证工具确实出现在模型工具列表里。
 这一步**不需要写任何代码**，只需一条 YAML。
+
+---
+
+## 8. 阶段零结论与阶段三裁决（2026-10-24 14:00）
+
+### 8.1 阶段零：✅ 通过
+
+`tests/mcp_ping_server.py` 经 `insert:` 方式挂进 `desktop` profile 后，DSH 设置页出现：
+
+| 位置 | 显示 |
+|---|---|
+| Managed by another plugin | `scipalhello` · stdio |
+| Registered MCP tools | `mcp__scipalhello__ping` |
+| Configured servers | 0（正常 —— 不是 UI 配的，是 profile patch 层注入的，故 UI 内为 Read-only） |
+
+**结论：Python 侧一行不改，DSH 能拉起 stdio 子进程并把工具注册进模型工具列表。**
+路线 A 的前提条件成立，玄木方案里的「换语言重写」彻底作废。
+
+### 8.2 阶段三裁决：**A-1 单进程薄转发**
+
+在原始路线 A（"每个域一个 MCP Server"）之上再收一步：
+
+> **只做一个 MCP server 进程，它不承载任何业务逻辑，只把 MCP 工具调用转发到 SciPal 已有的 Flask API。**
+
+**为什么不再按域拆成多个 server —— 决定性约束是显存：**
+
+| 事实 | 后果 |
+|---|---|
+| SciPal 的 embedding / Cross-Encoder reranker / ChromaDB 都是**进程级资源** | 每个 MCP server 都是独立 Python 进程 → 拆 9 个 = 9 份模型 |
+| 本机 RTX 4060 **8 GB** | 装不下第二份，更别说 9 份 |
+| Flask 进程本来就常驻并已加载全部模型 | 转发是**零增量成本**；新起进程是**全量成本** |
+
+**故：单进程 + 扁平命名空间**（`mcp__scipal__<tool>`），宁可粗，不要碎。
+
+**两条硬性设计约束：**
+
+1. **MCP server 必须是纯 HTTP 客户端** —— 禁止 `from services...`、禁止 sys.path 注入。
+   一旦 import 了 SciPal 内部模块，就会把模型一起加载进子进程，单进程设计立刻失效。
+2. **不许改 Flask 业务代码** —— 需要新能力就调现有路由；路由不够再加，但那是另一张工单。
+
+**长任务处理**：MCP 的 `toolCallTimeoutMs` 只有 60 秒，且**不支持 task-based execution**。
+SciPal 现成有轮询设施（`/api/tasks/<id>`、`/api/review/task/<id>`、`/api/search/download_status`），
+所以长任务工具一律「**立即返回 job 句柄 + 独立的 status 工具轮询**」，不做同步等待。
