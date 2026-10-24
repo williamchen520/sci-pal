@@ -72,9 +72,11 @@ def _not_running_error(detail: str) -> ToolError:
     """
     return ToolError(
         f"SciPal API 未启动（{base_url()}）。\n"
-        f"若已安装自启（scripts/install_autostart.ps1）：服务可能正在预热，"
-        f"等 30–45 秒后重试。\n"
-        f"否则执行：python scripts/sciPal_watchdog.py --once\n"
+        f"推荐：安装一次性自启（计划任务），之后无需人工介入：\n"
+        f"    powershell -File scripts/install_autostart.ps1\n"
+        f"若已安装自启：服务可能正在预热，等 30–45 秒后重试。\n"
+        f"临时应急（服务会随终端退出被回收，非持久）：\n"
+        f"    python scripts/sciPal_watchdog.py --once\n"
         f"（详情：{detail}）"
     )
 
