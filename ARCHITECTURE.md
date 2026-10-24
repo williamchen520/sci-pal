@@ -31,7 +31,7 @@ Sci-Pal 是一个**本地学术文献管理与智能阅读系统**，核心目�
 ```
 sciPal/
 ├── api_server.py              # Flask API 服务入口（主程序）
-├── app.py                     # 已废弃（勿运行；与 api_server.py 争 5000 端口且路由残缺）
+├── app.py                     # 已于 2026-10-24 删除（原与 api_server.py 争 5000 端口且路由残缺）
 ├── config/
 │   └── settings.py            # 配置管理（可能未使用，以环境变量为主）
 ├── routes/                    # 蓝图路由（旧版，可能已废弃，主路由在 api_server.py）
@@ -173,7 +173,7 @@ PDF → Docling（段落/图表/表格/章节层级）→ GROBID（元数据/参
 | `services/pdf/annotator.py` | PDF 标注服务 | 前端已移除标注功能（V25.14），后端保留但未被调用 |
 | `frontend/vendor/pdf.min.js` | PDF.js 库 | V25.14 后改用浏览器原生 iframe，不再使用 |
 | `frontend/src/pdf_annotator.js` | PDF 标注前端 | V25.14 后移除标注，可能已废弃 |
-| `app.py` | 已废弃 | 与 api_server.py 争 5000 端口；仅注册 3 个 blueprint，review/tasks/abstracts/graph/qa 路由全缺 |
+| `app.py` | 已删除（2026-10-24） | 与 api_server.py 争 5000 端口；仅注册 3 个 blueprint，review/tasks/abstracts/graph/qa 路由全缺 |
 | `services/l3/` | 空目录 | 废弃 |
 | `services/user/` | 空目录 | 废弃 |
 
@@ -1035,7 +1035,7 @@ TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 python3 scripts/self_check.py
 - `services/ai/`（旧版 AI 服务，确认是否被 review/qa 完全替代）
 - `services/query/search_service.py`（旧版检索服务，确认是否被 search/ 替代）
 - `routes/`（旧版蓝图，确认是否在 api_server.py 中注册）
-- `app.py`（**已确认废弃**，建议删除；删除需用户点头）
+- `app.py`（**已删除**，2026-10-24 移除；主入口统一为 `api_server.py`）
 - `services/pdf/annotator.py`（标注后端，前端已移除，确认是否需要保留）
 - `AI_API_KEY`/`AI_MODEL`/`AI_BASE_URL` 旧版环境变量（确认是否还在使用）
 

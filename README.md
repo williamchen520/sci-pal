@@ -63,7 +63,7 @@
 ```
 sci-pal/
 ├── api_server.py              # Flask 主入口（端口 5000）
-├── app.py                     # 已废弃（勿运行；会与 api_server.py 抢 5000 端口且路由残缺）
+├── app.py                     # 已于 2026-10-24 删除（原与 api_server.py 抢 5000 端口且路由残缺）
 ├── config/settings.py         # 全局配置
 ├── requirements.txt
 ├── .env.example              # 环境变量模板
