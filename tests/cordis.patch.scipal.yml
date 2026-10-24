@@ -1,0 +1,83 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+#
+# ---------------------------------------------------------------------------
+# v3（2026-10-24）—— SciPal 真实工具面（取代 v2 的 hello-world）
+#
+#   相对 v2 的改动：
+#     · serverName   scipalhello → scipal
+#     · 脚本         tests/mcp_ping_server.py → mcp_server/scipal_server.py
+#     · env          新增 no_proxy，见下
+#
+# 保留的三条铁律（v1/v2 踩出来的）：
+#   1. 新增条目必须包在 `insert:` 里。写成顶层 `- id: xxx` 会被判定为
+#      "targets that match no row" → warn 并跳过，且不报错（静默失败）。
+#      实测日志：[warn] patch: entry "mcp-scipalhello" not found
+#   2. `failOnStartupError: true`。默认值 false 会让启动失败静默跳过。
+#   3. 要在 DSH 关闭时改；启动后 DSH 会回写本文件。
+#
+# ---------------------------------------------------------------------------
+
+- id: locale
+  name: "@deepseek-ai/dsh-client-locale"
+  config:
+    preference: en
+
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: deepseek-account
+    model: deepseek-flash
+    reasoningEffort: high
+
+- id: ui-settings-account
+  name: "@deepseek-ai/dsh-client-ui-settings-account"
+  config:
+    version: 1
+    step: done
+    purpose: null
+    process: standard
+    completion: skipped
+    usage: compact
+    developerTools: false
+
+- id: ui-chat
+  name: "@deepseek-ai/dsh-client-ui-chat"
+  config:
+    transcriptView: standard
+    performanceUsage: compact
+
+- id: ui-settings
+  name: "@deepseek-ai/dsh-client-ui-settings"
+  config:
+    enabled: false
+
+# ===== SciPal MCP 服务器 =====
+- insert:
+    - id: mcp-scipal
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: scipal
+        transport: stdio
+        command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+        args: ['D:/sciPal/mcp_server/scipal_server.py']
+        cwd: 'D:/sciPal'
+        env:
+          PYTHONUTF8: '1'
+          # 本机有 http_proxy=127.0.0.1:52819，且 DSH 的 stdio 环境清洗
+          # 只删 /KEY|PASSWORD|SECRET|TOKEN|DSH_*/i，清不掉 http_proxy。
+          # 不设 no_proxy 时，访问 127.0.0.1:5000 会绕经本机代理 —— 代理一挂，
+          # Flask 明明活着工具也会失败。显式绕过，消除这层无关依赖。
+          no_proxy: '127.0.0.1,localhost'
+          NO_PROXY: '127.0.0.1,localhost'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: true
+# 工具出现形式：
+#   mcp__scipal__health
+#   mcp__scipal__search_papers
+#   mcp__scipal__get_paper
+#   mcp__scipal__get_abstract
+#   mcp__scipal__task_status
+# 前置：SciPal Flask 需先启动（python api_server.py，端口 5000）。
+#       未启动时工具会返回明确错误文本，不会崩。
