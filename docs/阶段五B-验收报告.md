@@ -118,7 +118,7 @@ selftest.py             → 20/20 PASS（未受文档修改影响）
 
 ---
 
-## 五、待办（按顺序）
+## 五、待办（按顺序；第 1–3 项已完成，见第六节）
 
 1. **提交**（D-1）：显式列路径，别 `git add -A`（仓库里有别人的 `_test_v3317b.py`）；
    `tests/backups/` 下两份新备份（`20261024-203750.bak` / `-204144.bak`，均 916 B）按既往惯例一并入库。
@@ -129,5 +129,41 @@ selftest.py             → 20/20 PASS（未受文档修改影响）
    - 功能层：`mcp__scipal-search__health` 与 `mcp__scipal-generate__health` 都应 200；
      旧名 `mcp__scipal__*` 应**全部消失**（这是「删旧挂新」是否真正生效的判据）。
 4. **阶段五-C（需用户点头）**：异步化端点（`POST /api/review/generate_async` 等 + 写入
-   `services/unified_task_manager.py` 的 job 句柄），把综述生成 / 大纲 / 多跳提问 / 问答
+   `services/task_manager` 的 job 句柄），把综述生成 / 大纲 / 多跳提问 / 问答
    真正接进 MCP。属**业务代码改动**，不在五-B 范围。
+
+---
+
+## 六、实机验收：**通过**（2026-10-24 21:01，重启后进程层复核）
+
+用户在 DSH 完全重启后（新实例 `DeepSeek Harness.exe` 20:58:54–57 启动）复报工具清单，
+验收方独立从进程层核对，三项判据全部命中：
+
+| 判据 | 期望 | 实测 |
+|---|---|---|
+| 含 `mcp_` 的 `python.exe` 进程数 | 4 → **6** | **6** ✅ |
+| 命令构成 | 3 条（哨兵 + search + generate） | `mcp_ping_server.py` / `search_server.py` / `generate_server.py` ✅ |
+| 旧 `scipal_server.py` 进程 | 必须为 **0** | **0**（运行态已彻底摘除）✅ |
+| 工具数 | **13** | 1 + 6 + 6 = 13 ✅ |
+| 旧名 `mcp__scipal__*` | 全部消失 | 全部消失 ✅ |
+| 两个新 server 的 `health` | 200 / `status: ok` / V33.17 | 均 200 ✅ |
+
+进程层原始证据（父进程 `24844` = 重启后的 DeepSeek Harness）：
+
+```text
+20:59:08  24448  mcp_ping_server.py      PARENT=24844   ← 哨兵
+20:59:08  15128  search_server.py        PARENT=24844   ← scipal-search
+20:59:08  18256  generate_server.py      PARENT=24844   ← scipal-generate
+20:59:09  18524  mcp_ping_server.py      PARENT=24448   ← venv 启动器 fork 的 worker
+20:59:09   2364  search_server.py        PARENT=15128
+20:59:09  23820  generate_server.py      PARENT=18256
+→ 3 条命令 / 6 个 python 进程，无 scipal_server.py
+```
+
+**结论：阶段五-B 端到端验收通过。** 「删旧挂新」确实生效 —— 判据不是「新工具出现了」，
+而是「旧工具彻底消失且旧进程为 0」，这一点比工具清单更能排除「新旧并存」。
+
+> 一个过程教训：用户第一次反馈「旧工具还在、新工具 0 个」时，验收方查进程发现
+> `DeepSeek Harness.exe` 仍是半小时前那批 PID —— **关窗口 ≠ 退出**（Electron 进托盘）。
+> 因此「`mcp__scipal__health` 还能调」应直接判为**旧配置仍在运行**，
+> 而不是「新配置挂载失败」。
