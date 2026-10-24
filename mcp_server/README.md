@@ -282,31 +282,23 @@ server 数 : 3    断言总数 : 20    PASS : 20    FAIL : 0    RESULT : PASS
 
 ## 8. 已知限制（如实记录，未在本工单修复）
 
-### 8.1 `tasks` 表不存在（`/api/tasks/<id>` 返回 500）
+### 8.1 ~~`tasks` 表不存在~~ → **已不存在此问题**（2026-10-24 21:15 复核更正）
 
-> 承载它的旧工具 `task_status` 已随 legacy server 摘除，但 **Flask 侧缺陷仍在**，
-> 只要将来有工具走 `/api/tasks/<id>` 就会踩到。
+早期实测 `GET /api/tasks/<id>` 返回 500 `no such table: tasks`，**现已修复**：
 
-实测 `GET /api/tasks/<任意 id>` → **500**，Flask 侧 traceback：
+| 检查 | 早期（已过时） | 现在实测 |
+|---|---|---|
+| `data/research.db` 是否有 `tasks` 表 | ❌ 不存在 | ✅ **存在**，11 列与 `services/unified_task_manager.py` 完全匹配 |
+| `GET /api/tasks/<不存在的 id>` | 500 + traceback | **404** `{"error":"task not found"}` |
+| tasks 表从哪来 | — | `api_server.py:2001` 启动时幂等创建（V33.12 统一任务表） |
 
-```text
-File "d:\sciPal\services\unified_task_manager.py", line 103, in get_task
-    row = conn.execute("SELECT * FROM tasks WHERE task_id = ?", (task_id,)).fetchone()
-sqlite3.OperationalError: no such table: tasks
-```
-
-核对结果：
-
-| 检查 | 实测 |
-|---|---|
-| `data/research.db` 表数量 | 32 |
-| 是否存在 `tasks` 表 | ❌ **不存在** |
-| `api_server.py:1958 run_db_migrations()` 职责 | 只给 `papers` 补 `volume/issue/pages` 字段，**不建 tasks 表** |
-| `database/init_db.py:299` | 有 `CREATE TABLE tasks`，但该脚本是旧 schema，当前库来源是 `build_db/` |
-
-→ 这是 **Flask / 数据库侧既有缺陷**，不是转发层问题：MCP 侧已把 5xx 正确转为
-`is_error=True` 的受控错误，没有崩溃也没有静默。按工单「不许改 Flask 业务代码」，
-本工单只报告，需另开工单建表。
+> 结论：持久化任务表（`tasks`）是可用的。**但要注意有两套任务体系并存**，
+> 轮询时别拿错端点：
+>
+> | 体系 | 存储 | 端点 | 谁在用 |
+> |---|---|---|---|
+> | 统一任务表 | SQLite `tasks` 表（持久，重启不丢） | `/api/tasks/<id>` | 在线下载（`download_online_papers`） |
+> | review 任务 | **进程内内存 dict**（`services/review/task_manager.py`，重启即丢） | `/api/review/task/<id>` | 大纲生成（`review_task_status`） |
 
 ### 8.2 其他
 
@@ -314,7 +306,8 @@ sqlite3.OperationalError: no such table: tasks
 |---|---|
 | 单次 HTTP 超时 45 s | 留 15 s 余量给 MCP 的 60 s 上限；更长的任务必须走 job 句柄 + 轮询 |
 | `use_online=True` 可能超时 | 在线检索走 NCBI，网络慢时仍可能触及 45 s；纯在线检索用 `search_online`（默认每个库 20 条） |
-| **重型生成能力未挂载** | `review/generate`、`outline` 生成、`agentic/search`、`qa/ask`、`papers/parse` 全是同步阻塞，超 60 s，**当前不暴露为工具**；异步化属阶段五-C |
+| **重型生成能力未挂载** | `review/generate`、`agentic/search`、`qa/ask`、`papers/parse` 都是**同步阻塞**，超 60 s，当前不暴露为工具（异步化属阶段五-C）。⚠️ 例外：**大纲生成 `POST /api/review/outline` 自 V26.3 起就是异步的**（立即返 `task_id`，实测 0.13 s），零业务改动即可挂载 |
+| 异步任务也会拖慢请求循环 | `app.run(threaded=False)`（`api_server.py:2057`）= **单线程**；实测大纲任务运行期间 `/api/health` 被饿到 **21.4 s / 21.8 s**，任务结束后回到 0.03 s。轮询间隔与 MCP 超时都要按这个量级留余量 |
 | 长任务无同步等待 | DSH 不支持 task-based execution，本设计一律「立即返回句柄 + 轮询」（`download_online_papers` → `download_status`） |
 | `search_hybrid` 结果体量 | 默认 `top_k=10`；大结果会占用较多上下文，按需调小 |
 | 每 server ≤ 8 工具 | 约束是**模型上下文与选择准确率**，不是显存（MCP 进程不加载模型，≈68 MB/个） |

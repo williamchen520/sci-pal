@@ -35,15 +35,20 @@
 | 候选能力 | 路由 | 实现方式 | 能否进 MCP |
 |---|---|---|---|
 | 综述生成 | `POST /api/review/generate` | **同步跑完整流水线**（检索→证据→大纲→撰写→引用校验），分钟级 | ❌ **不能**，远超 60s 且会阻塞 Flask |
-| 大纲生成 | `/api/review/outline` | 同步 LLM 生成 | ❌ 同上 |
+| 大纲生成 | `POST /api/review/outline` | ✅ **自 V26.3 起已是异步**：立即返回 `{task_id}`，后台线程跑，配 `/api/review/task/<id>` 轮询 + `/api/review/cancel/<id>` 取消（实测 0.129 s 返回） | ✅ **能** —— 本工单当时漏判，留到五-C 挂载 |
 | 多轮渐进式提问 | `/api/agentic/search` | 同步多跳（≤5 hops，每跳检索+LLM） | ❌ 至少数十秒，极易超时 |
 | 问答 | `POST /api/qa/ask` | 同步 LLM | ❌ 同上（且依赖 Ollama） |
 | PDF 解析 | `POST /api/papers/parse` | 同步解析（无 job 句柄） | ❌ |
 | PDF 导入 | `POST /api/papers/import` | multipart 文件上传 | ❌ MCP 工具无法传文件流；且后续解析是同步的 |
 
-**根因**：Flask 侧**只有同步的长任务端点，没有 job 提交端点**。唯一符合"立即返回 job 句柄"语义的是
-`POST /api/search/download_online`（返回 `task_id`，轮询 `/api/search/download_status`），
-以及任务存储 `services/unified_task_manager.py`（当前只有 `online_downloader` 在用，且无创建型 HTTP 路由）。
+**根因（2026-10-24 21:15 更正）**：除 `POST /api/review/outline` 与 `POST /api/search/download_online`
+之外，Flask 侧其余重路由**都是同步阻塞**，没有 job 提交端点。
+即：**已知的异步入口只有两个**，其余（`review/generate`、`agentic/search`、`qa/ask`、`papers/parse`）都需要异步化。
+
+> ⚠️ 原文写「Flask 侧没有 job 提交端点」是**错的**：`api_server.py:527` 的
+> `POST /api/review/outline` 自 V26.3 起就是 `task_manager.create_task()` + 后台线程 + 立即返回
+> `{"task_id": ...}`，配套 `:599 /api/review/running_task`、`:612 /api/review/task/<id>`、
+> `:628 /api/review/cancel/<id>` 全都在。**大纲生成因此是零业务改动可挂载的**（见阶段五-C）。
 
 → **本工单 `scipal-generate` 只做"只读 + 轮询"壳**
 （读已生成的大纲/综述、查引用图谱、查任务状态），把重物留给 **阶段五-C：异步化**
