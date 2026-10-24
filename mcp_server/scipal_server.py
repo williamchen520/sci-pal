@@ -65,8 +65,16 @@ def base_url() -> str:
 
 
 def _not_running_error(detail: str) -> ToolError:
+    """服务不通时的错误文案：给出可操作指引，而不是「请手动起 Flask」。
+
+    注意：绝不在工具调用内同步等待服务启动——冷启动 30–45 秒会顶到 MCP 的
+    60 秒上限。启动交给 scripts/sciPal_watchdog.py（工具调用之外）。
+    """
     return ToolError(
-        f"SciPal API 未启动：连接 {base_url()} 失败，请先运行 python api_server.py"
+        f"SciPal API 未启动（{base_url()}）。\n"
+        f"若已安装自启（scripts/install_autostart.ps1）：服务可能正在预热，"
+        f"等 30–45 秒后重试。\n"
+        f"否则执行：python scripts/sciPal_watchdog.py --once\n"
         f"（详情：{detail}）"
     )
 
