@@ -92,6 +92,7 @@ SERVERS = [
             "review_task_status",
             "cancel_review_task",
             "generate_outline",
+            "generate_review",
         ],
         "calls": {
             "health": {},
@@ -105,6 +106,9 @@ SERVERS = [
             # 真实提交大纲任务（max_papers=2 控制规模）；异步判据在 _run_server 里：
             # 必须 <10s 返回且返回体含 task_id
             "generate_outline": {"topic": "CRISPR delivery", "max_papers": 2},
+            # 真实提交综述任务（max_papers=1 最小规模）；拿到 task_id 后立刻 cancel，
+            # 不让它跑满分钟级流水线
+            "generate_review": {"topic": "CRISPR delivery", "max_papers": 1},
         },
     },
 ]
@@ -216,6 +220,27 @@ async def _run_server(server: dict) -> tuple[int, int]:
                     )
                     passed += 1 if good else 0
                     failed += 0 if good else 1
+                    continue
+
+                if name == "generate_review":
+                    # 异步判据同上：<10s 返回且含 task_id；拿到后立刻取消，避免跑满分钟级任务
+                    task_id = _extract_task_id(text)
+                    good = bool(task_id) and elapsed < 10.0
+                    print(
+                        f"  [{'PASS' if good else 'FAIL'}] {name:<24} "
+                        f"耗时={elapsed:.2f}s task_id={task_id}（要求 <10s 且非空）"
+                    )
+                    passed += 1 if good else 0
+                    failed += 0 if good else 1
+                    if task_id:
+                        try:
+                            cancel_res = await session.call_tool(
+                                "cancel_review_task", {"task_id": task_id}
+                            )
+                            cancel_text = _extract_text(cancel_res).strip().replace("\n", " ")
+                            print(f"  [INFO] 已请求取消 {task_id}: {cancel_text[:110]}")
+                        except Exception as exc:  # 取消失败不影响本条断言，但必须可见
+                            print(f"  [WARN] 取消 {task_id} 失败: {exc}")
                     continue
 
                 if name == "cancel_review_task":

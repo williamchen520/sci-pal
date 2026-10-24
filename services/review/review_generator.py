@@ -254,6 +254,21 @@ class ReviewGenerator:
         """
         return self._insufficient_evidence_sections.copy()
 
+    def _check_cancel(self, task_id: Optional[str], progress: Optional[str] = None) -> None:
+        """C-2: 阶段间取消检查 + 粗粒度进度上报。
+
+        只在**阶段之间**生效：检索、证据抽取、大纲、撰写、校验这几个边界。
+        阶段内部（尤其是 `_write_draft` 的 LLM 长调用、`_retrieve` 的向量检索）
+        是原子的，**无法中途打断** —— 取消请求会在下一个边界点被观察到。
+        """
+        if not task_id:
+            return
+        from .task_manager import task_manager
+        if progress:
+            task_manager.update_progress(task_id, progress)
+        if task_manager.is_cancelled(task_id):
+            raise Exception("Task cancelled by user")
+
     def generate(
         self,
         topic: str,
@@ -266,6 +281,7 @@ class ReviewGenerator:
         include_abstracts: bool = True,
         selected_paper_ids: Optional[list[str]] = None,
         excluded_paper_ids: Optional[list[str]] = None,
+        task_id: Optional[str] = None,
     ) -> ReviewOutput:
         """
         生成综述。
@@ -286,8 +302,17 @@ class ReviewGenerator:
             selected_paper_ids: V26.0: 用户选定的论文 ID 列表，如果指定则只用这些论文
             excluded_paper_ids: V26.0: 用户要剔除的论文 ID 列表
 
+            task_id: V33.17 C-2: 传入 review 任务 id 时，会在**阶段之间**检查取消并上报进度。
+
         Returns:
             ReviewOutput（含 Markdown 全文、参考文献、统计、警告）
+
+        取消语义（如实说明，不要误以为可随时中断）：
+            检查点只有 5 个 —— 检索前 / 证据抽取前 / 大纲前 / 撰写前 / 校验前。
+            · 检索、证据抽取、大纲、撰写、校验**各自内部不可中断**；
+            · 最耗时的 `_write_draft`（LLM 逐段撰写）一旦开始，取消要等它整段跑完
+              才会在「校验前」被观察到；
+            · 因此取消的实效粒度是「阶段级」，不是「句子级」。
         """
         warnings: list[str] = []
 
@@ -324,6 +349,7 @@ class ReviewGenerator:
                         warnings.append(f"📋 使用按大纲搜索分配的证据卡片：{len(custom_evidence_cards)} 条（按章节主题搜索，内容更相关）")
 
         # ── Step 1: 检索 ──
+        self._check_cancel(task_id, "检索文献...")
         if custom_evidence_cards is not None:
             # V31.83: 已经有证据卡片了，跳过检索
             paragraphs = []
@@ -346,6 +372,7 @@ class ReviewGenerator:
             warnings.append(f"📚 检索到 {len(paragraphs)} 个相关段落。")
 
         # ── Step 2: 证据抽取 ──
+        self._check_cancel(task_id, "抽取证据...")
         if custom_evidence_cards is not None:
             # V31.83: 已经有证据卡片了，跳过证据抽取
             evidence_cards = custom_evidence_cards
@@ -372,6 +399,7 @@ class ReviewGenerator:
         evidence_dict = {c.evidence_id: c for c in evidence_cards}
 
         # ── Step 3: 大纲（V25.2: LLM 大纲生成；V25.8: 支持用户自定义段落级大纲）──
+        self._check_cancel(task_id, "生成大纲...")
         if custom_outline is not None:
             # V25.8: 用户自定义段落级大纲（优先级最高）
             from .outline_generator import OutlineGenerator
@@ -395,6 +423,7 @@ class ReviewGenerator:
         conflicts = []
 
         # V31.82: 只写正文，不做冲突检测（并行处理也不需要了）
+        self._check_cancel(task_id, "撰写正文...")
         self._auto_cite_count = 0  # V25.7: 每次生成前清零自动补引用计数器
         draft = self._write_draft(topic, outline, evidence_dict, review_type=review_type, language=language)
 
@@ -403,6 +432,7 @@ class ReviewGenerator:
             warnings.append(f"🔧 后处理自动补引用 {self._auto_cite_count} 句（从同章节证据中关键词匹配，建议人工复核）。")
 
         # ── Step 5: 校验 ──
+        self._check_cancel(task_id, "校验引用...")
         draft, verify_warnings = self.verifier.verify(draft, use_llm=self.use_llm_verification)
         warnings.extend(verify_warnings)
 

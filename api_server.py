@@ -58,6 +58,13 @@ def get_llm_client():
     return _llm_client
 
 
+# V33.17 C-2: 同步 /api/review/generate 用的是**共享单例**（会写 use_llm_verification，
+# 并读取 _last_draft / _last_evidence_cards 这两个中间结果）。threaded=True 之后，
+# 并发调用会互相覆盖参数与结果 → 用模块级锁把这条同步路径串行化。
+# 注意：异步版 /api/review/generate_async **不用**这把锁 —— 它每个任务 new 私有实例，天然隔离。
+_review_generate_lock = threading.Lock()
+
+
 def get_review_generator():
     """Lazy-load ReviewGenerator (V25.0)."""
     global _review_generator
@@ -851,30 +858,33 @@ def generate_review():
                     "configured_model": llm.model,
                 }), 503
 
-        generator = get_review_generator()
-        generator.use_llm_verification = use_llm_verify
+        # V33.17 C-2: 共享单例 + threaded=True → 必须串行，否则 use_llm_verification
+        # 与 _last_draft/_last_evidence_cards 会被并发任务互相覆盖。
+        with _review_generate_lock:
+            generator = get_review_generator()
+            generator.use_llm_verification = use_llm_verify
 
-        output = generator.generate(
-            topic=topic,
-            max_papers=max_papers,
-            citation_style=citation_style,
-            review_type=review_type,
-            custom_outline=custom_outline,
-            language=language,
-        )
-
-        # V25.6: 暂存综述结果（含 sentences 和 evidence_cards，用于前端点击溯源）
-        review_id = None
-        try:
-            store = get_review_store()
-            review_id = store.store(
-                review_output=output,
-                draft=generator._last_draft,
-                evidence_cards=generator._last_evidence_cards,
+            output = generator.generate(
+                topic=topic,
+                max_papers=max_papers,
+                citation_style=citation_style,
+                review_type=review_type,
+                custom_outline=custom_outline,
+                language=language,
             )
-        except Exception as store_err:
-            # 暂存失败不影响综述返回
-            print(f"[WARN] Review store failed: {store_err}")
+
+            # V25.6: 暂存综述结果（含 sentences 和 evidence_cards，用于前端点击溯源）
+            review_id = None
+            try:
+                store = get_review_store()
+                review_id = store.store(
+                    review_output=output,
+                    draft=generator._last_draft,
+                    evidence_cards=generator._last_evidence_cards,
+                )
+            except Exception as store_err:
+                # 暂存失败不影响综述返回
+                print(f"[WARN] Review store failed: {store_err}")
 
         return jsonify({
             "topic": output.topic,
@@ -888,6 +898,126 @@ def generate_review():
         })
     except Exception as e:
         return jsonify({"error": f"Review generation failed: {str(e)}"}), 500
+
+
+@app.route("/api/review/generate_async", methods=["POST"])
+def generate_review_async():
+    """V33.17 C-2: 异步生成综述初稿（立即返回 task_id）。
+
+    参数与同步版 `/api/review/generate` **完全一致**：
+      topic(必填) / max_papers=20 / use_llm_verify=false / citation_style="apa" /
+      review_type="narrative" / language="en" / custom_outline(JSON object, 可选)
+
+    返回：{"task_id": "..."}（立即，不等结果）
+
+    轮询：GET /api/review/task/<task_id>（status=running/completed/failed/cancelled）
+    取消：POST /api/review/cancel/<task_id>
+
+    ⚠️ 取消语义（如实说明）：
+      只在**阶段之间**生效 —— 检索前 / 证据抽取前 / 大纲前 / 撰写前 / 校验前，共 5 个点。
+      各阶段内部是原子的：**正在撰写正文时不可中断**，取消要等这一段 LLM 撰写跑完，
+      才会在「校验前」被观察到。所以取消粒度是「阶段级」，不是「句子级」。
+
+    并发隔离：每个任务 new 一个私有 ReviewGenerator（注入的 llm_client / retriever
+      仍是全局单例，模型不重复加载），因此两个任务的 use_llm_verification 不会串台。
+    """
+    json_body = request.get_json(silent=True) or {}
+
+    def get_param(name, default=None):
+        if name in json_body:
+            return json_body[name]
+        return request.values.get(name, default)
+
+    topic = str(get_param("topic", "")).strip()
+    if not topic:
+        return jsonify({"error": "topic is required"}), 400
+
+    max_papers = int(get_param("max_papers", 20))
+    use_llm_verify = str(get_param("use_llm_verify", "false")).lower() in ("true", "1", "yes")
+    citation_style = str(get_param("citation_style", "apa")).strip() or "apa"
+    review_type = str(get_param("review_type", "narrative")).strip() or "narrative"
+    language = str(get_param("language", "en")).strip().lower() or "en"
+    valid_review_types = {
+        "narrative", "comparative", "systematic",
+        "story", "experiment", "experimental", "compare", "meta", "meta-analysis",
+    }
+    if review_type.lower() not in valid_review_types:
+        review_type = "narrative"
+    custom_outline = json_body.get("custom_outline") if isinstance(json_body, dict) else None
+    if custom_outline is not None and not isinstance(custom_outline, dict):
+        return jsonify({"error": "custom_outline must be a JSON object"}), 400
+
+    task_id = task_manager.create_task("generate_review")
+
+    def run_task():
+        try:
+            llm = get_llm_client()
+            if not llm.is_available():
+                task_manager.fail_task(task_id, "LLM not available")
+                return
+
+            # V33.17 C-2: **每个任务 new 私有实例**，绝不复用 get_review_generator() 单例 —— 
+            # 单例的 use_llm_verification 与 _last_draft/_last_evidence_cards 会被并发任务覆盖。
+            # 注入的 llm_client / retriever 本身是全局单例，模型不会重复加载。
+            from services.review.review_generator import ReviewGenerator
+
+            generator = ReviewGenerator(
+                llm_client=get_llm_client(),
+                retriever=get_retriever(),
+                use_llm_verification=use_llm_verify,
+                db_path=str(DB_PATH),
+            )
+
+            output = generator.generate(
+                topic=topic,
+                max_papers=max_papers,
+                citation_style=citation_style,
+                review_type=review_type,
+                custom_outline=custom_outline,
+                language=language,
+                task_id=task_id,  # C-2: 阶段间取消检查 + 进度上报
+            )
+
+            review_id = None
+            try:
+                store = get_review_store()
+                review_id = store.store(
+                    review_output=output,
+                    draft=generator._last_draft,
+                    evidence_cards=generator._last_evidence_cards,
+                )
+            except Exception as store_err:
+                print(f"[WARN] Review store failed: {store_err}")
+
+            task_manager.complete_task(task_id, {
+                "topic": output.topic,
+                "markdown": output.markdown,
+                "references": output.references,
+                "stats": output.stats,
+                "warnings": output.warnings,
+                "relations": output.relations,
+                "conflicts": output.conflicts,
+                "review_id": review_id,
+                # C-2: 回显本次任务实际使用的参数，便于验证并发任务没有串台
+                "use_llm_verify": use_llm_verify,
+                "max_papers": max_papers,
+                "review_type": review_type,
+                "language": language,
+            })
+        except Exception as e:
+            if "Task cancelled by user" in str(e):
+                print("[INFO] Async review generation cancelled by user")
+                task_manager.cancel_task(task_id)
+            else:
+                print(f"[ERROR] Async review generation failed: {e}")
+                import traceback
+                traceback.print_exc()
+                task_manager.fail_task(task_id, str(e))
+
+    thread = threading.Thread(target=run_task, daemon=True)
+    thread.start()
+
+    return jsonify({"task_id": task_id})
 
 
 @app.route("/api/review/<review_id>", methods=["GET"])
@@ -2054,4 +2184,8 @@ if __name__ == "__main__":
         print(f"  ⚠️ LLM 预热失败: {e}")
     print("🔥 预热完成，启动服务")
 
-    app.run(host=host, port=port, debug=debug, threaded=False)
+    # V33.17 C-2: threaded=True —— 不让一次同步重请求（review/generate、agentic/search、
+    # qa/ask）把整站请求循环堵死。安全阀已先就位，顺序不能反：
+    #   1) 异步任务每个 new 私有 ReviewGenerator 实例（参数/中间结果不共享）
+    #   2) 同步 review/generate 由 _review_generate_lock 串行化（共享单例仍安全）
+    app.run(host=host, port=port, debug=debug, threaded=True)

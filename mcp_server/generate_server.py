@@ -23,9 +23,10 @@ serverName: `scipal-generate`　transport: stdio
     · 薄转发：只调 Flask 现有路由，不 import 任何 SciPal 内部模块，不加路由。
     · stdio 模式下 stdout 是 JSON-RPC 通道，本文件不向 stdout 打印。
 
-工具（8 个）
+工具（9 个）
     health / list_saved_outlines / get_saved_outline / get_review /
-    paper_citation_graph / review_task_status / generate_outline / cancel_review_task
+    paper_citation_graph / review_task_status / generate_outline / cancel_review_task /
+    generate_review
 """
 
 from __future__ import annotations
@@ -162,6 +163,39 @@ def generate_outline(
 def cancel_review_task(task_id: str) -> str:
     """按 task_id 取消任务。"""
     return _call("POST", f"/api/review/cancel/{_path_segment(task_id)}")
+
+
+@mcp.tool(
+    description=(
+        "提交综述正文生成任务（POST /api/review/generate_async）。"
+        "**立即返回 task_id，不要同步等待**：整条流水线（检索→证据→大纲→撰写→引用校验）是分钟级。"
+        "用 review_task_status 轮询，建议间隔 ≥5s。"
+        "取消只在**阶段之间**生效（检索/证据/大纲/撰写/校验之间），正在撰写正文时不可中断。"
+        "task_id 存在 Flask 进程内存里，Flask 重启后失效（404）。"
+        "⚠️ 不支持 custom_outline（嵌套 JSON，MCP 参数只吃标量）。"
+    )
+)
+def generate_review(
+    topic: str,
+    max_papers: int = 20,
+    use_llm_verify: bool = False,
+    citation_style: str = "apa",
+    review_type: str = "narrative",
+    language: str = "en",
+) -> str:
+    """提交综述生成任务，立即返回 {"task_id": ...}（异步，不等待正文）。"""
+    return _call(
+        "POST",
+        "/api/review/generate_async",
+        {
+            "topic": topic,
+            "max_papers": max_papers,
+            "use_llm_verify": use_llm_verify,
+            "citation_style": citation_style,
+            "review_type": review_type,
+            "language": language,
+        },
+    )
 
 
 def main() -> None:

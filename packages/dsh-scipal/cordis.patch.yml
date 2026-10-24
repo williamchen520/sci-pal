@@ -78,7 +78,7 @@
         toolCallTimeoutMs: 60000
         failOnStartupError: false
 
-# ── 工具出现形式（重启 DSH 后应有 15 个 mcp__ 工具 = 1 + 6 + 8）──────────────
+# ── 工具出现形式（重启 DSH 后应有 16 个 mcp__ 工具 = 1 + 6 + 9）──────────────
 # 哨兵：
 #   mcp__scipalhello__ping
 # scipal-search（6）：
@@ -88,7 +88,7 @@
 #   mcp__scipal-search__get_paper
 #   mcp__scipal-search__download_online_papers     ← 立即返回 task_id
 #   mcp__scipal-search__download_status            ← 轮询下载进度
-# scipal-generate（8，只读 + 轮询 + 异步大纲提交）：
+# scipal-generate（9，只读 + 轮询 + 两个异步 submit）：
 #   mcp__scipal-generate__health
 #   mcp__scipal-generate__list_saved_outlines
 #   mcp__scipal-generate__get_saved_outline
@@ -97,6 +97,7 @@
 #   mcp__scipal-generate__review_task_status
 #   mcp__scipal-generate__generate_outline         ← 立即返回 task_id（异步，实测 ~0.1s）
 #   mcp__scipal-generate__cancel_review_task
+#   mcp__scipal-generate__generate_review         ← 综述正文（分钟级，立即返 task_id）
 #
 # 前置：SciPal Flask 需先启动（python api_server.py，端口 5000）。
 #       未启动时工具会返回明确错误文本，不会崩。

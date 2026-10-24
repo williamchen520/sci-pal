@@ -98,7 +98,7 @@ D:\sciPal\packages\dsh-scipal
 
 或走 DSH Desktop 的插件安装 UI（若提供该入口）。
 
-安装成功后重启 DSH，工具列表应出现 **15 个**（哨兵 1 + search 6 + generate 8）：
+安装成功后重启 DSH，工具列表应出现 **16 个**（哨兵 1 + search 6 + generate 9）：
 
 ```text
 # 哨兵（1）
@@ -112,7 +112,7 @@ mcp__scipal-search__get_paper
 mcp__scipal-search__download_online_papers
 mcp__scipal-search__download_status
 
-# scipal-generate（8：只读 + 轮询 + 异步大纲提交）
+# scipal-generate（9：只读 + 轮询 + 两个异步 submit）
 mcp__scipal-generate__health
 mcp__scipal-generate__list_saved_outlines
 mcp__scipal-generate__get_saved_outline
@@ -121,6 +121,7 @@ mcp__scipal-generate__paper_citation_graph
 mcp__scipal-generate__review_task_status
 mcp__scipal-generate__generate_outline        ← 立即返 task_id，用 review_task_status 轮询
 mcp__scipal-generate__cancel_review_task
+mcp__scipal-generate__generate_review         ← 综述正文（分钟级，立即返 task_id）
 ```
 
 ## 变更 bundle 后的生效方式
@@ -135,7 +136,7 @@ mcp__scipal-generate__cancel_review_task
 | 改 `locale/*.json` / `icon.svg` | ❌ 不需要 | ✅ 重启后界面才更新 |
 
 > 本机构型**没有 HMR**，profile 只在 DSH 启动时应用。改完文件不重启 = 没变。
-> 重启后按上面的 **15 个**工具核对（旧的单进程 `scipal` server 已不再挂载，
+> 重启后按上面的 **16 个**工具核对（旧的单进程 `scipal` server 已不再挂载，
 > `selftest.py` 会额外跑它 5 个工具做回退覆盖，那是自检数不是挂载数）；少了哪个，先看该 server 的 `health` 工具，
 > 再看 `python.exe` 进程数（3 条 server 命令 × 2 层进程 = 6 个）。
 

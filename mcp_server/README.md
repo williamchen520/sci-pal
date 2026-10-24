@@ -4,8 +4,8 @@
 
 **它不承载任何业务逻辑**：所有工具只做一次 HTTP 转发，不 import SciPal 内部模块。
 
-当前挂载 **3 个 stdio 服务 / 共 15 个工具**：
-`scipalhello`（哨兵 1）+ `scipal-search`（6）+ `scipal-generate`（8）。
+当前挂载 **3 个 stdio 服务 / 共 16 个工具**：
+`scipalhello`（哨兵 1）+ `scipal-search`（6）+ `scipal-generate`（9）。
 
 ---
 
@@ -41,7 +41,7 @@
 |---|---|
 | `_forward.py` | 公共薄转发层：HTTP 请求 + 错误映射，**零业务逻辑** |
 | `search_server.py` | 检索类 server `scipal-search`（6 工具） |
-| `generate_server.py` | 生成/查询类 server `scipal-generate`（8 工具） |
+| `generate_server.py` | 生成/查询类 server `scipal-generate`（9 工具） |
 | `scipal_server.py` | **旧单进程 server（5 工具），已从 bundle 摘除，保留作回退**，不要重新挂载 |
 | `selftest.py` | 自检：拉起 3 个独立 stdio 子进程跑完整协议链路，逐工具 PASS/FAIL |
 | `README.md` | 本文 |
@@ -96,8 +96,8 @@ cd d:\sciPal
 |---|---|---|---|
 | `scipal`（legacy 回退入口） | 5 | 6 | `tools/list` 1 + 5 次调用 |
 | `scipal-search` | 6 | 7 | `tools/list` 1 + 6 次调用 |
-| `scipal-generate` | 8 | 9 | `tools/list` 1 + 8 次调用 |
-| **合计** | **19** | **22** | 哨兵由 `tests/mcp_ping_server.py --selftest` 单独验证 |
+| `scipal-generate` | 9 | 10 | `tools/list` 1 + 9 次调用 |
+| **合计** | **20** | **23** | 哨兵由 `tests/mcp_ping_server.py --selftest` 单独验证 |
 
 特殊断言（阶段五-C C-1）：
 
@@ -111,7 +111,7 @@ cd d:\sciPal
 
 ---
 
-## 5. 工具清单（15 个）
+## 5. 工具清单（16 个）
 
 ### 5.1 `scipal-search`（6）
 
@@ -124,7 +124,7 @@ cd d:\sciPal
 | `download_online_papers` | `POST /api/search/download_online` | `pmc_ids`(必填) → **立即返 `task_id`** |
 | `download_status` | `GET /api/search/download_status` | `task_id`(必填) |
 
-### 5.2 `scipal-generate`（8）
+### 5.2 `scipal-generate`（9）
 
 | MCP 工具 | 对应路由 | 入参 |
 |---|---|---|
@@ -136,20 +136,30 @@ cd d:\sciPal
 | `review_task_status` | `GET /api/review/task/<id>` | `task_id`(必填) |
 | `generate_outline` | `POST /api/review/outline` | `topic`(必填) / `max_papers`=20 / `review_type`=narrative / `language`=en → **立即返 `task_id`** |
 | `cancel_review_task` | `POST /api/review/cancel/<id>` | `task_id`(必填)；不存在/已结束 → 404 |
+| `generate_review` | `POST /api/review/generate_async` | `topic`(必填) / `max_papers`=20 / `use_llm_verify`=False / `citation_style`=apa / `review_type`=narrative / `language`=en → **立即返 `task_id`**（不支持 `custom_outline`） |
 
-> ⚠️ **能力边界（阶段五-C C-1 更正）**：
+> ⚠️ **能力边界（阶段五-C C-2 更新）**：
 >
 > - ✅ `generate_outline` **可提交**：`POST /api/review/outline` 自 V26.3 起就是**异步**的 —
->   服务端建任务后**立即返回 `task_id`**（实测 **~0.13 s**），用 `review_task_status` 轮询
->   （建议间隔 **≥5 s**）。
-> - ❌ `POST /api/review/generate`（综述正文）仍是**同步**实现：一次返回整篇 markdown，分钟级、
->   无 task_id。异步化属阶段五-C 的 **C-2**，需用户单独批准，本 server **不挂**。
-> - ❌ 同样不挂：`/api/agentic/search`、`/api/qa/ask`、`/api/papers/parse`（均为同步）。
+>   服务端建任务后**立即返回 `task_id`**（实测 **~0.13 s**）。
+> - ✅ `generate_review` **可提交**（C-2 新增）：`POST /api/review/generate_async`，
+>   实测 **0.050 / 0.346 s** 返回 `task_id`；整条流水线分钟级。
+>   **不支持 `custom_outline`**（嵌套 JSON，MCP 参数只吃标量）。
+> - ❌ 仍不挂：`/api/agentic/search`、`/api/qa/ask`、`/api/papers/parse`（同步）、
+>   `/api/papers/import`（multipart）。
 >
-> **轮询节奏**：模型**冷加载**时（首次调用，约 +1.5 GB）`/api/health` 实测会被饿到 **20 s 以上**；
-> **模型热之后**同一个任务 5–7 s 跑完，同期 health 稳定在 **0.006 ~ 0.039 s**（05:02 复测 35 次采样）。
-> 所以：**先随便调一次把冷加载熬过去，之后正常轮询即可；间隔仍建议 ≥5 s**（Flask 是
-> `app.run(threaded=False)` 单线程 server，一次同步重请求会让所有请求排队）。
+> **轮询节奏**：C-2 已把 Flask 改为 `threaded=True`，任务运行期间 `/api/health` 实测
+> **0.058–0.132 s**（并发两个综述任务时 10 次采样）。但**冷加载**（embedding/reranker 首次
+> 装载，约 +1.5 GB）仍会把解释器饿到 **20 s 以上** —— 那是**一次性**的，与 async 无关，
+> 先随便调一次熬过去即可。轮询间隔仍建议 **≥5 s**。
+>
+> **取消语义**：只在**阶段之间**生效（检索 / 证据抽取 / 大纲 / 撰写 / 校验，共 5 个点）；
+> **正在撰写正文时不可中断**，取消要等这段 LLM 调用跑完，才会在「校验前」被观察到。
+>
+> 📌 **`≤8 工具` 上限第 2 次破例**：`scipal-generate` 现在 9 个工具。两个 submit 类工具
+> （`generate_outline` / `generate_review`）与同 server 的结果读取（`get_review` /
+> `get_saved_outline` / `review_task_status`）是同一工作流闭环；拆第 4 个 server 要多 1 个
+> 常驻进程（≈68 MB）换不来收益，还多一层配置与故障面。（第 1 次破例是 C-1 的 `generate_outline`。）
 
 ### 5.3 `scipalhello`（1）
 
@@ -365,9 +375,10 @@ server 数 : 3    断言总数 : 22    PASS : 22    FAIL : 0    RESULT : PASS
 |---|---|
 | 单次 HTTP 超时 45 s | 留 15 s 余量给 MCP 的 60 s 上限；更长的任务必须走 job 句柄 + 轮询 |
 | `use_online=True` 可能超时 | 在线检索走 NCBI，网络慢时仍可能触及 45 s；纯在线检索用 `search_online`（默认每个库 20 条） |
-| **重型生成能力未挂载** | `review/generate`、`agentic/search`、`qa/ask`、`papers/parse` 都是**同步阻塞**，超 60 s，当前不暴露为工具（异步化属阶段五-C 的 C-2，需业务代码改动）。⚠️ 例外：**大纲生成 `POST /api/review/outline` 自 V26.3 起就是异步的**（立即返 `task_id`），**已于 C-1 挂载为 `generate_outline` + `cancel_review_task`** |
+| **重型生成能力（C-2 后）** | `agentic/search`、`qa/ask`、`papers/parse` 仍是同步，未挂载；`review/generate` 已有异步版 `POST /api/review/generate_async`，**C-2 已挂载为 `generate_review`**（立即返 `task_id`，实测 **0.050 / 0.346 s**）。大纲 `POST /api/review/outline` 于 C-1 挂载为 `generate_outline` + `cancel_review_task` |
 | **冷启动会把请求循环饿住（一次性）** | 模型**首次加载**时（embedding / reranker，约 +1.5 GB，实测进程 1.47 → 2.94 GB），实测 `/api/health` 被饿到 **21.4 s / 21.8 s**。这是**冷启动一次性**，不是异步本身的问题：**模型热之后**，大纲任务跑完只要 5–7 s，同期连续 35 次 health 采样全在 **0.006 ~ 0.039 s**（2026-10-25 05:02 复测）。第一次用工具前先碰一下 health 或检索，把冷加载熬过去，再也不要套着 20 s 余量做设计 |
-| **单线程 server 才是真瓶颈** | `app.run(threaded=False)`（`api_server.py:2057`）= **同一时刻只处理一个请求**。任何人调一次同步重路由（`review/generate`、`agentic/search`、`qa/ask`），轮询请求就全排队。这与上面的 GIL 冷启动是**两回事**，解法是 `threaded=True` + 给共享的 ReviewGenerator 做隔离（见 C-2 工单） |
+| ~~单线程 server 是真瓶颈~~ → **C-2 已修** | 原 `app.run(threaded=False)` 同一时刻只处理一个请求。C-2 改为 `threaded=True`，**且先补好两道安全阀**：① 异步任务每个 new 私有 `ReviewGenerator`（参数/中间结果不共享）；② 同步 `review/generate` 用 `_review_generate_lock` 串行化（共享单例仍安全）。实测并发两任务时 `/api/health` 0.058–0.132 s |
+| **并发两个重任务会互相拖慢**（未修，属吞吐限制） | 实测同时提交两条综述任务（`max_papers=2`），两者在「检索文献」阶段停留数分钟（CPU / GIL 争抢 + 共享 retriever）。**不串台**（私有实例隔离生效），但**吞吐显著下降** —— 批量生成建议串行 |
 | 长任务无同步等待 | DSH 不支持 task-based execution，本设计一律「立即返回句柄 + 轮询」（`download_online_papers` → `download_status`） |
 | `search_hybrid` 结果体量 | 默认 `top_k=10`；大结果会占用较多上下文，按需调小 |
 | 每 server ≤ 8 工具 | 约束是**模型上下文与选择准确率**，不是显存（MCP 进程不加载模型，≈68 MB/个） |
