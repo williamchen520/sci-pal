@@ -208,7 +208,7 @@ def seed_test_data():
     print("=" * 60)
     print()
     print("You can now:")
-    print("  1. Start the server: python app.py")
+    print("  1. Start the server: python api_server.py")
     print("  2. Open http://localhost:5000 in your browser")
     print("  3. Search for 'CRISPR' or 'deep learning'")
     print("  4. Ask the AI: 'What is CRISPR?' or 'How accurate is the medical imaging model?'")

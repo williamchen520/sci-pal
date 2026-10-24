@@ -1,5 +1,16 @@
-"""
-Sci-Pal Research Assistant - Main Entry
+"""Sci-Pal Research Assistant —— 旧版入口（已废弃，勿运行）。
+
+🔴 不要把它当服务入口：
+    1. 端口冲突：config/settings.py 的 PORT = 5000，与 api_server.py 抢同一端口，
+       两者不可能同时运行。
+    2. 路由残缺：这里只注册了 3 个 blueprint（papers / search / ai）；
+       /api/review/*、/api/tasks/*、/api/abstracts/*、/api/graph/*、/api/qa/* 等
+       在 api_server.py 上存在的路由，这里一个都没有 → 用它会大面积 404。
+    3. routes/ 这套 blueprint 体系整体已被 api_server.py 取代
+       （writing_bp 甚至没有任何入口注册，是孤儿）。
+
+主入口：python api_server.py
+处置结论：C-1 结论 A「确认废弃」；文件删除需用户点头（见 docs/工单-C-app-py入口.md）。
 """
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
