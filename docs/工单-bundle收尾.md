@@ -126,6 +126,37 @@
 
 ---
 
+## 四之二、E-5 · 修 README 的还原命令警告（验收新发现，🔴 请一并做）
+
+**现状**：`packages/dsh-scipal/README.md:38` 给的还原命令是
+
+```powershell
+Copy-Item "D:\sciPal\tests\cordis.patch.yml.bak" "$env:USERPROFILE\.dsh\profiles\desktop\cordis.patch.yml" -Force
+```
+
+`tests/cordis.patch.yml.bak` **只有 297 字节**（阶段零基线，仅 `- id: locale` 一条）。
+而当前 `~/.dsh/profiles/desktop/cordis.patch.yml` 是 **4209 字节 / 6 条顶层条目**（已实测）：
+
+| # | id | 内容 |
+|---|---|---|
+| 0 | `locale` | `preference: en` |
+| 1 | `agent-default-model` | `deepseek-account` / `deepseek-flash` / `reasoningEffort: high` |
+| 2 | **`ui-settings-account`** | **账户状态**：`step: done`、`purpose`、`process`、`completion`、`usage`、`developerTools` |
+| 3 | `ui-chat` | `transcriptView`、`performanceUsage` |
+| 4 | `ui-settings` | `enabled: False` |
+| 5 | `insert` | 两条 MCP（`scipalhello` / `scipal`）—— **这才是要清掉的** |
+
+**风险**：README 第 41-43 行的警告只泛泛说「可能加过 `agent-default-model`、`ui-*`」，
+**没点明第 2 条是账户状态**。误执行会丢掉 DSH 账户引导状态和界面偏好 —— 那是**用户状态**，不是配置。
+
+**要做的**（只改文档，不动任何文件）：
+1. 把警告改具体：明确列出会被抹掉的条目，**特别点名 `ui-settings-account` 含账户状态**。
+2. 给出**推荐做法**：**不要整体还原**，只删除第 5 条 `insert` 块（两条 MCP），保留第 0-4 条。
+3. 把 `tests/backups/`（E-2 会生成的带时间戳备份）作为**推荐还原源**，
+   `tests/cordis.patch.yml.bak`（297B 基线）降级为「仅当要彻底重置 profile 时用」。
+
+---
+
 ## 五、明确不要做的事
 
 - ❌ 不要写 `~/.dsh/**` 任何文件（官方禁止；且该文件 git 救不回来）
