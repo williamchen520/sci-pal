@@ -363,7 +363,7 @@ server 数 : 3    断言总数 : 22    PASS : 22    FAIL : 0    RESULT : PASS
 |---|---|
 | 单次 HTTP 超时 45 s | 留 15 s 余量给 MCP 的 60 s 上限；更长的任务必须走 job 句柄 + 轮询 |
 | `use_online=True` 可能超时 | 在线检索走 NCBI，网络慢时仍可能触及 45 s；纯在线检索用 `search_online`（默认每个库 20 条） |
-| **重型生成能力未挂载** | `review/generate`、`agentic/search`、`qa/ask`、`papers/parse` 都是**同步阻塞**，超 60 s，当前不暴露为工具（异步化属阶段五-C）。⚠️ 例外：**大纲生成 `POST /api/review/outline` 自 V26.3 起就是异步的**（立即返 `task_id`，实测 0.13 s），零业务改动即可挂载 |
+| **重型生成能力未挂载** | `review/generate`、`agentic/search`、`qa/ask`、`papers/parse` 都是**同步阻塞**，超 60 s，当前不暴露为工具（异步化属阶段五-C 的 C-2，需业务代码改动）。⚠️ 例外：**大纲生成 `POST /api/review/outline` 自 V26.3 起就是异步的**（立即返 `task_id`），**已于 C-1 挂载为 `generate_outline` + `cancel_review_task`** |
 | 异步任务也会拖慢请求循环 | `app.run(threaded=False)`（`api_server.py:2057`）= **单线程**；实测大纲任务运行期间 `/api/health` 被饿到 **21.4 s / 21.8 s**，任务结束后回到 0.03 s。轮询间隔与 MCP 超时都要按这个量级留余量 |
 | 长任务无同步等待 | DSH 不支持 task-based execution，本设计一律「立即返回句柄 + 轮询」（`download_online_papers` → `download_status`） |
 | `search_hybrid` 结果体量 | 默认 `top_k=10`；大结果会占用较多上下文，按需调小 |
