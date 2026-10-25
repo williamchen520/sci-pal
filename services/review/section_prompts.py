@@ -83,15 +83,22 @@ def evidence_lines(evidence: Sequence[Mapping[str, Any]]) -> str:
     """Render evidence cards as the ``[id] (type) content`` block."""
     lines: list[str] = []
     for card in evidence:
-        evidence_id = card.get("evidence_id", "")
-        evidence_type = card.get("evidence_type", "fact")
+        evidence_id = _field(card, "evidence_id", "")
+        evidence_type = _field(card, "evidence_type", "fact")
         if hasattr(evidence_type, "value"):
             evidence_type = evidence_type.value
-        lines.append(f"[{evidence_id}] ({evidence_type}) {card.get('content', '')}\n")
-        quote = str(card.get("original_quote") or "")
+        lines.append(f"[{evidence_id}] ({evidence_type}) {_field(card, 'content', '')}\n")
+        quote = str(_field(card, "original_quote", "") or "")
         if quote:
             lines.append(f"  Quote: {quote[:200]}\n")
     return "".join(lines)
+
+
+def _field(obj: Any, name: str, default: Any = "") -> Any:
+    """Read a field from either a mapping or a pydantic/domain object."""
+    if isinstance(obj, Mapping):
+        return obj.get(name, default)
+    return getattr(obj, name, default)
 
 
 def build_write_prompt(
@@ -107,15 +114,15 @@ def build_write_prompt(
 ) -> tuple[str, str]:
     """Return ``(section_type, user_prompt)`` for one section draft."""
     lang = "zh" if str(language).lower().startswith("zh") else "en"
-    section_type = detect_section_type(str(section.get("title", "")))
+    section_type = detect_section_type(str(_field(section, "title", "")))
     review_key = str(review_type).lower()
 
     hint = SECTION_HINTS[lang].get(section_type, SECTION_HINTS[lang]["body"])
     type_hint = REVIEW_TYPE_HINTS[lang].get(review_key, REVIEW_TYPE_HINTS[lang]["narrative"])
     type_label = REVIEW_TYPE_LABELS[lang].get(review_key, REVIEW_TYPE_LABELS[lang]["narrative"])
 
-    title = str(section.get("title", ""))
-    description = str(section.get("description", ""))
+    title = str(_field(section, "title", ""))
+    description = str(_field(section, "description", ""))
     evidence_text = evidence_lines(evidence)
 
     if lang == "en":

@@ -28,6 +28,7 @@ from typing import Optional
 from .citation_formatter import PaperMetadata, build_metadata_from_db_row, format_citation, format_citation_list, get_missing_fields_report, get_supported_styles, metadata_to_csl_json
 from .citation_verifier import CitationVerifier
 from .evidence_extractor import EvidenceExtractor
+from .section_prompts import build_write_prompt
 from .llm_client import LLMClient, LLMError
 from .models import (
     EvidenceCard,
@@ -1231,143 +1232,18 @@ class ReviewGenerator:
         V25.9: 支持英文/中文。
         V32.5: 章节类型感知 + 渐进式上下文注入 + 证据-声明矩阵 + 迭代精炼（feedback参数）。
         """
-        # 构建证据上下文
-        evidence_text = ""
-        for card in evidence:
-            evidence_text += f"[{card.evidence_id}] ({card.evidence_type.value}) {card.content}\n"
-            if card.original_quote:
-                evidence_text += f"  Quote: {card.original_quote[:200]}\n"
-
-        # V32.5: 章节类型感知——根据章节标题判断章节类型，用不同的写作风格
-        section_title_lower = section.title.lower()
-        if any(kw in section_title_lower for kw in ["introduction", "background", "前言", "引言", "背景"]):
-            section_type = "introduction"
-            section_type_hint_en = "This is the INTRODUCTION section. Start with broad context, narrow down to the specific topic, state the review's scope and objectives, and end with a brief roadmap of the review."
-            section_type_hint_zh = "这是引言部分。从宏观背景切入，逐步聚焦到具体主题，明确综述的范围和目标，最后简要介绍综述的结构安排。"
-        elif any(kw in section_title_lower for kw in ["method", "methodology", "approach", "方法", "材料"]):
-            section_type = "methods"
-            section_type_hint_en = "This is the METHODS section. Be precise and structured, describe search strategies, inclusion/exclusion criteria, data extraction, and analysis methods clearly. Use a systematic, objective tone."
-            section_type_hint_zh = "这是方法学部分。要精确、有条理，清晰描述检索策略、纳入排除标准、数据提取和分析方法。使用系统、客观的语气。"
-        elif any(kw in section_title_lower for kw in ["result", "finding", "结果", "发现"]):
-            section_type = "results"
-            section_type_hint_en = "This is the RESULTS section. Present findings objectively, organize by themes or subtopics, report quantitative data where available, and avoid interpretation (save that for Discussion)."
-            section_type_hint_zh = "这是结果部分。客观呈现研究发现，按主题或子主题组织，有定量数据时要报告，避免过度解读（解读放在讨论部分）。"
-        elif any(kw in section_title_lower for kw in ["discussion", "讨论"]):
-            section_type = "discussion"
-            section_type_hint_en = "This is the DISCUSSION section. Interpret the findings, compare across studies, explain contradictions, discuss mechanisms and implications, acknowledge limitations, and suggest future directions."
-            section_type_hint_zh = "这是讨论部分。解读研究发现，跨研究比较，解释矛盾，讨论机制和意义，承认局限性，提出未来方向。"
-        elif any(kw in section_title_lower for kw in ["conclusion", "summary", "perspective", "future", "结论", "总结", "展望"]):
-            section_type = "conclusion"
-            section_type_hint_en = "This is the CONCLUSION section. Summarize the key findings concisely, emphasize the main contributions, discuss broader implications, and end with a forward-looking perspective. Do not introduce new evidence."
-            section_type_hint_zh = "这是结论部分。简明总结主要发现，强调核心贡献，讨论更广泛的意义，以前瞻性视角结尾。不要引入新的证据。"
-        else:
-            section_type = "body"
-            section_type_hint_en = "This is a main body section. Present and synthesize the evidence, organize by logical themes, compare and contrast findings, and build toward the overall narrative."
-            section_type_hint_zh = "这是正文主体部分。呈现和综合证据，按逻辑主题组织，比较和对比不同研究的发现，构建整体叙事。"
-
-        # V25.9: 按语言选择 system prompt
+        # B5b: 提示词拼装已抽到 services/review/section_prompts.py
         system_prompt = WRITE_SYSTEM_PROMPT_EN if language.lower() == "en" else WRITE_SYSTEM_PROMPT_ZH
-
-        if language.lower() == "en":
-            type_hint = {
-                "narrative": "Organize by logical threads, progressing layer by layer, telling the research story clearly.",
-                "comparative": "Focus on comparing differences between experimental methods, model systems, and conditions.",
-                "systematic": "Maintain methodological rigor, explicitly describe evidence sources and quality.",
-            }.get(review_type.lower(), "Organize by logical threads, progressing layer by layer.")
-
-            type_label = {
-                "narrative": "Narrative Review",
-                "comparative": "Comparative Review",
-                "systematic": "Systematic Review",
-            }.get(review_type.lower(), "Narrative Review")
-
-            # V32.5: 构建前文摘要上下文（如果有的话）
-            context_block = ""
-            if previous_summary:
-                context_block = (
-                    f"Previous sections summary (for coherence, do NOT repeat this content):\n"
-                    f"{previous_summary}\n\n"
-                )
-
-            # V32.5: 构建评审反馈上下文（如果有的话，这是修订模式）
-            feedback_block = ""
-            if feedback:
-                feedback_block = (
-                    f"## Previous Draft Review Feedback (you are REVISING the draft based on this feedback):\n"
-                    f"{feedback}\n\n"
-                    f"Please address ALL the issues and suggestions above in your revised draft.\n\n"
-                )
-
-            user_prompt = (
-                f"Review type: {type_label}\n"
-                f"Writing style: {type_hint}\n"
-                f"Section type: {section_type}\n"
-                f"Section-specific guidance: {section_type_hint_en}\n\n"
-                f"Section position: Section {section_index + 1} of {total_sections}\n\n"
-                f"Section title: {section.title}\n"
-                f"Section description: {section.description}\n\n"
-                f"{context_block}"
-                f"{feedback_block}"
-                f"Available evidence cards:\n{evidence_text}\n\n"
-                f"## Writing Process (Claims-Evidence Matrix):\n"
-                f"Step 1: Identify 3-5 key claims (main points) this section should make.\n"
-                f"Step 2: For each claim, explicitly map which evidence card IDs support it (e.g., Claim 1 ← [ev_001, ev_003]).\n"
-                f"Step 3: Write the section text based ONLY on these evidence-backed claims. Every declarative sentence must trace back to at least one evidence card.\n\n"
-                f"Based on the above evidence cards, write the review text for this section (200-400 words). "
-                f"Every declarative sentence must end with a [evidence_id] citation marker. "
-                f"Do NOT repeat content already covered in previous sections. "
-                f"Do NOT make claims that are not supported by the provided evidence cards."
-            )
-        else:
-            type_hint = {
-                "narrative": "按逻辑线索组织，层层递进，像讲故事一样把研究脉络讲清楚。",
-                "comparative": "重点对比不同实验方法、模型系统和实验条件之间的差异，明确指出哪些研究用了什么方法、得出了什么不同结论。",
-                "systematic": "保持方法学严谨性，明确描述证据来源和质量，区分事实和推断，强调证据的一致性和差异性。",
-            }.get(review_type.lower(), "按逻辑线索组织，层层递进。")
-
-            type_label = {
-                "narrative": "叙事型综述",
-                "comparative": "实验对比型综述",
-                "systematic": "系统综述型",
-            }.get(review_type.lower(), "叙事型综述")
-
-            # V32.5: 构建前文摘要上下文（如果有的话）
-            context_block = ""
-            if previous_summary:
-                context_block = (
-                    f"前文摘要（用于保持连贯，不要重复这些内容）：\n"
-                    f"{previous_summary}\n\n"
-                )
-
-            # V32.5: 构建评审反馈上下文（如果有的话，这是修订模式）
-            feedback_block = ""
-            if feedback:
-                feedback_block = (
-                    f"## 初稿评审反馈（你正在根据此反馈修订初稿）：\n"
-                    f"{feedback}\n\n"
-                    f"请在修订稿中解决上述所有问题和建议。\n\n"
-                )
-
-            user_prompt = (
-                f"综述模板类型：{type_label}\n"
-                f"写作风格要求：{type_hint}\n"
-                f"章节类型：{section_type}\n"
-                f"章节写作指导：{section_type_hint_zh}\n\n"
-                f"章节位置：第 {section_index + 1} / {total_sections} 章\n\n"
-                f"章节标题：{section.title}\n"
-                f"章节描述：{section.description}\n\n"
-                f"{context_block}"
-                f"{feedback_block}"
-                f"可用证据卡片：\n{evidence_text}\n\n"
-                f"## 写作流程（证据-声明矩阵）：\n"
-                f"第一步：先确定本章要讲的 3-5 个核心要点（声明）。\n"
-                f"第二步：为每个要点明确映射支持它的证据卡片ID（例如：要点1 ← [ev_001, ev_003]）。\n"
-                f"第三步：仅基于这些有证据支撑的要点来撰写正文。每个陈述句都必须能追溯到至少一个证据卡片。\n\n"
-                f"请根据以上证据卡片，撰写本章节的综述正文（200-400字）。"
-                f"每个陈述句末尾必须标注 [证据ID] 引用标记。"
-                f"不要重复前面章节已经讲过的内容。"
-                f"不要做出没有证据卡片支撑的声明。"
-            )
+        _, user_prompt = build_write_prompt(
+            section,
+            evidence,
+            review_type=review_type,
+            language=language,
+            previous_summary=previous_summary,
+            feedback=feedback,
+            section_index=section_index,
+            total_sections=total_sections,
+        )
 
         try:
             return self.llm.chat(system_prompt, user_prompt)
