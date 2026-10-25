@@ -23,6 +23,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # V26.3: 导入任务管理器
 from services.review.task_manager import task_manager
 
+# B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
+from contracts import InternalError, fail, ok
+from routes.papers import build_papers_blueprint
+from routes.reviews import build_reviews_blueprint
+from routes.search import build_search_blueprint
+from routes.system import build_system_blueprint
+
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 DOCUMENTS_DIR = PROJECT_ROOT / "documents"
@@ -129,6 +136,34 @@ def get_graph():
         from services.search.graph_traverser import GraphTraverser
         _graph = GraphTraverser()
     return _graph
+
+
+# B3a: system 域只读路由（graph/stats、communities）已移入 routes/system.py
+app.register_blueprint(
+    build_system_blueprint(db_path=DB_PATH, get_graph=get_graph, log=app.logger)
+)
+# B3b: papers 域只读路由（列表/详情/引文邻居）已移入 routes/papers.py
+app.register_blueprint(
+    build_papers_blueprint(db_path=DB_PATH, get_graph=get_graph, log=app.logger)
+)
+
+
+def _download_task_manager():
+    """Lazy accessor so routes/search.py never imports the download subsystem."""
+    from services.search.online_downloader import get_task_manager
+
+    return get_task_manager()
+
+
+# B3c: 下载状态/历史/队列三条只读路由已移入 routes/search.py
+app.register_blueprint(
+    build_search_blueprint(get_task_manager=_download_task_manager, log=app.logger)
+)
+
+# B4a: 综述查询（reviews 表，CLI/外部生成的综述对前端可见）
+app.register_blueprint(
+    build_reviews_blueprint(db_path=DB_PATH, log=app.logger)
+)
 
 
 def get_hybrid():
@@ -474,178 +509,13 @@ def agentic_search_async():
     return jsonify({"task_id": task_id})
 
 
-@app.route("/api/papers", methods=["GET"])
-def list_papers():
-    """List all papers with basic metadata."""
-    import sqlite3
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute("""
-        SELECT paper_id, title, authors, journal, year, doi,
-               total_paragraphs, total_figures, total_tables
-        FROM papers ORDER BY year DESC, title
-    """).fetchall()
-    conn.close()
-    return jsonify({"count": len(rows), "papers": [dict(r) for r in rows]})
+# papers 域只读路由（列表/详情/引文邻居）已迁入 routes/papers.py（B3b）
 
 
-@app.route("/api/papers/<paper_id>", methods=["GET"])
-def paper_detail(paper_id):
-    """Get detailed metadata for a single paper."""
-    import sqlite3
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    paper = conn.execute(
-        "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)).fetchone()
-    if not paper:
-        conn.close()
-        return jsonify({"error": "Paper not found"}), 404
-
-    # Citation graph neighbors
-    cites = conn.execute("""
-        SELECT p.paper_id, p.title, p.year, c.confidence
-        FROM cross_paper_index c
-        JOIN papers p ON p.paper_id = c.target_paper_id
-        WHERE c.source_paper_id = ? AND c.relation = 'cites'
-        ORDER BY c.confidence DESC
-    """, (paper_id,)).fetchall()
-    cited_by = conn.execute("""
-        SELECT p.paper_id, p.title, p.year, c.confidence
-        FROM cross_paper_index c
-        JOIN papers p ON p.paper_id = c.source_paper_id
-        WHERE c.target_paper_id = ? AND c.relation = 'cites'
-        ORDER BY c.confidence DESC
-    """, (paper_id,)).fetchall()
-    similar = conn.execute("""
-        SELECT p.paper_id, p.title, p.year, c.confidence
-        FROM cross_paper_index c
-        JOIN papers p ON p.paper_id = c.target_paper_id
-        WHERE c.source_paper_id = ? AND c.relation = 'similar'
-        ORDER BY c.confidence DESC LIMIT 10
-    """, (paper_id,)).fetchall()
-    conn.close()
-
-    return jsonify({
-        "paper": dict(paper),
-        "cites": [dict(r) for r in cites],
-        "cited_by": [dict(r) for r in cited_by],
-        "similar": [dict(r) for r in similar],
-    })
+# paper_detail 已迁入 routes/papers.py（B3b）
 
 
-@app.route("/api/papers/<paper_id>/graph", methods=["GET"])
-def paper_graph(paper_id):
-    """
-    Graph traversal from a paper.
-
-    Query params:
-      relation: 'cites' | 'similar' | 'all' (default 'all')
-      direction: 'out' | 'in' | 'both' (default 'both')
-      max_hops: BFS depth (default 1, max 3)
-      max_total: max papers to return (default 10)
-    """
-    relation = request.args.get("relation", "all")
-    direction = request.args.get("direction", "both")
-    max_hops = min(int(request.args.get("max_hops", 1)), 3)
-    max_total = int(request.args.get("max_total", 10))
-
-    try:
-        graph = get_graph()
-        if max_hops <= 1:
-            neighbors = graph.get_neighbors(
-                [paper_id], relation=relation, direction=direction)
-            neighbors = neighbors[:max_total]
-        else:
-            neighbors = graph.traverse(
-                [paper_id], max_hops=max_hops, max_total=max_total,
-                relation=relation)
-        return jsonify({
-            "paper_id": paper_id,
-            "relation": relation,
-            "max_hops": max_hops,
-            "count": len(neighbors),
-            "neighbors": neighbors,
-        })
-    except Exception as e:
-        return jsonify({"error": f"Graph traversal failed: {str(e)}"}), 500
-
-
-@app.route("/api/graph/stats", methods=["GET"])
-def graph_stats():
-    """Return graph statistics (nodes, edges, components, top-cited)."""
-    try:
-        graph = get_graph()
-        return jsonify(graph.stats())
-    except Exception as e:
-        return jsonify({"error": f"Graph stats failed: {str(e)}"}), 500
-
-
-@app.route("/api/communities", methods=["GET"])
-def list_communities():
-    """
-    List paper communities (V24.3).
-
-    Query params:
-      min_size:  minimum community size (default 1)
-      detailed:  if '1', include member paper list per community
-    """
-    import sqlite3
-    min_size = int(request.args.get("min_size", 1))
-    detailed = request.args.get("detailed", "0") == "1"
-
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-
-    try:
-        comms = conn.execute("""
-            SELECT c.community_id, c.size, c.representative_paper_id,
-                   c.summary, c.keywords, c.avg_year,
-                   p.title as rep_title, p.authors as rep_authors,
-                   p.journal as rep_journal, p.year as rep_year
-            FROM paper_communities c
-            LEFT JOIN papers p ON c.representative_paper_id = p.paper_id
-            WHERE c.size >= ?
-            ORDER BY c.size DESC
-        """, (min_size,)).fetchall()
-    except sqlite3.OperationalError:
-        conn.close()
-        return jsonify({
-            "error": "Communities not built yet. Run: python -m build_db.build_communities --apply"
-        }), 404
-
-    result = []
-    for c in comms:
-        item = {
-            "community_id": c["community_id"],
-            "size": c["size"],
-            "representative": {
-                "paper_id": c["representative_paper_id"],
-                "title": c["rep_title"],
-                "authors": c["rep_authors"],
-                "journal": c["rep_journal"],
-                "year": c["rep_year"],
-            },
-            "summary": c["summary"],
-            "keywords": c["keywords"],
-            "avg_year": c["avg_year"],
-        }
-        if detailed:
-            members = conn.execute("""
-                SELECT m.paper_id, m.centrality, p.title, p.year, p.journal
-                FROM community_members m
-                LEFT JOIN papers p ON m.paper_id = p.paper_id
-                WHERE m.community_id = ?
-                ORDER BY m.centrality DESC
-            """, (c["community_id"],)).fetchall()
-            item["members"] = [dict(m) for m in members]
-        result.append(item)
-
-    conn.close()
-    return jsonify({
-        "total_communities": len(result),
-        "total_papers": sum(c["size"] for c in result),
-        "communities": result,
-    })
+# paper_graph 已迁入 routes/papers.py（B3b）
 
 
 # ---------------------------------------------------------------------------
@@ -1173,15 +1043,17 @@ def review_llm_status():
             hint = None if available else "配置 API key: export SCIPAL_LLM_API_KEY=sk-你的key"
         else:
             hint = None if available else "Start Ollama: ollama serve && ollama pull qwen2.5:14b"
-        return jsonify({
+        return jsonify(ok({
             "available": available,
             "provider": provider,
             "configured_model": llm.model,
             "installed_models": models,
             "hint": hint,
-        })
-    except Exception as e:
-        return jsonify({"available": False, "error": str(e)}), 500
+        }))
+    except Exception:
+        app.logger.exception("review_llm_status failed")
+        error = InternalError("LLM status check failed")
+        return jsonify(fail(error)), error.status
 
 
 # ---------------------------------------------------------------------------
@@ -1475,122 +1347,17 @@ def download_online_papers():
         return jsonify({"error": f"启动下载任务失败: {str(e)}"}), 500
 
 
-@app.route("/api/search/download_status", methods=["GET"])
-def download_status():
-    """
-    V33.2: 查询在线文献下载任务进度。
-
-    Query params:
-      task_id: 任务 ID（必填）
-
-    Returns:
-      {
-        "task_id": "dl_abc123...",
-        "status": "running" | "completed" | "failed",
-        "current_stage": "downloading" | "importing" | "indexing" | "completed",
-        "total": 10,
-        "downloaded": 5,
-        "download_failed": 0,
-        "download_skipped": 2,
-        "imported": 5,
-        "indexed": 5,
-        "new_paper_count": 7,
-        "progress_percent": 75,
-        "elapsed_seconds": 45.2,
-        "error": null
-      }
-    """
-    task_id = request.args.get("task_id", "").strip()
-
-    if not task_id:
-        return jsonify({"error": "缺少 task_id 参数"}), 400
-
-    try:
-        from services.search.online_downloader import get_task_manager
-        manager = get_task_manager()
-        task = manager.get_task(task_id)
-
-        if task is None:
-            return jsonify({"error": f"任务不存在: {task_id}"}), 404
-
-        return jsonify(task.to_dict())
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"查询任务状态失败: {str(e)}"}), 500
+# download_status 已迁入 routes/search.py（B3c）
 
 
 # ============================================================
 # V33.3: 下载历史、队列管理、失败重试 API
 # ============================================================
 
-@app.route("/api/search/download_history", methods=["GET"])
-def download_history():
-    """
-    V33.3: 获取下载历史记录（按时间倒序）。
-
-    Query params:
-      limit: 返回条数（默认 20，最多 50）
-
-    Returns:
-      {
-        "tasks": [...],  // 任务列表
-        "total": int,
-        "queue_status": { current_task_id, queue_length, queued_task_ids }
-      }
-    """
-    limit = min(int(request.args.get("limit", 20)), 50)
-
-    try:
-        from services.search.online_downloader import get_task_manager
-        manager = get_task_manager()
-        tasks = manager.list_tasks(limit=limit)
-        queue_status = manager.get_queue_status()
-
-        return jsonify({
-            "tasks": tasks,
-            "total": len(tasks),
-            "queue_status": queue_status,
-        })
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"获取下载历史失败: {str(e)}"}), 500
+# download_history 已迁入 routes/search.py（B3c）
 
 
-@app.route("/api/search/download_queue", methods=["GET"])
-def download_queue_status():
-    """
-    V33.3: 获取下载队列状态。
-
-    Returns:
-      {
-        "current_task_id": str | null,
-        "queue_length": int,
-        "queued_task_ids": [...],
-        "current_task": {...} | null  // 当前任务详情
-      }
-    """
-    try:
-        from services.search.online_downloader import get_task_manager
-        manager = get_task_manager()
-        queue_status = manager.get_queue_status()
-
-        # 获取当前任务详情
-        current_task = None
-        if queue_status["current_task_id"]:
-            task = manager.get_task(queue_status["current_task_id"])
-            if task:
-                current_task = task.to_dict()
-
-        return jsonify({
-            **queue_status,
-            "current_task": current_task,
-        })
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"获取队列状态失败: {str(e)}"}), 500
+# download_queue 已迁入 routes/search.py（B3c）
 
 
 @app.route("/api/search/retry_download", methods=["POST"])
