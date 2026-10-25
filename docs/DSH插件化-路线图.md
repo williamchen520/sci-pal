@@ -85,7 +85,7 @@ MCP 进程不加载模型，实测单个 ≈65–70 MB）。两次破例都在 `
 | `POST /api/papers/parse` 挂进 MCP | **暂不做** | 同步解析且耗时不可控；`/api/papers/import` 是 multipart，MCP 传不了文件流 |
 | `scipal-guard` 独立 server | **仍暂缓** | 原计划依赖的「领域词表校验」能力不存在；防幻觉结论已从 QA 结果的 `validation` 字段可得 |
 | 同步路由下线（`review/generate`、`qa/ask`、`agentic/search`） | **不下线** | 前端仍在用；async 是**新增**不是替换 |
-| 看门狗日志落盘 | 建议做（小） | `log()` 是 `print()`，计划任务下没有控制台 → 日志全丢，诊断缺第一手证据 |
+| 看门狗日志落盘 | **已完成** | `logs/sciPal_watchdog.log`（stdout 双写 + RUN MARKER + 5 MB 轮转）；状态切换日志带 `listening pids/count`，`count > 1` 额外打 `⚠️ 检测到多实例监听` |
 | `review` 任务跨重启丢失 | 已知限制 | `services/review/task_manager.py` 是进程内内存 dict；要持久化得改走 `tasks` 表，属新需求 |
 
 ---
@@ -282,7 +282,9 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
   宿主按后代进程树清理时仍会被杀。已实测两次确认。
   → 代码与文案四处（docstring / epilogue / 工具错误文案 / `--help`）均已显式声明，
   用户不会被误导。**持久运行只能靠计划任务（见 §2.9.2，已于 2026-10-25 安装并验收）。**
-- **看门狗日志不落盘**：`log()` 是 `print()` 到 stdout，计划任务下没有控制台 → 日志全丢。
-  诊断「实例堆积」那次靠的是数 PID 和掐秒表，不是日志。建议改成写 `logs/sciPal_watchdog.log`。
+- **看门狗日志已落盘**：`logs/sciPal_watchdog.log`（stdout 双写，5 MB 轮转保留 2 份）。
+  每次启动写 RUN MARKER（含脚本 `mtime/size`，可直接判断跑的是不是修好的那版）；
+  状态切换日志带 `listening pids/count`，`count > 1` 会额外打 `⚠️ 检测到多实例监听`。
+  写失败（磁盘满/权限/目录被删）只提示一次后静默走 stdout，不影响守护运行。
 - 唯一失败的自检项：`abstracts.db: no such table: abstracts`（历史遗留，未触碰）。
 - `self_check.py` 基线：通过 111 / 失败 1 / 总计 122。

@@ -22,6 +22,23 @@
     D:/sciPal/venv_sciPal_py312/Scripts/python.exe scripts/sciPal_watchdog.py --once
     D:/sciPal/venv_sciPal_py312/Scripts/python.exe scripts/sciPal_watchdog.py
 
+日志（V33.17 · 看门狗日志落盘）
+    文件：`logs/sciPal_watchdog.log` —— **绝对路径**，由 `PROJECT_ROOT` 派生（计划任务的
+        cwd 可能是 `C:/Windows/System32`，相对路径会写丢）。可用环境变量
+        `SCIPAL_WATCHDOG_LOG` 覆盖，仅供验收时临时指向别处，不参与生产逻辑。
+    格式：与 stdout 完全一致 —— `[YYYY-MM-DD HH:MM:SS] msg`，UTF-8，追加写。
+    双写：同一行同时进 stdout 与文件；**每次写入 open/close**，不复用长期句柄
+        （日志量极小，而长期句柄在进程被强杀时可能丢缓冲）。
+    轮转：超过 `LOG_MAX_BYTES`（5 MB）时轮转为 `.1` / `.2`，保留 `LOG_BACKUPS`（2）份，
+        超出丢最老；轮转失败不影响运行。
+    启动标记：每次启动写 RUN MARKER（pid / BASE_URL / python 路径 / **脚本 mtime + size**
+        / 上次退出是否干净），用于回答「跑的是不是修好的那版」。
+    降级：日志不可写（磁盘满 / 权限不足 / 目录被删）时**只向 stderr 提示一次**，
+        之后静默走 stdout，主循环照常运行 —— 日志失败绝不能让管家死掉。
+
+    判断实例堆积只需看两个信号：**多条「已拉起」没有对应的「服务已就绪」**，以及
+    **`listening count > 1`**（此时会额外打一条 `⚠️ 检测到多实例监听`）。
+
 说明
     本脚本不 import 任何 SciPal 业务模块，也不改动 api_server.py。
 """
@@ -52,6 +69,19 @@ API_SCRIPT = PROJECT_ROOT / "api_server.py"
 LOGS_DIR = PROJECT_ROOT / "logs"
 API_LOG = LOGS_DIR / "sciPal_api.log"
 LOCK_FILE = LOGS_DIR / "sciPal_watchdog.lock"
+
+# L-1: 看门狗自身日志 —— **绝对路径**，由 PROJECT_ROOT / LOGS_DIR 派生。
+# 计划任务的工作目录可能是 C:\Windows\System32，用相对路径会把日志写到别处（甚至丢）。
+# SCIPAL_WATCHDOG_LOG 仅供验收时指向临时文件，不参与生产逻辑。
+_env_log = os.environ.get("SCIPAL_WATCHDOG_LOG", "").strip()
+WATCHDOG_LOG = (
+    Path(_env_log).expanduser().resolve()
+    if _env_log
+    else (LOGS_DIR / "sciPal_watchdog.log").resolve()
+)
+
+LOG_MAX_BYTES = 5 * 1024 * 1024  # L-4: 轮转阈值（验收时可临时调小）
+LOG_BACKUPS = 2                  # 保留 .1 / .2 两份历史，超出丢最老
 
 BASE_URL = os.environ.get("SCIPAL_BASE_URL", "http://127.0.0.1:5000").rstrip("/")
 PROBE_URL = f"{BASE_URL}/api/health"
@@ -124,8 +154,136 @@ else:  # pragma: no cover - 仅 Windows 使用
 # ---------------------------------------------------------------------------
 
 
+_log_file_broken = False
+
+
+def _log_backup_path(index: int) -> Path:
+    """sciPal_watchdog.log.1 / .2（用字符串拼接，避免 with_suffix 对多段后缀报错）。"""
+    return WATCHDOG_LOG.parent / f"{WATCHDOG_LOG.name}.{index}"
+
+
+def _rotate_if_needed() -> None:
+    """L-4: 按大小轮转（纯标准库 os.replace）。失败不影响运行，只向 stderr 提示。"""
+    try:
+        if not WATCHDOG_LOG.exists() or WATCHDOG_LOG.stat().st_size < LOG_MAX_BYTES:
+            return
+    except OSError:
+        return
+
+    try:
+        oldest = _log_backup_path(LOG_BACKUPS)
+        if oldest.exists():
+            oldest.unlink()
+        for index in range(LOG_BACKUPS - 1, 0, -1):
+            src = _log_backup_path(index)
+            if src.exists():
+                os.replace(src, _log_backup_path(index + 1))
+        os.replace(WATCHDOG_LOG, _log_backup_path(1))
+    except OSError as exc:
+        print(
+            f"[WARN] 看门狗日志轮转失败（继续写原文件）：{exc}",
+            file=sys.stderr,
+            flush=True,
+        )
+
+
 def log(message: str) -> None:
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}] {message}", flush=True)
+    """写一行日志：stdout + 文件双写（L-1）。
+
+    - 文件写入**每次 open/close**，不复用长期句柄：日志量极小（健康时只在状态切换打点），
+      而长期句柄在进程被强杀时可能丢缓冲；每次 open 追加能保证「写进去的就是盘上的」。
+    - 写失败**绝不抛、也不刷屏**：第一次失败向 stderr 提示一次，之后静默走 stdout，
+      主循环照跑 —— 磁盘满 / 权限不足 / 目录被删，都不许让管家死掉。
+    """
+    global _log_file_broken
+    line = f"[{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}] {message}"
+    print(line, flush=True)
+
+    if _log_file_broken:
+        return
+    try:
+        _rotate_if_needed()
+        WATCHDOG_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with open(WATCHDOG_LOG, "a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+    except Exception as exc:
+        _log_file_broken = True
+        print(
+            f"[WARN] 看门狗日志写入失败，后续只输出 stdout（{WATCHDOG_LOG}）：{exc}",
+            file=sys.stderr,
+            flush=True,
+        )
+
+
+def _human_size(num: float) -> str:
+    for unit in ("B", "KB", "MB", "GB"):
+        if num < 1024 or unit == "GB":
+            return f"{num:.1f} {unit}" if unit != "B" else f"{int(num)} B"
+        num /= 1024
+    return f"{num:.1f} GB"
+
+
+def _last_log_time() -> str:
+    """读日志最后一行的时间戳（只读尾部 4 KB，不整文件读）。"""
+    try:
+        with open(WATCHDOG_LOG, "rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - 4096))
+            tail = handle.read().decode("utf-8", errors="replace")
+    except OSError as exc:
+        return f"不可读（{exc}）"
+    for line in reversed(tail.splitlines()):
+        if line.startswith("[") and len(line) >= 20:
+            return line[1:20]
+    return "（空）"
+
+
+def _log_writable() -> bool:
+    """L-5: 日志可写探针 —— 写一次空内容（不改变文件大小、不留垃圾行）。"""
+    try:
+        WATCHDOG_LOG.parent.mkdir(parents=True, exist_ok=True)
+        before = WATCHDOG_LOG.stat().st_size if WATCHDOG_LOG.exists() else 0
+        with open(WATCHDOG_LOG, "a", encoding="utf-8") as handle:
+            handle.write("")
+        after = WATCHDOG_LOG.stat().st_size if WATCHDOG_LOG.exists() else 0
+        return after >= before
+    except Exception:
+        return False
+
+
+def _run_marker(mode: str, previous_lock: dict | None) -> None:
+    """L-2: RUN MARKER —— 回答「跑的是不是修好的那版」。
+
+    关键是脚本自身的 mtime + size：本机踩过两次「改了代码但没重启守护进程」，
+    每次都靠比进程 CreationDate 才发现，写进日志后自查成本归零。
+    """
+    script = Path(__file__).resolve()
+    try:
+        stat = script.stat()
+        script_mtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(stat.st_mtime))
+        script_size = stat.st_size
+    except OSError:
+        script_mtime, script_size = "?", "?"
+
+    if previous_lock is None:
+        last_exit = "clean（无残留锁）"
+    else:
+        holder_pid = previous_lock.get("pid")
+        if holder_pid and pid_alive(int(holder_pid)):
+            last_exit = f"running（锁被 PID {holder_pid} 持有且存活）"
+        else:
+            last_exit = f"unclean（残留锁 PID {holder_pid} 已死：疑似异常退出/被强杀）"
+
+    log("=== watchdog start ===")
+    log(f"mode={mode}  pid={os.getpid()}")
+    log(f"BASE_URL={BASE_URL}  PROBE_URL={PROBE_URL}")
+    log(f"python={sys.version.split()[0]}  exe={sys.executable}")
+    log(f"script={script}")
+    log(f"script mtime={script_mtime}  size={script_size}B")
+    log(f"last exit={last_exit}")
+    log(f"log file={WATCHDOG_LOG}")
+    log("=== watchdog start end ===")
 
 
 def probe() -> bool:
@@ -196,10 +354,24 @@ def wait_until_ready(timeout: float = STARTUP_WAIT_TIMEOUT) -> bool:
     started = time.time()
     while time.time() - started < timeout:
         if probe():
-            log(f"服务已就绪（等待 {time.time() - started:.1f}s）")
+            pids = listening_pids()
+            log(
+                f"服务已就绪（等待 {time.time() - started:.1f}s，"
+                f"listening count={len(pids)}，pids={pids}）"
+            )
+            # L-3: count > 1 就是「已经堆积」的关键告警信号
+            if len(pids) > 1:
+                log(f"⚠️ 检测到多实例监听：{len(pids)} 个进程同时占用端口 {pids}")
             return True
         time.sleep(READY_POLL_INTERVAL)
-    log(f"等待 {timeout:.0f}s 仍未通过探针，服务可能异常（端口监听={port_listening()}）")
+
+    pids = listening_pids()
+    log(
+        f"等待 {timeout:.0f}s 仍未通过探针，服务可能异常"
+        f"（port_listening={port_listening()}，listening count={len(pids)}，pids={pids}）"
+    )
+    if len(pids) > 1:
+        log(f"⚠️ 检测到多实例监听：{len(pids)} 个进程同时占用端口 {pids}")
     return False
 
 
@@ -393,6 +565,14 @@ def launch() -> int | None:
         f"已拉起 api_server.py（pid={proc.pid}，日志：{API_LOG}；"
         f"breakaway={_once_breakaway_note}）"
     )
+    # L-3: 拉起后立刻快照端口 —— 若此时 count>1，说明已经堆了
+    pids = listening_pids()
+    log(
+        f"拉起后快照：listening count={len(pids)}，pids={pids}；"
+        f"接下来阻塞等待就绪，上限 {STARTUP_WAIT_TIMEOUT:.0f}s"
+    )
+    if len(pids) > 1:
+        log(f"⚠️ 检测到多实例监听：{len(pids)} 个进程同时占用端口 {pids}")
     return proc.pid
 
 
@@ -407,6 +587,7 @@ ONCE_EPILOGUE = (
 
 
 def run_once() -> int:
+    _run_marker("once", read_lock())
     if probe():
         log(f"SciPal API 已在运行（{BASE_URL}），无需拉起")
         print(ONCE_EPILOGUE, flush=True)
@@ -429,9 +610,12 @@ def run_once() -> int:
 
 
 def run_daemon() -> None:
+    # L-2: 启动前先快照锁，供 RUN MARKER 判定「上次是否干净退出」
+    previous = read_lock()
     if not acquire_lock():
         return
 
+    _run_marker("daemon", previous)
     log(f"watchdog 常驻启动：每 {POLL_INTERVAL:.0f}s 探测 {PROBE_URL}（PID {os.getpid()}）")
     log(
         "拉起策略：先判端口占用（F-3）→ 拉起后**阻塞等待就绪**，"
@@ -452,12 +636,17 @@ def run_daemon() -> None:
                 continue
 
             if not was_down:
-                log(f"服务不通（{PROBE_URL}）")
+                pids = listening_pids()
+                log(f"服务不通（{PROBE_URL}，listening pids={pids}）")
                 was_down = True
 
             # ── F-3：端口已有实例在监听但探针失败 → 它在冷启动/僵死，别再拉一个 ──
             if port_listening():
-                log("端口已有人在监听但探针未通过（可能在冷启动），本轮**不拉起**，继续等")
+                pids = listening_pids()
+                log(
+                    "端口已有人在监听但探针未通过（可能在冷启动），本轮**不拉起**，继续等"
+                    f"（listening count={len(pids)}，pids={pids}）"
+                )
                 time.sleep(POLL_INTERVAL)
                 continue
 
@@ -502,6 +691,22 @@ def show_status() -> int:
     print(f"lock              : {holder}")
     if holder and holder.get("pid"):
         print(f"lock holder alive : {pid_alive(holder['pid'])}")
+
+    # L-5: 日志可观测性（保留上面全部原有字段）
+    try:
+        log_size = WATCHDOG_LOG.stat().st_size if WATCHDOG_LOG.exists() else 0
+    except OSError:
+        log_size = 0
+    writable = _log_writable()
+    print(f"log file          : {WATCHDOG_LOG}")
+    print(
+        f"log size          : {_human_size(log_size)}"
+        f"（阈值 {_human_size(LOG_MAX_BYTES)}，保留 {LOG_BACKUPS} 份）"
+    )
+    print(f"log last line at  : {_last_log_time()}")
+    print(f"log writable      : {writable}")
+    if not writable:
+        print(f"  [WARN] 日志文件不可写：{WATCHDOG_LOG}（不影响 verdict）")
 
     healthy = ok and len(pids) <= 1
     print(f"verdict           : {'OK' if healthy else 'DEGRADED（可能多实例或服务异常）'}")
