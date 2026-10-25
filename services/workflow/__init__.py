@@ -1,6 +1,11 @@
 """Workflow runner exports."""
 
 from services.workflow.runner import run_workflow, write_artifact
+from services.workflow.stages import (
+    build_export_stage,
+    build_plan_stage,
+    build_store_stage,
+)
 from services.workflow.types import (
     DEFAULT_STAGES,
     StageContext,
@@ -15,4 +20,7 @@ __all__ = [
     "WorkflowSpec",
     "run_workflow",
     "write_artifact",
+    "build_plan_stage",
+    "build_store_stage",
+    "build_export_stage",
 ]
