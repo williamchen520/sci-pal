@@ -39,7 +39,7 @@ EXIT_APPROVAL_REQUIRED = 2
 
 def load_spec(path: str | Path) -> WorkflowSpec:
     """Load a job spec from JSON (topic + outline + optional limits/stages)."""
-    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    raw = json.loads(Path(path).read_text(encoding="utf-8-sig"))
     if not isinstance(raw, Mapping):
         raise ValueError("spec must be a JSON object")
 

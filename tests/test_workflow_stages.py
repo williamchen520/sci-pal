@@ -261,6 +261,25 @@ class EvidenceStageTests(unittest.TestCase):
             json.dumps(payload, ensure_ascii=False), encoding="utf-8"
         )
 
+    def test_retrieve_cards_are_used_without_extraction(self) -> None:
+        self.write_retrieve(
+            {
+                "evidence_cards": [
+                    {"evidence_id": "ev1", "paper_id": "p1", "para_id": "a1", "content": "c"}
+                ]
+            }
+        )
+        calls = []
+
+        def extractor(payload, ctx):
+            calls.append(payload)
+            return {"cards": [], "count": 0}
+
+        result = build_evidence_stage(extractor)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result.metrics["cards"], 1)
+        self.assertEqual(calls, [])
+
     def test_missing_retrieve_fails(self) -> None:
         result = build_evidence_stage()(context(self.dir, self.spec()))
         self.assertEqual(result.status, "failed")

@@ -174,6 +174,15 @@ def build_evidence_stage(extract: Extract | None = None) -> Callable[[StageConte
         if payload is None:
             return _failed("invalid_input", "retrieve.json is missing; retrieve must run first")
 
+        provided = payload.get("evidence_cards")
+        if isinstance(provided, list) and provided:
+            # retrieve already produced cards (search_and_assign_papers does this);
+            # extraction would only duplicate them.
+            cards = [dict(item) for item in provided if isinstance(item, Mapping)]
+            result = {"cards": cards, "count": len(cards), "source": "retrieve"}
+            write_artifact(context, "evidence.json", result)
+            return StageResult(artifacts=["evidence.json"], metrics={"cards": len(cards)})
+
         try:
             result = dict(extractor(payload, context))
         except ValueError as exc:
@@ -244,6 +253,7 @@ def _default_retrieve(
     return {
         "sections": outline.get("sections", sections),
         "papers": papers,
+        "evidence_cards": outline.get("evidence_cards") or [],
         "max_papers": max_papers,
     }
 
