@@ -55,6 +55,12 @@ def run_workflow(
     directory.mkdir(parents=True, exist_ok=True)
     manifest_path = directory / "run.json"
 
+    if not resume and manifest_path.exists():
+        raise ValueError(
+            f"run directory already contains a run ({manifest_path}); "
+            "use resume=True or a fresh directory"
+        )
+
     manifest = _load_manifest(manifest_path) if resume else _new_manifest(spec, run_id)
     if manifest["run_id"] != (run_id or manifest["run_id"]):
         raise ValueError("run_id does not match the existing manifest")

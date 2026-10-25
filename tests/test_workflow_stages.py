@@ -77,7 +77,9 @@ class StoreStageTests(unittest.TestCase):
     def test_default_store_writes_record(self) -> None:
         spec = WorkflowSpec(topic="demo", stages=("plan", "store", "export"))
         (self.dir / "review.json").write_text('{"topic": "demo", "sections": []}', encoding="utf-8")
-        result = build_store_stage()(context(self.dir, spec))
+        ctx = context(self.dir, spec)
+        ctx.services = {"db_path": self.dir / "reviews.db"}
+        result = build_store_stage()(ctx)
         self.assertEqual(result.status, "ok")
         record = json.loads((self.dir / "store.json").read_text(encoding="utf-8"))
         self.assertTrue(record["review_id"].startswith("rev_"))
@@ -685,7 +687,10 @@ class FullPipelineTests(unittest.TestCase):
                 "export": build_export_stage(),
             }
 
-            manifest = run_workflow(spec, stages, run_dir=run_dir, approve=True, run_id="r1")
+            manifest = run_workflow(
+                spec, stages, run_dir=run_dir, approve=True, run_id="r1",
+                services={"db_path": run_dir / "reviews.db"},
+            )
             self.assertEqual(manifest["status"], "completed", manifest.get("errors"))
             self.assertEqual(
                 [stage["status"] for stage in manifest["stages"]],
@@ -715,7 +720,8 @@ class EndToEndTests(unittest.TestCase):
                 "export": build_export_stage(),
             }
             manifest = run_workflow(
-                spec, stages, run_dir=run_dir, approve=True, run_id="r1"
+                spec, stages, run_dir=run_dir, approve=True, run_id="r1",
+                services={"db_path": run_dir / "reviews.db"},
             )
 
             self.assertEqual(manifest["status"], "completed")

@@ -108,6 +108,12 @@ class WorkflowRunnerTests(unittest.TestCase):
         self.assertEqual(self.calls["plan"], 1)
         self.assertEqual(self.calls["retrieve"], 2)
 
+    def test_refuses_existing_run_without_resume(self) -> None:
+        self.dir.mkdir(parents=True)
+        (self.dir / "run.json").write_text("{}", encoding="utf-8")
+        with self.assertRaises(ValueError):
+            run_workflow(self.spec(), self.stages(), run_dir=self.dir, approve=True)
+
     def test_resume_without_manifest_fails(self) -> None:
         with self.assertRaises(FileNotFoundError):
             run_workflow(self.spec(), self.stages(), run_dir=self.dir, resume=True)
