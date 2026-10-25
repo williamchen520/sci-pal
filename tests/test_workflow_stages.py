@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -464,6 +465,67 @@ class DraftStageTests(unittest.TestCase):
         result = build_draft_stage()(context(self.dir, self.spec()))
         self.assertEqual(result.status, "failed")
         self.assertIn("evidence.json", result.errors[0]["message"])
+
+    def test_references_are_derived_from_cards(self) -> None:
+        self.write_plan()
+        self.write_evidence(
+            [
+                {"evidence_id": "ev1", "paper_id": "p1", "para_id": "a1", "content": "c1", "paper_title": "T1"},
+                {"evidence_id": "ev2", "paper_id": "p1", "para_id": "a2", "content": "c2", "paper_title": "T1"},
+                {"evidence_id": "ev3", "paper_id": "p2", "para_id": "a3", "content": "c3", "paper_title": "T2"},
+            ]
+        )
+
+        def writer(plan, evidence, ctx):
+            return {
+                "topic": "demo",
+                "sections": [],
+                "sentences": [],
+                "evidence_cards": {card["evidence_id"]: card for card in evidence["cards"]},
+                "markdown": "# md",
+            }
+
+        result = build_draft_stage(writer)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok", result.errors)
+        review = json.loads((self.dir / "review.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(review["references"]), 2)
+        self.assertEqual({ref["paper_id"] for ref in review["references"]}, {"p1", "p2"})
+        self.assertEqual(result.metrics["references"], 2)
+
+    def test_references_enriched_from_papers_table(self) -> None:
+        self.write_plan()
+        self.write_evidence(
+            [{"evidence_id": "ev1", "paper_id": "p1", "para_id": "a1", "content": "c"}]
+        )
+        db = self.dir / "meta.db"
+        conn = sqlite3.connect(db)
+        conn.execute(
+            "CREATE TABLE papers (paper_id TEXT, title TEXT, authors TEXT, journal TEXT, year INTEGER, doi TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO papers VALUES ('p1', 'Real Title', 'A, B', 'Nature', 2024, '10.1/x')"
+        )
+        conn.commit()
+        conn.close()
+
+        def writer(plan, evidence, ctx):
+            return {
+                "topic": "demo",
+                "sections": [],
+                "sentences": [],
+                "evidence_cards": {"ev1": evidence["cards"][0]},
+                "markdown": "",
+            }
+
+        ctx = context(self.dir, self.spec())
+        ctx.services = {"db_path": db}
+        result = build_draft_stage(writer)(ctx)
+        self.assertEqual(result.status, "ok", result.errors)
+        review = json.loads((self.dir / "review.json").read_text(encoding="utf-8"))
+        ref = review["references"][0]
+        self.assertEqual(ref["title"], "Real Title")
+        self.assertEqual(ref["journal"], "Nature")
+        self.assertEqual(ref["year"], 2024)
 
     def test_injected_writer_produces_artifacts(self) -> None:
         self.write_plan()

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import re
-import uuid
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping
@@ -122,6 +122,8 @@ def build_draft_stage(draft: Draft | None = None) -> Callable[[StageContext], St
             "sections": payload.get("sections") or [],
             "sentences": payload.get("sentences") or [],
             "evidence_cards": payload.get("evidence_cards") or {},
+            "references": payload.get("references")
+            or _references_from_cards(payload.get("evidence_cards") or {}, context),
             "markdown": str(payload.get("markdown") or ""),
         }
         markdown = review["markdown"]
@@ -133,6 +135,7 @@ def build_draft_stage(draft: Draft | None = None) -> Callable[[StageContext], St
             metrics={
                 "sections": len(review["sections"]),
                 "sentences": len(review["sentences"]),
+                "references": len(review["references"]),
                 "words": len(markdown.split()),
             },
         )
@@ -365,6 +368,66 @@ def _render_markdown(draft: Any) -> str:
             if sentence.section_id == section.section_id:
                 parts.append(f"{sentence.text.strip()} ")
     return "".join(parts).strip() + "\n"
+
+
+def _references_from_cards(
+    cards: Mapping[str, Any], context: StageContext
+) -> list[dict[str, Any]]:
+    """Deduplicate evidence cards into a reference list, enriched from papers table."""
+    papers: dict[str, dict[str, Any]] = {}
+    for card in cards.values():
+        if not isinstance(card, Mapping):
+            continue
+        paper_id = str(card.get("paper_id") or "").strip()
+        if not paper_id:
+            continue
+        entry = papers.setdefault(
+            paper_id,
+            {"paper_id": paper_id, "title": str(card.get("paper_title") or paper_id)},
+        )
+        if card.get("source_type") == "abstract":
+            entry["source"] = "abstract"
+
+    if not papers:
+        return []
+
+    metadata = _paper_metadata(list(papers), context)
+    for paper_id, entry in papers.items():
+        for key, value in metadata.get(paper_id, {}).items():
+            if value not in (None, ""):
+                entry[key] = value
+    return list(papers.values())
+
+
+def _paper_metadata(
+    paper_ids: list[str], context: StageContext
+) -> dict[str, dict[str, Any]]:
+    db_path = context.services.get("db_path") or _default_db_path()
+    conn = None
+    try:
+        conn = sqlite3.connect(str(db_path), timeout=5)
+        conn.row_factory = sqlite3.Row
+        placeholders = ",".join("?" for _ in paper_ids)
+        rows = conn.execute(
+            "SELECT paper_id, title, authors, journal, year, doi FROM papers "
+            f"WHERE paper_id IN ({placeholders})",
+            paper_ids,
+        ).fetchall()
+    except sqlite3.Error:
+        return {}
+    finally:
+        if conn is not None:
+            conn.close()
+    return {
+        row["paper_id"]: {
+            "title": row["title"],
+            "authors": row["authors"],
+            "journal": row["journal"],
+            "year": row["year"],
+            "doi": row["doi"],
+        }
+        for row in rows
+    }
 
 
 def _rebuild_draft(review: Mapping[str, Any], context: StageContext):
