@@ -645,7 +645,7 @@ def _export_sections(review: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 def _relative_artifact(path: str | Path, run_dir: Path) -> str:
     try:
-        return str(Path(path).resolve().relative_to(run_dir.resolve()))
+        return Path(path).resolve().relative_to(run_dir.resolve()).as_posix()
     except ValueError:
         return str(path)
 
