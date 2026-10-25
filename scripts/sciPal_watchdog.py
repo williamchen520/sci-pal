@@ -123,6 +123,7 @@ _lock_acquired = False
 
 if os.name == "nt":
     import ctypes
+    import msvcrt  # T4-1': 拉起守卫用 LK_NBLCK 文件锁（仅 Windows）
     from ctypes import wintypes
 
     _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -517,11 +518,37 @@ def release_lock() -> None:
 # 于是 T-2 刚焊死的「唯一一把解析锁」被进程边界打穿。
 #
 # 守卫生效范围：**只包住 `launch() + wait_until_ready()` 这一段**。
+#
+# 🔴 T4-1' 返工（2026-10-25 验收发现）—— **改用操作系统级文件锁**
+#
+# 旧实现是「pid 文件 + 判活 + 接管」，接管分支 `unlink()` 是盲删：
+# 删的是「此刻磁盘上的文件」，不是「你判定为 stale 的那个」。于是两个 contender
+# 都读到同一份 stale 内容 → 都判「该接管」→ P1 删+建 → P2 把 **P1 刚建的活文件**
+# 删掉再建 → 双双「抢占成功」→ 两个 Flask 同时监听。更糟的是「判定」里要调
+# `process_start_time()`（WMI，0.5~1 s），把窗口放大到基本必现。
+#
+# 现在：`msvcrt.locking(fd, LK_NBLCK, 1)` 非阻塞抢一个固定偏移的字节（见
+# GUARD_LOCK_OFFSET），抢到就**持有 fd** 直到拉起结束，`finally` 里 close。
+# 锁由内核持有 —— 进程被 `taskkill /F` 则锁立即自动释放，下一个 contender
+# 直接拿到，**「stale」这个概念本身就不存在了**，也就没有
+# 「判活 → 删除 → 重建」这段非原子操作。
+#
+# 文件内容 `{pid,start,at}` 仍然写，但**只供人看，不参与判定**。
+# 打开方式 `O_RDWR|O_CREAT`（**不用 O_EXCL**），daemon 与 `--once` 走同一条路径。
 # ---------------------------------------------------------------------------
+
+GUARD_LOCK_BYTES = 1
+# 🔴 锁**不能**放在偏移 0：Windows 的字节区间锁会连带挡住「读被锁字节」，
+# 锁住第 0 字节会让 `{pid,...}` 一个字节都读不出来（实测 PermissionError），
+# A8 要求「持锁期间守卫文件内容逐字节不变」，必须可读。
+# 因此锁放在内容区之后的 512 偏移，内容固定占前 256 字节（不足用空格补齐，
+# json.loads 容忍尾部空白）。两个 contender 锁的是同一个偏移，互斥语义不变。
+GUARD_LOCK_OFFSET = 512
+GUARD_CONTENT_SIZE = 256
 
 
 def read_launch_guard() -> dict | None:
-    """读取守卫文件；不存在 / 空 / 非法 JSON 都返回 None。"""
+    """读取守卫文件内容（**仅供展示/排障**，不再用于判定）。"""
     try:
         raw = LAUNCH_GUARD_FILE.read_text(encoding="utf-8-sig").strip()
     except Exception:
@@ -535,76 +562,36 @@ def read_launch_guard() -> dict | None:
     return data if isinstance(data, dict) and "pid" in data else None
 
 
-def launch_guard_holder_alive(holder: dict) -> bool:
-    """守卫持有者是否是**同一个还活着的**看门狗进程。
+def launch_guard_is_held() -> bool:
+    """是否有别的进程正持有拉起守卫（`--status` 用）。
 
-    判据与 LOCK_FILE 一致：PID 存活 + 创建时间一致（防 PID 复用）；
-    拿不到创建时间时退回命令行校验（`sciPal_watchdog.py`）。
+    做法：以 `O_RDWR` 打开已存在的文件（**不创建**，免得凭空造出文件影响 A5），
+    试抢一次 `LK_NBLCK`：抢到 → 立刻释放 → 说明无人持有；抢不到 → 有人持有。
     """
-    pid = holder.get("pid")
-    if not isinstance(pid, int) or pid <= 0:
-        return False
-    if not pid_alive(pid):
-        return False
-
-    recorded_start = holder.get("start")
-    actual_start = process_start_time(pid)
-    if recorded_start is not None and actual_start is not None:
-        return int(recorded_start) == int(actual_start)
-
-    return command_line_has_watchdog(pid)
-
-
-def _create_guard_exclusive() -> bool:
-    """原子创建守卫文件（`O_CREAT|O_EXCL`）：谁先创建谁持有。"""
-    LOGS_DIR.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(
-        {
-            "pid": os.getpid(),
-            "start": process_start_time(os.getpid()),
-            "at": datetime.now().isoformat(timespec="seconds"),
-        },
-        ensure_ascii=False,
-    )
     try:
-        fd = os.open(str(LAUNCH_GUARD_FILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
+        fd = os.open(str(LAUNCH_GUARD_FILE), os.O_RDWR)
+    except FileNotFoundError:
         return False
-    except Exception as exc:  # 权限/磁盘等：不吞
-        log(f"创建拉起守卫失败：{exc}")
+    except Exception as exc:
+        log(f"探测拉起守卫失败：{exc}")
         return False
     try:
-        os.write(fd, payload.encode("utf-8"))
+        os.lseek(fd, GUARD_LOCK_OFFSET, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_NBLCK, GUARD_LOCK_BYTES)
+    except OSError:
+        return True
+    else:
+        try:
+            os.lseek(fd, GUARD_LOCK_OFFSET, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, GUARD_LOCK_BYTES)
+        except OSError:
+            pass
+        return False
     finally:
-        os.close(fd)
-    return True
-
-
-def release_launch_guard() -> None:
-    """释放守卫（只删自己写的，别人接管走的不动）。"""
-    holder = read_launch_guard()
-    if holder and holder.get("pid") != os.getpid():
-        return
-    try:
-        LAUNCH_GUARD_FILE.unlink()
-    except Exception:
-        pass
-
-
-def _read_guard_after_contention(timeout: float = 1.0) -> dict | None:
-    """创建失败后读守卫内容 —— 给赢家一点时间把 JSON 写进去。
-
-    `O_CREAT|O_EXCL` 创建与写入之间有一个极短的空文件窗口；此处若立刻判
-    「读不出来 = stale」就会把赢家踢掉，两边一起拉起（正是要修的问题）。
-    """
-    deadline = time.time() + timeout
-    while True:
-        holder = read_launch_guard()
-        if holder is not None:
-            return holder
-        if time.time() >= deadline:
-            return None
-        time.sleep(0.05)
+        try:
+            os.close(fd)
+        except OSError:
+            pass
 
 
 @contextmanager
@@ -612,55 +599,91 @@ def launch_guard():
     """拉起互斥：同一时刻只允许一个进程执行 `launch + wait_until_ready`。
 
     yield:
-        True  → 已持有守卫（退出 with 时自动删除文件）
-        False → 守卫被占 / 接管失败，**调用方不得 launch**，本轮跳过
+        True  → 已持有守卫（锁由打开的 fd 持有，退出 with 时释放并清理文件）
+        False → 守卫被占 / 路径被换掉，**调用方不得 launch**，本轮跳过
 
-    stale 判定：持有者 PID 已死、或 PID 已被复用（创建时间不符）→ 接管，
-    避免强杀留下的尸检文件把看门狗永久锁死。
+    实现要点：
+      · 锁是**内核文件锁**（`msvcrt.locking`），不是 pid 判活 —— 进程被强杀，
+        锁随句柄销毁自动释放，不存在「尸检文件把看门狗锁死」这回事。
+      · 抢到锁后校验 `fstat(fd).st_ino == stat(path).st_ino`：若路径已被别人换掉
+        （别人 unlink 后新建），说明我锁的是旧 inode，本轮让路。
+      · 释放顺序：先 close（Windows 上有句柄时删不掉），再 unlink，满足
+        「正常退出后守卫文件不存在」。删除失败只记日志，不影响互斥。
     """
-    if _create_guard_exclusive():
-        log(f"取得拉起守卫（PID {os.getpid()}）")
+    fd: int | None = None
+    held = False
+    try:
+        LOGS_DIR.mkdir(parents=True, exist_ok=True)
         try:
-            yield True
-        finally:
-            release_launch_guard()
-        return
-
-    holder = _read_guard_after_contention()
-    if holder and launch_guard_holder_alive(holder):
-        log(
-            f"拉起守卫被占（PID {holder.get('pid')} 正在拉起/等待就绪），本轮跳过"
-        )
-        yield False
-        return
-
-    # 读不出内容且文件很新：可能是赢家还没写完 JSON，保守让路（不抢）
-    if holder is None:
-        try:
-            age = time.time() - LAUNCH_GUARD_FILE.stat().st_mtime
-        except OSError:
-            age = None
-        if age is not None and age < 5:
-            log("拉起守卫刚被创建（内容未就绪），本轮跳过")
+            fd = os.open(str(LAUNCH_GUARD_FILE), os.O_RDWR | os.O_CREAT)
+        except Exception as exc:
+            log(f"打开拉起守卫失败（{exc}），本轮不拉起")
             yield False
             return
 
-    log(f"发现过期拉起守卫（{holder or '内容不可读'}），接管")
-    try:
-        LAUNCH_GUARD_FILE.unlink()
-    except Exception:
-        pass
+        try:
+            os.lseek(fd, GUARD_LOCK_OFFSET, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, GUARD_LOCK_BYTES)
+            held = True
+        except OSError:
+            held = False
 
-    if not _create_guard_exclusive():
-        log("接管拉起守卫失败（被其他进程抢先），本轮跳过")
-        yield False
-        return
+        if not held:
+            log("拉起守卫被占（另一个进程正在拉起/等待就绪），本轮跳过")
+            yield False
+            return
 
-    log(f"已接管并重新取得拉起守卫（PID {os.getpid()}）")
-    try:
+        # 我锁住的必须是**路径当前指向的那个文件**
+        try:
+            same_file = os.fstat(fd).st_ino == os.stat(str(LAUNCH_GUARD_FILE)).st_ino
+        except OSError:
+            same_file = False
+        if not same_file:
+            log("拉起守卫文件在抢锁期间被替换（旧 inode），本轮跳过")
+            yield False
+            return
+
+        # 内容仅供人看，不参与判定
+        payload = json.dumps(
+            {
+                "pid": os.getpid(),
+                "start": process_start_time(os.getpid()),
+                "at": datetime.now().isoformat(timespec="seconds"),
+            },
+            ensure_ascii=False,
+        )
+        try:
+            raw = payload.encode("utf-8")
+            if len(raw) < GUARD_CONTENT_SIZE:
+                raw = raw.ljust(GUARD_CONTENT_SIZE, b" ")  # 定长，避免残留尾部
+            os.lseek(fd, 0, os.SEEK_SET)
+            os.write(fd, raw)
+        except OSError as exc:
+            log(f"写守卫内容失败（不影响互斥）：{exc}")
+
+        log(f"取得拉起守卫（PID {os.getpid()}，文件锁）")
         yield True
     finally:
-        release_launch_guard()
+        if fd is not None:
+            if held:
+                try:
+                    os.lseek(fd, GUARD_LOCK_OFFSET, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, GUARD_LOCK_BYTES)
+                except OSError:
+                    pass
+            try:
+                os.close(fd)  # 锁随 close 释放（即便上面的 UNLCK 失败）
+            except OSError:
+                pass
+            if held:
+                # A5：正常退出后守卫文件必须不存在。Windows 上有打开句柄时
+                # 删不掉，所以必须放在 close 之后。
+                try:
+                    LAUNCH_GUARD_FILE.unlink()
+                except FileNotFoundError:
+                    pass
+                except OSError as exc:
+                    log(f"删除守卫文件失败（不影响互斥）：{exc}")
 
 
 # ---------------------------------------------------------------------------
@@ -688,7 +711,7 @@ def launch() -> int | None:
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     if not VENV_PYTHON.exists():
         log(f"虚拟环境解释器不存在：{VENV_PYTHON}")
-        return False
+        return None  # T4-1': 签名是 int | None，调用方判 is None
 
     # detached 子进程的 stdout/stderr 重定向到文件时，Windows 默认编码是 cp1252，
     # api_server.py 启动打印的 emoji（api_server.py:2035）会抛 UnicodeEncodeError 直接退出。
@@ -921,15 +944,14 @@ def show_status() -> int:
     if holder and holder.get("pid"):
         print(f"lock holder alive : {pid_alive(holder['pid'])}")
 
-    # T4-1: 拉起守卫 + 实例数（判单实例只认监听 PID 个数，不认 health 200）
-    guard = read_launch_guard()
-    print(f"launch guard      : {guard}")
-    if guard and guard.get("pid"):
-        guard_alive = launch_guard_holder_alive(guard)
-        print(
-            f"launch guard alive: {guard_alive}"
-            + ("" if guard_alive else "（stale，下次拉起会接管）")
-        )
+    # T4-1': 守卫改成 OS 文件锁之后「谁持有」没有稳定含义 —— 只报「锁是否被持有」，
+    # 不再做 pid 存活推断（那是旧 pid 文件方案的产物，也是返工的原因）。
+    guard_held = launch_guard_is_held()
+    print(
+        f"launch guard      : {'持有中' if guard_held else '未持有'}"
+        f"（文件={LAUNCH_GUARD_FILE.name}，存在={LAUNCH_GUARD_FILE.exists()}，"
+        f"内容={read_launch_guard()}）"
+    )
     print(f"instance count    : {len(pids)}（pids={pids}）")
 
     # L-5: 日志可观测性（保留上面全部原有字段）
