@@ -25,6 +25,7 @@ from services.review.task_manager import task_manager
 
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
 from contracts import InternalError, fail, ok
+from routes.system import build_system_blueprint
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -132,6 +133,12 @@ def get_graph():
         from services.search.graph_traverser import GraphTraverser
         _graph = GraphTraverser()
     return _graph
+
+
+# B3a: system 域只读路由（graph/stats、communities）已移入 routes/system.py
+app.register_blueprint(
+    build_system_blueprint(db_path=DB_PATH, get_graph=get_graph, log=app.logger)
+)
 
 
 def get_hybrid():
@@ -571,86 +578,6 @@ def paper_graph(paper_id):
         })
     except Exception as e:
         return jsonify({"error": f"Graph traversal failed: {str(e)}"}), 500
-
-
-@app.route("/api/graph/stats", methods=["GET"])
-def graph_stats():
-    """Return graph statistics (nodes, edges, components, top-cited)."""
-    try:
-        graph = get_graph()
-        return jsonify(ok(graph.stats()))
-    except Exception:
-        app.logger.exception("graph_stats failed")
-        error = InternalError("Graph stats failed")
-        return jsonify(fail(error)), error.status
-
-
-@app.route("/api/communities", methods=["GET"])
-def list_communities():
-    """
-    List paper communities (V24.3).
-
-    Query params:
-      min_size:  minimum community size (default 1)
-      detailed:  if '1', include member paper list per community
-    """
-    import sqlite3
-    min_size = int(request.args.get("min_size", 1))
-    detailed = request.args.get("detailed", "0") == "1"
-
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-
-    try:
-        comms = conn.execute("""
-            SELECT c.community_id, c.size, c.representative_paper_id,
-                   c.summary, c.keywords, c.avg_year,
-                   p.title as rep_title, p.authors as rep_authors,
-                   p.journal as rep_journal, p.year as rep_year
-            FROM paper_communities c
-            LEFT JOIN papers p ON c.representative_paper_id = p.paper_id
-            WHERE c.size >= ?
-            ORDER BY c.size DESC
-        """, (min_size,)).fetchall()
-    except sqlite3.OperationalError:
-        conn.close()
-        return jsonify({
-            "error": "Communities not built yet. Run: python -m build_db.build_communities --apply"
-        }), 404
-
-    result = []
-    for c in comms:
-        item = {
-            "community_id": c["community_id"],
-            "size": c["size"],
-            "representative": {
-                "paper_id": c["representative_paper_id"],
-                "title": c["rep_title"],
-                "authors": c["rep_authors"],
-                "journal": c["rep_journal"],
-                "year": c["rep_year"],
-            },
-            "summary": c["summary"],
-            "keywords": c["keywords"],
-            "avg_year": c["avg_year"],
-        }
-        if detailed:
-            members = conn.execute("""
-                SELECT m.paper_id, m.centrality, p.title, p.year, p.journal
-                FROM community_members m
-                LEFT JOIN papers p ON m.paper_id = p.paper_id
-                WHERE m.community_id = ?
-                ORDER BY m.centrality DESC
-            """, (c["community_id"],)).fetchall()
-            item["members"] = [dict(m) for m in members]
-        result.append(item)
-
-    conn.close()
-    return jsonify({
-        "total_communities": len(result),
-        "total_papers": sum(c["size"] for c in result),
-        "communities": result,
-    })
 
 
 # ---------------------------------------------------------------------------

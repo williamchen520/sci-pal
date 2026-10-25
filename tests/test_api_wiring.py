@@ -13,7 +13,7 @@ from pathlib import Path
 
 API = Path(__file__).resolve().parents[1] / "api_server.py"
 
-PILOT_ROUTES = {"graph_stats", "review_llm_status"}
+PILOT_ROUTES = {"review_llm_status"}
 
 
 def _tree() -> ast.Module:
@@ -61,6 +61,13 @@ class ContractPilotTests(unittest.TestCase):
         # come in a later batch together with the router split.
         source = API.read_text(encoding="utf-8")
         self.assertNotIn("register_error_handlers", source)
+
+    def test_system_blueprint_is_registered(self) -> None:
+        source = API.read_text(encoding="utf-8")
+        self.assertIn("from routes.system import build_system_blueprint", source)
+        self.assertIn("register_blueprint(", source)
+        self.assertNotIn("def graph_stats", source)
+        self.assertNotIn("def list_communities", source)
 
 
 if __name__ == "__main__":
