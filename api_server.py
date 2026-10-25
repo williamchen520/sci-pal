@@ -26,6 +26,7 @@ from services.review.task_manager import task_manager
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
 from contracts import InternalError, fail, ok
 from routes.papers import build_papers_blueprint
+from routes.search import build_search_blueprint
 from routes.system import build_system_blueprint
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
@@ -143,6 +144,19 @@ app.register_blueprint(
 # B3b: papers 域只读路由（列表/详情/引文邻居）已移入 routes/papers.py
 app.register_blueprint(
     build_papers_blueprint(db_path=DB_PATH, get_graph=get_graph, log=app.logger)
+)
+
+
+def _download_task_manager():
+    """Lazy accessor so routes/search.py never imports the download subsystem."""
+    from services.search.online_downloader import get_task_manager
+
+    return get_task_manager()
+
+
+# B3c: 下载状态/历史/队列三条只读路由已移入 routes/search.py
+app.register_blueprint(
+    build_search_blueprint(get_task_manager=_download_task_manager, log=app.logger)
 )
 
 
@@ -1327,122 +1341,17 @@ def download_online_papers():
         return jsonify({"error": f"启动下载任务失败: {str(e)}"}), 500
 
 
-@app.route("/api/search/download_status", methods=["GET"])
-def download_status():
-    """
-    V33.2: 查询在线文献下载任务进度。
-
-    Query params:
-      task_id: 任务 ID（必填）
-
-    Returns:
-      {
-        "task_id": "dl_abc123...",
-        "status": "running" | "completed" | "failed",
-        "current_stage": "downloading" | "importing" | "indexing" | "completed",
-        "total": 10,
-        "downloaded": 5,
-        "download_failed": 0,
-        "download_skipped": 2,
-        "imported": 5,
-        "indexed": 5,
-        "new_paper_count": 7,
-        "progress_percent": 75,
-        "elapsed_seconds": 45.2,
-        "error": null
-      }
-    """
-    task_id = request.args.get("task_id", "").strip()
-
-    if not task_id:
-        return jsonify({"error": "缺少 task_id 参数"}), 400
-
-    try:
-        from services.search.online_downloader import get_task_manager
-        manager = get_task_manager()
-        task = manager.get_task(task_id)
-
-        if task is None:
-            return jsonify({"error": f"任务不存在: {task_id}"}), 404
-
-        return jsonify(task.to_dict())
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"查询任务状态失败: {str(e)}"}), 500
+# download_status 已迁入 routes/search.py（B3c）
 
 
 # ============================================================
 # V33.3: 下载历史、队列管理、失败重试 API
 # ============================================================
 
-@app.route("/api/search/download_history", methods=["GET"])
-def download_history():
-    """
-    V33.3: 获取下载历史记录（按时间倒序）。
-
-    Query params:
-      limit: 返回条数（默认 20，最多 50）
-
-    Returns:
-      {
-        "tasks": [...],  // 任务列表
-        "total": int,
-        "queue_status": { current_task_id, queue_length, queued_task_ids }
-      }
-    """
-    limit = min(int(request.args.get("limit", 20)), 50)
-
-    try:
-        from services.search.online_downloader import get_task_manager
-        manager = get_task_manager()
-        tasks = manager.list_tasks(limit=limit)
-        queue_status = manager.get_queue_status()
-
-        return jsonify({
-            "tasks": tasks,
-            "total": len(tasks),
-            "queue_status": queue_status,
-        })
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"获取下载历史失败: {str(e)}"}), 500
+# download_history 已迁入 routes/search.py（B3c）
 
 
-@app.route("/api/search/download_queue", methods=["GET"])
-def download_queue_status():
-    """
-    V33.3: 获取下载队列状态。
-
-    Returns:
-      {
-        "current_task_id": str | null,
-        "queue_length": int,
-        "queued_task_ids": [...],
-        "current_task": {...} | null  // 当前任务详情
-      }
-    """
-    try:
-        from services.search.online_downloader import get_task_manager
-        manager = get_task_manager()
-        queue_status = manager.get_queue_status()
-
-        # 获取当前任务详情
-        current_task = None
-        if queue_status["current_task_id"]:
-            task = manager.get_task(queue_status["current_task_id"])
-            if task:
-                current_task = task.to_dict()
-
-        return jsonify({
-            **queue_status,
-            "current_task": current_task,
-        })
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"获取队列状态失败: {str(e)}"}), 500
+# download_queue 已迁入 routes/search.py（B3c）
 
 
 @app.route("/api/search/retry_download", methods=["POST"])

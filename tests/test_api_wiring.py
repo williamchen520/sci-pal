@@ -76,6 +76,13 @@ class ContractPilotTests(unittest.TestCase):
         self.assertNotIn("def paper_detail", source)
         self.assertNotIn("def paper_graph", source)
 
+    def test_search_blueprint_is_registered(self) -> None:
+        source = API.read_text(encoding="utf-8")
+        self.assertIn("from routes.search import build_search_blueprint", source)
+        self.assertNotIn("def download_status", source)
+        self.assertNotIn("def download_history", source)
+        self.assertNotIn("def download_queue_status", source)
+
 
 if __name__ == "__main__":
     unittest.main()
