@@ -39,9 +39,22 @@ from typing import Any, Dict, Optional
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 
-# review 侧的 4 个任务类型（与 api_server.reconcile_stale_review_tasks 保持一致）。
-# tasks 表与 online_downloader 共用，涉及「全表扫描」的读/删必须按此过滤。
-REVIEW_TASK_TYPES = ("qa_ask", "agentic_search", "generate_outline", "generate_review")
+# 持久化任务类型白名单（6-A 名为 REVIEW_TASK_TYPES，6-B 加入 parse_paper 后改名）。
+#
+# ⚠️ **另一份在 `api_server.py` 的 `PERSISTED_TASK_TYPES`，两处值必须完全一致。**
+# 这个白名单同时决定两件事：
+#   1. 启动对账收哪些僵尸（run_db_migrations 之后那次 UPDATE）；
+#   2. `/api/review/running_task` 看哪些类型。
+#
+# `download_online` 属于 services/search/online_downloader.py 的**另一套**任务体系，
+# 虽然同表，但**永远不许**进这个白名单。
+PERSISTED_TASK_TYPES = (
+    "qa_ask",
+    "agentic_search",
+    "generate_outline",
+    "generate_review",
+    "parse_paper",
+)
 
 # 只取需要的列（新增列不影响本适配器）
 _SELECT_COLUMNS = (
@@ -199,18 +212,18 @@ class TaskManager:
     def get_running_task(self) -> Optional[Dict[str, Any]]:
         """取最早创建的 **review** running 任务（对应旧实现的「第一个」）；无则 None。
 
-        ⚠️ 必须按 REVIEW_TASK_TYPES 过滤：`tasks` 表是 review 与 online_downloader
+        ⚠️ 必须按 PERSISTED_TASK_TYPES 过滤：`tasks` 表是 review 与 online_downloader
         共用的，不过滤就会把 `download_online` 任务当成 review 任务返回给
         `/api/review/running_task` —— 旧的内存实现里根本不存在这种情况。
         """
-        placeholders = ",".join("?" for _ in REVIEW_TASK_TYPES)
+        placeholders = ",".join("?" for _ in PERSISTED_TASK_TYPES)
         conn = _connect()
         try:
             row = conn.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM tasks "
                 f"WHERE status = 'running' AND type IN ({placeholders}) "
                 "ORDER BY created_at ASC LIMIT 1",
-                REVIEW_TASK_TYPES,
+                PERSISTED_TASK_TYPES,
             ).fetchone()
         finally:
             conn.close()
@@ -222,12 +235,12 @@ class TaskManager:
         同样只统计/删除 review 的 4 个类型：`tasks` 表与 online_downloader 共用，
         不能替别人清历史。
         """
-        placeholders = ",".join("?" for _ in REVIEW_TASK_TYPES)
+        placeholders = ",".join("?" for _ in PERSISTED_TASK_TYPES)
         conn = _connect()
         try:
             total = conn.execute(
                 f"SELECT COUNT(*) FROM tasks WHERE type IN ({placeholders})",
-                REVIEW_TASK_TYPES,
+                PERSISTED_TASK_TYPES,
             ).fetchone()[0]
             if total <= max_count:
                 return
@@ -236,7 +249,7 @@ class TaskManager:
                 f"  SELECT task_id FROM tasks WHERE type IN ({placeholders}) "
                 "  ORDER BY created_at ASC LIMIT ?"
                 ")",
-                (*REVIEW_TASK_TYPES, total - max_count),
+                (*PERSISTED_TASK_TYPES, total - max_count),
             )
             conn.commit()
         finally:

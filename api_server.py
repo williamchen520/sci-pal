@@ -1748,6 +1748,129 @@ def parse_local_paper():
         return jsonify({"error": f"解析失败: {str(e)}"}), 500
 
 
+# V33.17-6B: 解析串行化锁。
+# docling 模型在**进程内**加载，两个解析并发 = 双份内存 + 抢 CPU；解析本来就是分钟级，
+# 排队完全可接受。**不要**为了"看起来更快"去掉这把锁。
+_parse_lock = threading.Lock()
+
+
+@app.route("/api/papers/parse_async", methods=["POST"])
+def parse_local_paper_async():
+    """V33.17-6B: 异步解析本地 PDF（立即返回 task_id）。
+
+    参数与同步版 `/api/papers/parse` 完全一致：JSON body 的 `filename`。
+
+    校验顺序（**便宜校验必须在返回 task_id 之前**，让模型立刻知道参数错了）：
+      1. `filename` 为空            → 400
+      2. 含 `..` / `/` / `\\`       → 400（路径穿越）
+      3. `documents/<filename>` 不存在 → 404
+      以上三条都在 `create_task()` 之前判掉。
+
+    后台线程：
+      · 已解析（`papers.filename` 命中）→ **秒级** `complete_task({"status":"already_parsed", ...})`
+      · 未解析 → `_parse_lock` 串行化 → `ParserOrchestrator().parse_paper()` →
+        `DatabaseWriter().insert_paper()` → `complete_task({"status":"parsed", ...})`
+      · 失败 → `fail_task(task_id, str(e)[:500])`
+
+    ⚠️ 能力边界（如实告知模型）：
+      · 只能解析 `documents/` 下**已存在**的 PDF；本端点**不能上传**文件（MCP 传不了 multipart）。
+      · `insert_paper` **不写 ChromaDB** → 解析入库后**不保证立刻被混合检索命中**，
+        但可以按 `paper_id` 查到详情、也能进图谱。
+      · 任务与 review 任务同表，用 `review_task_status`（`/api/review/task/<id>`）轮询。
+    """
+    import sqlite3
+
+    data = request.get_json(silent=True) or {}
+    filename = str(data.get("filename", "")).strip()
+
+    # ===== 同步校验（必须在 create_task 之前）=====
+    if not filename:
+        return jsonify({"error": "缺少 filename 参数"}), 400
+    if ".." in filename or "/" in filename or "\\" in filename:
+        return jsonify({"error": "非法的文件名"}), 400
+
+    pdf_path = DOCUMENTS_DIR / filename
+    if not pdf_path.exists():
+        return jsonify({"error": f"PDF 文件不存在: {filename}"}), 404
+
+    task_id = task_manager.create_task("parse_paper")
+
+    def run_task():
+        try:
+            if task_manager.is_cancelled(task_id):
+                task_manager.cancel_task(task_id)
+                return
+
+            # ── 快路径：已解析，秒级返回 ──
+            conn = sqlite3.connect(str(DB_PATH), timeout=5)
+            try:
+                conn.row_factory = sqlite3.Row
+                row = conn.execute(
+                    "SELECT paper_id, title, total_paragraphs FROM papers WHERE filename = ?",
+                    (filename,),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            if row:
+                task_manager.complete_task(task_id, {
+                    "paper_id": row["paper_id"],
+                    "status": "already_parsed",
+                    "title": row["title"] or filename,
+                    "paragraph_count": row["total_paragraphs"] or 0,
+                })
+                return
+
+            # ── 慢路径：排队 → 解析 → 写库 ──
+            if not _parse_lock.acquire(blocking=False):
+                task_manager.update_progress(task_id, "排队中（前面还有解析任务）")
+                _parse_lock.acquire()  # 阻塞等待，期间 progress 保持"排队中"
+
+            try:
+                if task_manager.is_cancelled(task_id):
+                    task_manager.cancel_task(task_id)
+                    return
+
+                task_manager.update_progress(task_id, "解析中（docling）…")
+                from build_db.parsers.parser_orchestrator import ParserOrchestrator
+                from build_db.db_writer import DatabaseWriter
+
+                orchestrator = ParserOrchestrator()
+                parsed_result = orchestrator.parse_paper(str(pdf_path))
+
+                task_manager.update_progress(task_id, "写入数据库…")
+                if not DatabaseWriter().insert_paper(parsed_result):
+                    task_manager.fail_task(task_id, "解析成功但写入数据库失败")
+                    return
+
+                paper_id = parsed_result.get("paper_id", "")
+                title = parsed_result.get("metadata", {}).get("title", filename)
+                paragraph_count = len(parsed_result.get("paragraphs", []))
+
+                task_manager.complete_task(task_id, {
+                    "paper_id": paper_id,
+                    "status": "parsed",
+                    "title": title,
+                    "paragraph_count": paragraph_count,
+                    "stats": {
+                        "paragraphs": paragraph_count,
+                        "figures": len(parsed_result.get("figures", [])),
+                        "citations": len(parsed_result.get("citations", [])),
+                    },
+                })
+            finally:
+                _parse_lock.release()
+        except Exception as e:
+            print(f"[ERROR] Async parse failed: {filename} - {e}")
+            import traceback
+            traceback.print_exc()
+            # 不要把整段 traceback 塞进 DB
+            task_manager.fail_task(task_id, str(e)[:500])
+
+    threading.Thread(target=run_task, daemon=True).start()
+    return jsonify({"task_id": task_id})
+
+
 @app.route("/api/papers/<paper_id>/pdf", methods=["GET"])
 def serve_pdf(paper_id):
     """Serve the original PDF file for a paper (for built-in PDF reader)."""
@@ -2282,18 +2405,29 @@ def run_db_migrations():
 # V33.17-6A: 启动对账（review 僵尸任务收尸）
 # ---------------------------------------------------------------------------
 
-REVIEW_TASK_TYPES = ("qa_ask", "agentic_search", "generate_outline", "generate_review")
+# 持久化任务类型白名单（6-A 名为 REVIEW_TASK_TYPES，6-B 加入 parse_paper 后改名）。
+# ⚠️ **另一份在 `services/review/task_manager.py` 的 `PERSISTED_TASK_TYPES`，
+#    两处值必须完全一致。**
+# `download_online` 属于 services/search/online_downloader.py 的另一套任务体系，
+# 虽然同表，但**永远不许**进这个白名单。
+PERSISTED_TASK_TYPES = (
+    "qa_ask",
+    "agentic_search",
+    "generate_outline",
+    "generate_review",
+    "parse_paper",
+)
 
 
 def reconcile_stale_review_tasks() -> int:
-    """把上次进程遗留的 review `running` 任务收成 `failed`。
+    """把上次进程遗留的**持久化** `running` 任务收成 `failed`。
 
-    为什么必须做：review 任务在 6-A 之后落到 `tasks` 表（持久化）。进程被杀时
-    正在跑的任务会永远停在 `running` —— `/api/review/running_task` 会一直返回它，
-    前端误以为"还在跑"，新任务也难识别。
+    为什么必须做：这些任务（review 4 类 + 6-B 的 `parse_paper`）落 `tasks` 表。
+    进程被杀时正在跑的任务会永远停在 `running` —— `/api/review/running_task`
+    会一直返回它，前端误以为"还在跑"，新任务也难识别。
 
-    范围**严格限定**在 review 的 4 个类型：
-        qa_ask / agentic_search / generate_outline / generate_review
+    范围**严格限定**在 `PERSISTED_TASK_TYPES`：
+        qa_ask / agentic_search / generate_outline / generate_review / parse_paper
     `download_online` 等类型属于 services/search/online_downloader.py 的**另一套**
     任务体系，绝不能在这里被顺手改掉。
 
@@ -2306,7 +2440,7 @@ def reconcile_stale_review_tasks() -> int:
     import sqlite3
     from datetime import datetime
 
-    placeholders = ",".join("?" for _ in REVIEW_TASK_TYPES)
+    placeholders = ",".join("?" for _ in PERSISTED_TASK_TYPES)
     conn = None
     try:
         conn = sqlite3.connect(str(DB_PATH), timeout=5)
@@ -2316,7 +2450,7 @@ def reconcile_stale_review_tasks() -> int:
             (
                 "服务重启导致任务中断",
                 datetime.now().isoformat(timespec="seconds"),
-                *REVIEW_TASK_TYPES,
+                *PERSISTED_TASK_TYPES,
             ),
         )
         conn.commit()

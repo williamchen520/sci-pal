@@ -11,10 +11,11 @@ serverName: `scipal-search`　transport: stdio
     · 不承载模型：embedding / reranker / ChromaDB 全在常驻的 Flask 进程里。
     · stdio 模式下 stdout 是 JSON-RPC 通道，本文件不向 stdout 打印。
 
-工具（8 个 —— 真正的约束是模型上下文，不是显存）
+工具（10 个 —— 真正的约束是模型上下文，不是显存）
     health / search_hybrid / search_online / get_paper /
     download_online_papers / download_status /
-    ask_question / agentic_search
+    ask_question / agentic_search /
+    list_local_papers / parse_paper
 
 参数名以 api_server.py 路由实际读取的为准：
     /api/search/hybrid  读 `q`（不是 query），`use_online` 服务端默认 true —— 本工具默认 false
@@ -24,6 +25,7 @@ serverName: `scipal-search`　transport: stdio
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -175,6 +177,81 @@ def agentic_search(
     if paper_id.strip():
         payload["paper_id"] = paper_id.strip()
     return _call("POST", "/api/agentic/search_async", payload)
+
+
+@mcp.tool(
+    description=(
+        "列出 documents/ 目录下的本地 PDF 及其入库状态（GET /api/papers/local）。"
+        "默认只返回精简字段（filename/parsed/paper_id/title/file_size_mb/paragraph_count），"
+        "避免 70+ 篇全量灌进上下文；only_unparsed=true 只看未解析的；limit 默认 20，"
+        "超出会在结果里标注「已截断，共 N 篇」。"
+        "⚠️ 只能看**已有** PDF，本工具不能上传文件。"
+    )
+)
+def list_local_papers(only_unparsed: bool = False, limit: int = 20) -> str:
+    """列出本地 PDF 与解析状态（裁剪后的精简视图）。"""
+    raw = _call("GET", "/api/papers/local")
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return raw  # 上游返回非 JSON 时原样透出，不吞
+
+    if not isinstance(payload, dict) or not payload.get("ok"):
+        return raw  # 业务错误（4xx/5xx）原样返回，保留 status/detail
+
+    data = payload.get("data") or {}
+    all_papers = data.get("papers") or []
+    parsed_count = sum(1 for paper in all_papers if paper.get("parsed"))
+    unparsed_count = len(all_papers) - parsed_count
+
+    selected = [
+        paper for paper in all_papers
+        if not (only_unparsed and paper.get("parsed"))
+    ]
+
+    cap = max(1, int(limit))
+    shown = selected[:cap]
+    items = [
+        {
+            "filename": paper.get("filename"),
+            "parsed": bool(paper.get("parsed")),
+            "paper_id": paper.get("paper_id"),
+            "title": paper.get("title"),
+            "file_size_mb": paper.get("file_size_mb"),
+            "paragraph_count": paper.get("paragraph_count"),
+        }
+        for paper in shown
+    ]
+
+    return json.dumps(
+        {
+            "ok": True,
+            "total": len(all_papers),
+            "parsed_count": parsed_count,
+            "unparsed_count": unparsed_count,
+            "returned": len(items),
+            "truncated": len(selected) > len(items),
+            "note": f"已截断，共 {len(selected)} 篇" if len(selected) > len(items) else "",
+            "papers": items,
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
+@mcp.tool(
+    description=(
+        "提交本地 PDF 解析入库任务（POST /api/papers/parse_async）。"
+        "① **只能解析 documents/ 目录里已存在的 PDF，本工具不能上传文件**；"
+        "② 立即返回 task_id，用 mcp__scipal-generate__review_task_status 轮询（间隔 ≥5 s）；"
+        "③ 大文件可能几分钟（实测约 3.8 s/MB，16 MB 以上会超过 MCP 的 60 s，故必须异步）；"
+        "④ 解析入库**不写 Chroma 索引**，所以不保证立刻能被混合检索命中，"
+        "但可以按 paper_id 查详情。"
+    )
+)
+def parse_paper(filename: str) -> str:
+    """提交解析任务，立即返回 {"task_id": ...}（异步，不等待解析完成）。"""
+    return _call("POST", "/api/papers/parse_async", {"filename": filename})
 
 
 def main() -> None:

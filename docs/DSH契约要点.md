@@ -362,9 +362,10 @@ export function apply(ctx: Context) {
 > 模型仍然只存在于 5000 端口那**一个** Flask 进程里 —— 拆 server **不复制模型**，VRAM 不变。
 >
 > 真正的约束是**模型上下文与工具选择准确率**：单 server 塞的工具越多，上下文越挤、选错越多。
-> 故实际做法是 **按业务流拆、每 server ≤ 8 个工具**（现为 `scipal-search` 6 + `scipal-generate` 6
-> + 哨兵 `scipalhello` 1，共 13）。命名空间因此是多前缀（`mcp__scipal-search__*`），
-> 不再是单一 `mcp__scipal__*`。
+> 故实际做法是 **按业务流拆、每 server 以 8 个为基准**（现为 `scipal-search` **10** + `scipal-generate` 9
+> + 哨兵 `scipalhello` 1，共 **20**）。命名空间因此是多前缀（`mcp__scipal-search__*`），
+> 不再是单一 `mcp__scipal__*`。超出 8 的部分都是「同一工作流闭环」的破例（详见
+> `docs/DSH插件化-路线图.md` §2.3）。
 >
 > 下方原始论证保留作历史记录，**不要再据此把 server 合并回一个**。
 

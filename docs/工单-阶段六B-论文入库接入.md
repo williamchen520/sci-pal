@@ -3,6 +3,10 @@
 > 提出：WorkBuddy ｜ 执行：CodeBuddy ｜ 2026-10-25
 > 范围：**1 个新异步端点 + 2 个 MCP 工具 + 任务类型扩展**。不碰解析器、不碰检索索引、不碰 schema。
 > 规划：`docs/阶段六-规划与派单.md` §2。
+> ✅ **已交付（2026-10-25）**：工具 18 → **20**、断言 25 → **27**；验收项 1/2/3/4/6/7/8/9 已实测通过。
+> 验收项 5（真解析端到端）**受既有缺陷阻塞**：`paragraphs_fts` 列名不一致（`section_level1` vs `section_l1`），
+> 解析写库阶段报 `table paragraphs_fts has no column named section_level1`；用**未改动的同步路由**
+> `/api/papers/parse` 同样复现 → 与本工单无关，`build_db/**` 未改，需单开工单。
 
 ---
 

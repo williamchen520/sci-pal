@@ -4,8 +4,8 @@
 
 **它不承载任何业务逻辑**：所有工具只做一次 HTTP 转发，不 import SciPal 内部模块。
 
-当前挂载 **3 个 stdio 服务 / 共 18 个工具**：
-`scipalhello`（哨兵 1）+ `scipal-search`（8）+ `scipal-generate`（9）。
+当前挂载 **3 个 stdio 服务 / 共 20 个工具**：
+`scipalhello`（哨兵 1）+ `scipal-search`（10）+ `scipal-generate`（9）。
 
 ---
 
@@ -19,7 +19,7 @@
 |---|---|
 | embedding / reranker / ChromaDB 全在 **Flask 进程**里，MCP 侧只是 HTTP 客户端 | MCP 子进程**不加载模型**，单个 server 实测常驻 ≈ **68 MB** |
 | 显存不是约束（模型仍在 5000 端口那一个 Flask 里） | 拆 server **不复制模型**，VRAM 不变 |
-| 真正的约束是**模型上下文与工具数** | 单 server 工具过多会挤占上下文、降低选择准确率 → 按业务流拆，每 server ≤ 8 个工具 |
+| 真正的约束是**模型上下文与工具数** | 单 server 工具过多会挤占上下文、降低选择准确率 → 按业务流拆，每 server 以 8 个为基准（现有 10 / 9 / 1 均属同一工作流闭环的破例，理由见 `docs/DSH插件化-路线图.md` §2.3） |
 
 > 早期文档写「拆多个 = 多份模型、8 GB 装不下」是**错的**：那条推论的错误前提是
 > MCP 进程会 import 业务模块。只要守住下面的约束 1，就不会发生。
@@ -95,11 +95,12 @@ cd d:\sciPal
 | server | 工具数 | 断言数 | 说明 |
 |---|---|---|---|
 | `scipal`（legacy 回退入口） | 5 | 6 | `tools/list` 1 + 5 次调用 |
-| `scipal-search` | 8 | 9 | `tools/list` 1 + 8 次调用 |
+| `scipal-search` | 10 | 11 | `tools/list` 1 + 10 次调用 |
 | `scipal-generate` | 9 | 10 | `tools/list` 1 + 9 次调用 |
-| **合计** | **22** | **25** | 哨兵由 `tests/mcp_ping_server.py --selftest` 单独验证 |
+| **合计** | **24** | **27** | 哨兵由 `tests/mcp_ping_server.py --selftest` 单独验证 |
 
-特殊断言（阶段五-C C-3）：
+特殊断言（阶段六-B 起，共 5 个异步 submit：`generate_outline` / `generate_review` /
+`ask_question` / `agentic_search` / `parse_paper`）：
 
 - `generate_outline`：**必须 <10 s 返回且含 `task_id`**（这是「异步」的判据，不是看 `is_error`）
 - `cancel_review_task`：用不存在的 id，**期望 `status=404`**（业务错误算通过）
@@ -111,9 +112,9 @@ cd d:\sciPal
 
 ---
 
-## 5. 工具清单（18 个）
+## 5. 工具清单（20 个）
 
-### 5.1 `scipal-search`（8）
+### 5.1 `scipal-search`（10）
 
 | MCP 工具 | 对应路由 | 入参 |
 |---|---|---|
@@ -125,6 +126,8 @@ cd d:\sciPal
 | `download_status` | `GET /api/search/download_status` | `task_id`(必填) |
 | `ask_question` | `POST /api/qa/ask_async` | `question`(必填) / `paper_id`="" / `diagnostics`=False → **立即返 `task_id`**（单次 >120 s，必须轮询） |
 | `agentic_search` | `POST /api/agentic/search_async` | `query`(必填) / `max_hops`=3(钳 1-5) / `min_coverage`=0.6 / `top_paragraphs`=6 / `paper_id`="" → **立即返 `task_id`** |
+| `list_local_papers` | `GET /api/papers/local` | `only_unparsed`=False / `limit`=20（裁剪为 6 个精简字段，防上下文爆炸；超出标「已截断」） |
+| `parse_paper` | `POST /api/papers/parse_async` | `filename`(必填) → **立即返 `task_id`**；只能解析 `documents/` 已有 PDF，**不能上传** |
 
 ### 5.2 `scipal-generate`（9）
 
@@ -388,6 +391,10 @@ server 数 : 3    断言总数 : 22    PASS : 22    FAIL : 0    RESULT : PASS
 | **冷启动会把请求循环饿住（一次性）** | 模型**首次加载**时（embedding / reranker，约 +1.5 GB，实测进程 1.47 → 2.94 GB），实测 `/api/health` 被饿到 **21.4 s / 21.8 s**。这是**冷启动一次性**，不是异步本身的问题：**模型热之后**，大纲任务跑完只要 5–7 s，同期连续 35 次 health 采样全在 **0.006 ~ 0.039 s**（2026-10-25 05:02 复测）。第一次用工具前先碰一下 health 或检索，把冷加载熬过去，再也不要套着 20 s 余量做设计 |
 | ~~单线程 server 是真瓶颈~~ → **C-2 已修** | 原 `app.run(threaded=False)` 同一时刻只处理一个请求。C-2 改为 `threaded=True`，**且先补好两道安全阀**：① 异步任务每个 new 私有 `ReviewGenerator`（参数/中间结果不共享）；② 同步 `review/generate` 用 `_review_generate_lock` 串行化（共享单例仍安全）。实测并发两任务时 `/api/health` 0.058–0.132 s |
 | **并发两个重任务会互相拖慢**（未修，属吞吐限制） | 实测同时提交两条综述任务（`max_papers=2`），两者在「检索文献」阶段停留数分钟（CPU / GIL 争抢 + 共享 retriever）。**不串台**（私有实例隔离生效），但**吞吐显著下降** —— 批量生成建议串行 |
+| **解析入库不写 Chroma** | `DatabaseWriter.insert_paper()` 只写 `papers` / `paragraphs` / `figures` / `citations` / `tables`，**不写 ChromaDB** → 新解析的论文**不保证立刻被混合检索命中**（能按 `paper_id` 查详情、能进引用图谱）。要可检索需另跑索引构建脚本，不在 MCP 侧 |
+| **MCP 不能上传 PDF** | `parse_paper` 只能解析 `documents/` 里**已存在**的文件；`/api/papers/import` 是 multipart，MCP 传不了文件流。新 PDF 仍需用户手工放入 |
+| **docling 模型常驻进程（内存）** | 首次真解析会把 docling 模型载入 Flask 进程并**常驻**：实测 RSS **1123.6 → 2385.7 MB**（峰值 2762.3，**+1638 MB**）、Private **4764 → 7476 MB**（+2712 MB），任务结束后**不回落**。解析任务由 `_parse_lock` **串行化**（并发 = 双份内存），第二个任务的 progress 会显示「排队中（前面还有解析任务）」 |
+| ⚠️ **本机解析入库当前失败于既有 FTS schema 缺陷** | `build_db/db_writer.py` 往 `paragraphs_fts` 插 `section_level1`，而该表实际列名是 `section_l1`（`paragraphs_fts` 只有 `para_id/paper_id/section_l1/section_l2/text`）→ `table paragraphs_fts has no column named section_level1`。**同步 `/api/papers/parse` 同样 500「解析成功但写入数据库失败」**（对照实验 13.7 s 复现），与本阶段改动无关。修复需改 `build_db/**`（本工单红线），建议单独开工单 |
 | 长任务无同步等待 | DSH 不支持 task-based execution，本设计一律「立即返回句柄 + 轮询」（`download_online_papers` → `download_status`） |
 | `search_hybrid` 结果体量 | 默认 `top_k=10`；大结果会占用较多上下文，按需调小 |
 | 每 server ≤ 8 工具 | 约束是**模型上下文与选择准确率**，不是显存（MCP 进程不加载模型，≈68 MB/个） |

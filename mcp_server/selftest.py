@@ -1,4 +1,4 @@
-"""SciPal MCP 自检 —— 阶段五-C C-3（3 个 server / 25 条断言，逐工具真调用）。
+"""SciPal MCP 自检 —— 阶段六-B（3 个 server / 27 条断言，逐工具真调用）。
 
 做什么
     对 3 个 server 逐个以 client 身份拉起**独立 stdio 子进程**，跑完整链路：
@@ -70,6 +70,8 @@ SERVERS = [
             "download_status",
             "ask_question",
             "agentic_search",
+            "list_local_papers",
+            "parse_paper",
         ],
         "calls": {
             "health": {},
@@ -83,6 +85,10 @@ SERVERS = [
             # 两个异步任务：拿到 task_id 后立刻 cancel（判据 <10s + 非空）
             "ask_question": {"question": "What is CRISPR delivery?", "diagnostics": False},
             "agentic_search": {"query": "CRISPR delivery", "max_hops": 1, "top_paragraphs": 2},
+            # 只要 3 条，避免 70+ 篇灌满输出
+            "list_local_papers": {"limit": 3},
+            # 选一个**已解析**的文件：走 already_parsed 快路径，不跑 docling、不写库
+            "parse_paper": {"filename": "PMC12707946.pdf"},
         },
     },
     {
@@ -283,6 +289,7 @@ async def _run_server(server: dict) -> tuple[int, int]:
                     "generate_review",
                     "ask_question",
                     "agentic_search",
+                    "parse_paper",
                 ):
                     # 异步判据（三段共用）：<10s 返回且含 task_id；拿到后立刻取消，避免跑满分钟级任务
                     task_id = _extract_task_id(text)

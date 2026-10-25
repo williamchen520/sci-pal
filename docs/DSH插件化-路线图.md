@@ -10,14 +10,14 @@
 
 ## 0. 一句话现状（2026-10-25 11:30 更新）
 
-**阶段五已全部收口**：SciPal 通过 MCP 以 **3 个 stdio server / 18 个工具**接入 DSH Desktop，
+**阶段五已全部收口，阶段六-A / 六-B 已落地**：SciPal 通过 MCP 以 **3 个 stdio server / 20 个工具**接入 DSH Desktop，
 bundle `@local/dsh-scipal` 已实装（link 安装），Flask 由计划任务 `SciPalWatchdog` 托管，
 **业务代码改动仅限异步端点与检索器注入**（见 §2），其余全部是 `mcp_server/` 薄转发。
 
 | server | 工具数 | 内容 |
 |---|---|---|
 | `scipalhello` | 1 | 零依赖哨兵 `ping` |
-| `scipal-search` | 8 | health / 检索（本地·在线·混合）/ 论文详情 / 在线下载+轮询 / **问答** / **多跳检索** |
+| `scipal-search` | 10 | health / 检索（本地·在线·混合）/ 论文详情 / 在线下载+轮询 / **问答** / **多跳检索** / **本地 PDF 列表** / **异步解析入库** |
 | `scipal-generate` | 9 | health / 大纲（读·列表·**生成**）/ 综述详情 / 引用图谱 / 任务状态 / **取消** / **综述生成** |
 
 **根本约束不变**：DSH 是 TS，SciPal 是 Python（157 py / 45k 行 / 425MB），**绝不 TS 重写**，
@@ -44,6 +44,8 @@ bundle `@local/dsh-scipal` 已实装（link 安装），Flask 由计划任务 `S
 | 看门狗修复 | 拉起后等就绪、拉起前判端口、`--status`；消除实例堆积（曾滚到 8 个） | `ca21a5a` |
 | 五-C C-3 | 问答 / 多跳检索异步接入；**先修检索栈重复加载（71.5 s → 1.2 s）**（18 工具） | `62e1c03` |
 | 五-C 收尾 | selftest 清理改走 HTTP、失败可见、遗留任务检查 | `e7c63c0` |
+| 六-A | `review` 任务持久化到 SQLite `tasks` 表 + 启动对账收尸（18 工具，断言 25） | 待提交 |
+| 六-B | 本地 PDF 入库：`list_local_papers` + `parse_paper`（异步端点 `parse_async`）（20 工具，断言 27） | 待提交 |
 
 冻结回滚线：**`freeze/v33.17`**（`a097397`），只许看不许改。
 
@@ -74,19 +76,24 @@ bundle `@local/dsh-scipal` 已实装（link 安装），Flask 由计划任务 `S
 ### 2.3 工具数上限的取舍
 
 原则是 **≤8 工具/server**（约束是模型上下文与选择准确率，不是显存 ——
-MCP 进程不加载模型，实测单个 ≈65–70 MB）。两次破例都在 `scipal-generate`（9 个）：
-`generate_outline` / `generate_review` 与同 server 的「读结果」工具属于同一个工作流闭环，
-拆第四个 server 要多一个常驻进程，换不来收益。
+MCP 进程不加载模型，实测单个 ≈65–70 MB）。**三次破例**：
+
+1. `scipal-generate`（9 个）：`generate_outline` / `generate_review` 与同 server 的「读结果」工具
+   属于同一个工作流闭环，拆第四个 server 要多一个常驻进程，换不来收益。
+2. `scipal-search`（8 → 10，阶段六-B）：`list_local_papers` / `parse_paper` 属于「本地 PDF 入库」
+   同一个闭环，与 `get_paper` / `download_online_papers` 读的是同一批本地资源；
+   且 `list_local_papers` 已把返回裁剪为 6 个精简字段 + `limit` 上限 + 「已截断」标注，压住上下文占用。
 
 ### 2.4 尚未派单的事项（都不是阶段五的阻塞项）
 
 | 事项 | 判断 | 备注 |
 |---|---|---|
-| `POST /api/papers/parse` 挂进 MCP | **已排入阶段六-B** | ⚠️ 更正：`parse` 收的是 JSON `filename`（**不是** multipart，multipart 的是 `import`）；真问题是 docling 解析耗时未知，需异步 |
+| `POST /api/papers/parse` 挂进 MCP | **已完成（阶段六-B）** | 落地为 `parse_paper` + `list_local_papers` 两个工具，走**新增的异步端点 `POST /api/papers/parse_async`**（立即返 `task_id`，轮询 `review_task_status`）。⚠️ `parse` 收的是 JSON `filename`（**不是** multipart，multipart 的是 `import`）；同步路由 `POST /api/papers/parse` 保留未动，作为对照基线 |
 | `scipal-guard` 独立 server | **阶段六-C，待决策** | 卡在「词表从哪来」（统计生成 / 用户提供 / MeSH），不是卡在代码；无词表就只是重复 QA 已有的 `validation` |
 | 同步路由下线（`review/generate`、`qa/ask`、`agentic/search`） | **不下线** | 前端仍在用；async 是**新增**不是替换 |
 | 看门狗日志落盘 | **已完成** | `logs/sciPal_watchdog.log`（stdout 双写 + RUN MARKER + 5 MB 轮转）；状态切换日志带 `listening pids/count`，`count > 1` 额外打 `⚠️ 检测到多实例监听` |
-| `review` 任务跨重启丢失 | **已排入阶段六-A（本轮派单）** | `services/review/task_manager.py` 是进程内内存 dict → 改成 SQLite `tasks` 表（表已存在、0 行、11 列），保留 9 方法签名与 7 键返回 |
+| `review` 任务跨重启丢失 | **已完成（阶段六-A）** | `services/review/task_manager.py` 由进程内内存 dict 改为 SQLite `tasks` 表，保留 9 方法签名与 7 键返回；白名单 `PERSISTED_TASK_TYPES` 启动对账收尸 |
+| **`paragraphs_fts` 列名不一致**（既有缺陷，非六-A/B 引入） | **待单开工单** | `build_db/db_writer.py` 写 `section_level1`，而 `paragraphs_fts` 实际列名为 `section_l1` → 解析写库阶段报 `table paragraphs_fts has no column named section_level1`。未改动的同步路由 `/api/papers/parse` 同样复现，**证明与 MCP 层无关**；详见 `mcp_server/README.md` §8.2 |
 
 → **阶段六的分阶段规划与派单顺序见 `docs/阶段六-规划与派单.md`**（6-A 任务持久化 → 6-B 论文入库 → 6-C guard）。
 

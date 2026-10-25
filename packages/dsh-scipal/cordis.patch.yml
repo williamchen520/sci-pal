@@ -78,10 +78,10 @@
         toolCallTimeoutMs: 60000
         failOnStartupError: false
 
-# ── 工具出现形式（重启 DSH 后应有 18 个 mcp__ 工具 = 1 + 8 + 9）──────────────
+# ── 工具出现形式（重启 DSH 后应有 20 个 mcp__ 工具 = 1 + 10 + 9）─────────────
 # 哨兵：
 #   mcp__scipalhello__ping
-# scipal-search（8）：
+# scipal-search（10）：
 #   mcp__scipal-search__health
 #   mcp__scipal-search__search_hybrid
 #   mcp__scipal-search__search_online
@@ -90,6 +90,8 @@
 #   mcp__scipal-search__download_status            ← 轮询下载进度
 #   mcp__scipal-search__ask_question               ← 异步问答（>120s），轮询 review_task_status
 #   mcp__scipal-search__agentic_search             ← 异步多跳检索，轮询 review_task_status
+#   mcp__scipal-search__list_local_papers          ← 本地 PDF 与入库状态（精简视图，含 limit）
+#   mcp__scipal-search__parse_paper                ← 异步解析入库，立即返 task_id（不写 Chroma）
 # scipal-generate（9，只读 + 轮询 + 两个异步 submit）：
 #   mcp__scipal-generate__health
 #   mcp__scipal-generate__list_saved_outlines
