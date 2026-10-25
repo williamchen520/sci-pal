@@ -122,8 +122,9 @@ def build_draft_stage(draft: Draft | None = None) -> Callable[[StageContext], St
             "sections": payload.get("sections") or [],
             "sentences": payload.get("sentences") or [],
             "evidence_cards": payload.get("evidence_cards") or {},
+            "markdown": str(payload.get("markdown") or ""),
         }
-        markdown = str(payload.get("markdown") or "")
+        markdown = review["markdown"]
         write_artifact(context, "review.json", review)
         write_artifact(context, "draft.md", markdown)
 
@@ -199,7 +200,7 @@ def build_evidence_stage(extract: Extract | None = None) -> Callable[[StageConte
 
 def build_store_stage(save_review: SaveReview | None = None) -> Callable[[StageContext], StageResult]:
     """Persist the reviewed draft. Reads ``review.json``, writes ``store.json``."""
-    saver = save_review or _json_store
+    saver = save_review or _default_save_review
 
     def stage(context: StageContext) -> StageResult:
         review = _read_json(context.run_dir / "review.json")
@@ -366,15 +367,14 @@ def _render_markdown(draft: Any) -> str:
     return "".join(parts).strip() + "\n"
 
 
-def _default_verify(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
-    """Rebuild the domain objects and run the deterministic citation check."""
-    from services.review.citation_verifier import CitationVerifier
+def _rebuild_draft(review: Mapping[str, Any], context: StageContext):
+    """Rebuild ReviewDraft from the JSON contract (used by verify and store)."""
     from services.review.models import (
         EvidenceCard,
         ReviewDraft,
         ReviewOutline,
-        ReviewSentence,
         ReviewSection,
+        ReviewSentence,
     )
 
     plan = _read_json(context.run_dir / "plan.json") or {}
@@ -383,7 +383,7 @@ def _default_verify(review: Mapping[str, Any], context: StageContext) -> dict[st
         for index, item in enumerate(plan.get("sections") or [], start=1)
     ]
     topic = str(review.get("topic") or context.spec.topic)
-    draft = ReviewDraft(
+    return ReviewDraft(
         topic=topic,
         outline=ReviewOutline(topic=topic, sections=sections),
         sentences=[ReviewSentence(**item) for item in review.get("sentences") or []],
@@ -392,9 +392,16 @@ def _default_verify(review: Mapping[str, Any], context: StageContext) -> dict[st
             for evidence_id, card in (review.get("evidence_cards") or {}).items()
         },
     )
+
+
+def _default_verify(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
+    """Rebuild the domain objects and run the deterministic citation check."""
+    from services.review.citation_verifier import CitationVerifier
+
+    draft = _rebuild_draft(review, context)
     verified, warnings = CitationVerifier().verify(draft)
     return {
-        "topic": topic,
+        "topic": draft.topic,
         "stats": verified.stats(),
         "warnings": warnings,
         "sentences": [sentence.model_dump(mode="json") for sentence in verified.sentences],
@@ -459,16 +466,29 @@ def _paragraphs_from_retrieve(payload: Mapping[str, Any]) -> list[dict[str, Any]
     return derived
 
 
-def _json_store(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
-    """Placeholder store: keeps the record next to the run until the DB adapter lands."""
-    record = {
-        "review_id": f"rev_{uuid.uuid4().hex[:12]}",
-        "topic": review.get("topic") or context.spec.topic,
+def _default_save_review(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
+    """Persist into the in-process ReviewStore used by the API for traceability."""
+    from services.review.models import ReviewOutput
+    from services.review.review_store import get_review_store
+
+    draft = _rebuild_draft(review, context)
+    markdown = str(review.get("markdown") or "") or _render_markdown(draft)
+    output = ReviewOutput(
+        topic=draft.topic,
+        markdown=markdown,
+        references=list(review.get("references") or []),
+        stats=dict(review.get("stats") or draft.stats()),
+        warnings=list(review.get("warnings") or []),
+    )
+    review_id = get_review_store().store(
+        output, draft, list(draft.evidence_cards.values())
+    )
+    return {
+        "review_id": review_id,
+        "topic": draft.topic,
         "stored_at": _now(),
-        "review": dict(review),
+        "stats": output.stats,
     }
-    write_artifact(context, "review_store.json", record)
-    return record
 
 
 def _markdown_export(record: Mapping[str, Any], context: StageContext) -> list[str]:

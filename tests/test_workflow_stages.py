@@ -82,6 +82,44 @@ class StoreStageTests(unittest.TestCase):
         self.assertTrue(record["review_id"].startswith("rev_"))
         self.assertEqual(record["topic"], "demo")
 
+    def test_default_store_persists_into_review_store(self) -> None:
+        from unittest.mock import patch
+
+        captured = {}
+
+        class FakeStore:
+            def store(self, output, draft, cards):
+                captured.update(output=output, draft=draft, cards=cards)
+                return "rev_fake"
+
+        spec = WorkflowSpec(topic="demo", stages=("store",))
+        (self.dir / "plan.json").write_text(
+            '{"sections": [{"id": "sec-01", "title": "Intro"}]}', encoding="utf-8"
+        )
+        (self.dir / "review.json").write_text(
+            json.dumps(
+                {
+                    "topic": "demo",
+                    "markdown": "# md",
+                    "sentences": [
+                        {"sentence_id": "s1", "section_id": "sec-01", "text": "claim [ev1]", "evidence_ids": ["ev1"]}
+                    ],
+                    "evidence_cards": {
+                        "ev1": {"evidence_id": "ev1", "paper_id": "p1", "para_id": "a1", "content": "c"}
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        with patch("services.review.review_store.get_review_store", return_value=FakeStore()):
+            result = build_store_stage()(context(self.dir, spec))
+
+        self.assertEqual(result.status, "ok", result.errors)
+        self.assertEqual(result.metrics["review_id"], "rev_fake")
+        self.assertEqual(captured["output"].markdown, "# md")
+        self.assertEqual(len(captured["draft"].sentences), 1)
+        self.assertEqual(len(captured["cards"]), 1)
+
     def test_injected_store_is_used(self) -> None:
         seen = {}
 
