@@ -486,6 +486,7 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
     )
 
     db_path = context.services.get("db_path") or _default_db_path()
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     ReviewRepository(db_path).save(
         review_id=review_id,
         run_id=context.run_id,
