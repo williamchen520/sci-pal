@@ -25,6 +25,7 @@ from services.review.task_manager import task_manager
 
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
 from contracts import InternalError, fail, ok
+from routes.papers import build_papers_blueprint
 from routes.system import build_system_blueprint
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
@@ -138,6 +139,10 @@ def get_graph():
 # B3a: system 域只读路由（graph/stats、communities）已移入 routes/system.py
 app.register_blueprint(
     build_system_blueprint(db_path=DB_PATH, get_graph=get_graph, log=app.logger)
+)
+# B3b: papers 域只读路由（列表/详情/引文邻居）已移入 routes/papers.py
+app.register_blueprint(
+    build_papers_blueprint(db_path=DB_PATH, get_graph=get_graph, log=app.logger)
 )
 
 
@@ -484,100 +489,13 @@ def agentic_search_async():
     return jsonify({"task_id": task_id})
 
 
-@app.route("/api/papers", methods=["GET"])
-def list_papers():
-    """List all papers with basic metadata."""
-    import sqlite3
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute("""
-        SELECT paper_id, title, authors, journal, year, doi,
-               total_paragraphs, total_figures, total_tables
-        FROM papers ORDER BY year DESC, title
-    """).fetchall()
-    conn.close()
-    return jsonify({"count": len(rows), "papers": [dict(r) for r in rows]})
+# papers 域只读路由（列表/详情/引文邻居）已迁入 routes/papers.py（B3b）
 
 
-@app.route("/api/papers/<paper_id>", methods=["GET"])
-def paper_detail(paper_id):
-    """Get detailed metadata for a single paper."""
-    import sqlite3
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    paper = conn.execute(
-        "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)).fetchone()
-    if not paper:
-        conn.close()
-        return jsonify({"error": "Paper not found"}), 404
-
-    # Citation graph neighbors
-    cites = conn.execute("""
-        SELECT p.paper_id, p.title, p.year, c.confidence
-        FROM cross_paper_index c
-        JOIN papers p ON p.paper_id = c.target_paper_id
-        WHERE c.source_paper_id = ? AND c.relation = 'cites'
-        ORDER BY c.confidence DESC
-    """, (paper_id,)).fetchall()
-    cited_by = conn.execute("""
-        SELECT p.paper_id, p.title, p.year, c.confidence
-        FROM cross_paper_index c
-        JOIN papers p ON p.paper_id = c.source_paper_id
-        WHERE c.target_paper_id = ? AND c.relation = 'cites'
-        ORDER BY c.confidence DESC
-    """, (paper_id,)).fetchall()
-    similar = conn.execute("""
-        SELECT p.paper_id, p.title, p.year, c.confidence
-        FROM cross_paper_index c
-        JOIN papers p ON p.paper_id = c.target_paper_id
-        WHERE c.source_paper_id = ? AND c.relation = 'similar'
-        ORDER BY c.confidence DESC LIMIT 10
-    """, (paper_id,)).fetchall()
-    conn.close()
-
-    return jsonify({
-        "paper": dict(paper),
-        "cites": [dict(r) for r in cites],
-        "cited_by": [dict(r) for r in cited_by],
-        "similar": [dict(r) for r in similar],
-    })
+# paper_detail 已迁入 routes/papers.py（B3b）
 
 
-@app.route("/api/papers/<paper_id>/graph", methods=["GET"])
-def paper_graph(paper_id):
-    """
-    Graph traversal from a paper.
-
-    Query params:
-      relation: 'cites' | 'similar' | 'all' (default 'all')
-      direction: 'out' | 'in' | 'both' (default 'both')
-      max_hops: BFS depth (default 1, max 3)
-      max_total: max papers to return (default 10)
-    """
-    relation = request.args.get("relation", "all")
-    direction = request.args.get("direction", "both")
-    max_hops = min(int(request.args.get("max_hops", 1)), 3)
-    max_total = int(request.args.get("max_total", 10))
-
-    try:
-        graph = get_graph()
-        if max_hops <= 1:
-            neighbors = graph.get_neighbors(
-                [paper_id], relation=relation, direction=direction)
-            neighbors = neighbors[:max_total]
-        else:
-            neighbors = graph.traverse(
-                [paper_id], max_hops=max_hops, max_total=max_total,
-                relation=relation)
-        return jsonify({
-            "paper_id": paper_id,
-            "relation": relation,
-            "max_hops": max_hops,
-            "count": len(neighbors),
-            "neighbors": neighbors,
-        })
-    except Exception as e:
-        return jsonify({"error": f"Graph traversal failed: {str(e)}"}), 500
+# paper_graph 已迁入 routes/papers.py（B3b）
 
 
 # ---------------------------------------------------------------------------
