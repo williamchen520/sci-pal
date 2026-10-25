@@ -109,18 +109,32 @@ class TaskManager:
     并用 `cursor.rowcount` 判断是否真的生效 —— 与旧内存实现逐条对齐。
     """
 
-    def create_task(self, task_type: str) -> str:
-        """创建一个新任务，返回 uuid4（36 字符，保持既有 id 形态不变）。"""
+    def create_task(self, task_type: str, params: Optional[dict] = None) -> str:
+        """创建一个新任务，返回 uuid4（36 字符，保持既有 id 形态不变）。
+
+        T3-4: `params` 可选，落 `tasks.params` 列（JSON 文本），方便事后查
+        「这条任务是哪个文件 / 哪个问题」。**不传则保持 NULL** —— 兼容既有调用点
+        （qa_ask / agentic_search / generate_outline / generate_review 都不传）。
+
+        ⚠️ `get_task()` 仍只返回 7 键，`params` 不进返回体（前端/MCP 都无感）。
+        """
         task_id = str(uuid.uuid4())
         now = _now()
+        params_text: Optional[str] = None
+        if params is not None:
+            try:
+                params_text = json.dumps(params, ensure_ascii=False)
+            except (TypeError, ValueError):
+                params_text = json.dumps(str(params), ensure_ascii=False)
+
         conn = _connect()
         try:
             conn.execute(
                 "INSERT INTO tasks ("
                 "  task_id, type, status, progress_text, result, error, "
-                "  created_at, started_at, progress_pct"
-                ") VALUES (?, ?, 'running', '初始化中...', NULL, NULL, ?, ?, 0)",
-                (task_id, task_type, now, now),
+                "  created_at, started_at, progress_pct, params"
+                ") VALUES (?, ?, 'running', '初始化中...', NULL, NULL, ?, ?, 0, ?)",
+                (task_id, task_type, now, now, params_text),
             )
             conn.commit()
         finally:
@@ -152,8 +166,13 @@ class TaskManager:
         finally:
             conn.close()
 
-    def complete_task(self, task_id: str, result: Any) -> None:
-        """仅当 running 时置 completed。已 cancelled 的任务**必须无效**。"""
+    def complete_task(self, task_id: str, result: Any) -> bool:
+        """仅当 running 时置 completed。已 cancelled 的任务**必须无效**。
+
+        T3-5: 返回**本次迁移是否真的生效**。
+            True  = 任务原本是 running，已置 completed；
+            False = 任务已不在 running（cancelled / failed / 不存在），本次未生效。
+        """
         if result is None:
             payload = None
         else:
@@ -164,25 +183,32 @@ class TaskManager:
 
         conn = _connect()
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "UPDATE tasks SET status='completed', result=?, progress_pct=100, finished_at=? "
                 "WHERE task_id = ? AND status = 'running'",
                 (payload, _now(), task_id),
             )
             conn.commit()
+            return cursor.rowcount > 0
         finally:
             conn.close()
 
-    def fail_task(self, task_id: str, error: str) -> None:
-        """仅当 running 时置 failed。"""
+    def fail_task(self, task_id: str, error: str) -> bool:
+        """仅当 running 时置 failed。
+
+        T3-5: 返回**本次迁移是否真的生效**。
+            True  = 任务原本是 running，已置 failed；
+            False = 任务已不在 running（cancelled / completed / 不存在），本次未生效。
+        """
         conn = _connect()
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "UPDATE tasks SET status='failed', error=?, finished_at=? "
                 "WHERE task_id = ? AND status = 'running'",
                 (error, _now(), task_id),
             )
             conn.commit()
+            return cursor.rowcount > 0
         finally:
             conn.close()
 

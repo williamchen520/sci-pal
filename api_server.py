@@ -1699,13 +1699,47 @@ def clear_download_history():
 # ---------------------------------------------------------------------------
 _parse_lock = threading.Lock()
 
+# T3-3: 解析任务并发上限。超过就直接 429，**不许静默排队**。
+# 为什么是 3：单实例部署；docling 一次只跑一个（`_parse_lock` 串行），
+# 另外给「前端一键」与「MCP 提交」各留一个排队位。再多只是把线程堆在锁上。
+PARSE_MAX_CONCURRENT = 3
+
+# 准入锁：与 `_parse_lock` **分开**，只保护「查 running 数 + create_task」这一小段，
+# 避免准入判定的开销被解析串行化牵连（否则第 4 个请求要等解析完才拿到 429）。
+_parse_admit_lock = threading.Lock()
+
+
+def _parse_running_count() -> int:
+    """当前处于 running 的解析任务数（口径：type='parse_paper' AND status='running'）。
+
+    不含 completed / failed / cancelled —— 那些已经释放了并发额度。
+    """
+    import sqlite3
+
+    conn = sqlite3.connect(str(DB_PATH), timeout=5)
+    try:
+        return conn.execute(
+            "SELECT COUNT(*) FROM tasks WHERE type = 'parse_paper' AND status = 'running'"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+
 
 class ParseStoreError(RuntimeError):
     """解析成功、但写库失败（与「解析本身失败」区分，便于路由给出准确的 error）。"""
 
 
 class ParseCancelled(RuntimeError):
-    """解析已完成，但写库前发现任务已被取消 —— 放弃写库（数据不进库）。"""
+    """任务已取消，本次解析放弃（**数据不进库**）。
+
+    T3-1: `stage` 标明取消生效的阶段，供日志区分：
+      · `排队期间` —— 拿到锁后发现已被取消，**连 docling 都不跑**；
+      · `解析后`   —— docling 已跑完，写库前发现已被取消。
+    """
+
+    def __init__(self, message: str, stage: str = "") -> None:
+        super().__init__(message)
+        self.stage = stage
 
 
 def _parse_and_store(
@@ -1754,8 +1788,11 @@ def _parse_and_store(
     # 同步路由排队是预期行为 → 阻塞式 with（慢，但可预测）
     with _parse_lock:
         # T4-2: 已拿到锁、还没解析 —— 「排队中」到此为止，进度切到「解析中」。
-        if on_acquired is not None:
-            on_acquired()
+        # T3-1: 回调**返回 False** 表示「这个任务在排队期间已被取消」→ 立刻放弃，
+        # 位置必须在 `ParserOrchestrator()` 之前，否则白烧一次 docling（约 15 s + 3.5 GB）。
+        # 向后兼容：返回 None / 其它值 → 照常解析（同步路由根本不传 on_acquired）。
+        if on_acquired is not None and on_acquired() is False:
+            raise ParseCancelled("排队期间已取消，未解析", stage="排队期间")
 
         orchestrator = ParserOrchestrator()
         parsed_result = orchestrator.parse_paper(str(pdf_path))
@@ -1763,7 +1800,7 @@ def _parse_and_store(
         # T2-3: 写库前的最后一道闸。docling 是黑盒调用（分钟级、不可中断），
         # 取消只能在这里生效 —— 过了这一行就一定会写库。
         if before_store is not None and before_store():
-            raise ParseCancelled("任务已取消，未写库")
+            raise ParseCancelled("任务已取消，未写库", stage="解析后")
 
         if not DatabaseWriter().insert_paper(parsed_result):
             raise ParseStoreError("解析成功但写入数据库失败")
@@ -1805,8 +1842,21 @@ def parse_local_paper():
         return jsonify({"error": "非法的文件名"}), 400
 
     pdf_path = DOCUMENTS_DIR / filename
-    if not pdf_path.exists():
-        return jsonify({"error": f"PDF 文件不存在: {filename}"}), 404
+    # T3-6: 入参校验（顺序固定）：后缀 → 是否普通文件。
+    # 传目录名时 exists() 为真，会一路到 docling 才炸；传 .txt 也会直接进解析。
+    # 无后缀的名字（多为目录名，如 `docs`）归到「不是普通文件」——报 404 比
+    # 报「只支持 .pdf」更准确，也与工单 T3-6-a 的判据一致。
+    suffix = pdf_path.suffix.lower()
+    if suffix != ".pdf":
+        if suffix:
+            return jsonify({"error": f"只支持 .pdf 文件: {filename}"}), 400
+        return jsonify({"error": f"文件不存在或不是普通文件: {filename}"}), 404
+    if not pdf_path.is_file():
+        return jsonify({"error": f"文件不存在或不是普通文件: {filename}"}), 404
+
+    # T3-3: 本路由**有意不做并发准入**（不是漏了）。前端「解析」按钮是人点的，
+    # 加 429 只会让页面莫名报错；并发额度由异步路由 parse_async 兜住。
+    # 两条路由共用 _parse_and_store 里的 _parse_lock，不会真并行跑两个 docling。
 
     # 检查是否已解析。统一口径：段落数多者优先、并列取创建更早的
     # （papers.filename 不唯一，同一文件可能有 `<id>` 与 `<id>_mineru` 两行）
@@ -1865,10 +1915,13 @@ def parse_local_paper_async():
     参数与同步版 `/api/papers/parse` 完全一致：JSON body 的 `filename`。
 
     校验顺序（**便宜校验必须在返回 task_id 之前**，让模型立刻知道参数错了）：
-      1. `filename` 为空            → 400
-      2. 含 `..` / `/` / `\\`       → 400（路径穿越）
-      3. `documents/<filename>` 不存在 → 404
-      以上三条都在 `create_task()` 之前判掉。
+      1. `filename` 为空              → 400
+      2. 含 `..` / `/` / `\\`         → 400（路径穿越）
+      3. 后缀不是 `.pdf`              → 400
+      4. 不是普通文件（不存在/是目录）→ 404
+      以上四条都在 `create_task()` 之前判掉。
+    并发准入（T3-3）：running 的 `parse_paper` 任务达到 `PARSE_MAX_CONCURRENT`（3）
+      → **429** + `{error, running, limit}`，且**不建任务行**。不排队、不静默等待。
 
     后台线程：
       · 已解析（`_find_parsed_paper` 命中，段落数多者优先）→ **秒级**
@@ -1878,10 +1931,12 @@ def parse_local_paper_async():
       · 失败 → `fail_task(task_id, str(e)[:500])`
 
     ⚠️ 取消语义（如实说明）：
-      **docling 期间无法中断**。取消只在两个点生效：
-        1. 解析开始前（拿锁前 / 拿锁后各查一次 `is_cancelled`）；
-        2. **写库之前**（`_parse_and_store` 的 `before_store` 回调里）——
-           已取消则**不写库**，任务保持 `cancelled`，库里不会多出论文。
+      **docling 期间无法中断**。取消在三个点生效：
+        1. 提交后、拿锁前（`is_cancelled`）；
+        2. **拿到锁、还没解析**（T3-1 的 `on_acquired`）—— 排队期间取消的话，
+           这里直接放弃，**连 docling 都不跑**（不再白烧一次解析）；
+        3. **写库之前**（`_parse_and_store` 的 `before_store`）——
+           解析已跑完时取消，仍然不写库。
       若请求到达时已经过了「写库点」，数据会保留、任务可能仍是 `completed`。
 
     ⚠️ 能力边界（如实告知模型）：
@@ -1900,10 +1955,28 @@ def parse_local_paper_async():
         return jsonify({"error": "非法的文件名"}), 400
 
     pdf_path = DOCUMENTS_DIR / filename
-    if not pdf_path.exists():
-        return jsonify({"error": f"PDF 文件不存在: {filename}"}), 404
+    # T3-6: 与同步路由同一套校验（后缀 → 普通文件），且都在建任务之前。
+    # 无后缀 → 404「不是普通文件」；有非 .pdf 后缀 → 400「只支持 .pdf」。
+    suffix = pdf_path.suffix.lower()
+    if suffix != ".pdf":
+        if suffix:
+            return jsonify({"error": f"只支持 .pdf 文件: {filename}"}), 400
+        return jsonify({"error": f"文件不存在或不是普通文件: {filename}"}), 404
+    if not pdf_path.is_file():
+        return jsonify({"error": f"文件不存在或不是普通文件: {filename}"}), 404
 
-    task_id = task_manager.create_task("parse_paper")
+    # T3-3: 并发准入。「查 running 数」与「create_task」必须在同一把短锁里，
+    # 否则两个请求可能同时读到 running=2 都放行。超限**不建任务行**。
+    with _parse_admit_lock:
+        running = _parse_running_count()
+        if running >= PARSE_MAX_CONCURRENT:
+            return jsonify({
+                "error": f"解析任务已达上限（{PARSE_MAX_CONCURRENT}），请等前面的完成或取消",
+                "running": running,
+                "limit": PARSE_MAX_CONCURRENT,
+            }), 429
+        # T3-4: params 落库，方便事后按文件名定位任务（get_task 仍只返回 7 键）
+        task_id = task_manager.create_task("parse_paper", params={"filename": filename})
 
     def _fail(error_text: str) -> None:
         """置 failed，并把 progress 从上一阶段（如「写入数据库…」）改掉。
@@ -1914,6 +1987,18 @@ def parse_local_paper_async():
         """
         task_manager.update_progress(task_id, "已失败")
         task_manager.fail_task(task_id, error_text)
+
+    def _on_acquired() -> bool:
+        """拿到锁、尚未解析（T3-1）。
+
+        返回 **False** = 排队期间已被取消 → `_parse_and_store` 会在构造
+        `ParserOrchestrator()` 之前放弃，**不跑 docling**。
+        返回 True = 正常，顺带把 progress 切到「解析中」。
+        """
+        if task_manager.is_cancelled(task_id):
+            return False
+        task_manager.update_progress(task_id, "解析中（docling）…")
+        return True
 
     def _before_store() -> bool:
         """写库前的最后一道闸（在 _parse_and_store 的锁内、解析完成后被调用）。
@@ -1961,9 +2046,7 @@ def parse_local_paper_async():
                 on_waiting=lambda: task_manager.update_progress(
                     task_id, "排队中（前面还有解析任务）"
                 ),
-                on_acquired=lambda: task_manager.update_progress(
-                    task_id, "解析中（docling）…"
-                ),
+                on_acquired=_on_acquired,
             )
 
             task_manager.complete_task(task_id, {
@@ -1973,12 +2056,17 @@ def parse_local_paper_async():
                 "paragraph_count": result["paragraph_count"],
                 "stats": result["stats"],
             })
-        except ParseCancelled:
+        except ParseCancelled as exc:
             # 已取消 → 数据没写库。状态由取消端点置为 cancelled，这里只留日志。
             task_manager.cancel_task(task_id)  # 已是 cancelled 时 rowcount=0，幂等
             # flush=True：进程被 kill 时 stdout 是块缓冲，这行会丢；这条日志是
             # 「取消确实没写库」的唯一现场证据，不能指望缓冲区。
-            print(f"[INFO] 解析已取消，未写库：{filename}（{task_id}）", flush=True)
+            # T3-1: 阶段由 ParseCancelled.stage 给出（排队期间 / 解析后）
+            print(
+                f"[INFO] 解析已取消（{exc.stage or '未知阶段'}），未写库："
+                f"{filename}（{task_id}）",
+                flush=True,
+            )
         except ParseStoreError as e:
             _fail(str(e))
         except Exception as e:

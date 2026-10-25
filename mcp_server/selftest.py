@@ -87,8 +87,10 @@ SERVERS = [
             "agentic_search": {"query": "CRISPR delivery", "max_hops": 1, "top_paragraphs": 2},
             # 只要 3 条，避免 70+ 篇灌满输出
             "list_local_papers": {"limit": 3},
-            # 选一个**已解析**的文件：走 already_parsed 快路径，不跑 docling、不写库
-            "parse_paper": {"filename": "PMC12707946.pdf"},
+            # T3-7: 不再硬编码论文 —— 由 main() 从 /api/papers/local 动态注入
+            # 「第一篇 parsed=True 且 paragraph_count>0」的文件。
+            # None = 库里一篇可用的都没有 → 本条 SKIP（不计入断言数，也不算 FAIL）。
+            "parse_paper": None,
         },
     },
     {
@@ -230,19 +232,20 @@ def _extract_task_id(text: str):
     return payload.get("task_id")
 
 
-async def _run_server(server: dict) -> tuple[int, int]:
-    """跑一个 server 的完整链路，返回 (pass, fail)。"""
+async def _run_server(server: dict) -> tuple[int, int, int, int]:
+    """跑一个 server 的完整链路，返回 (pass, fail, cancel_failures, skipped)。"""
     path = HERE / server["file"]
     params = StdioServerParameters(command=sys.executable, args=[str(path)])
     passed = 0
     failed = 0
     cancel_failures = 0  # T-2: 清理失败次数（进汇总）
+    skipped = 0          # T3-7: 跳过条数（不计入断言数）
 
     print(f"\n[server] {server['label']}  ({server['file']})")
 
     if not path.exists():
         print(f"  [FAIL] 文件不存在：{path}")
-        return 0, 1, 0
+        return 0, 1, 0, 0
 
     async with stdio_client(params) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
@@ -263,6 +266,12 @@ async def _run_server(server: dict) -> tuple[int, int]:
 
             for name in expected:
                 args = server["calls"].get(name, {})
+                if args is None:
+                    # T3-7: 显式标记为 None = 本条没有可用的测试数据 → SKIP。
+                    # 不计 PASS 也不计 FAIL，但在汇总里单列 SKIP 行。
+                    print(f"  [SKIP] {name:<24} 无可用于 parse_paper 的已解析论文")
+                    skipped += 1
+                    continue
                 started = time.time()
                 try:
                     result = await session.call_tool(name, args)
@@ -327,7 +336,27 @@ async def _run_server(server: dict) -> tuple[int, int]:
                 print(f"  [PASS] {name:<24} status={status} ok={ok} ({elapsed:.2f}s)")
                 passed += 1
 
-    return passed, failed, cancel_failures
+    return passed, failed, cancel_failures, skipped
+
+
+def _pick_parsed_paper() -> str | None:
+    """T3-7: 从 `/api/papers/local` 动态选一篇**已解析且有段落**的论文。
+
+    为什么不再硬编码：写死 `PMC12707946.pdf` 时，换库/换机器没这篇就整块跳过，
+    而「跳过」不会体现在汇总里 —— 看起来仍像全过。
+    """
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    try:
+        with opener.open(f"{_base_url()}/api/papers/local", timeout=30) as response:
+            payload = json.loads(response.read().decode("utf-8", errors="replace"))
+    except Exception as exc:
+        print(f"  [WARN] 读取 /api/papers/local 失败，parse_paper 将跳过：{exc}")
+        return None
+
+    for paper in payload.get("papers") or []:
+        if paper.get("parsed") and (paper.get("paragraph_count") or 0) > 0:
+            return paper.get("filename")
+    return None
 
 
 def main() -> None:
@@ -342,14 +371,26 @@ def main() -> None:
         print("\nRESULT: FAIL")
         raise SystemExit(1)
 
+    # T3-7: 给 search server 的 parse_paper 动态注入一篇已解析论文
+    search_server = next(s for s in SERVERS if s["file"] == "search_server.py")
+    picked = _pick_parsed_paper()
+    if picked:
+        search_server["calls"]["parse_paper"] = {"filename": picked}
+        print(f"  [INFO] parse_paper 动态选中 {picked}（parsed=True 且段落数 > 0）")
+    else:
+        search_server["calls"]["parse_paper"] = None
+        print("  [SKIP] 无可用于 parse_paper 的已解析论文")
+
     total_pass = 0
     total_fail = 0
     total_cancel_failures = 0
+    total_skip = 0
     for server in SERVERS:
-        passed, failed, cancel_failures = asyncio.run(_run_server(server))
+        passed, failed, cancel_failures, skipped = asyncio.run(_run_server(server))
         total_pass += passed
         total_fail += failed
         total_cancel_failures += cancel_failures
+        total_skip += skipped
 
     # T-3: 收尾自检 —— 验证「取消」是真的发生了，而不是只打了行日志
     leftover_state, leftover_detail = _check_leftovers()
@@ -373,6 +414,7 @@ def main() -> None:
     print(f"  断言总数         : {total_pass + total_fail}")
     print(f"  PASS             : {total_pass}")
     print(f"  FAIL             : {total_fail}")
+    print(f"  SKIP             : {total_skip}")
     print(f"  清理失败         : {total_cancel_failures}")
     print(f"  leftover_tasks   : {leftover_count}")
     print(f"  RESULT           : {'PASS' if total_fail == 0 else 'FAIL'}")

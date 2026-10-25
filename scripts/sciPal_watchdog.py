@@ -607,8 +607,8 @@ def launch_guard():
         锁随句柄销毁自动释放，不存在「尸检文件把看门狗锁死」这回事。
       · 抢到锁后校验 `fstat(fd).st_ino == stat(path).st_ino`：若路径已被别人换掉
         （别人 unlink 后新建），说明我锁的是旧 inode，本轮让路。
-      · 释放顺序：先 close（Windows 上有句柄时删不掉），再 unlink，满足
-        「正常退出后守卫文件不存在」。删除失败只记日志，不影响互斥。
+      · **守卫文件常驻，永不删除**（T3-2）：删文件意味着「先放开锁、再动文件」，
+        那一步没有原子性。文件的**内容**不参与任何判定，留着零成本。
     """
     fd: int | None = None
     held = False
@@ -675,15 +675,12 @@ def launch_guard():
                 os.close(fd)  # 锁随 close 释放（即便上面的 UNLCK 失败）
             except OSError:
                 pass
-            if held:
-                # A5：正常退出后守卫文件必须不存在。Windows 上有打开句柄时
-                # 删不掉，所以必须放在 close 之后。
-                try:
-                    LAUNCH_GUARD_FILE.unlink()
-                except FileNotFoundError:
-                    pass
-                except OSError as exc:
-                    log(f"删除守卫文件失败（不影响互斥）：{exc}")
+            # T3-2: **不删守卫文件**。
+            # 以前这里（close 之后）unlink，等于「先放开锁、再动文件」：
+            # 若有人恰在此刻抢到锁并通过 same_file 校验，W1 一删路径、W3 造新
+            # inode 再抢一把 → 两个实例同时 launch。残留文件本身无害
+            # （判定只看锁，不读内容），所以宁可留着。
+            # ⚠️ 也不要加「启动时清理残留」之类的补偿 —— 那又回到同一个竞态。
 
 
 # ---------------------------------------------------------------------------
@@ -944,14 +941,15 @@ def show_status() -> int:
     if holder and holder.get("pid"):
         print(f"lock holder alive : {pid_alive(holder['pid'])}")
 
-    # T4-1': 守卫改成 OS 文件锁之后「谁持有」没有稳定含义 —— 只报「锁是否被持有」，
-    # 不再做 pid 存活推断（那是旧 pid 文件方案的产物，也是返工的原因）。
+    # T3-2: 守卫文件常驻后，「存在」与「被持有」是两件事，分开报：
+    #   存在 —— 纯排障信息（残留无害，不会再删）；
+    #   held —— **唯一有判定意义**的字段（LK_NBLCK 试抢即放）。
+    # 内容里的 pid 不是持有判据（旧 pid 文件方案已废弃）。
+    guard_exists = LAUNCH_GUARD_FILE.exists()
     guard_held = launch_guard_is_held()
-    print(
-        f"launch guard      : {'持有中' if guard_held else '未持有'}"
-        f"（文件={LAUNCH_GUARD_FILE.name}，存在={LAUNCH_GUARD_FILE.exists()}，"
-        f"内容={read_launch_guard()}）"
-    )
+    print(f"launch guard      : 存在={guard_exists}")
+    print(f"launch guard held : {guard_held}")
+    print(f"launch guard data : {read_launch_guard()}")
     print(f"instance count    : {len(pids)}（pids={pids}）")
 
     # L-5: 日志可观测性（保留上面全部原有字段）
