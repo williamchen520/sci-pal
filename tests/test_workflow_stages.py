@@ -11,6 +11,7 @@ from services.workflow import StageResult, WorkflowSpec, run_workflow
 from services.workflow.stages import (
     build_export_stage,
     build_plan_stage,
+    build_retrieve_stage,
     build_store_stage,
 )
 from services.workflow.types import StageContext
@@ -115,6 +116,62 @@ class ExportStageTests(unittest.TestCase):
         result = build_export_stage()(context(self.dir, spec))
         self.assertEqual(result.status, "failed")
         self.assertIn("store.json", result.errors[0]["message"])
+
+
+class RetrieveStageTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+
+    def spec(self, max_papers=25) -> WorkflowSpec:
+        return WorkflowSpec(
+            topic="demo",
+            stages=("plan", "retrieve", "store", "export"),
+            limits={"max_papers": max_papers},
+        )
+
+    def test_missing_plan_fails(self) -> None:
+        result = build_retrieve_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.errors[0]["kind"], "invalid_input")
+
+    def test_empty_sections_fail(self) -> None:
+        (self.dir / "plan.json").write_text('{"sections": []}', encoding="utf-8")
+        result = build_retrieve_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+
+    def test_injected_finder_receives_plan_and_writes_artifact(self) -> None:
+        (self.dir / "plan.json").write_text(
+            '{"sections": [{"id": "sec-01", "title": "Intro", "keywords": []}]}',
+            encoding="utf-8",
+        )
+        seen = {}
+
+        def finder(sections, topic, max_papers, ctx):
+            seen.update(sections=sections, topic=topic, max_papers=max_papers)
+            return {"sections": sections, "papers": [{"paper_id": "p1"}, {"paper_id": "p2"}]}
+
+        result = build_retrieve_stage(finder)(context(self.dir, self.spec(max_papers=25)))
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(seen["topic"], "demo")
+        self.assertEqual(seen["max_papers"], 25)
+        self.assertEqual(result.metrics, {"sections": 1, "papers": 2})
+        payload = json.loads((self.dir / "retrieve.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(payload["papers"]), 2)
+
+    def test_finder_error_is_reported_as_upstream(self) -> None:
+        (self.dir / "plan.json").write_text(
+            '{"sections": [{"id": "s1", "title": "Intro"}]}', encoding="utf-8"
+        )
+
+        def boom(*args, **kwargs):
+            raise RuntimeError("retriever unavailable")
+
+        result = build_retrieve_stage(boom)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.errors[0]["kind"], "upstream")
+        self.assertIn("retriever unavailable", result.errors[0]["message"])
 
 
 class EndToEndTests(unittest.TestCase):

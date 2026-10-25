@@ -26,6 +26,7 @@ from services.workflow.types import StageContext, StageResult
 
 SaveReview = Callable[[Mapping[str, Any], StageContext], Mapping[str, Any]]
 ExportReview = Callable[[Mapping[str, Any], StageContext], list[str]]
+Retrieve = Callable[[list[dict[str, Any]], str, int, StageContext], Mapping[str, Any]]
 
 
 def build_plan_stage() -> Callable[[StageContext], StageResult]:
@@ -50,6 +51,41 @@ def build_plan_stage() -> Callable[[StageContext], StageResult]:
         }
         write_artifact(context, "plan.json", plan)
         return StageResult(artifacts=["plan.json"], metrics={"sections": len(sections)})
+
+    return stage
+
+
+def build_retrieve_stage(retrieve: Retrieve | None = None) -> Callable[[StageContext], StageResult]:
+    """Search and assign papers per plan section. Reads ``plan.json``.
+
+    The underlying ``search_and_assign_papers`` call is synchronous and can run
+    for minutes; the runner belongs off the request thread (CLI or worker), not
+    inside an HTTP handler.
+    """
+    finder = retrieve or _default_retrieve
+
+    def stage(context: StageContext) -> StageResult:
+        plan = _read_json(context.run_dir / "plan.json")
+        if plan is None:
+            return _failed("invalid_input", "plan.json is missing; plan must run first")
+        sections = plan.get("sections") or []
+        if not sections:
+            return _failed("invalid_input", "plan has no sections")
+
+        max_papers = int(context.spec.limits.get("max_papers", 100))
+        try:
+            payload = dict(finder(sections, context.spec.topic, max_papers, context))
+        except Exception as exc:  # noqa: BLE001 - reported as a stage error
+            return _failed("upstream", f"retrieval failed: {exc}")
+
+        write_artifact(context, "retrieve.json", payload)
+        return StageResult(
+            artifacts=["retrieve.json"],
+            metrics={
+                "sections": len(payload.get("sections") or []),
+                "papers": len(payload.get("papers") or []),
+            },
+        )
 
     return stage
 
@@ -89,6 +125,35 @@ def build_export_stage(export_review: ExportReview | None = None) -> Callable[[S
 # ---------------------------------------------------------------------------
 # Default adapters (replaceable without touching the runner or the stages)
 # ---------------------------------------------------------------------------
+
+
+def _default_retrieve(
+    sections: list[dict[str, Any]],
+    topic: str,
+    max_papers: int,
+    context: StageContext,
+) -> dict[str, Any]:
+    """Adapter over the existing review pipeline (models load on first call)."""
+    from services.review.review_generator import search_and_assign_papers
+
+    retriever = context.services.get("retriever") or _build_retriever()
+    outline, papers = search_and_assign_papers(
+        outline={"sections": sections},
+        topic=topic,
+        max_papers=max_papers,
+        retriever=retriever,
+    )
+    return {
+        "sections": outline.get("sections", sections),
+        "papers": papers,
+        "max_papers": max_papers,
+    }
+
+
+def _build_retriever() -> Any:
+    from services.search.unified_retriever import UnifiedRetriever
+
+    return UnifiedRetriever(rerank=True, routing=True, expand=True, graph_expand=True)
 
 
 def _json_store(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
