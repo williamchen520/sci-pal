@@ -26,6 +26,7 @@ from services.review.task_manager import task_manager
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
 from contracts import InternalError, fail, ok
 from routes.papers import build_papers_blueprint
+from routes.reviews import build_reviews_blueprint
 from routes.search import build_search_blueprint
 from routes.system import build_system_blueprint
 
@@ -157,6 +158,11 @@ def _download_task_manager():
 # B3c: 下载状态/历史/队列三条只读路由已移入 routes/search.py
 app.register_blueprint(
     build_search_blueprint(get_task_manager=_download_task_manager, log=app.logger)
+)
+
+# B4a: 综述查询（reviews 表，CLI/外部生成的综述对前端可见）
+app.register_blueprint(
+    build_reviews_blueprint(db_path=DB_PATH, log=app.logger)
 )
 
 
