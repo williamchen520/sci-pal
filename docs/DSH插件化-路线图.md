@@ -8,14 +8,20 @@
 
 ---
 
-## 0. 一句话现状
+## 0. 一句话现状（2026-10-25 11:30 更新）
 
-SciPal 已经能通过 MCP 被 DSH 调用（阶段三端到端通过，模型侧 6 个工具，真检索返回真实论文）。
-**Python 业务代码零改动**——全部靠 `cordis.patch.yml` 的 `insert` + `mcp_server/` 薄转发。
-剩下的工作是：把这条通路**正规化**（可安装卸载的 bundle）和**扩展**（按业务流拆 server）。
+**阶段五已全部收口**：SciPal 通过 MCP 以 **3 个 stdio server / 18 个工具**接入 DSH Desktop，
+bundle `@local/dsh-scipal` 已实装（link 安装），Flask 由计划任务 `SciPalWatchdog` 托管，
+**业务代码改动仅限异步端点与检索器注入**（见 §2），其余全部是 `mcp_server/` 薄转发。
 
-**根本约束**：DSH 是 TypeScript，SciPal 是 Python（157 py / 45k 行 / 425MB）。
-**绝不 TS 重写核心逻辑**。一切跨语言都走 MCP stdio 桥，DSH 侧零 TS 代码。
+| server | 工具数 | 内容 |
+|---|---|---|
+| `scipalhello` | 1 | 零依赖哨兵 `ping` |
+| `scipal-search` | 8 | health / 检索（本地·在线·混合）/ 论文详情 / 在线下载+轮询 / **问答** / **多跳检索** |
+| `scipal-generate` | 9 | health / 大纲（读·列表·**生成**）/ 综述详情 / 引用图谱 / 任务状态 / **取消** / **综述生成** |
+
+**根本约束不变**：DSH 是 TS，SciPal 是 Python（157 py / 45k 行 / 425MB），**绝不 TS 重写**，
+一切跨语言走 MCP stdio 桥，DSH 侧零 TS 代码。
 
 ---
 
@@ -31,14 +37,65 @@ SciPal 已经能通过 MCP 被 DSH 调用（阶段三端到端通过，模型侧
 | 四-A 修订 | 修验收发现的 4 项缺陷 | `f9197b5` |
 | 四-A 验收 | 两轮验收报告 | `549af80` `3f4a471` |
 | 五-A | 配置型 bundle `packages/dsh-scipal`（零代码） | `2457e85` |
+| 五-A 实装 | 桌面端「本地目录」安装 + `Enable now` + 完全重启，6 工具全通（进程层复核） | 见 `packages/dsh-scipal/INSTALL.md` |
+| 五-B | 拆 `scipal-search` / `scipal-generate`，删旧单进程 `scipal`（13 工具） | `b263961` `5c53bd3` |
+| 五-C C-1 | 大纲生成异步接入（`generate_outline` / `cancel_review_task`，15 工具） | `24ee394` |
+| 五-C C-2 | 综述生成异步化 + 私有 `ReviewGenerator` 隔离 + `threaded=True`（16 工具） | `5b03055` |
+| 看门狗修复 | 拉起后等就绪、拉起前判端口、`--status`；消除实例堆积（曾滚到 8 个） | `ca21a5a` |
+| 五-C C-3 | 问答 / 多跳检索异步接入；**先修检索栈重复加载（71.5 s → 1.2 s）**（18 工具） | `62e1c03` |
+| 五-C 收尾 | selftest 清理改走 HTTP、失败可见、遗留任务检查 | `e7c63c0` |
 
 冻结回滚线：**`freeze/v33.17`**（`a097397`），只许看不许改。
 
 ---
 
-## 2. 下一步（按优先级）
+## 2. 阶段五完成情况（2026-10-25 收口）
 
-### 🔴 2.1 【必须人做】bundle 实装验证
+### 2.1 业务代码改了什么（这是唯一非薄转发的部分）
+
+| 改动 | 位置 | 为什么 |
+|---|---|---|
+| `POST /api/review/generate_async` | `api_server.py` | 综述生成分钟级、超 MCP 60 s；**线程内 new 私有 `ReviewGenerator`**（共享单例的 `use_llm_verification` / `_last_draft` 会串台） |
+| `POST /api/qa/ask_async` | `api_server.py` | 问答实测 >120 s |
+| `POST /api/agentic/search_async` | `api_server.py` | 多跳实测 71.5 s（1 跳） |
+| `_review_generate_lock` | `api_server.py` | `threaded=True` 后同步路由串行化，保护共享单例 |
+| `threaded=False → True` | `api_server.py` 末尾 | 单线程 server 会被一次同步重请求堵死全站 |
+| `QAService(retriever=...)` | `services/qa/qa_service.py` | 不再自建检索栈（`UnifiedRetriever` 是饿汉式，重复加载模型） |
+| `AgenticSearcher(retriever=get_retriever())` | `api_server.py` | 此前**每次请求**重建检索栈 |
+
+### 2.2 三条实测结论（都已写进 `mcp_server/README.md`，别再反推）
+
+1. **「异步会饿死请求循环」是错的** —— 21.8 s 是 embedding/reranker **冷加载一次性**；
+   模型热之后任务 5–7 s 跑完，同期 35 次 health 采样全在 0.006–0.039 s。
+2. **真正的瓶颈是 `threaded=False`**（单线程 server）+ **共享单例的可写状态**，两者都已在 C-2 修掉。
+3. **重复加载检索栈代价极大**：`/api/agentic/search` 由 71.5 s → **热态 1.2 s（约 58 倍）**，
+   连续 4 次 RSS 仅 +3.9 MB。**首次仍 109 s（冷加载）**，所以异步端点必须保留。
+
+### 2.3 工具数上限的取舍
+
+原则是 **≤8 工具/server**（约束是模型上下文与选择准确率，不是显存 ——
+MCP 进程不加载模型，实测单个 ≈65–70 MB）。两次破例都在 `scipal-generate`（9 个）：
+`generate_outline` / `generate_review` 与同 server 的「读结果」工具属于同一个工作流闭环，
+拆第四个 server 要多一个常驻进程，换不来收益。
+
+### 2.4 尚未派单的事项（都不是阶段五的阻塞项）
+
+| 事项 | 判断 | 备注 |
+|---|---|---|
+| `POST /api/papers/parse` 挂进 MCP | **暂不做** | 同步解析且耗时不可控；`/api/papers/import` 是 multipart，MCP 传不了文件流 |
+| `scipal-guard` 独立 server | **仍暂缓** | 原计划依赖的「领域词表校验」能力不存在；防幻觉结论已从 QA 结果的 `validation` 字段可得 |
+| 同步路由下线（`review/generate`、`qa/ask`、`agentic/search`） | **不下线** | 前端仍在用；async 是**新增**不是替换 |
+| 看门狗日志落盘 | 建议做（小） | `log()` 是 `print()`，计划任务下没有控制台 → 日志全丢，诊断缺第一手证据 |
+| `review` 任务跨重启丢失 | 已知限制 | `services/review/task_manager.py` 是进程内内存 dict；要持久化得改走 `tasks` 表，属新需求 |
+
+---
+
+## 2.9 历史留档：阶段五派单前的原始步骤（**已全部完成，勿照做**）
+
+> 以下为 2026-10-24 的状态记录，保留是因为里面有踩坑细节（如清场行号、`plugin_manager` 的结论）。
+> **当前有效流程请看 `packages/dsh-scipal/INSTALL.md`**。
+
+### 🔴 2.9.1 bundle 实装验证
 
 **为什么必须人做**：DSH Desktop 无 MCP 配置 UI，CLI 管不了 `desktop` profile，
 agent 无法自助验证「工具是否出现在模型工具列表」。
@@ -86,7 +143,7 @@ agent 无法自助验证「工具是否出现在模型工具列表」。
 
 ---
 
-### 🔴 2.2 【必须人做】安装计划任务
+### ✅ 2.9.2 安装计划任务 —— **已安装并验收（2026-10-25）**
 
 装上才真正消除「手动起 Flask」：
 
@@ -105,7 +162,7 @@ Get-ScheduledTask -TaskName SciPalWatchdog | Select-Object -ExpandProperty Setti
 
 ---
 
-### 🟢 2.3 【CodeBuddy】阶段五-B：拆 MCP server（按科研业务流）
+### ✅ 2.9.3 阶段五-B：拆 MCP server —— **已完成（2026-10-25，实际结果见 §2）**
 
 目标：`scipal-search` / `scipal-generate` 两个 server。
 
@@ -130,7 +187,7 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 ---
 
-### ✅ 2.4 【CodeBuddy】阶段四-B：小修 —— **已完成并验收**
+### ✅ 2.9.4 【CodeBuddy】阶段四-B：小修 —— **已完成并验收**
 
 - 版本指针已统一为 V33.17，历史注释保留；`run_db_migrations()` 已补 `import sqlite3`。
 - 验收：`/api/health` → `V33.17`，banner → `Sci-Pal API V33.17`，`self_check.py` 110/1/121 无回归。
@@ -150,7 +207,7 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 ---
 
-### ✅ 2.5 文档治理 —— **已执行**（`f0beca4`）
+### ✅ 2.9.5 文档治理 —— **已执行**（`f0beca4`）
 
 > 📋 **清单见 [`docs/文档治理-清单.md`](./文档治理-清单.md)**（判定依据与引用统计）。
 
@@ -170,7 +227,7 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 ---
 
-## 2.0 📌 当前派单顺序（2026-10-24 更新）
+## 2.95 历史留档：2026-10-24 派单顺序（**三张工单已全部完成**）
 
 三张工单**互不依赖，可以并行**；但按「链路靠前的先做」排优先级：
 
@@ -187,21 +244,23 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
 
 ---
 
-## 3. ⚠️ 依赖顺序（别搞反）
+## 3. ✅ 依赖顺序（已走完，留档）
 
-**拆 server（2.3）会改变 bundle 的内容。** 建议顺序：
+阶段五实际执行顺序与下面这条建议**一致**，所以没有再出现「分不清是 bundle 机制不通还是拆分改坏了」的情况：
 
 ```
-2.1 bundle 实装验证（先验证「能装能卸」这个机制本身）
-        ↓ 确认能装
-2.3 拆 MCP server → 同步更新 package/bundle 配置
+2.1 bundle 实装验证（先验证「能装能卸」这个机制本身）   ✅ 已装并验通 6 工具
         ↓
-2.1 再装一次（验证拆分后仍可安装）
+2.3 拆 MCP server → 同步更新 package/bundle 配置        ✅ 3 server / 13 工具
+        ↓
+重启验证拆分后仍可挂载                                  ✅ 旧名消失 + 旧进程为 0
+        ↓
+五-C（C-1 大纲 / C-2 综述 / C-3 问答+多跳）             ✅ 18 工具
 ```
 
-否则两个未知数叠一起，出问题分不清是 bundle 机制不通还是拆分改坏了。
+2.2（计划任务）✅ 已装；2.4（小修）✅ 已完成。
 
-2.2（装计划任务）和 2.4（小修）互相独立，可随时插队。
+> **下次再动 server 结构时，仍然照这个顺序走**：先确认机制，再改内容，最后复验。
 
 ---
 
@@ -222,6 +281,8 @@ SciPal 已有轮询基础设施：`/api/tasks/<id>`、`/api/review/task/<id>`、
   （实测 `breakaway=已启用`，未降级）但**无效**——该标志只脱离 Job Object，**不改变父子进程链**，
   宿主按后代进程树清理时仍会被杀。已实测两次确认。
   → 代码与文案四处（docstring / epilogue / 工具错误文案 / `--help`）均已显式声明，
-  用户不会被误导。**持久运行只能靠计划任务（2.2）。**
+  用户不会被误导。**持久运行只能靠计划任务（见 §2.9.2，已于 2026-10-25 安装并验收）。**
+- **看门狗日志不落盘**：`log()` 是 `print()` 到 stdout，计划任务下没有控制台 → 日志全丢。
+  诊断「实例堆积」那次靠的是数 PID 和掐秒表，不是日志。建议改成写 `logs/sciPal_watchdog.log`。
 - 唯一失败的自检项：`abstracts.db: no such table: abstracts`（历史遗留，未触碰）。
-- `self_check.py` 基线：通过 110 / 失败 1 / 总计 121。
+- `self_check.py` 基线：通过 111 / 失败 1 / 总计 122。
