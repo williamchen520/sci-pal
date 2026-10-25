@@ -6,6 +6,7 @@ from services.workflow.stages import (
     build_plan_stage,
     build_retrieve_stage,
     build_store_stage,
+    build_verify_stage,
 )
 from services.workflow.types import (
     DEFAULT_STAGES,
@@ -24,5 +25,6 @@ __all__ = [
     "build_plan_stage",
     "build_retrieve_stage",
     "build_store_stage",
+    "build_verify_stage",
     "build_export_stage",
 ]

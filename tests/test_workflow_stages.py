@@ -13,6 +13,7 @@ from services.workflow.stages import (
     build_plan_stage,
     build_retrieve_stage,
     build_store_stage,
+    build_verify_stage,
 )
 from services.workflow.types import StageContext
 
@@ -172,6 +173,74 @@ class RetrieveStageTests(unittest.TestCase):
         self.assertEqual(result.status, "failed")
         self.assertEqual(result.errors[0]["kind"], "upstream")
         self.assertIn("retriever unavailable", result.errors[0]["message"])
+
+
+class VerifyStageTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+
+    def spec(self) -> WorkflowSpec:
+        return WorkflowSpec(topic="demo", stages=("plan", "retrieve", "verify", "store", "export"))
+
+    def write_review(self, payload: dict) -> None:
+        (self.dir / "review.json").write_text(
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+        )
+
+    def test_missing_review_fails(self) -> None:
+        result = build_verify_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertIn("review.json", result.errors[0]["message"])
+
+    def test_injected_checker_writes_metrics(self) -> None:
+        self.write_review({"topic": "demo", "sentences": [], "evidence_cards": {}})
+
+        def checker(review, ctx):
+            return {"stats": {"total_sentences": 2, "verified": 1, "rejected": 1, "pass_rate": 0.5}}
+
+        result = build_verify_stage(checker)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result.metrics["verified"], 1)
+        self.assertTrue((self.dir / "verify.json").exists())
+
+    def test_checker_error_is_reported(self) -> None:
+        self.write_review({"topic": "demo"})
+
+        def boom(review, ctx):
+            raise RuntimeError("verifier exploded")
+
+        result = build_verify_stage(boom)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.errors[0]["kind"], "internal")
+
+    def test_default_adapter_uses_citation_verifier(self) -> None:
+        (self.dir / "plan.json").write_text(
+            '{"sections": [{"id": "sec-01", "title": "Intro"}]}', encoding="utf-8"
+        )
+        self.write_review(
+            {
+                "topic": "demo",
+                "sentences": [
+                    {"sentence_id": "s1", "section_id": "sec-01", "text": "A finding [1].", "evidence_ids": ["ev1"]},
+                    {"sentence_id": "s2", "section_id": "sec-01", "text": "Unsupported claim.", "evidence_ids": []},
+                ],
+                "evidence_cards": {
+                    "ev1": {
+                        "evidence_id": "ev1",
+                        "paper_id": "p1",
+                        "para_id": "para1",
+                        "content": "finding",
+                    }
+                },
+            }
+        )
+        result = build_verify_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok", result.errors)
+        self.assertEqual(result.metrics["total_sentences"], 2)
+        self.assertEqual(result.metrics["verified"], 1)
+        self.assertEqual(result.metrics["rejected"], 1)
 
 
 class EndToEndTests(unittest.TestCase):

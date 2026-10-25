@@ -27,6 +27,7 @@ from services.workflow.types import StageContext, StageResult
 SaveReview = Callable[[Mapping[str, Any], StageContext], Mapping[str, Any]]
 ExportReview = Callable[[Mapping[str, Any], StageContext], list[str]]
 Retrieve = Callable[[list[dict[str, Any]], str, int, StageContext], Mapping[str, Any]]
+Verify = Callable[[Mapping[str, Any], StageContext], Mapping[str, Any]]
 
 
 def build_plan_stage() -> Callable[[StageContext], StageResult]:
@@ -86,6 +87,32 @@ def build_retrieve_stage(retrieve: Retrieve | None = None) -> Callable[[StageCon
                 "papers": len(payload.get("papers") or []),
             },
         )
+
+    return stage
+
+
+def build_verify_stage(verify: Verify | None = None) -> Callable[[StageContext], StageResult]:
+    """Deterministic citation check. Reads ``review.json``, writes ``verify.json``."""
+    checker = verify or _default_verify
+
+    def stage(context: StageContext) -> StageResult:
+        review = _read_json(context.run_dir / "review.json")
+        if review is None:
+            return _failed("invalid_input", "review.json is missing; draft must run first")
+
+        try:
+            payload = dict(checker(review, context))
+        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+            return _failed("internal", f"verification failed: {exc}")
+
+        write_artifact(context, "verify.json", payload)
+        stats = payload.get("stats") or {}
+        metrics = {
+            key: stats.get(key)
+            for key in ("total_sentences", "verified", "rejected", "pass_rate")
+            if key in stats
+        }
+        return StageResult(artifacts=["verify.json"], metrics=metrics)
 
     return stage
 
@@ -154,6 +181,41 @@ def _build_retriever() -> Any:
     from services.search.unified_retriever import UnifiedRetriever
 
     return UnifiedRetriever(rerank=True, routing=True, expand=True, graph_expand=True)
+
+
+def _default_verify(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
+    """Rebuild the domain objects and run the deterministic citation check."""
+    from services.review.citation_verifier import CitationVerifier
+    from services.review.models import (
+        EvidenceCard,
+        ReviewDraft,
+        ReviewOutline,
+        ReviewSentence,
+        ReviewSection,
+    )
+
+    plan = _read_json(context.run_dir / "plan.json") or {}
+    sections = [
+        ReviewSection(section_id=item["id"], title=item["title"], order=index)
+        for index, item in enumerate(plan.get("sections") or [], start=1)
+    ]
+    topic = str(review.get("topic") or context.spec.topic)
+    draft = ReviewDraft(
+        topic=topic,
+        outline=ReviewOutline(topic=topic, sections=sections),
+        sentences=[ReviewSentence(**item) for item in review.get("sentences") or []],
+        evidence_cards={
+            evidence_id: EvidenceCard(**card)
+            for evidence_id, card in (review.get("evidence_cards") or {}).items()
+        },
+    )
+    verified, warnings = CitationVerifier().verify(draft)
+    return {
+        "topic": topic,
+        "stats": verified.stats(),
+        "warnings": warnings,
+        "sentences": [sentence.model_dump(mode="json") for sentence in verified.sentences],
+    }
 
 
 def _json_store(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
