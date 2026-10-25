@@ -28,6 +28,7 @@ from typing import Optional
 from .citation_formatter import PaperMetadata, build_metadata_from_db_row, format_citation, format_citation_list, get_missing_fields_report, get_supported_styles, metadata_to_csl_json
 from .citation_verifier import CitationVerifier
 from .evidence_extractor import EvidenceExtractor
+from .query_builder import build_section_query
 from .section_loop import write_section_loop
 from .section_prompts import build_write_prompt
 from .llm_client import LLMClient, LLMError
@@ -2140,14 +2141,12 @@ def search_and_assign_papers(
                 if para_topic and para_topic not in search_keywords:
                     search_keywords.append(para_topic)
 
-        # 去重
+        # 去重 + 收窄：优先专有名词，限制在 3 个词以内（避免 inflammation 这类泛词稀释）
         search_keywords = list(dict.fromkeys(search_keywords))
-
-        # 组合成搜索查询（最多用前5个关键词）
-        query = " ".join(search_keywords[:5])
+        query = build_section_query(search_keywords, title=sec_title)
 
         print(f"\n  [{sec_idx+1}/{num_sections}] 章节: {sec_title[:40]}")
-        print(f"    搜索关键词: {search_keywords[:5]}")
+        print(f"    搜索关键词: {query.split()}")
         print(f"    搜索查询: {query[:60]}...")
 
         # 按章节关键词搜索
