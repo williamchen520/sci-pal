@@ -26,6 +26,8 @@ import json
 import os
 import sys
 import time
+import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -132,6 +134,63 @@ def _flask_running() -> bool:
         return False
 
 
+def _cancel_task(task_id: str) -> tuple[bool, str]:
+    """T-1: 直接对 Flask 发取消请求，**不走 MCP 工具**。
+
+    为什么不用 `session.call_tool("cancel_review_task", ...)`：
+      该工具只存在于 `scipal-generate`，而 `ask_question` / `agentic_search` / `generate_review`
+      的断言各自跑在不同 server 的会话里 → 在 search 会话里必然返回
+      `Unknown tool: cancel_review_task`。而 `call_tool` 返回的是「错误结果」不是异常，
+      旧代码只打了 `[INFO]` 就过去了 —— 清理从未发生，却看起来成功。
+
+    清理是**测试的副作用处理**，不应该依赖「被测工具是否在当前 server 暴露」。
+
+    返回 (ok, message)：
+      ok=True  → HTTP 200（真取消），或 404「Task not found or already finished」（已结束，无需取消）
+      ok=False → 其它任何情况；调用方必须打 [WARN] 并计入汇总
+    """
+    url = f"{_base_url()}/api/review/cancel/{urllib.parse.quote(task_id, safe='')}"
+    # 绕开本机 http_proxy（127.0.0.1:52819），写法同 scripts/sciPal_watchdog.py 的 probe()
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    request = urllib.request.Request(url, data=b"", method="POST")
+    try:
+        with opener.open(request, timeout=15) as response:
+            body = response.read().decode("utf-8", errors="replace").strip()
+            return True, f"已取消 {task_id}（HTTP {response.status} {body[:80]}）"
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace").strip()
+        if exc.code == 404 and "not found" in body.lower():
+            return True, f"任务已结束，无需取消 {task_id}（404）"
+        return False, f"HTTP {exc.code} {body[:120]}"
+    except Exception as exc:
+        return False, f"请求失败: {exc}"
+
+
+def _check_leftovers() -> tuple[int, str]:
+    """T-3: 收尾自检 —— 确认没有遗留任务仍在跑。
+
+    返回 (state, detail)：state 0=无遗留，1=有遗留，-1=查询失败。
+    """
+    url = f"{_base_url()}/api/review/running_task"
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    try:
+        with opener.open(url, timeout=15) as response:
+            payload = json.loads(response.read().decode("utf-8", errors="replace"))
+    except Exception as exc:
+        return -1, f"无法查询 /api/review/running_task: {exc}"
+
+    if not isinstance(payload, dict) or not payload.get("running"):
+        return 0, "无遗留任务"
+
+    task = payload.get("task") or {}
+    detail = (
+        f"task_id={task.get('task_id')} "
+        f"type={task.get('task_type')} "
+        f"progress={task.get('progress')}"
+    )
+    return 1, detail
+
+
 def _extract_text(result) -> str:
     """mcp 2.x：CallToolResult.content 是 block 列表，文本在 block.text。"""
     blocks = [
@@ -171,12 +230,13 @@ async def _run_server(server: dict) -> tuple[int, int]:
     params = StdioServerParameters(command=sys.executable, args=[str(path)])
     passed = 0
     failed = 0
+    cancel_failures = 0  # T-2: 清理失败次数（进汇总）
 
     print(f"\n[server] {server['label']}  ({server['file']})")
 
     if not path.exists():
         print(f"  [FAIL] 文件不存在：{path}")
-        return 0, 1
+        return 0, 1, 0
 
     async with stdio_client(params) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
@@ -214,20 +274,16 @@ async def _run_server(server: dict) -> tuple[int, int]:
                     failed += 1
                     continue
 
-                # ── 特殊断言（阶段五-C C-1）────────────────────────────────
-                if name == "generate_outline":
-                    # 异步判据：必须快速返回（<10s）且返回体含 task_id
-                    task_id = _extract_task_id(text)
-                    good = bool(task_id) and elapsed < 10.0
-                    print(
-                        f"  [{'PASS' if good else 'FAIL'}] {name:<24} "
-                        f"耗时={elapsed:.2f}s task_id={task_id}（要求 <10s 且非空）"
-                    )
-                    passed += 1 if good else 0
-                    failed += 0 if good else 1
-                    continue
-
-                if name in ("generate_review", "ask_question", "agentic_search"):
+                # ── 特殊断言（阶段五-C C-1 / C-3）────────────────────────────
+                # 四条「异步 submit」工具共用同一判据：<10s 返回 + 含 task_id + 立刻取消。
+                # 注：generate_outline 原先单独一个分支且**从不取消**，T-3 收尾检查
+                # 实测抓出它遗留了一个 running 的 outline 任务，故合并到本分支统一清理。
+                if name in (
+                    "generate_outline",
+                    "generate_review",
+                    "ask_question",
+                    "agentic_search",
+                ):
                     # 异步判据（三段共用）：<10s 返回且含 task_id；拿到后立刻取消，避免跑满分钟级任务
                     task_id = _extract_task_id(text)
                     good = bool(task_id) and elapsed < 10.0
@@ -238,14 +294,14 @@ async def _run_server(server: dict) -> tuple[int, int]:
                     passed += 1 if good else 0
                     failed += 0 if good else 1
                     if task_id:
-                        try:
-                            cancel_res = await session.call_tool(
-                                "cancel_review_task", {"task_id": task_id}
-                            )
-                            cancel_text = _extract_text(cancel_res).strip().replace("\n", " ")
-                            print(f"  [INFO] 已请求取消 {task_id}: {cancel_text[:110]}")
-                        except Exception as exc:  # 取消失败不影响本条断言，但必须可见
-                            print(f"  [WARN] 取消 {task_id} 失败: {exc}")
+                        # T-1/T-2: 走 HTTP 清理（不依赖被测 server 是否暴露 cancel 工具）；
+                        # 失败必须 [WARN] + 计入汇总，绝不允许像旧版那样只打 [INFO] 就过去。
+                        cancel_ok, cancel_msg = _cancel_task(task_id)
+                        if cancel_ok:
+                            print(f"  [INFO] {cancel_msg}")
+                        else:
+                            print(f"  [WARN] 取消失败 {task_id}: {cancel_msg}")
+                            cancel_failures += 1
                     continue
 
                 if name == "cancel_review_task":
@@ -264,7 +320,7 @@ async def _run_server(server: dict) -> tuple[int, int]:
                 print(f"  [PASS] {name:<24} status={status} ok={ok} ({elapsed:.2f}s)")
                 passed += 1
 
-    return passed, failed
+    return passed, failed, cancel_failures
 
 
 def main() -> None:
@@ -281,19 +337,38 @@ def main() -> None:
 
     total_pass = 0
     total_fail = 0
+    total_cancel_failures = 0
     for server in SERVERS:
-        passed, failed = asyncio.run(_run_server(server))
+        passed, failed, cancel_failures = asyncio.run(_run_server(server))
         total_pass += passed
         total_fail += failed
+        total_cancel_failures += cancel_failures
+
+    # T-3: 收尾自检 —— 验证「取消」是真的发生了，而不是只打了行日志
+    leftover_state, leftover_detail = _check_leftovers()
+    leftover_count = leftover_state if leftover_state > 0 else 0
+
+    print()
+    print("=" * 74)
+    print("收尾检查（T-3：任务是否真的被清理）")
+    print("=" * 74)
+    if leftover_state == 0:
+        print("  [OK] 无遗留任务（GET /api/review/running_task → running=false）")
+    elif leftover_state > 0:
+        print(f"  [WARN] 有任务仍在运行，可能是取消未生效：{leftover_detail}")
+    else:
+        print(f"  [WARN] {leftover_detail}")
 
     print("\n" + "=" * 74)
     print("汇总")
     print("=" * 74)
-    print(f"  server 数      : {len(SERVERS)}")
-    print(f"  断言总数       : {total_pass + total_fail}")
-    print(f"  PASS           : {total_pass}")
-    print(f"  FAIL           : {total_fail}")
-    print(f"  RESULT         : {'PASS' if total_fail == 0 else 'FAIL'}")
+    print(f"  server 数        : {len(SERVERS)}")
+    print(f"  断言总数         : {total_pass + total_fail}")
+    print(f"  PASS             : {total_pass}")
+    print(f"  FAIL             : {total_fail}")
+    print(f"  清理失败         : {total_cancel_failures}")
+    print(f"  leftover_tasks   : {leftover_count}")
+    print(f"  RESULT           : {'PASS' if total_fail == 0 else 'FAIL'}")
     raise SystemExit(0 if total_fail == 0 else 1)
 
 
