@@ -141,7 +141,7 @@ profiles/desktop/.plugin-manager/logs/operation-*/pnpm.log
 你现在有哪些 mcp__ 开头的工具？
 ```
 
-期望看到 **16 个**（哨兵 1 + search 6 + generate 9）：
+期望看到 **18 个**（哨兵 1 + search 8 + generate 9）：
 
 ```text
 mcp__scipalhello__ping                                   ← 哨兵（零依赖）
@@ -152,6 +152,8 @@ mcp__scipal-search__search_online
 mcp__scipal-search__get_paper
 mcp__scipal-search__download_online_papers
 mcp__scipal-search__download_status
+mcp__scipal-search__ask_question
+mcp__scipal-search__agentic_search
 
 mcp__scipal-generate__health
 mcp__scipal-generate__list_saved_outlines
@@ -164,9 +166,9 @@ mcp__scipal-generate__cancel_review_task
 mcp__scipal-generate__generate_review
 ```
 
-> **为什么是 16 而不是 20**：旧的单进程 `scipal` server（5 个工具）已经不再挂载，
+> **为什么是 18 而不是 22**：旧的单进程 `scipal` server（5 个工具）已经不再挂载，
 > `mcp_server/scipal_server.py` 只作为回退入口留在仓库里。`selftest.py` 会跑 3 个文件、
-> 断言 **23 项**（含 legacy 的 5 个工具），**那是自检覆盖，不是挂载数**——别拿它当期望值。
+> 断言 **25 项**（含 legacy 的 5 个工具），**那是自检覆盖，不是挂载数**——别拿它当期望值。
 
 ### 4.2 进程数硬判据
 

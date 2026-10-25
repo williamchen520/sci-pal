@@ -78,16 +78,18 @@
         toolCallTimeoutMs: 60000
         failOnStartupError: false
 
-# ── 工具出现形式（重启 DSH 后应有 16 个 mcp__ 工具 = 1 + 6 + 9）──────────────
+# ── 工具出现形式（重启 DSH 后应有 18 个 mcp__ 工具 = 1 + 8 + 9）──────────────
 # 哨兵：
 #   mcp__scipalhello__ping
-# scipal-search（6）：
+# scipal-search（8）：
 #   mcp__scipal-search__health
 #   mcp__scipal-search__search_hybrid
 #   mcp__scipal-search__search_online
 #   mcp__scipal-search__get_paper
 #   mcp__scipal-search__download_online_papers     ← 立即返回 task_id
 #   mcp__scipal-search__download_status            ← 轮询下载进度
+#   mcp__scipal-search__ask_question               ← 异步问答（>120s），轮询 review_task_status
+#   mcp__scipal-search__agentic_search             ← 异步多跳检索，轮询 review_task_status
 # scipal-generate（9，只读 + 轮询 + 两个异步 submit）：
 #   mcp__scipal-generate__health
 #   mcp__scipal-generate__list_saved_outlines

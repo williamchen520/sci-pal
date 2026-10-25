@@ -11,9 +11,10 @@ serverName: `scipal-search`　transport: stdio
     · 不承载模型：embedding / reranker / ChromaDB 全在常驻的 Flask 进程里。
     · stdio 模式下 stdout 是 JSON-RPC 通道，本文件不向 stdout 打印。
 
-工具（6 个，有意设上限 —— 真正的约束是模型上下文，不是显存）
+工具（8 个 —— 真正的约束是模型上下文，不是显存）
     health / search_hybrid / search_online / get_paper /
-    download_online_papers / download_status
+    download_online_papers / download_status /
+    ask_question / agentic_search
 
 参数名以 api_server.py 路由实际读取的为准：
     /api/search/hybrid  读 `q`（不是 query），`use_online` 服务端默认 true —— 本工具默认 false
@@ -40,9 +41,11 @@ mcp = MCPServer(
     SERVER_NAME,
     version=SERVER_VERSION,
     instructions=(
-        "SciPal 文献检索与下载工具（薄转发本地 Flask API）。"
-        "检索/详情是同步只读调用；下载由 download_online_papers 立即返回 task_id，"
-        "必须用 download_status 轮询，不要同步等待。"
+        "SciPal 文献检索、下载与问答工具（薄转发本地 Flask API）。"
+        "检索/详情是同步只读调用；"
+        "download_online_papers / ask_question / agentic_search 都**立即返回 task_id**，"
+        "必须用 review_task_status 轮询（同一套 task_manager），不要同步等待。"
+        "任务存在 Flask 进程内存里，Flask 重启即丢。"
     ),
 )
 
@@ -127,6 +130,51 @@ def download_status(task_id: str) -> str:
         "GET",
         f"/api/search/download_status?task_id={_path_segment(task_id)}",
     )
+
+
+@mcp.tool(
+    description=(
+        "提交学术问答任务（POST /api/qa/ask_async）：检索证据 → LLM 生成 → 引用覆盖率校验。"
+        "**立即返回 task_id，不要同步等待**（实测单次 >120 s）；"
+        "用 review_task_status 轮询，建议间隔 ≥5 s。"
+        "任务存在 Flask 进程内存里，Flask 重启即丢（会 404）。"
+        "取消只在提交前 / 返回后生效，ask() 内部不可中断。"
+    )
+)
+def ask_question(question: str, paper_id: str = "", diagnostics: bool = False) -> str:
+    """提交问答任务，立即返回 {"task_id": ...}。"""
+    payload = {"question": question, "diagnostics": diagnostics}
+    if paper_id.strip():
+        payload["paper_id"] = paper_id.strip()
+    return _call("POST", "/api/qa/ask_async", payload)
+
+
+@mcp.tool(
+    description=(
+        "提交多跳（agentic）检索任务（POST /api/agentic/search_async）："
+        "逐跳检索 + 实体覆盖度判断，直到达到 max_hops 或 min_coverage。"
+        "**立即返回 task_id，不要同步等待**（max_hops=1 实测也要数十秒）；"
+        "用 review_task_status 轮询，建议间隔 ≥5 s。"
+        "max_hops 钳制在 1–5。任务存在 Flask 进程内存里，重启即丢。"
+    )
+)
+def agentic_search(
+    query: str,
+    max_hops: int = 3,
+    min_coverage: float = 0.6,
+    top_paragraphs: int = 6,
+    paper_id: str = "",
+) -> str:
+    """提交多跳检索任务，立即返回 {"task_id": ...}。"""
+    payload = {
+        "q": query,
+        "max_hops": max(1, min(int(max_hops), 5)),
+        "min_coverage": float(min_coverage),
+        "top_paragraphs": int(top_paragraphs),
+    }
+    if paper_id.strip():
+        payload["paper_id"] = paper_id.strip()
+    return _call("POST", "/api/agentic/search_async", payload)
 
 
 def main() -> None:

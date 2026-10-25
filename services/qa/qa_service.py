@@ -70,8 +70,13 @@ class QAService:
         top_paragraphs: int = 8,
         top_figures: int = 3,
         temperature: float = 0.3,
+        retriever: Optional[UnifiedRetriever] = None,
     ):
-        self.retriever = UnifiedRetriever(
+        # V33.17 C-3: 允许注入共享检索器。UnifiedRetriever.__init__ 是饿汉式
+        # （构造即加载 embedding / reranker / ChromaDB），NULL 时自建一套会让
+        # Flask 进程多养一整套检索栈（实测 +2.6 GB）。
+        # 默认仍自建 → 保持向后兼容，单独使用 QAService() 的调用方不受影响。
+        self.retriever = retriever or UnifiedRetriever(
             rerank=rerank,
             graph_expand=graph_expand,
         )
