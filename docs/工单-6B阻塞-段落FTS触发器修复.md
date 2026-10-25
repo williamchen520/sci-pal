@@ -85,6 +85,20 @@ rowid 对齐率      : 11246 / 50950   ← **只有 22% 对齐**
 | `api_server.py:2478-2481` | `run_db_migrations()` → `reconcile_stale_review_tasks()`，顺序已正确 |
 | `api_server.py:1751` | 6-B 的 `parse_local_paper_async()`（本次**不用改**，它已经如实把失败落成 `failed`） |
 
+### 0.6 附带观测（**不在本工单范围，别当成你的 bug**）
+
+验收方连跑 4 次真解析后（每次都是同一套 `ParserOrchestrator()` 新建路径），Flask worker 进程：
+
+```text
+重启后（未解析任何文件）      ：WS ≈ 1.4 GB
+4 次真解析之后                ：WS 7,024 MB / Private 11,133 MB   ← 不回落
+```
+
+→ 说明「每建一次 `ParserOrchestrator` 就多留一份模型/缓冲」这个方向值得怀疑，
+但**本工单不要动它**（要动就是 `_parse_lock` 之外再引入 orchestrator 复用，属另一件事）。
+你只需要在报告里**不要**把「内存 11 GB」当成自己改动引入的回归即可。
+真解析只跑 **1 次**（F-2 要求），跑完看内存涨了多少、如实记一行就行。
+
 ---
 
 ## 一、任务
