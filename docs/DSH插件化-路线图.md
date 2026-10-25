@@ -82,11 +82,13 @@ MCP 进程不加载模型，实测单个 ≈65–70 MB）。两次破例都在 `
 
 | 事项 | 判断 | 备注 |
 |---|---|---|
-| `POST /api/papers/parse` 挂进 MCP | **暂不做** | 同步解析且耗时不可控；`/api/papers/import` 是 multipart，MCP 传不了文件流 |
-| `scipal-guard` 独立 server | **仍暂缓** | 原计划依赖的「领域词表校验」能力不存在；防幻觉结论已从 QA 结果的 `validation` 字段可得 |
+| `POST /api/papers/parse` 挂进 MCP | **已排入阶段六-B** | ⚠️ 更正：`parse` 收的是 JSON `filename`（**不是** multipart，multipart 的是 `import`）；真问题是 docling 解析耗时未知，需异步 |
+| `scipal-guard` 独立 server | **阶段六-C，待决策** | 卡在「词表从哪来」（统计生成 / 用户提供 / MeSH），不是卡在代码；无词表就只是重复 QA 已有的 `validation` |
 | 同步路由下线（`review/generate`、`qa/ask`、`agentic/search`） | **不下线** | 前端仍在用；async 是**新增**不是替换 |
 | 看门狗日志落盘 | **已完成** | `logs/sciPal_watchdog.log`（stdout 双写 + RUN MARKER + 5 MB 轮转）；状态切换日志带 `listening pids/count`，`count > 1` 额外打 `⚠️ 检测到多实例监听` |
-| `review` 任务跨重启丢失 | 已知限制 | `services/review/task_manager.py` 是进程内内存 dict；要持久化得改走 `tasks` 表，属新需求 |
+| `review` 任务跨重启丢失 | **已排入阶段六-A（本轮派单）** | `services/review/task_manager.py` 是进程内内存 dict → 改成 SQLite `tasks` 表（表已存在、0 行、11 列），保留 9 方法签名与 7 键返回 |
+
+→ **阶段六的分阶段规划与派单顺序见 `docs/阶段六-规划与派单.md`**（6-A 任务持久化 → 6-B 论文入库 → 6-C guard）。
 
 ---
 
