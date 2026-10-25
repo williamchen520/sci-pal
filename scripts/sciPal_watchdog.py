@@ -32,9 +32,11 @@ import argparse
 import atexit
 import json
 import os
+import socket
 import subprocess
 import sys
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -56,8 +58,17 @@ PROBE_URL = f"{BASE_URL}/api/health"
 
 PROBE_TIMEOUT = 3.0        # 单次探测超时
 POLL_INTERVAL = 10.0       # 常驻模式探测间隔
-LAUNCH_COOLDOWN = 60.0     # 拉起后冷却期 > 冷启动 30–45s，避免重复拉起
-STARTUP_WAIT_TIMEOUT = 180.0  # --once 模式等待就绪上限
+READY_POLL_INTERVAL = 2.0  # 拉起后「等待就绪」期间的探测间隔
+
+# F-1（本工单核心）：daemon 拉起后**阻塞等待就绪**（与 --once 对齐），
+# 就绪之后才清零状态。这个常量只剩兜底用途 —— 当「拉起后等满
+# STARTUP_WAIT_TIMEOUT 仍未就绪」时，用它避免下一轮立刻再拉一个。
+#
+# 原来的 60 s 是错的：实测冷启动 ≈76 s（2026-10-25 07:34 / 07:39），
+# 冷却一过探针仍失败 → 再拉一个 → Windows SO_REUSEADDR 允许重复绑定
+# → 每 60~70 s 多一个实例，滚雪球到 8 个。
+LAUNCH_COOLDOWN = 180.0
+STARTUP_WAIT_TIMEOUT = 180.0  # --once 与 daemon 共用的「等待就绪」上限
 
 # Windows 进程创建标志
 CREATE_BREAKAWAY_FROM_JOB = 0x01000000  # 允许子进程脱离父进程所在的 Job
@@ -125,6 +136,71 @@ def probe() -> bool:
             return 200 <= response.status < 400
     except Exception:
         return False
+
+
+def _host_port() -> tuple[str, int]:
+    parsed = urllib.parse.urlparse(BASE_URL)
+    return (parsed.hostname or "127.0.0.1", parsed.port or 5000)
+
+
+def port_listening(timeout: float = 0.6) -> bool:
+    """F-3: 端口上是否已经有进程在监听（TCP 层，与 probe 的 HTTP 层互补）。
+
+    为什么必须分开判：Windows 的 SO_REUSEADDR 允许多个进程绑同一端口，
+    「探针失败」不等于「没有进程在监听」—— 很可能只是那个进程还在冷启动。
+    拉起前不做这个区分，就会在冷启动窗口里反复叠加实例。
+    """
+    host, port = _host_port()
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def listening_pids(port: int | None = None) -> list[int]:
+    """F-4: 列出正在监听该端口的 PID（用 netstat -ano 解析，纯标准库）。"""
+    _, default_port = _host_port()
+    port = port or default_port
+    try:
+        completed = subprocess.run(
+            ["netstat", "-ano"],
+            capture_output=True,
+            text=True,
+            encoding="mbcs",
+            errors="replace",
+            timeout=15,
+        )
+    except Exception as exc:  # 不吞：打印出来
+        log(f"读取 netstat 失败：{exc}")
+        return []
+
+    pids: set[int] = set()
+    needle = f":{port}"
+    for line in (completed.stdout or "").splitlines():
+        if needle not in line or "LISTENING" not in line.upper():
+            continue
+        parts = line.split()
+        if parts and parts[-1].isdigit():
+            pids.add(int(parts[-1]))
+    return sorted(pids)
+
+
+def wait_until_ready(timeout: float = STARTUP_WAIT_TIMEOUT) -> bool:
+    """F-1: 拉起后阻塞等待服务真正就绪（与 --once 一致）。
+
+    这是本工单的核心修复：旧版 daemon 拉起后立刻 sleep(10s) 就进入下一轮，
+    60 s 冷却一过、探针还失败（冷启动 ~76 s）就再拉一个 —— 实例滚雪球。
+    现在无论冷启动多久，都等它到底（或等满 timeout），期间绝不再拉起。
+    """
+    started = time.time()
+    while time.time() - started < timeout:
+        if probe():
+            log(f"服务已就绪（等待 {time.time() - started:.1f}s）")
+            return True
+        time.sleep(READY_POLL_INTERVAL)
+    log(f"等待 {timeout:.0f}s 仍未通过探针，服务可能异常（端口监听={port_listening()}）")
+    return False
 
 
 def pid_alive(pid: int) -> bool:
@@ -265,13 +341,14 @@ def _creation_flags(with_breakaway: bool) -> int:
     return flags
 
 
-def launch() -> bool:
-    """以 detached 方式拉起 api_server.py，stdout/stderr 落 logs/sciPal_api.log。
+def launch() -> int | None:
+    """以 detached 方式拉起 api_server.py，返回子进程 pid；失败返回 None。
 
     优先带 CREATE_BREAKAWAY_FROM_JOB（脱离父终端所在的 Job，减少「终端退出即被杀」）；
     若所在 Job 未开启 breakaway 权限，系统会拒绝 → 自动降级为普通 detached。
     """
     global _once_breakaway_note
+    proc: subprocess.Popen | None = None
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     if not VENV_PYTHON.exists():
         log(f"虚拟环境解释器不存在：{VENV_PYTHON}")
@@ -287,7 +364,7 @@ def launch() -> bool:
     for with_breakaway in (True, False):
         try:
             handle = open(API_LOG, "a", encoding="utf-8")
-            subprocess.Popen(
+            proc = subprocess.Popen(
                 [str(VENV_PYTHON), str(API_SCRIPT)],
                 cwd=str(PROJECT_ROOT),
                 env=env,
@@ -305,13 +382,18 @@ def launch() -> bool:
                 _once_breakaway_note = "失败（Job 不允许 breakaway，已降级）"
                 continue
             log(f"拉起失败：{exc}")
-            return False
+            return None
         else:
             _once_breakaway_note = "已启用" if with_breakaway else "未启用"
             break
 
-    log(f"已拉起 api_server.py（日志：{API_LOG}；breakaway={_once_breakaway_note}）")
-    return True
+    if proc is None:
+        return None
+    log(
+        f"已拉起 api_server.py（pid={proc.pid}，日志：{API_LOG}；"
+        f"breakaway={_once_breakaway_note}）"
+    )
+    return proc.pid
 
 
 # ---------------------------------------------------------------------------
@@ -332,17 +414,14 @@ def run_once() -> int:
 
     log("SciPal API 未运行，正在拉起 api_server.py ...")
     started = time.time()
-    if not launch():
+    if launch() is None:
         print(ONCE_EPILOGUE, flush=True)
         return 1
 
-    while time.time() - started < STARTUP_WAIT_TIMEOUT:
-        time.sleep(1.0)
-        if probe():
-            elapsed = time.time() - started
-            log(f"服务已就绪，实际耗时 {elapsed:.1f}s（冷启动通常 30–45s）")
-            print(ONCE_EPILOGUE, flush=True)
-            return 0
+    if wait_until_ready(STARTUP_WAIT_TIMEOUT):
+        log(f"服务已就绪，实际耗时 {time.time() - started:.1f}s")
+        print(ONCE_EPILOGUE, flush=True)
+        return 0
 
     log(f"已等待 {STARTUP_WAIT_TIMEOUT:.0f}s 仍未就绪，请检查日志：{API_LOG}")
     print(ONCE_EPILOGUE, flush=True)
@@ -354,32 +433,79 @@ def run_daemon() -> None:
         return
 
     log(f"watchdog 常驻启动：每 {POLL_INTERVAL:.0f}s 探测 {PROBE_URL}（PID {os.getpid()}）")
+    log(
+        "拉起策略：先判端口占用（F-3）→ 拉起后**阻塞等待就绪**，"
+        f"上限 {STARTUP_WAIT_TIMEOUT:.0f}s（F-1）→ 失败才进 {LAUNCH_COOLDOWN:.0f}s 兜底冷却"
+    )
     last_launch = 0.0
     was_down = False
 
     try:
         while True:
-            alive = probe()
-            if alive:
+            # ── 健康 ──
+            if probe():
                 if was_down:
                     log(f"服务已恢复（{BASE_URL}）")
                     was_down = False
-            else:
-                if not was_down:
-                    log(f"服务不通（{PROBE_URL}）")
-                    was_down = True
-                if time.time() - last_launch >= LAUNCH_COOLDOWN:
-                    if launch():
-                        last_launch = time.time()
-                        log(f"进入 {LAUNCH_COOLDOWN:.0f}s 冷却期，等待冷启动完成")
-                else:
-                    remaining = LAUNCH_COOLDOWN - (time.time() - last_launch)
-                    log(f"冷却期内（剩 {remaining:.0f}s），暂不重复拉起")
+                last_launch = 0.0  # 健康时清零：冷却只服务于「拉起后未就绪」的失败场景
+                time.sleep(POLL_INTERVAL)
+                continue
+
+            if not was_down:
+                log(f"服务不通（{PROBE_URL}）")
+                was_down = True
+
+            # ── F-3：端口已有实例在监听但探针失败 → 它在冷启动/僵死，别再拉一个 ──
+            if port_listening():
+                log("端口已有人在监听但探针未通过（可能在冷启动），本轮**不拉起**，继续等")
+                time.sleep(POLL_INTERVAL)
+                continue
+
+            # ── 兜底冷却：上次拉起等满超时仍未就绪 ──
+            if last_launch and (time.time() - last_launch) < LAUNCH_COOLDOWN:
+                remaining = LAUNCH_COOLDOWN - (time.time() - last_launch)
+                log(f"上次拉起未就绪，兜底冷却中（剩 {remaining:.0f}s）")
+                time.sleep(POLL_INTERVAL)
+                continue
+
+            # ── 拉起 + F-1：阻塞等待就绪，期间绝不进入下一轮 ──
+            pid = launch()
+            if pid is None:
+                time.sleep(POLL_INTERVAL)
+                continue
+
+            last_launch = time.time()
+            if wait_until_ready(STARTUP_WAIT_TIMEOUT):
+                last_launch = 0.0
+                was_down = False
+            # 未就绪：保留 last_launch，下一轮先走端口检查 + 兜底冷却
+
             time.sleep(POLL_INTERVAL)
     except KeyboardInterrupt:
         log("收到中断信号，退出")
     finally:
         release_lock()
+
+
+def show_status() -> int:
+    """F-4: 一次性自检 —— 锁 / 监听数 / 探针，不用再手敲 netstat。"""
+    ok = probe()
+    pids = listening_pids()
+    holder = read_lock()
+
+    print("=== SciPal watchdog 状态 ===")
+    print(f"BASE_URL          : {BASE_URL}")
+    print(f"probe             : {'OK' if ok else 'FAIL'}")
+    print(f"port_listening    : {port_listening()}")
+    print(f"listening pids    : {pids}")
+    print(f"listening count   : {len(pids)}")
+    print(f"lock              : {holder}")
+    if holder and holder.get("pid"):
+        print(f"lock holder alive : {pid_alive(holder['pid'])}")
+
+    healthy = ok and len(pids) <= 1
+    print(f"verdict           : {'OK' if healthy else 'DEGRADED（可能多实例或服务异常）'}")
+    return 0 if healthy else 1
 
 
 def main() -> None:
@@ -389,7 +515,15 @@ def main() -> None:
         action="store_true",
         help="只探测一次：不通就拉起并等待就绪，打印实际耗时后退出（临时应急，非持久）",
     )
+    parser.add_argument(
+        "--status",
+        action="store_true",
+        help="自检：打印锁内容、监听 5000 的 PID 列表、探针结果后退出（F-4）",
+    )
     args = parser.parse_args()
+
+    if args.status:
+        raise SystemExit(show_status())
 
     if args.once:
         raise SystemExit(run_once())
