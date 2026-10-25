@@ -23,6 +23,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # V26.3: 导入任务管理器
 from services.review.task_manager import task_manager
 
+# B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
+from contracts import InternalError, fail, ok
+
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 DOCUMENTS_DIR = PROJECT_ROOT / "documents"
@@ -575,9 +578,11 @@ def graph_stats():
     """Return graph statistics (nodes, edges, components, top-cited)."""
     try:
         graph = get_graph()
-        return jsonify(graph.stats())
-    except Exception as e:
-        return jsonify({"error": f"Graph stats failed: {str(e)}"}), 500
+        return jsonify(ok(graph.stats()))
+    except Exception:
+        app.logger.exception("graph_stats failed")
+        error = InternalError("Graph stats failed")
+        return jsonify(fail(error)), error.status
 
 
 @app.route("/api/communities", methods=["GET"])
@@ -1173,15 +1178,17 @@ def review_llm_status():
             hint = None if available else "配置 API key: export SCIPAL_LLM_API_KEY=sk-你的key"
         else:
             hint = None if available else "Start Ollama: ollama serve && ollama pull qwen2.5:14b"
-        return jsonify({
+        return jsonify(ok({
             "available": available,
             "provider": provider,
             "configured_model": llm.model,
             "installed_models": models,
             "hint": hint,
-        })
-    except Exception as e:
-        return jsonify({"available": False, "error": str(e)}), 500
+        }))
+    except Exception:
+        app.logger.exception("review_llm_status failed")
+        error = InternalError("LLM status check failed")
+        return jsonify(fail(error)), error.status
 
 
 # ---------------------------------------------------------------------------
