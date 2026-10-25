@@ -221,7 +221,7 @@ def build_store_stage(save_review: SaveReview | None = None) -> Callable[[StageC
 
 def build_export_stage(export_review: ExportReview | None = None) -> Callable[[StageContext], StageResult]:
     """Export deliverables. Reads ``store.json``, writes under ``exports/``."""
-    exporter = export_review or _markdown_export
+    exporter = export_review or _default_export
 
     def stage(context: StageContext) -> StageResult:
         record = _read_json(context.run_dir / "store.json")
@@ -572,27 +572,82 @@ def _default_db_path() -> Path:
     return Path(__file__).resolve().parents[2] / "data" / "research.db"
 
 
-def _markdown_export(record: Mapping[str, Any], context: StageContext) -> list[str]:
-    """Write the reviewed Markdown plus a small manifest under ``exports/``."""
-    source = context.run_dir / "draft.md"
-    markdown = source.read_text(encoding="utf-8") if source.exists() else ""
+def _default_export(record: Mapping[str, Any], context: StageContext) -> list[str]:
+    """Use ExportManager for Markdown (and BibTeX when references exist)."""
+    from services.review.export_manager import ExportManager
 
-    exports = context.run_dir / "exports"
-    exports.mkdir(parents=True, exist_ok=True)
-    (exports / "review.md").write_text(markdown, encoding="utf-8")
-    (exports / "metadata.json").write_text(
-        json.dumps(
-            {
-                "review_id": record.get("review_id"),
-                "topic": record.get("topic"),
-                "exported_at": _now(),
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8",
+    review = _read_json(context.run_dir / "review.json") or {}
+    manager = context.services.get("export_manager")
+    if manager is None:
+        manager = ExportManager(storage_dir=context.run_dir / "exports")
+
+    review_id = str(record.get("review_id") or "")
+    title = str(review.get("topic") or record.get("topic") or context.spec.topic)
+    references = list(review.get("references") or [])
+    artifacts: list[str] = []
+
+    markdown_task = manager.create_export(review_id, format="markdown")
+    markdown_task = manager.export_to_markdown(
+        markdown_task.task_id,
+        title=title,
+        sections=_export_sections(review),
+        references=references,
     )
-    return ["exports/review.md", "exports/metadata.json"]
+    if markdown_task and markdown_task.file_path:
+        artifacts.append(_relative_artifact(markdown_task.file_path, context.run_dir))
+
+    if references:
+        bibtex_task = manager.create_export(review_id, format="bibtex")
+        bibtex_task = manager.export_to_bibtex(bibtex_task.task_id, references)
+        if bibtex_task and bibtex_task.file_path:
+            artifacts.append(_relative_artifact(bibtex_task.file_path, context.run_dir))
+
+    write_artifact(
+        context,
+        "exports/manifest.json",
+        {"review_id": review_id, "files": artifacts, "references": len(references)},
+    )
+    artifacts.append("exports/manifest.json")
+    return artifacts
+
+
+def _export_sections(review: Mapping[str, Any]) -> list[dict[str, Any]]:
+    sentences = [item for item in review.get("sentences") or [] if isinstance(item, Mapping)]
+    sections: list[dict[str, Any]] = []
+    for section in review.get("sections") or []:
+        if not isinstance(section, Mapping):
+            continue
+        section_id = section.get("section_id") or section.get("id")
+        selected = [item for item in sentences if item.get("section_id") == section_id]
+        sections.append(
+            {
+                "title": section.get("title", ""),
+                "content": " ".join(str(item.get("text", "")) for item in selected),
+                "evidence_ids": sorted(
+                    {
+                        str(eid)
+                        for item in selected
+                        for eid in item.get("evidence_ids") or []
+                    }
+                ),
+            }
+        )
+    if not sections and sentences:
+        sections = [
+            {
+                "title": "Review",
+                "content": " ".join(str(item.get("text", "")) for item in sentences),
+                "evidence_ids": [],
+            }
+        ]
+    return sections
+
+
+def _relative_artifact(path: str | Path, run_dir: Path) -> str:
+    try:
+        return str(Path(path).resolve().relative_to(run_dir.resolve()))
+    except ValueError:
+        return str(path)
 
 
 # ---------------------------------------------------------------------------

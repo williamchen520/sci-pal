@@ -151,17 +151,45 @@ class ExportStageTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.dir = Path(self.tmp.name)
 
-    def test_default_export_copies_markdown(self) -> None:
+    def test_default_export_uses_export_manager(self) -> None:
         spec = WorkflowSpec(topic="demo", stages=("export",))
-        (self.dir / "store.json").write_text('{"review_id": "rev_1"}', encoding="utf-8")
-        (self.dir / "draft.md").write_text("# review body", encoding="utf-8")
-        result = build_export_stage()(context(self.dir, spec))
-        self.assertEqual(result.status, "ok")
-        self.assertEqual(
-            (self.dir / "exports" / "review.md").read_text(encoding="utf-8"), "# review body"
+        (self.dir / "store.json").write_text(
+            '{"review_id": "rev_1", "topic": "demo"}', encoding="utf-8"
         )
-        metadata = json.loads((self.dir / "exports" / "metadata.json").read_text(encoding="utf-8"))
-        self.assertEqual(metadata["review_id"], "rev_1")
+        (self.dir / "review.json").write_text(
+            json.dumps(
+                {
+                    "topic": "demo",
+                    "sections": [{"section_id": "sec-01", "title": "Intro"}],
+                    "sentences": [
+                        {
+                            "sentence_id": "s1",
+                            "section_id": "sec-01",
+                            "text": "Claim [ev1].",
+                            "evidence_ids": ["ev1"],
+                        }
+                    ],
+                    "references": [
+                        {"authors": "A, B", "year": 2024, "title": "Paper", "journal": "J", "doi": "10.1/x"}
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        result = build_export_stage()(context(self.dir, spec))
+        self.assertEqual(result.status, "ok", result.errors)
+
+        markdown_files = list((self.dir / "exports" / "files").glob("*.md"))
+        self.assertEqual(len(markdown_files), 1)
+        text = markdown_files[0].read_text(encoding="utf-8")
+        self.assertIn("# demo", text)
+        self.assertIn("## Intro", text)
+        self.assertIn("Claim [ev1].", text)
+        self.assertIn("## References", text)
+        self.assertIn("10.1/x", text)
+
+        self.assertEqual(len(list((self.dir / "exports" / "files").glob("*.bib"))), 1)
+        self.assertTrue((self.dir / "exports" / "manifest.json").exists())
 
     def test_missing_store_fails(self) -> None:
         spec = WorkflowSpec(topic="demo", stages=("export",))
@@ -665,7 +693,7 @@ class FullPipelineTests(unittest.TestCase):
             )
             verify = json.loads((run_dir / "verify.json").read_text(encoding="utf-8"))
             self.assertEqual(verify["stats"]["verified"], 1)
-            self.assertTrue((run_dir / "exports" / "review.md").exists())
+            self.assertTrue(list((run_dir / "exports" / "files").glob("*.md")))
 
 
 class EndToEndTests(unittest.TestCase):
@@ -691,10 +719,10 @@ class EndToEndTests(unittest.TestCase):
             )
 
             self.assertEqual(manifest["status"], "completed")
-            self.assertEqual(
-                manifest["artifacts"], ["plan.json", "store.json", "exports/review.md", "exports/metadata.json"]
-            )
-            self.assertTrue((run_dir / "exports" / "review.md").exists())
+            self.assertIn("plan.json", manifest["artifacts"])
+            self.assertIn("store.json", manifest["artifacts"])
+            self.assertIn("exports/manifest.json", manifest["artifacts"])
+            self.assertTrue(list((run_dir / "exports" / "files").glob("*.md")))
 
 
 if __name__ == "__main__":
