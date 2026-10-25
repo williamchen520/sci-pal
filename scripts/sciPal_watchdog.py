@@ -55,6 +55,8 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 
 # Windows 控制台默认 cp1252，中文/emoji 输出会抛 UnicodeEncodeError
@@ -69,6 +71,13 @@ API_SCRIPT = PROJECT_ROOT / "api_server.py"
 LOGS_DIR = PROJECT_ROOT / "logs"
 API_LOG = LOGS_DIR / "sciPal_api.log"
 LOCK_FILE = LOGS_DIR / "sciPal_watchdog.lock"
+
+# T4-1: **拉起互斥守卫** —— 与上面的「常驻单实例锁」是两件事，别混用：
+#   · LOCK_FILE   ：只允许一个 daemon 存活（长期持有）
+#   · LAUNCH_GUARD：只允许一个进程执行「launch + wait_until_ready」（短命，毫秒~分钟级）
+# 分开的原因：daemon 活着时 `--once` 也**必须**被挡住，但它不能因此去抢 daemon 的锁；
+# 反过来 daemon 每轮拉起也要挡 `--once`。
+LAUNCH_GUARD_FILE = LOGS_DIR / "sciPal_launch.guard"
 
 # L-1: 看门狗自身日志 —— **绝对路径**，由 PROJECT_ROOT / LOGS_DIR 派生。
 # 计划任务的工作目录可能是 C:\Windows\System32，用相对路径会把日志写到别处（甚至丢）。
@@ -500,6 +509,161 @@ def release_lock() -> None:
 
 
 # ---------------------------------------------------------------------------
+# T4-1 拉起互斥守卫（logs/sciPal_launch.guard）
+#
+# 为什么需要它：daemon 的 LOCK_FILE 只挡「两个 daemon」，`--once` 以前既不读锁
+# 也不看端口，`probe()` 一失败就 `launch()`。实测同一秒两个 `--once` 各拉一个，
+# 而 Windows 的 SO_REUSEADDR 让两个 Flask **都能绑定 5000、都能通过 health 200**，
+# 于是 T-2 刚焊死的「唯一一把解析锁」被进程边界打穿。
+#
+# 守卫生效范围：**只包住 `launch() + wait_until_ready()` 这一段**。
+# ---------------------------------------------------------------------------
+
+
+def read_launch_guard() -> dict | None:
+    """读取守卫文件；不存在 / 空 / 非法 JSON 都返回 None。"""
+    try:
+        raw = LAUNCH_GUARD_FILE.read_text(encoding="utf-8-sig").strip()
+    except Exception:
+        return None
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) and "pid" in data else None
+
+
+def launch_guard_holder_alive(holder: dict) -> bool:
+    """守卫持有者是否是**同一个还活着的**看门狗进程。
+
+    判据与 LOCK_FILE 一致：PID 存活 + 创建时间一致（防 PID 复用）；
+    拿不到创建时间时退回命令行校验（`sciPal_watchdog.py`）。
+    """
+    pid = holder.get("pid")
+    if not isinstance(pid, int) or pid <= 0:
+        return False
+    if not pid_alive(pid):
+        return False
+
+    recorded_start = holder.get("start")
+    actual_start = process_start_time(pid)
+    if recorded_start is not None and actual_start is not None:
+        return int(recorded_start) == int(actual_start)
+
+    return command_line_has_watchdog(pid)
+
+
+def _create_guard_exclusive() -> bool:
+    """原子创建守卫文件（`O_CREAT|O_EXCL`）：谁先创建谁持有。"""
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(
+        {
+            "pid": os.getpid(),
+            "start": process_start_time(os.getpid()),
+            "at": datetime.now().isoformat(timespec="seconds"),
+        },
+        ensure_ascii=False,
+    )
+    try:
+        fd = os.open(str(LAUNCH_GUARD_FILE), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        return False
+    except Exception as exc:  # 权限/磁盘等：不吞
+        log(f"创建拉起守卫失败：{exc}")
+        return False
+    try:
+        os.write(fd, payload.encode("utf-8"))
+    finally:
+        os.close(fd)
+    return True
+
+
+def release_launch_guard() -> None:
+    """释放守卫（只删自己写的，别人接管走的不动）。"""
+    holder = read_launch_guard()
+    if holder and holder.get("pid") != os.getpid():
+        return
+    try:
+        LAUNCH_GUARD_FILE.unlink()
+    except Exception:
+        pass
+
+
+def _read_guard_after_contention(timeout: float = 1.0) -> dict | None:
+    """创建失败后读守卫内容 —— 给赢家一点时间把 JSON 写进去。
+
+    `O_CREAT|O_EXCL` 创建与写入之间有一个极短的空文件窗口；此处若立刻判
+    「读不出来 = stale」就会把赢家踢掉，两边一起拉起（正是要修的问题）。
+    """
+    deadline = time.time() + timeout
+    while True:
+        holder = read_launch_guard()
+        if holder is not None:
+            return holder
+        if time.time() >= deadline:
+            return None
+        time.sleep(0.05)
+
+
+@contextmanager
+def launch_guard():
+    """拉起互斥：同一时刻只允许一个进程执行 `launch + wait_until_ready`。
+
+    yield:
+        True  → 已持有守卫（退出 with 时自动删除文件）
+        False → 守卫被占 / 接管失败，**调用方不得 launch**，本轮跳过
+
+    stale 判定：持有者 PID 已死、或 PID 已被复用（创建时间不符）→ 接管，
+    避免强杀留下的尸检文件把看门狗永久锁死。
+    """
+    if _create_guard_exclusive():
+        log(f"取得拉起守卫（PID {os.getpid()}）")
+        try:
+            yield True
+        finally:
+            release_launch_guard()
+        return
+
+    holder = _read_guard_after_contention()
+    if holder and launch_guard_holder_alive(holder):
+        log(
+            f"拉起守卫被占（PID {holder.get('pid')} 正在拉起/等待就绪），本轮跳过"
+        )
+        yield False
+        return
+
+    # 读不出内容且文件很新：可能是赢家还没写完 JSON，保守让路（不抢）
+    if holder is None:
+        try:
+            age = time.time() - LAUNCH_GUARD_FILE.stat().st_mtime
+        except OSError:
+            age = None
+        if age is not None and age < 5:
+            log("拉起守卫刚被创建（内容未就绪），本轮跳过")
+            yield False
+            return
+
+    log(f"发现过期拉起守卫（{holder or '内容不可读'}），接管")
+    try:
+        LAUNCH_GUARD_FILE.unlink()
+    except Exception:
+        pass
+
+    if not _create_guard_exclusive():
+        log("接管拉起守卫失败（被其他进程抢先），本轮跳过")
+        yield False
+        return
+
+    log(f"已接管并重新取得拉起守卫（PID {os.getpid()}）")
+    try:
+        yield True
+    finally:
+        release_launch_guard()
+
+
+# ---------------------------------------------------------------------------
 # 拉起
 # ---------------------------------------------------------------------------
 
@@ -587,26 +751,75 @@ ONCE_EPILOGUE = (
 
 
 def run_once() -> int:
+    """临时应急拉起，**任何路径都不许堆出第二个实例**（T4-1）。
+
+    三道闸，顺序不能换（越便宜、越有权威的越前面）：
+      ① 服务已就绪          → 无需拉起
+      ② 有 daemon 在运行    → 拉起是它的职责，`--once` 绝不抢先
+      ③ 端口已有人在监听    → 那是在冷启动/僵死，再拉一个就是双实例
+    三道都过才进「拉起守卫」→ launch() → 等就绪。
+
+    退出码口径：**只要有「不 launch」的正当理由就 exit 0**；
+    只有「尝试拉起但未在超时内就绪」才 exit 1。
+    """
     _run_marker("once", read_lock())
+
+    # ① 服务已就绪
     if probe():
         log(f"SciPal API 已在运行（{BASE_URL}），无需拉起")
         print(ONCE_EPILOGUE, flush=True)
         return 0
 
-    log("SciPal API 未运行，正在拉起 api_server.py ...")
-    started = time.time()
-    if launch() is None:
-        print(ONCE_EPILOGUE, flush=True)
-        return 1
-
-    if wait_until_ready(STARTUP_WAIT_TIMEOUT):
-        log(f"服务已就绪，实际耗时 {time.time() - started:.1f}s")
+    # ② 常驻看门狗在跑 → 拉起归它管
+    holder = read_lock()
+    if holder and lock_holder_alive(holder) and holder.get("pid") != os.getpid():
+        log(
+            f"已有看门狗在运行（PID {holder.get('pid')}），--once 不重复拉起"
+            f"（探针当前失败，拉起/重试由该常驻进程负责）"
+        )
         print(ONCE_EPILOGUE, flush=True)
         return 0
 
-    log(f"已等待 {STARTUP_WAIT_TIMEOUT:.0f}s 仍未就绪，请检查日志：{API_LOG}")
-    print(ONCE_EPILOGUE, flush=True)
-    return 1
+    # ③ 端口已被占用（探针未通过 = 在冷启动或僵死）
+    if port_listening():
+        pids = listening_pids()
+        log(
+            f"端口已有人在监听（可能在冷启动），--once 不重复拉起"
+            f"（listening count={len(pids)}，pids={pids}）"
+        )
+        print(ONCE_EPILOGUE, flush=True)
+        return 0
+
+    # ④ 进守卫：launch + 等就绪 全程互斥
+    with launch_guard() as acquired:
+        if not acquired:
+            print(ONCE_EPILOGUE, flush=True)
+            return 0
+
+        # 拿到守卫后复查：等待期间别人可能已经拉起并开始监听
+        if port_listening():
+            pids = listening_pids()
+            log(
+                f"取得守卫后复查：端口已被占用，取消本次拉起"
+                f"（listening count={len(pids)}，pids={pids}）"
+            )
+            print(ONCE_EPILOGUE, flush=True)
+            return 0
+
+        log("SciPal API 未运行，正在拉起 api_server.py ...")
+        started = time.time()
+        if launch() is None:
+            print(ONCE_EPILOGUE, flush=True)
+            return 1
+
+        if wait_until_ready(STARTUP_WAIT_TIMEOUT):
+            log(f"服务已就绪，实际耗时 {time.time() - started:.1f}s")
+            print(ONCE_EPILOGUE, flush=True)
+            return 0
+
+        log(f"已等待 {STARTUP_WAIT_TIMEOUT:.0f}s 仍未就绪，请检查日志：{API_LOG}")
+        print(ONCE_EPILOGUE, flush=True)
+        return 1
 
 
 def run_daemon() -> None:
@@ -657,17 +870,33 @@ def run_daemon() -> None:
                 time.sleep(POLL_INTERVAL)
                 continue
 
-            # ── 拉起 + F-1：阻塞等待就绪，期间绝不进入下一轮 ──
-            pid = launch()
-            if pid is None:
-                time.sleep(POLL_INTERVAL)
-                continue
+            # ── 拉起 + T4-1 守卫 + F-1：阻塞等待就绪，期间绝不进入下一轮 ──
+            with launch_guard() as acquired:
+                if not acquired:
+                    # 另一个进程（daemon 另一路 / --once）正在拉起或等就绪
+                    time.sleep(POLL_INTERVAL)
+                    continue
 
-            last_launch = time.time()
-            if wait_until_ready(STARTUP_WAIT_TIMEOUT):
-                last_launch = 0.0
-                was_down = False
-            # 未就绪：保留 last_launch，下一轮先走端口检查 + 兜底冷却
+                # 拿到守卫后复查端口：等待守卫期间别人可能已经拉起来了
+                if port_listening():
+                    pids = listening_pids()
+                    log(
+                        "取得守卫后复查：端口已被占用，本轮不拉起"
+                        f"（listening count={len(pids)}，pids={pids}）"
+                    )
+                    time.sleep(POLL_INTERVAL)
+                    continue
+
+                pid = launch()
+                if pid is None:
+                    time.sleep(POLL_INTERVAL)
+                    continue
+
+                last_launch = time.time()
+                if wait_until_ready(STARTUP_WAIT_TIMEOUT):
+                    last_launch = 0.0
+                    was_down = False
+                # 未就绪：保留 last_launch，下一轮先走端口检查 + 兜底冷却
 
             time.sleep(POLL_INTERVAL)
     except KeyboardInterrupt:
@@ -691,6 +920,17 @@ def show_status() -> int:
     print(f"lock              : {holder}")
     if holder and holder.get("pid"):
         print(f"lock holder alive : {pid_alive(holder['pid'])}")
+
+    # T4-1: 拉起守卫 + 实例数（判单实例只认监听 PID 个数，不认 health 200）
+    guard = read_launch_guard()
+    print(f"launch guard      : {guard}")
+    if guard and guard.get("pid"):
+        guard_alive = launch_guard_holder_alive(guard)
+        print(
+            f"launch guard alive: {guard_alive}"
+            + ("" if guard_alive else "（stale，下次拉起会接管）")
+        )
+    print(f"instance count    : {len(pids)}（pids={pids}）")
 
     # L-5: 日志可观测性（保留上面全部原有字段）
     try:

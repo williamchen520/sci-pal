@@ -1708,7 +1708,9 @@ class ParseCancelled(RuntimeError):
     """解析已完成，但写库前发现任务已被取消 —— 放弃写库（数据不进库）。"""
 
 
-def _parse_and_store(pdf_path, filename: str, before_store=None) -> Dict:
+def _parse_and_store(
+    pdf_path, filename: str, before_store=None, on_acquired=None, on_waiting=None
+) -> Dict:
     """docling 解析 + 写库，全程持有 `_parse_lock`（串行化）。
 
     Args:
@@ -1717,6 +1719,15 @@ def _parse_and_store(pdf_path, filename: str, before_store=None) -> Dict:
         before_store: 可选回调，在**解析完成后、写库之前**、**锁内**调用。
             返回 True 表示放弃写库（异步路由用它做取消的最后一道闸）；
             回调里可以顺带更新进度（此刻任务仍是 running，写得进去）。
+        on_waiting: 可选回调，在**确认要排队**（试抢锁失败）时、阻塞取锁之前调用。
+            必须放在**模块 import 之后**：docling 的 import 首次要 10~15 秒，
+            放在 import 之前试抢会摸到一个「暂时空闲」的锁，从而漏报排队（T4-2）。
+        on_acquired: 可选回调，在 **`_parse_lock` 已取得、但尚未开始解析** 时调用
+            （`with` 块内第一行，早于 `ParserOrchestrator()` 构造）。
+            用途：把「排队中」切成「解析中」—— 排队期间进度文案必须停在
+            「排队中」，否则排队完全不可观测（T4-2）。
+            异常传播：回调抛异常 = 放弃本次解析，锁由 `with` 自动释放，
+            异常原样抛给调用方（不吞、不转成 ParseStoreError）。
 
     Returns:
         `{"paper_id", "title", "paragraph_count", "stats"}`
@@ -1725,13 +1736,27 @@ def _parse_and_store(pdf_path, filename: str, before_store=None) -> Dict:
         ParseCancelled: `before_store` 返回 True（**未写库**）
         ParseStoreError: `insert_paper` 返回 False
         ImportError: build_db 解析模块不可用（在取锁之前就抛，不会卡住队列）
-        Exception: docling 解析本身失败
+        Exception: docling 解析本身失败；或 `on_acquired` / `before_store` 抛出的异常
     """
     from build_db.parsers.parser_orchestrator import ParserOrchestrator
     from build_db.db_writer import DatabaseWriter
 
+    # T4-2: 试抢一次判「要不要排队」，**必须在 import 之后**。
+    # docling 的 import 首次要 10~15 秒：若在 import 前试抢，先到的线程还卡在
+    # import 里、锁是空的 → 后到的任务会误判「不用排队」，随后静默阻塞在 with 上。
+    # 试抢成功必须立刻归还（threading.Lock 不可重入），真正取锁交给下面的 with。
+    if on_waiting is not None:
+        if _parse_lock.acquire(blocking=False):
+            _parse_lock.release()
+        else:
+            on_waiting()
+
     # 同步路由排队是预期行为 → 阻塞式 with（慢，但可预测）
     with _parse_lock:
+        # T4-2: 已拿到锁、还没解析 —— 「排队中」到此为止，进度切到「解析中」。
+        if on_acquired is not None:
+            on_acquired()
+
         orchestrator = ParserOrchestrator()
         parsed_result = orchestrator.parse_paper(str(pdf_path))
 
@@ -1919,20 +1944,27 @@ def parse_local_paper_async():
                 return
 
             # ── 慢路径 ──
-            # 「排队中」提示：非阻塞试抢一次，失败就如实打 progress，然后**立刻归还**。
-            # 真正的锁在 _parse_and_store 里（with _parse_lock）。这里若持有不放，
-            # 到了里面会自锁 —— threading.Lock 不可重入。
-            if _parse_lock.acquire(blocking=False):
-                _parse_lock.release()
-            else:
-                task_manager.update_progress(task_id, "排队中（前面还有解析任务）")
-
             if task_manager.is_cancelled(task_id):
                 task_manager.cancel_task(task_id)
                 return
 
-            task_manager.update_progress(task_id, "解析中（docling）…")
-            result = _parse_and_store(pdf_path, filename, before_store=_before_store)
+            # T4-2: 两条进度都由 _parse_and_store 回调写，时机才准：
+            #   on_waiting  —— 试抢锁失败（真的要排队）→ 「排队中」
+            #   on_acquired —— 真正拿到锁（开始解析）  → 「解析中（docling）…」
+            # 以前这里无条件写「解析中」，紧接就阻塞在锁上 → 排队不可观测；
+            # 试抢也不能放在路由层：_parse_and_store 里的 docling import 首次要
+            # 10~15 秒，那时锁还是空的，会漏报排队。
+            result = _parse_and_store(
+                pdf_path,
+                filename,
+                before_store=_before_store,
+                on_waiting=lambda: task_manager.update_progress(
+                    task_id, "排队中（前面还有解析任务）"
+                ),
+                on_acquired=lambda: task_manager.update_progress(
+                    task_id, "解析中（docling）…"
+                ),
+            )
 
             task_manager.complete_task(task_id, {
                 "paper_id": result["paper_id"],
