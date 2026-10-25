@@ -183,13 +183,18 @@ def agentic_search(
     description=(
         "列出 documents/ 目录下的本地 PDF 及其入库状态（GET /api/papers/local）。"
         "默认只返回精简字段（filename/parsed/paper_id/title/file_size_mb/paragraph_count），"
-        "避免 70+ 篇全量灌进上下文；only_unparsed=true 只看未解析的；limit 默认 20，"
+        "避免 70+ 篇全量灌进上下文；only_unparsed=true 只看未解析的；"
+        "limit 默认 20、**上限 50**（超出按 50 截断），"
         "超出会在结果里标注「已截断，共 N 篇」。"
         "⚠️ 只能看**已有** PDF，本工具不能上传文件。"
+        "⚠️ documents 目录不存在时返回 {\"ok\": false, \"error\": ...}，不是「0 篇」。"
     )
 )
 def list_local_papers(only_unparsed: bool = False, limit: int = 20) -> str:
-    """列出本地 PDF 与解析状态（裁剪后的精简视图）。"""
+    """列出本地 PDF 与解析状态（裁剪后的精简视图）。
+
+    limit 硬钳在 50：上下文预算正是这条工具存在的理由，不能靠调用方自觉。
+    """
     raw = _call("GET", "/api/papers/local")
     try:
         payload = json.loads(raw)
@@ -200,6 +205,21 @@ def list_local_papers(only_unparsed: bool = False, limit: int = 20) -> str:
         return raw  # 业务错误（4xx/5xx）原样返回，保留 status/detail
 
     data = payload.get("data") or {}
+
+    # T2-5: Flask 侧「documents 目录不存在」返回 200 + error（前端在用，状态码不能改成 4xx），
+    # 于是 _call 会把它包成 ok=true。这里必须如实上抛，否则模型会答「本地没有 PDF」。
+    dir_error = data.get("error")
+    if dir_error:
+        return json.dumps(
+            {
+                "ok": False,
+                "error": dir_error,
+                "hint": "检查 DOCUMENTS_DIR 是否存在",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+
     all_papers = data.get("papers") or []
     parsed_count = sum(1 for paper in all_papers if paper.get("parsed"))
     unparsed_count = len(all_papers) - parsed_count
@@ -209,7 +229,8 @@ def list_local_papers(only_unparsed: bool = False, limit: int = 20) -> str:
         if not (only_unparsed and paper.get("parsed"))
     ]
 
-    cap = max(1, int(limit))
+    # T2-4: 上限硬钳 50。只有下限的话，limit=10000 就把「避免灌满上下文」直接绕过。
+    cap = max(1, min(int(limit), 50))
     shown = selected[:cap]
     items = [
         {

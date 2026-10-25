@@ -1184,6 +1184,51 @@ def review_llm_status():
         return jsonify({"available": False, "error": str(e)}), 500
 
 
+# ---------------------------------------------------------------------------
+# V33.17-6B补丁: 「哪条记录才算数」的唯一口径
+#
+# papers.filename **没有**唯一约束（索引只有 idx_papers_doi / idx_papers_title），
+# 同一份 PDF 可能同时存在 `paper_X_<hash>`（正常，如 224 段）与
+# `paper_X_<hash>_mineru`（空壳，0 段）两行。裸 `fetchone()` 取到哪条取决于物理
+# 行序 → 同步路由 / 异步快路径 / `/api/papers/local` 会给出互相矛盾的答案
+# （实测同一文件：快路径 224、papers/local 0）。
+#
+# 口径：**段落数多者优先；并列时取创建更早的**（原始入库那条）。
+# ⚠️ 只统一「读取口径」，**不删** `_mineru` 空壳行 —— 那是数据清理，另议。
+# ---------------------------------------------------------------------------
+_PARSED_PAPER_ORDER = "ORDER BY total_paragraphs DESC, created_at ASC LIMIT 1"
+
+
+def _find_parsed_paper(filename: str, conn=None):
+    """按 filename 取「最有效」的一条已解析记录（`sqlite3.Row`）；没有返回 None。
+
+    这是**唯一口径**，三处调用点都走它：
+      · 同步 `POST /api/papers/parse`
+      · 异步 `POST /api/papers/parse_async` 的快路径
+      · `GET /api/papers/local` 的 parsed_map
+
+    Args:
+        filename: `papers.filename`（磁盘上的 PDF 文件名）
+        conn: 可选，复用调用方已打开的连接（`/api/papers/local` 要扫 77 个文件，
+              避免 77 次开关连接）。为 None 时自己开关。
+    """
+    import sqlite3
+
+    own_conn = conn is None
+    if own_conn:
+        conn = sqlite3.connect(str(DB_PATH), timeout=5)
+        conn.row_factory = sqlite3.Row
+    try:
+        return conn.execute(
+            "SELECT paper_id, filename, title, authors, year, total_paragraphs "
+            f"FROM papers WHERE filename = ? {_PARSED_PAPER_ORDER}",
+            (filename,),
+        ).fetchone()
+    finally:
+        if own_conn:
+            conn.close()
+
+
 # V25.11: 列出本地 documents 目录所有 PDF，标记是否已解析
 @app.route("/api/papers/local", methods=["GET"])
 def list_local_papers():
@@ -1193,17 +1238,15 @@ def list_local_papers():
       papers: [{filename, file_size, modified_at, parsed, paper_id, title, authors, year, paragraph_count}]
     """
     import sqlite3
-    import os
 
     if not DOCUMENTS_DIR.exists():
+        # ⚠️ 状态码**保持 200**：前端也在用这个路由，返回 4xx 可能让页面报错。
+        # 「目录不存在」由 MCP 侧（search_server.list_local_papers）据 error 字段
+        # 如实上报成 {"ok": false, ...}，不再伪装成「0 篇」。
         return jsonify({"papers": [], "error": "documents directory not found"}), 200
 
-    # 查询所有已解析论文
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
-    rows = conn.execute(
-        "SELECT paper_id, filename, title, authors, year, total_paragraphs FROM papers"
-    ).fetchall()
 
     # V25.17: 查询每篇论文的补充材料数量
     supp_counts = {}
@@ -1215,41 +1258,32 @@ def list_local_papers():
             supp_counts[r["paper_id"]] = r["cnt"]
     except Exception:
         pass  # 表可能还不存在（旧数据库），迁移会在启动时创建
-    conn.close()
 
-    parsed_map = {}
-    for row in rows:
-        if row["filename"]:
-            parsed_map[row["filename"]] = {
-                "paper_id": row["paper_id"],
-                "title": row["title"] or row["filename"],
-                "authors": row["authors"] or "",
-                "year": row["year"],
-                "paragraph_count": row["total_paragraphs"] or 0,
-                "supp_count": supp_counts.get(row["paper_id"], 0),
-            }
-
-    # 扫描 documents 目录
+    # 扫描 documents 目录。每个文件名都走 _find_parsed_paper（统一口径），
+    # 不再用「后写覆盖」的 parsed_map —— 否则 _mineru 空壳行会把 224 段覆盖成 0。
     result = []
-    for entry in sorted(DOCUMENTS_DIR.iterdir()):
-        if not entry.is_file() or entry.suffix.lower() != ".pdf":
-            continue
-        filename = entry.name
-        stat = entry.stat()
-        info = parsed_map.get(filename)
-        result.append({
-            "filename": filename,
-            "file_size": stat.st_size,
-            "file_size_mb": round(stat.st_size / (1024 * 1024), 2),
-            "modified_at": entry.stat().st_mtime,
-            "parsed": info is not None,
-            "paper_id": info["paper_id"] if info else None,
-            "title": info["title"] if info else filename,
-            "authors": info["authors"] if info else "",
-            "year": info["year"] if info else None,
-            "paragraph_count": info["paragraph_count"] if info else 0,
-            "supp_count": info["supp_count"] if info else 0,
-        })
+    try:
+        for entry in sorted(DOCUMENTS_DIR.iterdir()):
+            if not entry.is_file() or entry.suffix.lower() != ".pdf":
+                continue
+            filename = entry.name
+            stat = entry.stat()
+            info = _find_parsed_paper(filename, conn=conn)
+            result.append({
+                "filename": filename,
+                "file_size": stat.st_size,
+                "file_size_mb": round(stat.st_size / (1024 * 1024), 2),
+                "modified_at": stat.st_mtime,
+                "parsed": info is not None,
+                "paper_id": info["paper_id"] if info else None,
+                "title": (info["title"] or filename) if info else filename,
+                "authors": (info["authors"] or "") if info else "",
+                "year": info["year"] if info else None,
+                "paragraph_count": (info["total_paragraphs"] or 0) if info else 0,
+                "supp_count": supp_counts.get(info["paper_id"], 0) if info else 0,
+            })
+    finally:
+        conn.close()
 
     # 已解析的排前面，然后按文件名
     result.sort(key=lambda x: (not x["parsed"], x["filename"].lower()))
@@ -1652,6 +1686,79 @@ def clear_download_history():
         return jsonify({"error": f"清空历史失败: {str(e)}"}), 500
 
 
+# ---------------------------------------------------------------------------
+# V33.17-6B补丁: 解析 + 写库的**唯一实现**与**唯一那把锁**
+#
+# 为什么抽出来：`_parse_lock` 原先只有异步路由使用，同步路由（前端「解析」按钮）
+# 直接跑 docling → 前端点一次 + MCP 提交一次 = 两份 docling 并发，
+# 正是这把锁的注释里明确要防的「双份内存 + 抢 CPU」。锁必须下沉到唯一实现里。
+#
+# ⚠️ 两个解析入口都只调用 `_parse_and_store()`，**不许**在外面再
+#    `_parse_lock.acquire()` —— `threading.Lock` 不可重入，会自锁。
+#    异步路由为了显示「排队中」只做一次「非阻塞试抢 + 立刻归还」。
+# ---------------------------------------------------------------------------
+_parse_lock = threading.Lock()
+
+
+class ParseStoreError(RuntimeError):
+    """解析成功、但写库失败（与「解析本身失败」区分，便于路由给出准确的 error）。"""
+
+
+class ParseCancelled(RuntimeError):
+    """解析已完成，但写库前发现任务已被取消 —— 放弃写库（数据不进库）。"""
+
+
+def _parse_and_store(pdf_path, filename: str, before_store=None) -> Dict:
+    """docling 解析 + 写库，全程持有 `_parse_lock`（串行化）。
+
+    Args:
+        pdf_path: PDF 绝对路径
+        filename: 原始文件名（metadata 缺 title 时兜底）
+        before_store: 可选回调，在**解析完成后、写库之前**、**锁内**调用。
+            返回 True 表示放弃写库（异步路由用它做取消的最后一道闸）；
+            回调里可以顺带更新进度（此刻任务仍是 running，写得进去）。
+
+    Returns:
+        `{"paper_id", "title", "paragraph_count", "stats"}`
+
+    Raises:
+        ParseCancelled: `before_store` 返回 True（**未写库**）
+        ParseStoreError: `insert_paper` 返回 False
+        ImportError: build_db 解析模块不可用（在取锁之前就抛，不会卡住队列）
+        Exception: docling 解析本身失败
+    """
+    from build_db.parsers.parser_orchestrator import ParserOrchestrator
+    from build_db.db_writer import DatabaseWriter
+
+    # 同步路由排队是预期行为 → 阻塞式 with（慢，但可预测）
+    with _parse_lock:
+        orchestrator = ParserOrchestrator()
+        parsed_result = orchestrator.parse_paper(str(pdf_path))
+
+        # T2-3: 写库前的最后一道闸。docling 是黑盒调用（分钟级、不可中断），
+        # 取消只能在这里生效 —— 过了这一行就一定会写库。
+        if before_store is not None and before_store():
+            raise ParseCancelled("任务已取消，未写库")
+
+        if not DatabaseWriter().insert_paper(parsed_result):
+            raise ParseStoreError("解析成功但写入数据库失败")
+
+        paper_id = parsed_result.get("paper_id", "")
+        title = parsed_result.get("metadata", {}).get("title", filename)
+        paragraph_count = len(parsed_result.get("paragraphs", []))
+
+    return {
+        "paper_id": paper_id,
+        "title": title,
+        "paragraph_count": paragraph_count,
+        "stats": {
+            "paragraphs": paragraph_count,
+            "figures": len(parsed_result.get("figures", [])),
+            "citations": len(parsed_result.get("citations", [])),
+        },
+    }
+
+
 @app.route("/api/papers/parse", methods=["POST"])
 def parse_local_paper():
     """V25.14: 触发解析一篇本地未解析的 PDF 文献。
@@ -1662,9 +1769,6 @@ def parse_local_paper():
     Returns:
       paper_id, status, title, stats
     """
-    import sqlite3
-    import os
-
     data = request.get_json(silent=True) or {}
     filename = data.get("filename", "").strip()
 
@@ -1679,13 +1783,9 @@ def parse_local_paper():
     if not pdf_path.exists():
         return jsonify({"error": f"PDF 文件不存在: {filename}"}), 404
 
-    # 检查是否已解析
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    row = conn.execute(
-        "SELECT paper_id, title, total_paragraphs FROM papers WHERE filename = ?", (filename,)
-    ).fetchone()
-    conn.close()
+    # 检查是否已解析。统一口径：段落数多者优先、并列取创建更早的
+    # （papers.filename 不唯一，同一文件可能有 `<id>` 与 `<id>_mineru` 两行）
+    row = _find_parsed_paper(filename)
 
     if row:
         # 已解析，直接返回
@@ -1705,53 +1805,32 @@ def parse_local_paper():
         return jsonify({"error": f"解析失败: build_db 目录不存在 ({build_db_dir})，请确认项目结构完整"}), 500
 
     try:
-        from build_db.parsers.parser_orchestrator import ParserOrchestrator
-        from build_db.db_writer import DatabaseWriter
+        # 与异步路由共用同一把锁（_parse_and_store 内部持有），
+        # 前端「解析」按钮与 MCP 提交不会再有两次 docling 并发。
+        result = _parse_and_store(pdf_path, filename)
+    except ParseStoreError:
+        # 字段与文案保持原样（前端按 error 展示）
+        return jsonify({"error": "解析成功但写入数据库失败"}), 500
     except ImportError as e:
-        # 导入失败时给出更明确的诊断
+        # 导入失败时给出更明确的诊断；此时尚未取锁，不会卡住队列
         import traceback
         print(f"❌ 解析模块导入失败: {e}")
         traceback.print_exc()
         return jsonify({"error": f"解析模块导入失败: {str(e)}。请确认 build_db/ 目录完整且 docling 已安装（pip install docling）"}), 500
-
-    try:
-        orchestrator = ParserOrchestrator()
-        parsed_result = orchestrator.parse_paper(str(pdf_path))
-
-        db_writer = DatabaseWriter()
-        success = db_writer.insert_paper(parsed_result)
-
-        if not success:
-            return jsonify({"error": "解析成功但写入数据库失败"}), 500
-
-        paper_id = parsed_result.get("paper_id", "")
-        title = parsed_result.get("metadata", {}).get("title", filename)
-        paragraph_count = len(parsed_result.get("paragraphs", []))
-
-        print(f"✅ 解析完成: {title} ({paragraph_count} 段落)")
-        return jsonify({
-            "paper_id": paper_id,
-            "status": "parsed",
-            "title": title,
-            "paragraph_count": paragraph_count,
-            "stats": {
-                "paragraphs": paragraph_count,
-                "figures": len(parsed_result.get("figures", [])),
-                "citations": len(parsed_result.get("citations", [])),
-            },
-        })
-
     except Exception as e:
         print(f"❌ 解析失败: {filename} - {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": f"解析失败: {str(e)}"}), 500
 
-
-# V33.17-6B: 解析串行化锁。
-# docling 模型在**进程内**加载，两个解析并发 = 双份内存 + 抢 CPU；解析本来就是分钟级，
-# 排队完全可接受。**不要**为了"看起来更快"去掉这把锁。
-_parse_lock = threading.Lock()
+    print(f"✅ 解析完成: {result['title']} ({result['paragraph_count']} 段落)")
+    return jsonify({
+        "paper_id": result["paper_id"],
+        "status": "parsed",
+        "title": result["title"],
+        "paragraph_count": result["paragraph_count"],
+        "stats": result["stats"],
+    })
 
 
 @app.route("/api/papers/parse_async", methods=["POST"])
@@ -1767,10 +1846,18 @@ def parse_local_paper_async():
       以上三条都在 `create_task()` 之前判掉。
 
     后台线程：
-      · 已解析（`papers.filename` 命中）→ **秒级** `complete_task({"status":"already_parsed", ...})`
-      · 未解析 → `_parse_lock` 串行化 → `ParserOrchestrator().parse_paper()` →
-        `DatabaseWriter().insert_paper()` → `complete_task({"status":"parsed", ...})`
+      · 已解析（`_find_parsed_paper` 命中，段落数多者优先）→ **秒级**
+        `complete_task({"status":"already_parsed", ...})`
+      · 未解析 → `_parse_and_store()`（内部持有 `_parse_lock`，与同步路由共用）→
+        `complete_task({"status":"parsed", ...})`
       · 失败 → `fail_task(task_id, str(e)[:500])`
+
+    ⚠️ 取消语义（如实说明）：
+      **docling 期间无法中断**。取消只在两个点生效：
+        1. 解析开始前（拿锁前 / 拿锁后各查一次 `is_cancelled`）；
+        2. **写库之前**（`_parse_and_store` 的 `before_store` 回调里）——
+           已取消则**不写库**，任务保持 `cancelled`，库里不会多出论文。
+      若请求到达时已经过了「写库点」，数据会保留、任务可能仍是 `completed`。
 
     ⚠️ 能力边界（如实告知模型）：
       · 只能解析 `documents/` 下**已存在**的 PDF；本端点**不能上传**文件（MCP 传不了 multipart）。
@@ -1778,8 +1865,6 @@ def parse_local_paper_async():
         但可以按 `paper_id` 查到详情、也能进图谱。
       · 任务与 review 任务同表，用 `review_task_status`（`/api/review/task/<id>`）轮询。
     """
-    import sqlite3
-
     data = request.get_json(silent=True) or {}
     filename = str(data.get("filename", "")).strip()
 
@@ -1805,23 +1890,25 @@ def parse_local_paper_async():
         task_manager.update_progress(task_id, "已失败")
         task_manager.fail_task(task_id, error_text)
 
+    def _before_store() -> bool:
+        """写库前的最后一道闸（在 _parse_and_store 的锁内、解析完成后被调用）。
+
+        返回 True = 放弃写库。顺带把 progress 推进到「写入数据库…」——
+        此刻任务状态仍是 running，`update_progress` 写得进去。
+        """
+        if task_manager.is_cancelled(task_id):
+            return True
+        task_manager.update_progress(task_id, "写入数据库…")
+        return False
+
     def run_task():
         try:
             if task_manager.is_cancelled(task_id):
                 task_manager.cancel_task(task_id)
                 return
 
-            # ── 快路径：已解析，秒级返回 ──
-            conn = sqlite3.connect(str(DB_PATH), timeout=5)
-            try:
-                conn.row_factory = sqlite3.Row
-                row = conn.execute(
-                    "SELECT paper_id, title, total_paragraphs FROM papers WHERE filename = ?",
-                    (filename,),
-                ).fetchone()
-            finally:
-                conn.close()
-
+            # ── 快路径：已解析，秒级返回（统一口径，见 _find_parsed_paper）──
+            row = _find_parsed_paper(filename)
             if row:
                 task_manager.complete_task(task_id, {
                     "paper_id": row["paper_id"],
@@ -1831,45 +1918,37 @@ def parse_local_paper_async():
                 })
                 return
 
-            # ── 慢路径：排队 → 解析 → 写库 ──
-            if not _parse_lock.acquire(blocking=False):
-                task_manager.update_progress(task_id, "排队中（前面还有解析任务）")
-                _parse_lock.acquire()  # 阻塞等待，期间 progress 保持"排队中"
-
-            try:
-                if task_manager.is_cancelled(task_id):
-                    task_manager.cancel_task(task_id)
-                    return
-
-                task_manager.update_progress(task_id, "解析中（docling）…")
-                from build_db.parsers.parser_orchestrator import ParserOrchestrator
-                from build_db.db_writer import DatabaseWriter
-
-                orchestrator = ParserOrchestrator()
-                parsed_result = orchestrator.parse_paper(str(pdf_path))
-
-                task_manager.update_progress(task_id, "写入数据库…")
-                if not DatabaseWriter().insert_paper(parsed_result):
-                    _fail("解析成功但写入数据库失败")
-                    return
-
-                paper_id = parsed_result.get("paper_id", "")
-                title = parsed_result.get("metadata", {}).get("title", filename)
-                paragraph_count = len(parsed_result.get("paragraphs", []))
-
-                task_manager.complete_task(task_id, {
-                    "paper_id": paper_id,
-                    "status": "parsed",
-                    "title": title,
-                    "paragraph_count": paragraph_count,
-                    "stats": {
-                        "paragraphs": paragraph_count,
-                        "figures": len(parsed_result.get("figures", [])),
-                        "citations": len(parsed_result.get("citations", [])),
-                    },
-                })
-            finally:
+            # ── 慢路径 ──
+            # 「排队中」提示：非阻塞试抢一次，失败就如实打 progress，然后**立刻归还**。
+            # 真正的锁在 _parse_and_store 里（with _parse_lock）。这里若持有不放，
+            # 到了里面会自锁 —— threading.Lock 不可重入。
+            if _parse_lock.acquire(blocking=False):
                 _parse_lock.release()
+            else:
+                task_manager.update_progress(task_id, "排队中（前面还有解析任务）")
+
+            if task_manager.is_cancelled(task_id):
+                task_manager.cancel_task(task_id)
+                return
+
+            task_manager.update_progress(task_id, "解析中（docling）…")
+            result = _parse_and_store(pdf_path, filename, before_store=_before_store)
+
+            task_manager.complete_task(task_id, {
+                "paper_id": result["paper_id"],
+                "status": "parsed",
+                "title": result["title"],
+                "paragraph_count": result["paragraph_count"],
+                "stats": result["stats"],
+            })
+        except ParseCancelled:
+            # 已取消 → 数据没写库。状态由取消端点置为 cancelled，这里只留日志。
+            task_manager.cancel_task(task_id)  # 已是 cancelled 时 rowcount=0，幂等
+            # flush=True：进程被 kill 时 stdout 是块缓冲，这行会丢；这条日志是
+            # 「取消确实没写库」的唯一现场证据，不能指望缓冲区。
+            print(f"[INFO] 解析已取消，未写库：{filename}（{task_id}）", flush=True)
+        except ParseStoreError as e:
+            _fail(str(e))
         except Exception as e:
             print(f"[ERROR] Async parse failed: {filename} - {e}")
             import traceback
