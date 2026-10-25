@@ -29,6 +29,7 @@ ExportReview = Callable[[Mapping[str, Any], StageContext], list[str]]
 Retrieve = Callable[[list[dict[str, Any]], str, int, StageContext], Mapping[str, Any]]
 Verify = Callable[[Mapping[str, Any], StageContext], Mapping[str, Any]]
 Extract = Callable[[Mapping[str, Any], StageContext], Mapping[str, Any]]
+Draft = Callable[[Mapping[str, Any], Mapping[str, Any], StageContext], Mapping[str, Any]]
 
 
 def build_plan_stage() -> Callable[[StageContext], StageResult]:
@@ -86,6 +87,52 @@ def build_retrieve_stage(retrieve: Retrieve | None = None) -> Callable[[StageCon
             metrics={
                 "sections": len(payload.get("sections") or []),
                 "papers": len(payload.get("papers") or []),
+            },
+        )
+
+    return stage
+
+
+def build_draft_stage(draft: Draft | None = None) -> Callable[[StageContext], StageResult]:
+    """Write the draft and emit ``review.json`` + ``draft.md``.
+
+    ``review.json`` is the interface consumed by the verify stage, so its shape
+    (sentences + evidence_cards) is part of the contract, not an implementation
+    detail.
+    """
+    writer = draft or _default_draft
+
+    def stage(context: StageContext) -> StageResult:
+        plan = _read_json(context.run_dir / "plan.json")
+        evidence = _read_json(context.run_dir / "evidence.json")
+        if plan is None:
+            return _failed("invalid_input", "plan.json is missing; plan must run first")
+        if evidence is None:
+            return _failed("invalid_input", "evidence.json is missing; evidence must run first")
+
+        try:
+            payload = dict(writer(plan, evidence, context))
+        except ValueError as exc:
+            return _failed("invalid_input", str(exc))
+        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+            return _failed("upstream", f"draft failed: {exc}")
+
+        review = {
+            "topic": payload.get("topic") or context.spec.topic,
+            "sections": payload.get("sections") or [],
+            "sentences": payload.get("sentences") or [],
+            "evidence_cards": payload.get("evidence_cards") or {},
+        }
+        markdown = str(payload.get("markdown") or "")
+        write_artifact(context, "review.json", review)
+        write_artifact(context, "draft.md", markdown)
+
+        return StageResult(
+            artifacts=["review.json", "draft.md"],
+            metrics={
+                "sections": len(review["sections"]),
+                "sentences": len(review["sentences"]),
+                "words": len(markdown.split()),
             },
         )
 
@@ -205,6 +252,108 @@ def _build_retriever() -> Any:
     from services.search.unified_retriever import UnifiedRetriever
 
     return UnifiedRetriever(rerank=True, routing=True, expand=True, graph_expand=True)
+
+
+def _default_draft(
+    plan: Mapping[str, Any],
+    evidence: Mapping[str, Any],
+    context: StageContext,
+) -> dict[str, Any]:
+    """Build the domain inputs and run the existing draft writer."""
+    from services.review.review_generator import ReviewGenerator
+
+    generator = context.services.get("generator")
+    if generator is None:
+        from services.review.llm_client import LLMClient
+
+        generator = ReviewGenerator(LLMClient())
+
+    retrieve = _read_json(context.run_dir / "retrieve.json")
+    outline, cards = _draft_inputs(plan, retrieve, evidence, context.spec.topic)
+    draft = generator._write_draft(
+        context.spec.topic,
+        outline,
+        cards,
+        review_type=str(context.spec.limits.get("review_type", "narrative")),
+        language=str(context.spec.limits.get("language", "en")),
+    )
+    return _serialize_draft(draft)
+
+
+def _draft_inputs(
+    plan: Mapping[str, Any],
+    retrieve: Mapping[str, Any] | None,
+    evidence: Mapping[str, Any],
+    topic: str,
+):
+    from services.review.models import EvidenceCard, ReviewOutline, ReviewSection
+
+    cards: dict[str, Any] = {}
+    for item in evidence.get("cards") or []:
+        if isinstance(item, Mapping) and item.get("evidence_id"):
+            cards[str(item["evidence_id"])] = EvidenceCard(**dict(item))
+    if not cards:
+        raise ValueError("evidence.json has no evidence cards")
+
+    assignments: dict[str, list[str]] = {}
+    if isinstance(retrieve, Mapping):
+        for item in retrieve.get("sections") or []:
+            if not isinstance(item, Mapping):
+                continue
+            section_id = str(item.get("id") or item.get("section_id") or "")
+            if section_id:
+                assignments[section_id] = [
+                    str(value) for value in item.get("assigned_evidence_ids") or []
+                ]
+
+    plan_sections = [item for item in plan.get("sections") or [] if isinstance(item, Mapping)]
+    sections = []
+    for index, item in enumerate(plan_sections, start=1):
+        section_id = str(item.get("id") or f"sec-{index:02d}")
+        assigned = [eid for eid in assignments.get(section_id, []) if eid in cards]
+        if not assigned:
+            if len(plan_sections) > 1:
+                raise ValueError(
+                    f"section {section_id} has no assigned evidence; "
+                    "retrieve must provide assigned_evidence_ids"
+                )
+            assigned = list(cards)
+        sections.append(
+            ReviewSection(
+                section_id=section_id,
+                title=str(item.get("title") or section_id),
+                order=index,
+                assigned_evidence_ids=assigned,
+            )
+        )
+
+    return ReviewOutline(topic=topic, sections=sections), cards
+
+
+def _serialize_draft(draft: Any) -> dict[str, Any]:
+    return {
+        "topic": draft.topic,
+        "sections": [
+            {"section_id": section.section_id, "title": section.title}
+            for section in draft.outline.sections
+        ],
+        "sentences": [sentence.model_dump(mode="json") for sentence in draft.sentences],
+        "evidence_cards": {
+            evidence_id: card.model_dump(mode="json")
+            for evidence_id, card in draft.evidence_cards.items()
+        },
+        "markdown": _render_markdown(draft),
+    }
+
+
+def _render_markdown(draft: Any) -> str:
+    parts = [f"# {draft.topic}\n"]
+    for section in draft.outline.sections:
+        parts.append(f"\n## {section.title}\n")
+        for sentence in draft.sentences:
+            if sentence.section_id == section.section_id:
+                parts.append(f"{sentence.text.strip()} ")
+    return "".join(parts).strip() + "\n"
 
 
 def _default_verify(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:

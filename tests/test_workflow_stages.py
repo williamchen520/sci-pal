@@ -9,6 +9,7 @@ from pathlib import Path
 
 from services.workflow import StageResult, WorkflowSpec, run_workflow
 from services.workflow.stages import (
+    build_draft_stage,
     build_evidence_stage,
     build_export_stage,
     build_plan_stage,
@@ -309,6 +310,233 @@ class EvidenceStageTests(unittest.TestCase):
         payload = json.loads((self.dir / "evidence.json").read_text(encoding="utf-8"))
         self.assertEqual(payload["cards"][0]["para_id"], "p9::abstract")
         self.assertEqual(payload["cards"][0]["source_type"], "abstract")
+
+
+class FakeReviewGenerator:
+    """Stands in for ReviewGenerator: returns a prebuilt ReviewDraft."""
+
+    def __init__(self, draft):
+        self.draft = draft
+        self.calls = []
+
+    def _write_draft(self, topic, outline, cards, review_type="narrative", language="en"):
+        self.calls.append(
+            {"topic": topic, "outline": outline, "cards": cards, "review_type": review_type}
+        )
+        return self.draft
+
+
+def make_review_draft(section_count: int = 1):
+    from services.review.models import (
+        EvidenceCard,
+        ReviewDraft,
+        ReviewOutline,
+        ReviewSection,
+        ReviewSentence,
+    )
+
+    card = EvidenceCard(
+        evidence_id="ev1", paper_id="p1", para_id="a1", content="finding"
+    )
+    sections = [
+        ReviewSection(
+            section_id=f"sec-0{index}",
+            title=f"Section {index}",
+            order=index,
+            assigned_evidence_ids=["ev1"],
+        )
+        for index in range(1, section_count + 1)
+    ]
+    sentences = [
+        ReviewSentence(
+            sentence_id=f"s{index}",
+            section_id=f"sec-0{index}",
+            text=f"Claim {index} [ev1].",
+            evidence_ids=["ev1"],
+        )
+        for index in range(1, section_count + 1)
+    ]
+    return ReviewDraft(
+        topic="demo",
+        outline=ReviewOutline(topic="demo", sections=sections),
+        sentences=sentences,
+        evidence_cards={"ev1": card},
+    )
+
+
+class DraftStageTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+
+    def spec(self) -> WorkflowSpec:
+        return WorkflowSpec(topic="demo", stages=("plan", "retrieve", "evidence", "draft"))
+
+    def write_plan(self, sections=None) -> None:
+        sections = sections or [{"id": "sec-01", "title": "Intro", "keywords": []}]
+        (self.dir / "plan.json").write_text(
+            json.dumps({"sections": sections}), encoding="utf-8"
+        )
+
+    def write_evidence(self, cards=None) -> None:
+        cards = cards or [
+            {"evidence_id": "ev1", "paper_id": "p1", "para_id": "a1", "content": "finding"}
+        ]
+        (self.dir / "evidence.json").write_text(
+            json.dumps({"cards": cards}), encoding="utf-8"
+        )
+
+    def test_missing_plan(self) -> None:
+        result = build_draft_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertIn("plan.json", result.errors[0]["message"])
+
+    def test_missing_evidence(self) -> None:
+        self.write_plan()
+        result = build_draft_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertIn("evidence.json", result.errors[0]["message"])
+
+    def test_injected_writer_produces_artifacts(self) -> None:
+        self.write_plan()
+        self.write_evidence()
+
+        def writer(plan, evidence, ctx):
+            return {
+                "topic": "demo",
+                "sections": [{"section_id": "sec-01", "title": "Intro"}],
+                "sentences": [{"sentence_id": "s1", "section_id": "sec-01", "text": "Claim [ev1].", "evidence_ids": ["ev1"]}],
+                "evidence_cards": {"ev1": evidence["cards"][0]},
+                "markdown": "# demo\n\n## Intro\nClaim [ev1].\n",
+            }
+
+        result = build_draft_stage(writer)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok", result.errors)
+        self.assertEqual(result.metrics["sentences"], 1)
+        self.assertTrue((self.dir / "review.json").exists())
+        self.assertIn("## Intro", (self.dir / "draft.md").read_text(encoding="utf-8"))
+
+    def test_default_writer_serializes_review_draft(self) -> None:
+        self.write_plan()
+        self.write_evidence()
+        generator = FakeReviewGenerator(make_review_draft(1))
+        ctx = context(self.dir, self.spec())
+        ctx.services = {"generator": generator}
+
+        result = build_draft_stage()(ctx)
+        self.assertEqual(result.status, "ok", result.errors)
+        review = json.loads((self.dir / "review.json").read_text(encoding="utf-8"))
+        self.assertEqual(review["topic"], "demo")
+        self.assertEqual(len(review["sentences"]), 1)
+        self.assertIn("ev1", review["evidence_cards"])
+        self.assertIn("## Section 1", (self.dir / "draft.md").read_text(encoding="utf-8"))
+
+    def test_multi_section_without_assignment_fails(self) -> None:
+        self.write_plan(
+            [
+                {"id": "sec-01", "title": "Intro"},
+                {"id": "sec-02", "title": "Methods"},
+            ]
+        )
+        self.write_evidence()
+        ctx = context(self.dir, self.spec())
+        ctx.services = {"generator": FakeReviewGenerator(make_review_draft(2))}
+        result = build_draft_stage()(ctx)
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.errors[0]["kind"], "invalid_input")
+
+    def test_assignments_from_retrieve_are_used(self) -> None:
+        self.write_plan(
+            [
+                {"id": "sec-01", "title": "Intro"},
+                {"id": "sec-02", "title": "Methods"},
+            ]
+        )
+        self.write_evidence()
+        (self.dir / "retrieve.json").write_text(
+            json.dumps(
+                {
+                    "sections": [
+                        {"id": "sec-01", "assigned_evidence_ids": ["ev1"]},
+                        {"id": "sec-02", "assigned_evidence_ids": ["ev1"]},
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        generator = FakeReviewGenerator(make_review_draft(2))
+        ctx = context(self.dir, self.spec())
+        ctx.services = {"generator": generator}
+        result = build_draft_stage()(ctx)
+        self.assertEqual(result.status, "ok", result.errors)
+        self.assertEqual(len(generator.calls[0]["outline"].sections), 2)
+
+
+class FullPipelineTests(unittest.TestCase):
+    def test_full_pipeline_without_models(self) -> None:
+        """plan -> retrieve -> evidence -> draft -> verify -> store -> export."""
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "runs" / "r1"
+
+            spec = WorkflowSpec(
+                topic="demo",
+                stages=("plan", "retrieve", "evidence", "draft", "verify", "store", "export"),
+                limits={"max_papers": 10},
+                metadata={"outline": {"sections": [{"id": "sec-01", "title": "Intro"}]}},
+            )
+
+            def retrieve(sections, topic, max_papers, ctx):
+                return {
+                    "sections": [
+                        {"id": "sec-01", "assigned_evidence_ids": ["ev1"]}
+                    ],
+                    "paragraphs": [
+                        {
+                            "paper_id": "p1",
+                            "para_id": "a1",
+                            "text": "Treatment reduced mortality by twenty percent in the trial cohort.",
+                        }
+                    ],
+                    "papers": [],
+                }
+
+            def draft(plan, evidence, ctx):
+                card = next(iter(evidence["cards"]))
+                return {
+                    "topic": "demo",
+                    "sections": [{"section_id": "sec-01", "title": "Intro"}],
+                    "sentences": [
+                        {
+                            "sentence_id": "s1",
+                            "section_id": "sec-01",
+                            "text": "Treatment reduced mortality [ev1].",
+                            "evidence_ids": [card["evidence_id"]],
+                        }
+                    ],
+                    "evidence_cards": {card["evidence_id"]: card},
+                    "markdown": "# demo\n\n## Intro\nTreatment reduced mortality [ev1].\n",
+                }
+
+            stages = {
+                "plan": build_plan_stage(),
+                "retrieve": build_retrieve_stage(retrieve),
+                "evidence": build_evidence_stage(),
+                "draft": build_draft_stage(draft),
+                "verify": build_verify_stage(),
+                "store": build_store_stage(),
+                "export": build_export_stage(),
+            }
+
+            manifest = run_workflow(spec, stages, run_dir=run_dir, approve=True, run_id="r1")
+            self.assertEqual(manifest["status"], "completed", manifest.get("errors"))
+            self.assertEqual(
+                [stage["status"] for stage in manifest["stages"]],
+                ["ok"] * 7,
+            )
+            verify = json.loads((run_dir / "verify.json").read_text(encoding="utf-8"))
+            self.assertEqual(verify["stats"]["verified"], 1)
+            self.assertTrue((run_dir / "exports" / "review.md").exists())
 
 
 class EndToEndTests(unittest.TestCase):
