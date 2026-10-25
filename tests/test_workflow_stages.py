@@ -133,6 +133,38 @@ class StoreStageTests(unittest.TestCase):
         self.assertEqual(record["run_id"], "r1")
         self.assertEqual(record["stats"]["total_sentences"], 1)
 
+    def test_store_prefers_verified_stats(self) -> None:
+        from unittest.mock import patch
+
+        class FakeStore:
+            def store(self, output, draft, cards):
+                return "rev_fake"
+
+        spec = WorkflowSpec(topic="demo", stages=("store",))
+        (self.dir / "plan.json").write_text('{"sections": []}', encoding="utf-8")
+        (self.dir / "review.json").write_text(
+            json.dumps({"topic": "demo", "markdown": "# md", "sentences": [], "evidence_cards": {}}),
+            encoding="utf-8",
+        )
+        (self.dir / "verify.json").write_text(
+            json.dumps(
+                {
+                    "stats": {"total_sentences": 3, "verified": 3, "rejected": 0, "pass_rate": 1.0},
+                    "warnings": ["w1"],
+                }
+            ),
+            encoding="utf-8",
+        )
+        ctx = context(self.dir, spec)
+        ctx.services = {"db_path": self.dir / "reviews.db"}
+        with patch("services.review.review_store.get_review_store", return_value=FakeStore()):
+            result = build_store_stage()(ctx)
+
+        self.assertEqual(result.status, "ok", result.errors)
+        record = json.loads((self.dir / "store.json").read_text(encoding="utf-8"))
+        self.assertEqual(record["stats"]["verified"], 3)
+        self.assertEqual(record["stats"]["pass_rate"], 1.0)
+
     def test_injected_store_is_used(self) -> None:
         seen = {}
 
@@ -556,6 +588,30 @@ class DraftStageTests(unittest.TestCase):
         self.assertEqual(ref["title"], "Real Title")
         self.assertEqual(ref["journal"], "Nature")
         self.assertEqual(ref["year"], 2024)
+
+    def test_references_strip_heading_markers_and_dedupe(self) -> None:
+        self.write_plan()
+        self.write_evidence(
+            [
+                {"evidence_id": "ev1", "paper_id": "p1", "para_id": "a1", "content": "c", "paper_title": "# Shared Title"},
+                {"evidence_id": "ev2", "paper_id": "p2", "para_id": "a2", "content": "c", "paper_title": "Shared Title"},
+            ]
+        )
+
+        def writer(plan, evidence, ctx):
+            return {
+                "topic": "demo",
+                "sections": [],
+                "sentences": [],
+                "evidence_cards": {card["evidence_id"]: card for card in evidence["cards"]},
+                "markdown": "",
+            }
+
+        result = build_draft_stage(writer)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok", result.errors)
+        review = json.loads((self.dir / "review.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(review["references"]), 1)
+        self.assertEqual(review["references"][0]["title"], "Shared Title")
 
     def test_injected_writer_produces_artifacts(self) -> None:
         self.write_plan()

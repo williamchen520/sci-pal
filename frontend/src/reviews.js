@@ -60,6 +60,19 @@ function formatTime(value) {
     return isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
+/** draft.md 以 "# 主题" 开头，详情页已单独显示标题，这里去掉重复的一级标题。 */
+function stripDuplicateTitle(markdown, topic) {
+    const lines = String(markdown || '').split(/\r?\n/);
+    const first = lines[0] ? lines[0].trim() : '';
+    if (/^#\s+/.test(first)) {
+        const title = first.replace(/^#\s+/, '').trim();
+        if (!topic || title.toLowerCase() === String(topic).trim().toLowerCase()) {
+            lines.shift();
+        }
+    }
+    return lines.join('\n');
+}
+
 function renderList(reviews) {
     if (!reviews.length) {
         listEl.innerHTML = '<div class="empty">还没有已保存的综述</div>';
@@ -90,12 +103,12 @@ function renderDetail(review) {
             ${stats.total_sentences != null ? ` · ${stats.verified}/${stats.total_sentences} 句通过校验` : ''}
             ${review.run_id ? ` · run ${escapeHtml(review.run_id)}` : ''}
         </div>
-        <div class="markdown">${renderMarkdown(review.markdown)}</div>
+        <div class="markdown">${renderMarkdown(stripDuplicateTitle(review.markdown, review.topic))}</div>
         ${references.length ? `
             <div class="refs">
                 <h3>参考文献（${references.length}）</h3>
                 <ol>
-                    ${references.map((ref) => `<li>${escapeHtml(ref.authors || '')} ${escapeHtml(ref.year || '')} ${escapeHtml(ref.title || '')} ${escapeHtml(ref.journal || '')}</li>`).join('')}
+                    ${references.map((ref) => `<li>${escapeHtml(ref.authors || '')} ${escapeHtml(ref.year || '')} ${escapeHtml(String(ref.title || '').replace(/^[#\s]+/, ''))} ${escapeHtml(ref.journal || '')}</li>`).join('')}
                 </ol>
             </div>` : ''}
     `;

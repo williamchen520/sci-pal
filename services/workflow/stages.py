@@ -383,7 +383,10 @@ def _references_from_cards(
             continue
         entry = papers.setdefault(
             paper_id,
-            {"paper_id": paper_id, "title": str(card.get("paper_title") or paper_id)},
+            {
+                "paper_id": paper_id,
+                "title": _clean_title(card.get("paper_title") or paper_id),
+            },
         )
         if card.get("source_type") == "abstract":
             entry["source"] = "abstract"
@@ -394,9 +397,30 @@ def _references_from_cards(
     metadata = _paper_metadata(list(papers), context)
     for paper_id, entry in papers.items():
         for key, value in metadata.get(paper_id, {}).items():
-            if value not in (None, ""):
-                entry[key] = value
-    return list(papers.values())
+            if value in (None, ""):
+                continue
+            entry[key] = _clean_title(value) if key == "title" else value
+    return _dedupe_references(list(papers.values()))
+
+
+def _clean_title(value: Any) -> str:
+    """Strip markdown heading markers that leak in from parsed titles."""
+    return re.sub(r"^[#\s]+", "", str(value or "")).strip()
+
+
+def _dedupe_references(references: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[tuple[str, str]] = set()
+    result: list[dict[str, Any]] = []
+    for reference in references:
+        key = (
+            " ".join(str(reference.get("title", "")).lower().split()),
+            str(reference.get("year") or ""),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(reference)
+    return result
 
 
 def _paper_metadata(
@@ -420,7 +444,7 @@ def _paper_metadata(
             conn.close()
     return {
         row["paper_id"]: {
-            "title": row["title"],
+            "title": _clean_title(row["title"]),
             "authors": row["authors"],
             "journal": row["journal"],
             "year": row["year"],
@@ -537,12 +561,23 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
 
     draft = _rebuild_draft(review, context)
     markdown = str(review.get("markdown") or "") or _render_markdown(draft)
+
+    # store runs after verify; the draft's own stats are "all unverified", so the
+    # verified numbers must come from verify.json.
+    verify = _read_json(context.run_dir / "verify.json") or {}
+    stats = dict(review.get("stats") or {})
+    if isinstance(verify.get("stats"), Mapping):
+        stats.update(verify["stats"])
+    if not stats:
+        stats = draft.stats()
+    warnings = list(verify.get("warnings") or review.get("warnings") or [])
+
     output = ReviewOutput(
         topic=draft.topic,
         markdown=markdown,
         references=list(review.get("references") or []),
-        stats=dict(review.get("stats") or draft.stats()),
-        warnings=list(review.get("warnings") or []),
+        stats=stats,
+        warnings=warnings,
     )
     review_id = get_review_store().store(
         output, draft, list(draft.evidence_cards.values())
