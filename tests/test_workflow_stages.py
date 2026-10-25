@@ -111,14 +111,24 @@ class StoreStageTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
+        ctx = context(self.dir, spec)
+        ctx.services = {"db_path": self.dir / "reviews.db"}
         with patch("services.review.review_store.get_review_store", return_value=FakeStore()):
-            result = build_store_stage()(context(self.dir, spec))
+            result = build_store_stage()(ctx)
 
         self.assertEqual(result.status, "ok", result.errors)
         self.assertEqual(result.metrics["review_id"], "rev_fake")
         self.assertEqual(captured["output"].markdown, "# md")
         self.assertEqual(len(captured["draft"].sentences), 1)
         self.assertEqual(len(captured["cards"]), 1)
+
+        from services.review.review_repository import ReviewRepository
+
+        record = ReviewRepository(self.dir / "reviews.db").get("rev_fake")
+        self.assertIsNotNone(record)
+        self.assertEqual(record["markdown"], "# md")
+        self.assertEqual(record["run_id"], "r1")
+        self.assertEqual(record["stats"]["total_sentences"], 1)
 
     def test_injected_store_is_used(self) -> None:
         seen = {}

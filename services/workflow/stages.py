@@ -467,8 +467,9 @@ def _paragraphs_from_retrieve(payload: Mapping[str, Any]) -> list[dict[str, Any]
 
 
 def _default_save_review(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
-    """Persist into the in-process ReviewStore used by the API for traceability."""
+    """Persist into the in-process ReviewStore *and* the durable reviews table."""
     from services.review.models import ReviewOutput
+    from services.review.review_repository import ReviewRepository
     from services.review.review_store import get_review_store
 
     draft = _rebuild_draft(review, context)
@@ -483,12 +484,28 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
     review_id = get_review_store().store(
         output, draft, list(draft.evidence_cards.values())
     )
+
+    db_path = context.services.get("db_path") or _default_db_path()
+    ReviewRepository(db_path).save(
+        review_id=review_id,
+        run_id=context.run_id,
+        topic=draft.topic,
+        markdown=markdown,
+        stats=output.stats,
+        references=output.references,
+        warnings=output.warnings,
+    )
     return {
         "review_id": review_id,
         "topic": draft.topic,
         "stored_at": _now(),
         "stats": output.stats,
+        "db_path": str(db_path),
     }
+
+
+def _default_db_path() -> Path:
+    return Path(__file__).resolve().parents[2] / "data" / "research.db"
 
 
 def _markdown_export(record: Mapping[str, Any], context: StageContext) -> list[str]:
