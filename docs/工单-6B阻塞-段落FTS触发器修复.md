@@ -1,24 +1,26 @@
-# 工单：修复 `paragraphs` 写入被 FTS 触发器打断（阻塞 6-B 真解析入库）
+# 工单：修复 `paragraphs` 写入被 FTS 触发器打断（阻塞 6-B 真解析入库 + 去重脚本）
 
-> **派单对象**：CodeBuddy
-> **优先级**：🔴 高 —— 当前**任何**新论文入库都会失败（同步 `/api/papers/parse` 与
-> 6-B 的 `/api/papers/parse_async` 都挂），6-B 的「解析→入库」因此无法端到端成立。
+> **派单对象**：CodeBuddy ｜ **提出**：WorkBuddy ｜ 2026-10-25（v2：扩入复发路径）
+> **优先级**：🔴 高 —— `paragraphs` 表**任何** INSERT / UPDATE / DELETE 都会失败。
 > **性质**：**既有缺陷**（不是 6-B 引入的），被 6-B 的真解析验收趟出来。
 
 ---
 
 ## 零、背景事实（我已现查核实，**直接采信，不要重复查仓库**）
 
-### 0.1 现象（两条路由都失败，证明与 6-B 无关）
+### 0.1 现象（三条路径全挂，证明与 6-B 无关）
 
 ```text
-# 6-B 新增的异步路由
+# ① 6-B 新增的异步路由
 POST /api/papers/parse_async  {"filename":"<临时名>.pdf"}
 → task failed，error="解析成功但写入数据库失败"
 
-# 6-A 之前就有的同步路由（同一段写库代码）
+# ② 6-A 之前就有的同步路由（前端「解析」按钮走这条，同一段写库代码）
 POST /api/papers/parse        {"filename":"<临时名>.pdf"}
 → HTTP 500 {"error":"解析成功但写入数据库失败"}   TIME=16.58s
+
+# ③ 去重脚本（build_db/dedup_papers.py:36 的 PAPER_ID_TABLES 含 "paragraphs"）
+DELETE FROM paragraphs WHERE paper_id = ?  → 触发 paragraphs_ad → 同样报错 → 整批 rollback
 ```
 
 `logs/sciPal_api.log` 里 docling 解析本身是成功的：
@@ -29,9 +31,7 @@ POST /api/papers/parse        {"filename":"<临时名>.pdf"}
 ❌ Error inserting paper: table paragraphs_fts has no column named section_level1
 ```
 
-即：**解析 100% 成功，卡在 `DatabaseWriter.insert_paper()` 写 `paragraphs` 表的那一刻**。
-
-### 0.2 根因：`research.db` 里 3 个遗留触发器与 FTS 表列名不匹配
+### 0.2 根因：3 个遗留触发器与 FTS 表列名不匹配
 
 `paragraphs_fts` 的实际列（`PRAGMA table_info`）：
 
@@ -49,18 +49,22 @@ END
 -- paragraphs_ad / paragraphs_au 同病（用 'delete' 命令 + old.section_level1/2/3）
 ```
 
-→ 只要往 `paragraphs` 插一行，`paragraphs_ai` 就报错，整个事务回滚。
+### 0.3 **复发路径**（本次必须一起修，否则修好也会再坏）
 
-### 0.3 这三条触发器**不是仓库脚本建的**
+`build_db/build_fts.py`：
 
 ```text
-grep -rn "CREATE TRIGGER" --include=*.py .   # 排除 venv
-→ 只有 build_db/build_abstracts_db.py 里的 papers_fts_insert/update/delete（那是 abstracts.db）
+:22   conn.execute("DROP TABLE IF EXISTS paragraphs_fts")     ← 只删表，不删触发器
+:28   CREATE VIRTUAL TABLE paragraphs_fts USING fts5(para_id, paper_id, section_l1, section_l2, text, ...)
+:53   INSERT INTO paragraphs_fts (para_id, paper_id, section_l1, section_l2, text) ...
 ```
 
-`build_db/build_fts.py:22` 会 `DROP TABLE IF EXISTS paragraphs_fts`，然后
-`:28` 用 `section_l1 / section_l2` 重建。**重建 FTS 表时没有一并重建触发器**，
-触发器停留在「旧列名时代」→ 从此写入必炸。
+SQLite 的 `DROP TABLE` **不会**连带删掉建在别的表上的触发器 → 触发器原地保留、继续指向同名新表 →
+列名从这一刻起对不上。**这就是 bug 的诞生点**，只修库不修脚本，下次谁跑一次 `build_fts.py` 立刻复现。
+
+全仓库 `grep -rn "CREATE TRIGGER" --include=*.py .`（排除 venv）只有
+`build_db/build_abstracts_db.py` 里的 `papers_fts_*`（那是 abstracts.db），
+**没有任何代码负责重建 `paragraphs_ai/ad/au`** → 不会自愈。
 
 ### 0.4 关键度量（决定修法，不要用 rowid）
 
@@ -70,42 +74,34 @@ paragraphs_fts    : 50950 行（build_fts.py 只索引 length(text) > 10 的段�
 rowid 对齐率      : 11246 / 50950   ← **只有 22% 对齐**
 ```
 
-→ **绝不能按 rowid 删/改 FTS 行**（会删错别人）。`para_id` 两边都唯一，
-用它做删除键才是安全的。
+→ **绝不能按 rowid 删/改 FTS 行**（会删错别人）。`para_id` 两边都唯一，用它做删除键才安全。
 
-库里触发器仅这 3 个（`SELECT name FROM sqlite_master WHERE type='trigger'` 全表就它仨），
-不用担心里面还有别的东西在跑。
-
-### 0.5 现有代码位置
+### 0.5 代码位置
 
 | 位置 | 作用 |
 |---|---|
-| `build_db/db_writer.py:38-95` | `insert_paper()` → 成功 `True`、异常 `rollback()` + `False`（**已有正确回滚**，不必改） |
-| `api_server.py:2332 run_db_migrations()` | 启动时幂等迁移，只补 `papers.volume/issue/pages` 与建 `supplementary_files` |
+| `build_db/db_writer.py:38-95` | `insert_paper()` → 成功 `True`、异常 `rollback()` + `False`（**回滚已正确，不必改**） |
+| `api_server.py:2332 run_db_migrations()` | 启动时幂等迁移，目前只补 `papers.volume/issue/pages` 与建 `supplementary_files` |
 | `api_server.py:2478-2481` | `run_db_migrations()` → `reconcile_stale_review_tasks()`，顺序已正确 |
-| `api_server.py:1751` | 6-B 的 `parse_local_paper_async()`（本次**不用改**，它已经如实把失败落成 `failed`） |
+| `build_db/build_fts.py` | 重建 FTS 索引（91 行，`DB_PATH` 是模块常量，`build_fts()` 无参） |
 
 ### 0.6 附带观测（**不在本工单范围，别当成你的 bug**）
 
-验收方连跑 4 次真解析后（每次都是同一套 `ParserOrchestrator()` 新建路径），Flask worker 进程：
+验收方连跑 4 次真解析后（每次都新建 `ParserOrchestrator()`），Flask worker：
 
 ```text
-重启后（未解析任何文件）      ：WS ≈ 1.4 GB
-4 次真解析之后                ：WS 7,024 MB / Private 11,133 MB   ← 不回落
+重启后（未解析任何文件）  ：WS ≈ 1.4 GB
+4 次真解析之后            ：WS 7,024 MB / Private 11,133 MB   ← 不回落
 ```
 
-→ 说明「每建一次 `ParserOrchestrator` 就多留一份模型/缓冲」这个方向值得怀疑，
-但**本工单不要动它**（要动就是 `_parse_lock` 之外再引入 orchestrator 复用，属另一件事）。
-你只需要在报告里**不要**把「内存 11 GB」当成自己改动引入的回归即可。
-真解析只跑 **1 次**（F-2 要求），跑完看内存涨了多少、如实记一行就行。
+→ 「每建一次 orchestrator 就多留一份」值得怀疑，但**本工单不要动**。
+所以本工单的验证**只在 prod 上跑 1 次真解析**，其余验证用 DB 副本做（见 F-2）。
 
 ---
 
 ## 一、任务
 
-### F-1（必须）在 `run_db_migrations()` 里加幂等触发器修复
-
-位置：`api_server.py` 的 `run_db_migrations()` 内，**放在现有 papers 字段迁移之后**。
+### F-1（必须）`run_db_migrations()` 里加幂等触发器修复
 
 判据式检测，不要无脑重建：
 
@@ -114,9 +110,7 @@ cursor.execute(
     "SELECT name, sql FROM sqlite_master WHERE type='trigger' "
     "AND name IN ('paragraphs_ai','paragraphs_ad','paragraphs_au')"
 )
-for name, sql in cursor.fetchall():
-    if sql and "section_level1" in sql:
-        needs_fix = True
+needs_fix = any(sql and "section_level1" in sql for _, sql in cursor.fetchall())
 ```
 
 需要修就 `DROP TRIGGER IF EXISTS` + 重建三条，**列名与 FTS 表一致，删除/更新走 `para_id`**：
@@ -138,62 +132,68 @@ CREATE TRIGGER paragraphs_au AFTER UPDATE ON paragraphs BEGIN
 END;
 ```
 
-硬要求：
+硬要求：幂等（第二次启动不再 DROP/CREATE、不再打日志）；只碰这 3 个触发器；
+不动历史数据行、不 rebuild 存量 FTS；失败要打印清楚但**不许阻塞启动**；
+成功后打一行 `🔧 触发器迁移：paragraphs_ai/ad/au 已按 section_l1|section_l2 重建`。
 
-1. **幂等**：第二次启动不应再 DROP/CREATE，也不应打印「修复」日志。
-2. **只碰这 3 个触发器**，不许 `DROP TRIGGER` 别的。
-3. **不动历史数据行**：不 UPDATE/DELETE `paragraphs` / `paragraphs_fts` 任何一行。
-   （存量 FTS 行 `section_l1/l2` 是否为空不影响本次目标，别顺手回填。）
-4. 失败必须**打印清楚并继续启动**（沿用现有 try/except 风格），不许因此让服务起不来。
-5. 重建成功后打印一行：`🔧 触发器迁移：paragraphs_ai/ad/au 已按 section_l1|section_l2 重建`。
+### F-2（必须）`build_fts.py` 重建 FTS 后一并重建触发器（堵复发）
 
-### F-2（必须）自证：写入 + FTS 检索 + 更新/删除 三向一致
+在 `build_db/build_fts.py` 里，`paragraphs_fts` 建好并填充完（`conn.commit()` 之后）：
+`DROP TRIGGER IF EXISTS` 三条 → 用与 F-1 **完全相同**的 DDL 重建。
 
-修完必须自己验一遍（**用临时副本，验完删干净**）：
+同时给脚本加一个可选的库路径入口（二选一，便于在副本上验证、也避免误重建生产库）：
 
-1. 复制一个**小** PDF 成临时名（如 `documents/_fix_probe.pdf`，取 `PMC13612245.pdf` 268 KB 那个）；
-2. `POST /api/papers/parse_async {"filename":"_fix_probe.pdf"}` → 轮询到 `completed`，
-   `result.status == "parsed"`、`paragraph_count > 0`；
-3. 用 FTS 命中该论文的段落：
-   `SELECT para_id FROM paragraphs_fts WHERE paragraphs_fts MATCH '<正文里出现的词>' AND paper_id = '<新 paper_id>'`
-   → **至少 1 行**（证明 `paragraphs_ai` 真的写进 FTS 了）；
-4. 更新一条该论文的段落（`UPDATE paragraphs SET section_level1='X' WHERE para_id=?`）后，
-   FTS 里对应行仍能在 MATCH 里命中（或按新值命中），**不出现重复行**；
-5. 删除该段落（`DELETE FROM paragraphs WHERE para_id=?`）后，FTS 里该 `para_id` **归零**；
-6. **清理**：删 `papers` 里新增行 + 删临时 PDF，并贴出清理后的计数。
-
-### F-3（可选，但建议）`--status` 式自检脚本或函数
-
-在 `scripts/` 下加一个只读检查（或 `run_db_migrations` 里加 `--check` 分支），打印：
-
-```text
-paragraphs_ai/ad/au 是否存在、SQL 是否含 section_level1（旧列名 = 未修）
-paragraphs_fts 列名
-paragraphs / paragraphs_fts 行数、para_id 唯一性
-判据：OK / BROKEN
+```python
+def build_fts(db_path: str | Path | None = None): ...           # 默认仍用模块 DB_PATH
+# 或 if __name__ == "__main__": argparse 收 --db
 ```
 
-目的是**下次再出现同类漂移能一眼看见**，不用靠真解析 20 秒去试。
+> 触发器 DDL 建议抽成一个模块级常量/函数，`build_fts.py` 与 `run_db_migrations`
+> 各自 import 或复制**同一份文本**，并在两处注释里互相指认（避免以后又只改一边）。
 
-> 如果你判断成本偏高，可以只做「`run_db_migrations` 里打印一行当前触发器状态」，
-> 但要在报告里说明你选了哪种。
+### F-3（必须）三向自证 —— **在 DB 副本上做，不碰生产库**
 
-### F-4（顺手）两处措辞／观感
+```powershell
+cp data/research.db data/_fts_probe.db     # 副本，验完删掉
+```
 
-1. `reconcile_stale_review_tasks()` 的日志现在是
-   `🧹 启动对账：收掉 1 个遗留 review 任务`，但白名单已含 `parse_paper` →
-   改成「遗留**持久化**任务」。
-2. 解析失败时 `progress` 停在 `写入数据库…`（实测：`status=failed | progress=写入数据库…`）→
-   失败时把 progress 置为 `已失败`（或保留阶段 + 前缀 `失败于：`），避免前端看起来像还在跑。
+在副本上（纯 sqlite3 脚本，**不启动 Flask、不跑 docling**）：
+
+1. `INSERT INTO paragraphs (para_id, paper_id, section_level1, section_level2, text, sequence) VALUES (...)`
+   → **必须成功**（这就是当前必失败的那一步）；
+2. `INSERT INTO paragraphs_fts` 里能否用 `MATCH` 查到这条（`paragraphs_ai` 生效）；
+3. `UPDATE paragraphs SET section_level1='X' WHERE para_id=?` → FTS 里该 para_id **不出现重复行**，且能按新值命中；
+4. `DELETE FROM paragraphs WHERE para_id=?` → FTS 里该 para_id **归零**；
+5. `DELETE FROM paragraphs WHERE paper_id='<某个已有论文>'` 会连带把它的 FTS 行删干净 ——
+   **不要真跑这条**（会删历史数据），改成：只对第 1 步插入的那条做 3/4 两步验证即可；
+6. 附上 `SELECT count(*) FROM paragraphs_fts` 前后对比（除自测行外应无变化）。
+
+### F-4（必须）prod 端到端 —— **只跑 1 次真解析**
+
+1. 复制**最小**的 PDF 成临时名（`documents/PMC13612245.pdf` 268 KB → `documents/_fix_probe.pdf`）；
+2. `POST /api/papers/parse_async {"filename":"_fix_probe.pdf"}` → 轮询到 `completed`，
+   `result.status == "parsed"`、`paragraph_count > 0`；
+3. 用 `MATCH` 命中该论文段落 ≥1 行（证明 `paragraphs_ai` 在生产库也生效）；
+4. **清理**：删 `papers`/`paragraphs`/`figures`/`citations`/`tables` 里该 paper 的行 +
+   该论文的 FTS 行 + 临时 PDF，并贴出清理后的计数（`papers` 应回到 565、`documents/` 回到 77）。
+
+### F-5（顺手，各一行）
+
+1. `reconcile_stale_review_tasks()` 的日志 `🧹 启动对账：收掉 N 个遗留 review 任务` →
+   白名单已含 `parse_paper`，改成「遗留**持久化**任务」。
+2. 解析失败时 `progress` 停在 `写入数据库…`（实测 `status=failed | progress=写入数据库…`）→
+   失败分支把 `progress_text` 置为 `已失败`（或 `失败于：<阶段>`）。
 
 ---
 
 ## 二、红线
 
-- **只改** `api_server.py`（`run_db_migrations` / 那行日志；F-4.2 若在 `parse_local_paper_async`
-  内改则也允许）**+ 可选新增 `scripts/` 下的只读检查脚本 + 文档**。
-- **不许改** `build_db/**`（尤其 `db_writer.py`、`build_fts.py`）、`services/**`、`mcp_server/**`。
-- **不许** 动 `research.db` 的历史数据行、不许 rebuild FTS、不许改表结构（只重建触发器）。
+- **允许改**：`api_server.py`（仅 `run_db_migrations` + 那行日志 + 解析失败时的 progress）、
+  `build_db/build_fts.py`（仅 F-2 范围）、`scripts/` 下新增只读检查、文档。
+- **不许改**：`build_db/db_writer.py`、`build_db/dedup_papers.py`、`services/**`、`mcp_server/**`。
+- **不许**：动 `research.db` 的历史数据行（`paragraphs` / `paragraphs_fts` / `papers` 一行都不许改）、
+  不许在生产库上 rebuild FTS、不许改表结构（只重建触发器）。
+- 副本文件（`data/_fts_probe.db`）验完必须删掉。
 - 不许 `git add -A`（仓库里有别人的 `_test_v3317b.py`），显式列路径。
 - 提交前缀 `V33.17: 修复段落FTS触发器 —— `，**不要自己 push**。
 
@@ -203,24 +203,27 @@ paragraphs / paragraphs_fts 行数、para_id 唯一性
 
 | # | 判据 | 期望 |
 |---|---|---|
-| 1 | 重启后首次日志 | 出现一行「触发器迁移：…已重建」 |
+| 1 | 重启后首次日志 | 出现「触发器迁移：…已重建」 |
 | 2 | 再重启一次 | **不再**打印该行（幂等） |
-| 3 | 三个触发器 SQL | 不含 `section_level1`，删除走 `para_id` |
+| 3 | 三个触发器 SQL | 不含 `section_level1`；删除走 `para_id` |
 | 4 | 触发器总数 | 仍为 3（没多建、没误删） |
-| 5 | 真解析端到端 | temp 副本 → `completed` / `parsed` / `paragraph_count>0` |
-| 6 | FTS 命中 | `MATCH` 能查到新论文段落 ≥1 行 |
-| 7 | 更新/删除一致 | 无重复行、删后归零 |
-| 8 | 数据卫生 | `papers` 仍 565 行、`documents/` 仍 77 个 PDF、无临时文件 |
-| 9 | 回归 | `selftest` 27/27、`precheck` 退出码 0、`/api/review/running_task` → `running=false` |
+| 5 | **副本三向自证** | insert 成功 + MATCH 命中 + update 无重复 + delete 归零 |
+| 6 | **`build_fts.py` 复发测试** | 在**副本**上跑一次 `build_fts(--db 副本)` → 触发器仍在且 SQL 正确 → 副本再 insert 仍成功 |
+| 7 | prod 真解析 | temp 副本 → `completed` / `parsed` / `paragraph_count>0` / MATCH ≥1 |
+| 8 | 数据卫生 | `papers` 565、`documents/` 77、无临时文件、无 `data/_fts_probe.db` |
+| 9 | 回归 | `selftest` 27/27、`precheck` 退出码 0、`running_task` → `running=false` |
+
+判据 6 是本工单与 v1 的关键差别：**只证明「库修好了」不够，必须证明「再跑一次 build_fts 也不会坏」**。
 
 ---
 
 ## 四、交付报告必须回答
 
-1. 检测逻辑写在 `run_db_migrations()` 的哪一行之后？贴那段 diff。
-2. 你用的删除键是什么？为什么不用 `rowid`（提示：见 §0.4 的 11246/50950）。
-3. 真解析端到端：`task_id`、耗时、`result` 原文、FTS `MATCH` 的返回行数。
-4. 更新/删除验证怎么做的？贴 SQL 与前后计数。
-5. 清理结果：`papers` 行数、`documents/` 文件数、临时 PDF 是否删除。
-6. 幂等怎么证明的（两次重启的日志对比）。
-7. `git diff --stat` 全文；有没有碰 `build_db/**`、`services/**`、`mcp_server/**`。
+1. F-1 的检测逻辑贴在哪一段之后？贴 diff。
+2. 删除键为什么用 `para_id` 不用 `rowid`（提示 §0.4：11246/50950）。
+3. 触发器 DDL 是「抽公共常量」还是「两处复制」？如果复制，怎么保证两处一致（贴两处代码）。
+4. 副本三向自证：四条 SQL 与前后计数。
+5. **复发测试**：在副本上跑 `build_fts` 的完整命令、耗时、跑完后触发器 SQL 与一次 insert 的结果。
+6. prod 真解析：`task_id`、耗时、`result` 原文、MATCH 行数、清理后 `papers`/`documents` 计数。
+7. 幂等证明（两次重启日志对比）。
+8. `git diff --stat` 全文；有没有碰 `db_writer.py` / `dedup_papers.py` / `services/**` / `mcp_server/**`。
