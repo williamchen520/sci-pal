@@ -400,27 +400,60 @@ def _references_from_cards(
             if value in (None, ""):
                 continue
             entry[key] = _clean_title(value) if key == "title" else value
-    return _dedupe_references(list(papers.values()))
+    return sanitize_references(list(papers.values()))
+
+
+def sanitize_references(references: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Clean common parser leaks and drop duplicate papers."""
+    cleaned: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for raw in references:
+        if not isinstance(raw, Mapping):
+            continue
+        item = dict(raw)
+        item["title"] = _clean_title(item.get("title"))
+        item["authors"] = _clean_authors(item.get("authors"), item["title"])
+        item["year"] = _clean_scalar(item.get("year"))
+        item["journal"] = _clean_scalar(item.get("journal"))
+        key = " ".join(str(item["title"]).lower().split())[:80]
+        if key and key in seen:
+            continue
+        if key:
+            seen.add(key)
+        cleaned.append(item)
+    return cleaned
+
+
+def _clean_authors(value: Any, title: str) -> str:
+    """Parsers sometimes write a heading or the whole title into ``authors``."""
+    text = re.sub(r"^[#\s]+", "", str(value or "")).strip()
+    if not text or text.lower() in {"none", "null"}:
+        return ""
+    if text.startswith("#") or len(text) > 200:
+        return ""
+    if title and " ".join(text.lower().split())[:60] == " ".join(title.lower().split())[:60]:
+        return ""
+    return text
+
+
+def _clean_scalar(value: Any) -> str:
+    text = str(value or "").strip()
+    return "" if text.lower() in {"none", "null"} else text
 
 
 def _clean_title(value: Any) -> str:
-    """Strip markdown heading markers that leak in from parsed titles."""
-    return re.sub(r"^[#\s]+", "", str(value or "")).strip()
+    """Strip heading markers and collapse parser-concatenated duplicates.
 
-
-def _dedupe_references(references: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    seen: set[tuple[str, str]] = set()
-    result: list[dict[str, Any]] = []
-    for reference in references:
-        key = (
-            " ".join(str(reference.get("title", "")).lower().split()),
-            str(reference.get("year") or ""),
-        )
-        if key in seen:
-            continue
-        seen.add(key)
-        result.append(reference)
-    return result
+    Some parsed titles contain the same opening twice (e.g. ``"A B C ... A B C ..."``).
+    If the first 40 characters reappear later, cut the title at the repeat.
+    """
+    text = re.sub(r"^[#\s]+", "", str(value or "")).strip()
+    prefix = text[:40].strip().lower()
+    if len(prefix) >= 20:
+        repeat_at = text.lower().find(prefix, 40)
+        if repeat_at > 0:
+            text = text[:repeat_at].strip(" -;,:")
+    return text
 
 
 def _paper_metadata(

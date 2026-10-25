@@ -17,6 +17,7 @@ from services.workflow.stages import (
     build_retrieve_stage,
     build_store_stage,
     build_verify_stage,
+    sanitize_references,
 )
 from services.workflow.types import StageContext
 
@@ -587,7 +588,7 @@ class DraftStageTests(unittest.TestCase):
         ref = review["references"][0]
         self.assertEqual(ref["title"], "Real Title")
         self.assertEqual(ref["journal"], "Nature")
-        self.assertEqual(ref["year"], 2024)
+        self.assertEqual(ref["year"], "2024")
 
     def test_references_strip_heading_markers_and_dedupe(self) -> None:
         self.write_plan()
@@ -755,6 +756,39 @@ class FullPipelineTests(unittest.TestCase):
             verify = json.loads((run_dir / "verify.json").read_text(encoding="utf-8"))
             self.assertEqual(verify["stats"]["verified"], 1)
             self.assertTrue(list((run_dir / "exports" / "files").glob("*.md")))
+
+
+class SanitizeReferencesTests(unittest.TestCase):
+    def test_strips_heading_authors_and_none_scalars(self) -> None:
+        cleaned = sanitize_references(
+            [
+                {
+                    "title": "# Same Paper",
+                    "authors": "# Same Paper",
+                    "year": "None",
+                    "journal": "None",
+                },
+                {"title": "Same Paper", "authors": "A, B", "year": 2024, "journal": "J"},
+                {"title": "Another Paper", "authors": "C", "year": 2020, "journal": "K"},
+            ]
+        )
+        self.assertEqual(len(cleaned), 2)
+        self.assertEqual(cleaned[0]["title"], "Same Paper")
+        self.assertEqual(cleaned[0]["authors"], "")
+        self.assertEqual(cleaned[0]["year"], "")
+        self.assertEqual(cleaned[0]["journal"], "")
+
+    def test_collapses_concatenated_titles(self) -> None:
+        title = "Metabolic dysregulation reshapes the immune landscape in sepsis"
+        cleaned = sanitize_references([{"title": f"{title} {title}", "authors": "A"}])
+        self.assertEqual(cleaned[0]["title"], title)
+
+    def test_keeps_real_authors(self) -> None:
+        cleaned = sanitize_references(
+            [{"title": "T", "authors": "A, B", "year": 2024, "journal": "J"}]
+        )
+        self.assertEqual(cleaned[0]["authors"], "A, B")
+        self.assertEqual(cleaned[0]["year"], "2024")
 
 
 class EndToEndTests(unittest.TestCase):
