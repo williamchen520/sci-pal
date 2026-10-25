@@ -363,13 +363,19 @@ server 数 : 3    断言总数 : 22    PASS : 22    FAIL : 0    RESULT : PASS
 | `GET /api/tasks/<不存在的 id>` | 500 + traceback | **404** `{"error":"task not found"}` |
 | tasks 表从哪来 | — | `api_server.py:2001` 启动时幂等创建（V33.12 统一任务表） |
 
-> 结论：持久化任务表（`tasks`）是可用的。**但要注意有两套任务体系并存**，
-> 轮询时别拿错端点：
+> 结论：持久化任务表（`tasks`）是可用的。**两套任务体系共用同一张表，但端点不同**，
+> 轮询时别拿错：
 >
 > | 体系 | 存储 | 端点 | 谁在用 |
 > |---|---|---|---|
-> | 统一任务表 | SQLite `tasks` 表（持久，重启不丢） | `/api/tasks/<id>` | 在线下载（`download_online_papers`） |
-> | review 任务 | **进程内内存 dict**（`services/review/task_manager.py`，重启即丢） | `/api/review/task/<id>` | 大纲生成（`review_task_status`） |
+> | 在线下载 | SQLite `tasks` 表（`type='download_online'`） | `/api/tasks/<id>` | `download_online_papers` / `download_status` |
+> | review 任务 | **同一张 `tasks` 表**（`type IN qa_ask/agentic_search/generate_outline/generate_review`，V33.17-6A 起持久化） | `/api/review/task/<id>` | `review_task_status` |
+>
+> ⚠️ **Review 任务自 6-A 起重启不丢**：轮询期间若 Flask 重启，任务会变成
+> `status=failed` + `error="服务重启导致任务中断"`（**不再是 404**），已完成任务的
+> `result` 也仍可查。启动时会把上次进程遗留的 review `running` 收成 `failed`
+> （**只限上面 4 个类型，不碰 `download_online`**）；`/api/review/running_task`
+> 同样只返回这 4 个类型，避免把下载任务误报成"综述在跑"。
 
 ### 8.2 其他
 

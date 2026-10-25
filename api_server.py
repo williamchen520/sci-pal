@@ -2279,6 +2279,58 @@ def run_db_migrations():
 
 
 # ---------------------------------------------------------------------------
+# V33.17-6A: 启动对账（review 僵尸任务收尸）
+# ---------------------------------------------------------------------------
+
+REVIEW_TASK_TYPES = ("qa_ask", "agentic_search", "generate_outline", "generate_review")
+
+
+def reconcile_stale_review_tasks() -> int:
+    """把上次进程遗留的 review `running` 任务收成 `failed`。
+
+    为什么必须做：review 任务在 6-A 之后落到 `tasks` 表（持久化）。进程被杀时
+    正在跑的任务会永远停在 `running` —— `/api/review/running_task` 会一直返回它，
+    前端误以为"还在跑"，新任务也难识别。
+
+    范围**严格限定**在 review 的 4 个类型：
+        qa_ask / agentic_search / generate_outline / generate_review
+    `download_online` 等类型属于 services/search/online_downloader.py 的**另一套**
+    任务体系，绝不能在这里被顺手改掉。
+
+    幂等：没有 running 行时 rowcount=0，什么也不做；重复启动不报错。
+    返回：被收掉的条数。
+    """
+    if not DB_PATH.exists():
+        return 0
+
+    import sqlite3
+    from datetime import datetime
+
+    placeholders = ",".join("?" for _ in REVIEW_TASK_TYPES)
+    conn = None
+    try:
+        conn = sqlite3.connect(str(DB_PATH), timeout=5)
+        cursor = conn.execute(
+            f"UPDATE tasks SET status='failed', error=?, finished_at=? "
+            f"WHERE status = 'running' AND type IN ({placeholders})",
+            (
+                "服务重启导致任务中断",
+                datetime.now().isoformat(timespec="seconds"),
+                *REVIEW_TASK_TYPES,
+            ),
+        )
+        conn.commit()
+        return cursor.rowcount
+    except Exception as exc:
+        # 表不存在 / 库被占用等都不许阻塞启动
+        print(f"⚠️ 启动对账失败（不影响启动）：{exc}")
+        return 0
+    finally:
+        if conn is not None:
+            conn.close()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -2290,6 +2342,14 @@ if __name__ == "__main__":
     print(f"   DB: {DB_PATH}")
     print(f"   Frontend: {FRONTEND_DIR}")
     run_db_migrations()
+
+    # V33.17-6A: 收掉上次进程遗留的 review 任务（范围仅 4 个 review 类型）
+    _stale = reconcile_stale_review_tasks()
+    print(
+        f"🧹 启动对账：收掉 {_stale} 个遗留 review 任务（status→failed）"
+        if _stale
+        else "🧹 启动对账：无遗留 review 任务"
+    )
 
     # V33.13: 启动时预热模型，避免第一次请求超时
     print("🔥 启动预热：加载模型...")
