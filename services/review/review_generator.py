@@ -28,6 +28,7 @@ from typing import Optional
 from .citation_formatter import PaperMetadata, build_metadata_from_db_row, format_citation, format_citation_list, get_missing_fields_report, get_supported_styles, metadata_to_csl_json
 from .citation_verifier import CitationVerifier
 from .evidence_extractor import EvidenceExtractor
+from .section_loop import write_section_loop
 from .section_prompts import build_write_prompt
 from .llm_client import LLMClient, LLMError
 from .models import (
@@ -927,33 +928,27 @@ class ReviewGenerator:
                 continue
 
             print(f"    正在调用 LLM 撰写此章节...")
-            # V32.5: 传入前文摘要，实现渐进式上下文注入
-            section_text = self._write_section(
-                section, section_evidence,
-                review_type=review_type, language=language,
-                previous_summary=previous_sections_summary,
-                section_index=sec_idx,
-                total_sections=len(outline.sections),
-            )
-            print(f"    ✅ 撰写完成，{len(section_text)} 字符")
 
-            # V32.5: 迭代精炼——评审打分，低于60分就修订（最多重试1次）
-            score, review_suggestions = self._review_section(section, section_text, section_evidence, language=language)
-            print(f"    📊 评审得分: {score:.0f}/100")
-            if score < 60.0 and review_suggestions:
-                print(f"    🔄 分数低于60，根据评审建议修订...")
-                # 把评审建议注入到 prompt 里，重新生成
-                revised_text = self._write_section(
+            # B5c: 写作-评审-重试的循环已抽到 section_loop（返回最佳尝试）
+            def _generate(feedback: str) -> str:
+                return self._write_section(
                     section, section_evidence,
                     review_type=review_type, language=language,
                     previous_summary=previous_sections_summary,
                     section_index=sec_idx,
                     total_sections=len(outline.sections),
-                    feedback=review_suggestions,
+                    feedback=feedback,
                 )
-                if revised_text and len(revised_text) > 50:
-                    section_text = revised_text
-                    print(f"    ✅ 修订完成，{len(section_text)} 字符")
+
+            def _review(text: str):
+                return self._review_section(section, text, section_evidence, language=language)
+
+            attempt = write_section_loop(_generate, _review, max_attempts=2)
+            section_text = attempt.text
+            print(
+                f"    ✅ 撰写完成，{len(section_text)} 字符；"
+                f"评审 {attempt.score:.0f}/100，尝试 {attempt.attempts} 次"
+            )
 
             # V32.5: 更新前文摘要——截取当前章节前 200 字作为摘要，追加到前文摘要里
             # 为了控制上下文长度，前文摘要最多保留 800 字
