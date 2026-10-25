@@ -3,6 +3,16 @@
 > **派单对象**：CodeBuddy ｜ **提出**：WorkBuddy ｜ 2026-10-25（v2：扩入复发路径）
 > **优先级**：🔴 高 —— `paragraphs` 表**任何** INSERT / UPDATE / DELETE 都会失败。
 > **性质**：**既有缺陷**（不是 6-B 引入的），被 6-B 的真解析验收趟出来。
+>
+> ✅ **T-1 已交付（2026-10-25）**：F-1 ~ F-5 全部完成。prod 实跑 1 次真解析
+> （`status=parsed` / 29 段 / FTS 29 行 / `MATCH` 命中），清理后回到基线
+> （papers 565 / documents 77）。**T-2（orchestrator 内存不回落）未动。**
+>
+> ⚠️ 一处判据修正：F-1 给的 `needs_fix = any("section_level1" in sql ...)` **不幂等** ——
+> 修复后的 DDL 里必然含 `new.section_level1`（`paragraphs` 的数据源列），子串判断会
+> 永远为 True、每次启动都重建打日志。实际改为比对「触发器 `INSERT INTO paragraphs_fts(列清单)`
+> 的目标列」与 `PRAGMA table_info(paragraphs_fts)`，实现在
+> `build_db/build_fts.py::paragraphs_triggers_need_fix()`。
 
 ---
 

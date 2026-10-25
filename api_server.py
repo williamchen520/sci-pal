@@ -1795,6 +1795,16 @@ def parse_local_paper_async():
 
     task_id = task_manager.create_task("parse_paper")
 
+    def _fail(error_text: str) -> None:
+        """置 failed，并把 progress 从上一阶段（如「写入数据库…」）改掉。
+
+        V33.17: 必须**先**改 progress 再 fail —— `update_progress` 与 `fail_task`
+        都带 `WHERE status='running'`，顺序反了就改不动，前端会看到
+        `status=failed | progress=写入数据库…` 这种自相矛盾的组合。
+        """
+        task_manager.update_progress(task_id, "已失败")
+        task_manager.fail_task(task_id, error_text)
+
     def run_task():
         try:
             if task_manager.is_cancelled(task_id):
@@ -1840,7 +1850,7 @@ def parse_local_paper_async():
 
                 task_manager.update_progress(task_id, "写入数据库…")
                 if not DatabaseWriter().insert_paper(parsed_result):
-                    task_manager.fail_task(task_id, "解析成功但写入数据库失败")
+                    _fail("解析成功但写入数据库失败")
                     return
 
                 paper_id = parsed_result.get("paper_id", "")
@@ -1865,7 +1875,7 @@ def parse_local_paper_async():
             import traceback
             traceback.print_exc()
             # 不要把整段 traceback 塞进 DB
-            task_manager.fail_task(task_id, str(e)[:500])
+            _fail(str(e)[:500])
 
     threading.Thread(target=run_task, daemon=True).start()
     return jsonify({"task_id": task_id})
@@ -2396,6 +2406,36 @@ def run_db_migrations():
             conn.commit()
             print("🔧 数据库迁移完成: 新增 tasks 表（统一任务表）")
 
+        # V33.17: 段落 FTS 触发器修复（**既有缺陷**，不是 6-B 引入）。
+        # 根因：`build_db/build_fts.py` 曾 DROP TABLE paragraphs_fts 后按 5 列重建
+        # （section_l1 / section_l2），但 SQLite 的 DROP TABLE **不连带删触发器** ——
+        # 库里 paragraphs_ai/ad/au 仍写 section_level1/2/3，于是 paragraphs 的任何
+        # INSERT/UPDATE/DELETE 都报 `no column named section_level1`：
+        # 前端「解析」按钮（同步 /api/papers/parse）、6-B 的 parse_async、
+        # build_db/dedup_papers.py 的去重 DELETE 全挂。
+        #
+        # DDL 唯一真源在 build_db/build_fts.py 的 PARAGRAPHS_TRIGGER_DDL，
+        # 这里只 import 函数来跑，**不另抄一份**。
+        # 判据式检测：触发器插入 paragraphs_fts 的**目标列**与 FTS 表实际列不一致
+        # 才重建 → 第二次启动不 DROP、不 CREATE、不打日志（幂等）。
+        # 判据实现在 build_fts.paragraphs_triggers_need_fix()，不用
+        # `"section_level1" in sql` 那种子串判断（新 DDL 里必然出现
+        # `new.section_level1`，会永远判定需要修）。
+        # 只碰这 3 个触发器，不动历史数据行、不 rebuild 存量 FTS。
+        try:
+            from build_db.build_fts import (
+                paragraphs_triggers_need_fix,
+                rebuild_paragraphs_triggers,
+            )
+
+            if paragraphs_triggers_need_fix(cursor):
+                rebuild_paragraphs_triggers(cursor)
+                conn.commit()
+                print("🔧 触发器迁移：paragraphs_ai/ad/au 已按 section_l1|section_l2 重建")
+        except Exception as fts_exc:
+            # 与整个迁移函数策略一致：失败必须可见，但**不许阻塞启动**
+            print(f"⚠️  触发器迁移失败（不影响启动）: {fts_exc}")
+
         conn.close()
     except Exception as e:
         print(f"⚠️  数据库迁移跳过（不影响运行）: {e}")
@@ -2477,12 +2517,13 @@ if __name__ == "__main__":
     print(f"   Frontend: {FRONTEND_DIR}")
     run_db_migrations()
 
-    # V33.17-6A: 收掉上次进程遗留的 review 任务（范围仅 4 个 review 类型）
+    # V33.17-6A: 收掉上次进程遗留的任务。范围 = PERSISTED_TASK_TYPES
+    # （6-B 起含 parse_paper，故措辞用「持久化任务」而非「review 任务」）
     _stale = reconcile_stale_review_tasks()
     print(
-        f"🧹 启动对账：收掉 {_stale} 个遗留 review 任务（status→failed）"
+        f"🧹 启动对账：收掉 {_stale} 个遗留持久化任务（status→failed）"
         if _stale
-        else "🧹 启动对账：无遗留 review 任务"
+        else "🧹 启动对账：无遗留持久化任务"
     )
 
     # V33.13: 启动时预热模型，避免第一次请求超时
