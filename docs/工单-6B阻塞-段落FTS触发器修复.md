@@ -113,14 +113,30 @@ rowid 对齐率      : 11246 / 50950   ← **只有 22% 对齐**
 
 ### F-1（必须）`run_db_migrations()` 里加幂等触发器修复
 
-判据式检测，不要无脑重建：
+判据式检测，不要无脑重建。
+
+> ⚠️ **v2.1 更正（2026-10-25，交付方指出，验收方确认成立）**：本节初版给的
+> `needs_fix = any("section_level1" in sql ...)` **是错的、不幂等** —— 修好之后的 DDL 里
+> 必然出现 `new.section_level1`（那是 `paragraphs` 的数据源列），子串判断会永远为 `True`，
+> 每次启动都 DROP/CREATE 并打日志，直接违反「幂等」硬要求。
+>
+> **正确判据**：把触发器里 `INSERT INTO paragraphs_fts (<列清单>)` 的**目标列**与
+> `PRAGMA table_info(paragraphs_fts)` 求差集，非空才需要修。实现在
+> `build_db/build_fts.py::paragraphs_triggers_need_fix()`，`api_server.py` 直接 import 调用
+> （DDL 唯一真源也在 `build_fts.py` 的 `PARAGRAPHS_TRIGGER_DDL`，两处不复制）。
 
 ```python
-cursor.execute(
+# build_db/build_fts.py::paragraphs_triggers_need_fix(cursor) 的核心
+fts_columns = {row[1] for row in cursor.execute("PRAGMA table_info(paragraphs_fts)")}
+for _name, sql in cursor.execute(
     "SELECT name, sql FROM sqlite_master WHERE type='trigger' "
     "AND name IN ('paragraphs_ai','paragraphs_ad','paragraphs_au')"
-)
-needs_fix = any(sql and "section_level1" in sql for _, sql in cursor.fetchall())
+):
+    for column_list in re.findall(r"INSERT\s+INTO\s+paragraphs_fts\s*\(([^)]*)\)", sql or "", re.I):
+        names = {p.strip().split()[-1].strip('"`[]') for p in column_list.split(",") if p.strip()}
+        if names - {"paragraphs_fts", "rowid"} - fts_columns:
+            return True          # 目标列里出现 FTS 表不存在的列 → 需要修
+return False
 ```
 
 需要修就 `DROP TRIGGER IF EXISTS` + 重建三条，**列名与 FTS 表一致，删除/更新走 `para_id`**：
