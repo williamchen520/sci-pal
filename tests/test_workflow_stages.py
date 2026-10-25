@@ -9,6 +9,7 @@ from pathlib import Path
 
 from services.workflow import StageResult, WorkflowSpec, run_workflow
 from services.workflow.stages import (
+    build_evidence_stage,
     build_export_stage,
     build_plan_stage,
     build_retrieve_stage,
@@ -241,6 +242,73 @@ class VerifyStageTests(unittest.TestCase):
         self.assertEqual(result.metrics["total_sentences"], 2)
         self.assertEqual(result.metrics["verified"], 1)
         self.assertEqual(result.metrics["rejected"], 1)
+
+
+class EvidenceStageTests(unittest.TestCase):
+    LONG_TEXT = "This paragraph reports that treatment reduced mortality by twenty percent in the cohort."
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+
+    def spec(self) -> WorkflowSpec:
+        return WorkflowSpec(topic="demo", stages=("plan", "retrieve", "evidence"))
+
+    def write_retrieve(self, payload: dict) -> None:
+        (self.dir / "retrieve.json").write_text(
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+        )
+
+    def test_missing_retrieve_fails(self) -> None:
+        result = build_evidence_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertIn("retrieve.json", result.errors[0]["message"])
+
+    def test_injected_extractor_used(self) -> None:
+        self.write_retrieve({"paragraphs": [{"paper_id": "p1", "para_id": "a", "text": "x"}]})
+        seen = {}
+
+        def extractor(payload, ctx):
+            seen["payload"] = payload
+            return {"cards": [{"evidence_id": "ev1"}], "count": 1}
+
+        result = build_evidence_stage(extractor)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result.metrics["cards"], 1)
+        self.assertIn("paragraphs", seen["payload"])
+
+    def test_no_source_text_fails(self) -> None:
+        self.write_retrieve({"papers": [{"paper_id": "p1", "title": "no abstract"}]})
+        result = build_evidence_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.errors[0]["kind"], "invalid_input")
+
+    def test_default_extractor_builds_cards(self) -> None:
+        self.write_retrieve(
+            {
+                "paragraphs": [
+                    {"paper_id": "p1", "para_id": "a1", "text": self.LONG_TEXT, "paper_title": "T1"},
+                    {"paper_id": "p1", "para_id": "a1", "text": self.LONG_TEXT},  # duplicate para
+                    {"paper_id": "p2", "para_id": "a2", "text": "too short"},
+                ]
+            }
+        )
+        result = build_evidence_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok", result.errors)
+        self.assertEqual(result.metrics["cards"], 1)  # deduped + short dropped
+        payload = json.loads((self.dir / "evidence.json").read_text(encoding="utf-8"))
+        self.assertEqual(payload["cards"][0]["paper_id"], "p1")
+
+    def test_abstracts_fallback(self) -> None:
+        self.write_retrieve(
+            {"papers": [{"paper_id": "p9", "title": "T9", "abstract": self.LONG_TEXT}]}
+        )
+        result = build_evidence_stage()(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok", result.errors)
+        payload = json.loads((self.dir / "evidence.json").read_text(encoding="utf-8"))
+        self.assertEqual(payload["cards"][0]["para_id"], "p9::abstract")
+        self.assertEqual(payload["cards"][0]["source_type"], "abstract")
 
 
 class EndToEndTests(unittest.TestCase):

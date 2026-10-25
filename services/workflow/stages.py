@@ -28,6 +28,7 @@ SaveReview = Callable[[Mapping[str, Any], StageContext], Mapping[str, Any]]
 ExportReview = Callable[[Mapping[str, Any], StageContext], list[str]]
 Retrieve = Callable[[list[dict[str, Any]], str, int, StageContext], Mapping[str, Any]]
 Verify = Callable[[Mapping[str, Any], StageContext], Mapping[str, Any]]
+Extract = Callable[[Mapping[str, Any], StageContext], Mapping[str, Any]]
 
 
 def build_plan_stage() -> Callable[[StageContext], StageResult]:
@@ -113,6 +114,29 @@ def build_verify_stage(verify: Verify | None = None) -> Callable[[StageContext],
             if key in stats
         }
         return StageResult(artifacts=["verify.json"], metrics=metrics)
+
+    return stage
+
+
+def build_evidence_stage(extract: Extract | None = None) -> Callable[[StageContext], StageResult]:
+    """Turn retrieved paragraphs into evidence cards (simplified path, no LLM)."""
+    extractor = extract or _default_extract
+
+    def stage(context: StageContext) -> StageResult:
+        payload = _read_json(context.run_dir / "retrieve.json")
+        if payload is None:
+            return _failed("invalid_input", "retrieve.json is missing; retrieve must run first")
+
+        try:
+            result = dict(extractor(payload, context))
+        except ValueError as exc:
+            return _failed("invalid_input", str(exc))
+        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+            return _failed("upstream", f"evidence extraction failed: {exc}")
+
+        write_artifact(context, "evidence.json", result)
+        cards = result.get("cards") or []
+        return StageResult(artifacts=["evidence.json"], metrics={"cards": len(cards)})
 
     return stage
 
@@ -216,6 +240,64 @@ def _default_verify(review: Mapping[str, Any], context: StageContext) -> dict[st
         "warnings": warnings,
         "sentences": [sentence.model_dump(mode="json") for sentence in verified.sentences],
     }
+
+
+def _default_extract(payload: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
+    """Simplified evidence extraction: one card per paragraph, no LLM call."""
+    from services.review.evidence_extractor import EvidenceExtractor
+
+    paragraphs = _paragraphs_from_retrieve(payload)
+    if not paragraphs:
+        raise ValueError(
+            "retrieve.json has neither paragraphs nor paper abstracts to extract evidence from"
+        )
+
+    extractor = context.services.get("extractor") or EvidenceExtractor(None)
+    cards = extractor.extract_from_paragraphs(
+        paragraphs,
+        topic=context.spec.topic,
+        language=str(context.spec.limits.get("language", "en")),
+    )
+    return {
+        "cards": [card.model_dump(mode="json") for card in cards],
+        "count": len(cards),
+    }
+
+
+def _paragraphs_from_retrieve(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Prefer real paragraphs; fall back to abstracts so the stage can still run."""
+    paragraphs = payload.get("paragraphs")
+    if isinstance(paragraphs, list) and paragraphs:
+        usable = [
+            dict(item)
+            for item in paragraphs
+            if isinstance(item, Mapping)
+            and item.get("text")
+            and item.get("paper_id")
+            and item.get("para_id")
+        ]
+        if usable:
+            return usable
+
+    derived: list[dict[str, Any]] = []
+    for paper in payload.get("papers") or []:
+        if not isinstance(paper, Mapping):
+            continue
+        abstract = str(paper.get("abstract") or "").strip()
+        paper_id = str(paper.get("paper_id") or paper.get("id") or "").strip()
+        if not abstract or not paper_id:
+            continue
+        derived.append(
+            {
+                "paper_id": paper_id,
+                "para_id": f"{paper_id}::abstract",
+                "text": abstract,
+                "paper_title": paper.get("title", ""),
+                "section_l1": "abstract",
+                "source_type": "abstract",
+            }
+        )
+    return derived
 
 
 def _json_store(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
