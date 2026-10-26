@@ -658,6 +658,7 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
         "topic": draft.topic,
         "stored_at": _now(),
         "stats": output.stats,
+        "references": output.references,
         "db_path": str(db_path),
     }
 
@@ -677,7 +678,7 @@ def _default_export(record: Mapping[str, Any], context: StageContext) -> list[st
 
     review_id = str(record.get("review_id") or "")
     title = str(review.get("topic") or record.get("topic") or context.spec.topic)
-    references = list(review.get("references") or [])
+    references = list(record.get("references") or review.get("references") or [])
     artifacts: list[str] = []
 
     markdown_task = manager.create_export(review_id, format="markdown")

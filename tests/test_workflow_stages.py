@@ -134,6 +134,38 @@ class StoreStageTests(unittest.TestCase):
         self.assertEqual(record["run_id"], "r1")
         self.assertEqual(record["stats"]["total_sentences"], 1)
 
+    def test_store_record_carries_references(self) -> None:
+        from unittest.mock import patch
+
+        class FakeStore:
+            def store(self, output, draft, cards):
+                return "rev_fake"
+
+        spec = WorkflowSpec(topic="demo", stages=("store",))
+        (self.dir / "plan.json").write_text('{"sections": []}', encoding="utf-8")
+        references = [{"title": "T", "authors": "A", "year": 2024}]
+        (self.dir / "review.json").write_text(
+            json.dumps(
+                {
+                    "topic": "demo",
+                    "markdown": "# md",
+                    "sentences": [],
+                    "evidence_cards": {},
+                    "references": references,
+                }
+            ),
+            encoding="utf-8",
+        )
+        ctx = context(self.dir, spec)
+        ctx.services = {"db_path": self.dir / "reviews.db"}
+        with patch("services.review.review_store.get_review_store", return_value=FakeStore()):
+            result = build_store_stage()(ctx)
+
+        self.assertEqual(result.status, "ok", result.errors)
+        record = json.loads((self.dir / "store.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(record["references"]), 1)
+        self.assertEqual(record["references"][0]["title"], "T")
+
     def test_store_prefers_verified_stats(self) -> None:
         from unittest.mock import patch
 

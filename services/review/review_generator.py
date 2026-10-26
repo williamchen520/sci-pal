@@ -2028,6 +2028,15 @@ def _research_db_path() -> Optional[Path]:
     return path if path.exists() else None
 
 
+def _title_recall_limits() -> tuple[int, int]:
+    """(title-match candidates, extra papers per section), env-tunable."""
+    import os
+
+    limit = max(1, min(int(os.environ.get("SCIPAL_TITLE_RECALL_LIMIT", "8")), 20))
+    max_add = max(0, min(int(os.environ.get("SCIPAL_TITLE_RECALL_MAX", "6")), 10))
+    return limit, max_add
+
+
 def _paper_titles(paper_ids: list[str]) -> dict[str, str]:
     """Titles for the candidate papers (module-level cache, DB-backed)."""
     missing = [pid for pid in paper_ids if pid not in _PAPER_TITLE_CACHE]
@@ -2331,14 +2340,15 @@ def search_and_assign_papers(
             title_ids: set[str] = set()
             db_path = _research_db_path()
             if db_path is not None:
+                recall_limit, recall_max = _title_recall_limits()
                 try:
-                    extras = title_recall.recall(db_path, query_terms, limit=6)
+                    extras = title_recall.recall(db_path, query_terms, limit=recall_limit)
                 except Exception:
                     extras = []
                 added = 0
                 for item in extras:
                     pid = item["paper_id"]
-                    if pid in sec_paper_ids or added >= 4:
+                    if pid in sec_paper_ids or added >= recall_max:
                         continue
                     for row in item["paragraphs"]:
                         evidence_id = f"ev_title_{pid}_{row['para_id'][-8:]}_{evidence_seq}"
@@ -2369,6 +2379,51 @@ def search_and_assign_papers(
                     added += 1
                 if added:
                     print(f"    🔎 标题召回：补充 {added} 篇")
+
+            # 摘要库标题召回：覆盖没有全文、但有摘要的论文
+            abstract_db = Path(__file__).resolve().parent.parent.parent / "data" / "abstracts.db"
+            if abstract_db.exists():
+                try:
+                    pmids = title_recall.recall_abstracts_by_title(
+                        abstract_db, query_terms, limit=6
+                    )
+                except Exception:
+                    pmids = []
+                added_abs = 0
+                for pmid in pmids:
+                    if pmid in sec_paper_ids or added_abs >= 2:
+                        continue
+                    record = title_recall.abstract_for(abstract_db, pmid, query_terms)
+                    if not record:
+                        continue
+                    evidence_id = f"ev_abs_title_{pmid}_{evidence_seq}"
+                    evidence_seq += 1
+                    content = record["abstract"][:1000]
+                    all_evidence_cards[evidence_id] = {
+                        "evidence_id": evidence_id,
+                        "paper_id": pmid,
+                        "para_id": f"{pmid}_abstract",
+                        "paper_title": record["title"],
+                        "section_l1": "Abstract",
+                        "page": 0,
+                        "content": content,
+                        "original_quote": content[:200],
+                        "confidence": 0.6,
+                        "verified": False,
+                        "source_type": "abstract_title_match",
+                    }
+                    sec_evidence_ids.append(evidence_id)
+                    sec_paper_ids.append(pmid)
+                    title_ids.add(pmid)
+                    paper_scores[pmid] = max(paper_scores.get(pmid, 0.0), 0.5)
+                    all_papers[pmid] = {
+                        "paper_id": pmid,
+                        "title": record["title"],
+                        "source": "abstract_title_match",
+                    }
+                    added_abs += 1
+                if added_abs:
+                    print(f"    🔎 摘要标题召回：补充 {added_abs} 篇")
 
             # 相关性过滤：多词查询至少命中 2 个词；单词查询命中 1 个即可
             relevant = [
