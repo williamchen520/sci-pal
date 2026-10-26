@@ -25,6 +25,8 @@ from typing import Iterable
 DEFAULT_LEXICON = (
     Path(__file__).resolve().parent / "data" / "pubtator3_vocab_candidates.tsv"
 )
+#: Official gene symbols (45k rows) — matched by token, not by the big phrase regex.
+HGNC_LEXICON = Path(__file__).resolve().parent / "data" / "hgnc_symbols.tsv"
 
 #: Terms that are real entities but too generic to validate against.
 BROAD_TERMS = frozenset(
@@ -78,9 +80,12 @@ class Entry:
     mentions: int = 0
     papers: int = 0
     database: str = ""
+    source: str = "pubtator"
 
     @property
     def tier(self) -> str:
+        if self.database == "hgnc":
+            return "curated"  # official gene symbol list
         if normalize_surface(self.canonical) in BROAD_TERMS or self.papers >= 100:
             return "broad"
         if self.papers < 2 or len(self.canonical.strip()) < 3:
@@ -95,11 +100,11 @@ class Lexicon:
     index: dict[str, list[Entry]] = field(default_factory=dict)
 
     @classmethod
-    def load(cls, path: str | Path | None = None) -> "Lexicon":
-        source = Path(path) if path else DEFAULT_LEXICON
+    def load(cls, path: str | Path | None = None, *, source: str = "pubtator") -> "Lexicon":
+        file_path = Path(path) if path else DEFAULT_LEXICON
         entries: list[Entry] = []
-        if source.exists():
-            with source.open(encoding="utf-8", newline="") as handle:
+        if file_path.exists():
+            with file_path.open(encoding="utf-8", newline="") as handle:
                 for row in csv.DictReader(handle, delimiter="\t"):
                     aliases = tuple(
                         alias.strip()
@@ -115,11 +120,28 @@ class Lexicon:
                             mentions=int(row.get("mentions") or 0),
                             papers=int(row.get("papers") or 0),
                             database=row.get("database", ""),
+                            source=source,
                         )
                     )
         lexicon = cls(entries=entries)
         lexicon._build_index()
         return lexicon
+
+    @classmethod
+    def load_all(cls) -> "Lexicon":
+        """PubTator3 (corpus) + HGNC (official gene symbols) when present."""
+        lexicon = cls.load(DEFAULT_LEXICON, source="pubtator")
+        if HGNC_LEXICON.exists():
+            lexicon.merge(cls.load(HGNC_LEXICON, source="hgnc"))
+        return lexicon
+
+    def merge(self, other: "Lexicon") -> "Lexicon":
+        existing = {(entry.type, entry.normalized_id) for entry in self.entries}
+        for entry in other.entries:
+            if (entry.type, entry.normalized_id) not in existing:
+                self.entries.append(entry)
+        self._build_index()
+        return self
 
     def _build_index(self) -> None:
         for entry in self.entries:
@@ -130,6 +152,14 @@ class Lexicon:
 
     def lookup(self, surface: str) -> list[Entry]:
         return self.index.get(normalize_surface(surface), [])
+
+    def preferred(self, surface: str) -> list[Entry]:
+        """Resolve multi-source duplicates: a single HGNC row wins over PubTator."""
+        entries = self.lookup(surface)
+        hgnc = [entry for entry in entries if entry.database == "hgnc"]
+        if len(hgnc) == 1:
+            return hgnc
+        return entries
 
     def is_curated(self, surface: str) -> bool:
         return any(entry.tier == "curated" for entry in self.lookup(surface))
@@ -142,10 +172,14 @@ class Lexicon:
         return self.index.keys()
 
     def match_surfaces(self) -> Iterable[str]:
-        """Only surfaces worth matching: curated/broad tiers, no common words."""
+        """Only surfaces worth matching: curated/broad tiers, no common words.
+
+        HGNC rows are excluded here: 45k alternatives would make the phrase
+        regex slow, and gene symbols are matched by token in ``guard`` instead.
+        """
         seen: set[str] = set()
         for entry in self.entries:
-            if entry.tier == "weak":
+            if entry.tier == "weak" or entry.source == "hgnc":
                 continue
             for surface in (entry.canonical, *entry.aliases):
                 text = surface.strip()

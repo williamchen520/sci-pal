@@ -123,7 +123,7 @@ class VocabularyGuard:
         lexicon: Lexicon | None = None,
         fts_lookup: Callable[[str], bool] | None = None,
     ) -> None:
-        self.lexicon = lexicon or Lexicon.load()
+        self.lexicon = lexicon or Lexicon.load_all()
         self._fts = fts_lookup
         self._pattern = _phrase_pattern(self.lexicon.match_surfaces())
 
@@ -131,7 +131,7 @@ class VocabularyGuard:
         report = GuardReport()
         body = str(text or "")
         self._check_entities(body, report)
-        self._check_unknown_tokens(body, report)
+        self._check_tokens(body, report)
         self._check_abbreviations(body, report)
         return report
 
@@ -143,7 +143,7 @@ class VocabularyGuard:
                 continue
             if len(surface.strip()) <= 3 and not surface.strip().isupper():
                 continue
-            entries: list[Entry] = self.lexicon.lookup(surface)
+            entries: list[Entry] = self.lexicon.preferred(surface)
             if not entries:
                 continue
             exact = [
@@ -173,19 +173,32 @@ class VocabularyGuard:
             else:
                 self._add(report, surface, "known_curated", entry.normalized_id)
 
-    def _check_unknown_tokens(self, body: str, report: GuardReport) -> None:
+    def _check_tokens(self, body: str, report: GuardReport) -> None:
+        """Gene-symbol tokens: HGNC/PubTator hit → known; else FTS → corpus/unknown."""
+        reported = {issue.term.upper() for issue in report.issues}
         known_surfaces = {normalize_surface(surface) for surface in self.lexicon.match_surfaces()}
         for match in _ENTITY_TOKEN.finditer(body):
             token = match.group(0)
-            if token.upper() in STOP_ACRONYMS:
+            upper = token.upper()
+            if upper in STOP_ACRONYMS or upper in reported:
                 continue
-            if self.lexicon.lookup(token) or normalize_surface(token) in known_surfaces:
+            entries = self.lexicon.preferred(token)
+            if entries:
+                ids = {(entry.type, entry.normalized_id) for entry in entries}
+                if len(ids) > 1:
+                    self._add(report, token, "ambiguous", "多个标准 ID")
+                else:
+                    self._add(report, token, "known_curated", entries[0].normalized_id)
+                reported.add(upper)
+                continue
+            if normalize_surface(token) in known_surfaces:
                 continue
             landed = bool(self._fts and self._fts(token))
             if landed:
                 self._add(report, token, "corpus", "正文出现过（方法/技术类不判）")
             else:
                 self._add(report, token, "unknown", "词表与正文均未见")
+            reported.add(upper)
 
     def _check_abbreviations(self, body: str, report: GuardReport) -> None:
         defined = {match.group(2).upper() for match in _DEFINITION.finditer(body)}
@@ -199,7 +212,7 @@ class VocabularyGuard:
             if not token.isupper() or upper in defined or upper in seen or upper in reported:
                 continue
             seen.add(upper)
-            entries = self.lexicon.lookup(token)
+            entries = self.lexicon.preferred(token)
             if entries or (self._fts and self._fts(token)):
                 continue
             self._add(report, token, "undefined_abbrev", "缩写未定义")
