@@ -54,6 +54,37 @@ def _first(mapping: Mapping, *keys: str) -> str:
     return ""
 
 
+def _normalize_protocol_id(value: Any) -> str:
+    """Accept ``325000``, ``protocols_io_325000`` or a /view/...-325000 URL.
+
+    URL slugs may contain digits before the real id (``western-blot-2024-325000``),
+    so trailing digits win over the first digit group.
+    """
+    import re as re_lib
+
+    text = str(value or "").strip()
+    for pattern in (r"(\d+)\s*$", r"protocols_io_(\d+)", r"(\d{2,})"):
+        match = re_lib.search(pattern, text)
+        if match:
+            return match.group(1)
+    return text
+
+
+def _html_text(value: Any) -> str:
+    """API returns step bodies as HTML (``<p>...</p>``); strip tags for storage."""
+    import html as html_lib
+    import re as re_lib
+
+    text = html_lib.unescape(str(value or ""))
+    text = re_lib.sub(r"<[^>]+>", " ", text)
+    return re_lib.sub(r"\s+", " ", text).strip()
+
+
+def _duration(value: Any) -> str:
+    text = _text(value)
+    return "" if text in {"0", "0:00", "0.0"} else text
+
+
 def _reagents(step: Mapping) -> list[str]:
     for key in ("reagents", "components", "materials", "reagents_list"):
         value = step.get(key)
@@ -98,15 +129,19 @@ class ProtocolService:
         for ordinal, step in enumerate(steps, 1):
             if not isinstance(step, Mapping):
                 continue
+            instructions = _html_text(
+                _first(step, "step", "instructions", "description", "step_description", "text")
+            )
+            title_text = _first(step, "title", "name", "step_title", "section")
+            if not title_text and instructions:
+                title_text = instructions[:80]
             parsed_steps.append(
                 {
                     "step_id": _first(step, "id", "step_id", "guid") or f"{protocol_id}_step_{ordinal}",
                     "ordinal": ordinal,
-                    "title": _first(step, "title", "name", "step_title"),
-                    "instructions": _first(
-                        step, "instructions", "description", "step_description", "text"
-                    ),
-                    "duration": _first(step, "duration", "time", "duration_text"),
+                    "title": title_text,
+                    "instructions": instructions,
+                    "duration": _duration(_first(step, "duration", "time", "duration_text")),
                     "reagents": _reagents(step),
                 }
             )
@@ -158,8 +193,12 @@ class ProtocolService:
         fetch = getattr(self.client, "fetch_protocol", None)
         if fetch is None:
             raise RuntimeError("client does not support fetch_protocol")
-        payload = fetch(protocol_id)
-        return self.import_payload(payload, url=f"https://www.protocols.io/view/{protocol_id}")
+        normalized = _normalize_protocol_id(protocol_id)
+        payload = fetch(normalized)
+        return self.import_payload(
+            payload,
+            url=f"https://www.protocols.io/view/{normalized}",
+        )
 
     def list(self, limit: int = 50) -> list[dict[str, Any]]:
         self.ensure_schema()
