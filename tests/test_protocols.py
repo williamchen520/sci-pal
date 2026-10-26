@@ -131,6 +131,21 @@ class FakeService:
     def get(self, protocol_id):
         return self.service.get(protocol_id)
 
+    def add_run(self, protocol_id, **kwargs):
+        return self.service.add_run(protocol_id, **kwargs)
+
+    def list_runs(self, protocol_id, limit=50):
+        return self.service.list_runs(protocol_id, limit)
+
+    def recent_runs(self, limit=20):
+        return self.service.recent_runs(limit)
+
+    def update_run(self, run_id, **fields):
+        return self.service.update_run(run_id, **fields)
+
+    def delete_run(self, run_id):
+        return self.service.delete_run(run_id)
+
 
 class ProtocolRoutesTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -173,6 +188,35 @@ class ProtocolRoutesTests(unittest.TestCase):
 
     def test_missing_protocol_returns_404(self) -> None:
         self.assertEqual(self.client.get("/api/protocols/nope").status_code, 404)
+
+    def test_experiment_run_lifecycle(self) -> None:
+        self.client.post("/api/protocols/import", json={"payload": FIXTURE})
+        created = self.client.post(
+            "/api/protocols/px_test_001/runs",
+            json={"title": "Run 1", "operator": "chen", "status": "running", "result": ""},
+        )
+        self.assertEqual(created.status_code, 200)
+        run = created.get_json()["run"]
+        self.assertEqual(run["status"], "running")
+
+        listed = self.client.get("/api/protocols/px_test_001/runs").get_json()
+        self.assertEqual(listed["count"], 1)
+
+        updated = self.client.patch(
+            f"/api/experiments/{run['run_id']}", json={"status": "completed", "result": "OK"}
+        ).get_json()
+        self.assertEqual(updated["run"]["status"], "completed")
+
+        recent = self.client.get("/api/experiments").get_json()
+        self.assertEqual(recent["runs"][0]["protocol_title"], "TLR4 stimulation assay")
+
+        self.assertEqual(self.client.delete(f"/api/experiments/{run['run_id']}").status_code, 200)
+        self.assertEqual(self.client.get("/api/protocols/px_test_001/runs").get_json()["count"], 0)
+
+    def test_run_for_missing_protocol_returns_404(self) -> None:
+        self.assertEqual(
+            self.client.post("/api/protocols/nope/runs", json={"title": "x"}).status_code, 404
+        )
 
 
 if __name__ == "__main__":

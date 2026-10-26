@@ -107,9 +107,84 @@ async function loadDetail(protocolId) {
                     ${step.duration ? `<div><span class="tag">⏱ ${escapeHtml(step.duration)}</span></div>` : ''}
                     ${step.instructions ? `<p>${escapeHtml(step.instructions)}</p>` : ''}
                     ${(step.reagents || []).length ? `<p><span class="tag">试剂</span>${escapeHtml(step.reagents.join('、'))}</p>` : ''}
-                </div>`).join('') || '<div class="empty">该协议没有解析出步骤</div>'}`;
+                </div>`).join('') || '<div class="empty">该协议没有解析出步骤</div>'}
+            <div class="runs">
+                <h3>实验记录</h3>
+                <div class="run-form">
+                    <input id="runTitle" placeholder="实验标题">
+                    <input id="runOperator" placeholder="操作人">
+                    <input id="runDate" type="date">
+                    <select id="runStatus">
+                        <option value="planned">计划</option>
+                        <option value="running">进行中</option>
+                        <option value="completed">完成</option>
+                        <option value="failed">失败</option>
+                    </select>
+                    <input id="runResult" placeholder="结果 / 备注">
+                    <button onclick="addRun('${escapeHtml(protocol.protocol_id)}')">添加记录</button>
+                </div>
+                <div id="runList"><div class="hint">加载中…</div></div>
+            </div>`;
+        await loadRuns(protocol.protocol_id);
     } catch (err) {
         detailEl.innerHTML = `<div class="empty error">加载失败：${escapeHtml(err.message)}</div>`;
+    }
+}
+
+const RUN_LABELS = { planned: '计划', running: '进行中', completed: '完成', failed: '失败' };
+
+async function loadRuns(protocolId) {
+    const container = document.getElementById('runList');
+    if (!container) return;
+    try {
+        const resp = await fetch(`/api/protocols/${encodeURIComponent(protocolId)}/runs`);
+        const body = await resp.json();
+        if (!resp.ok || !body.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+        if (!body.runs.length) {
+            container.innerHTML = '<div class="hint">还没有实验记录</div>';
+            return;
+        }
+        container.innerHTML = body.runs.map((run) => `
+            <div class="run-item">
+                <div>
+                    <span class="badge ${escapeHtml(run.status)}">${escapeHtml(RUN_LABELS[run.status] || run.status)}</span>
+                    <strong>${escapeHtml(run.title || '(无标题)')}</strong>
+                    <span class="hint">${escapeHtml(run.run_date || '')} · ${escapeHtml(run.operator || '')}</span>
+                </div>
+                ${run.result ? `<div class="hint">结果：${escapeHtml(run.result)}</div>` : ''}
+            </div>`).join('');
+    } catch (err) {
+        container.innerHTML = `<div class="hint bad">加载失败：${escapeHtml(err.message)}</div>`;
+    }
+}
+
+async function addRun(protocolId) {
+    const title = document.getElementById('runTitle').value.trim();
+    if (!title) {
+        setStatus('实验标题不能为空', 'bad');
+        return;
+    }
+    const payload = {
+        title,
+        operator: document.getElementById('runOperator').value.trim(),
+        run_date: document.getElementById('runDate').value,
+        status: document.getElementById('runStatus').value,
+        result: document.getElementById('runResult').value.trim(),
+    };
+    try {
+        const resp = await fetch(`/api/protocols/${encodeURIComponent(protocolId)}/runs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const body = await resp.json();
+        if (!resp.ok || !body.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+        document.getElementById('runTitle').value = '';
+        document.getElementById('runResult').value = '';
+        setStatus('实验记录已添加', 'ok');
+        await loadRuns(protocolId);
+    } catch (err) {
+        setStatus(`添加失败：${err.message}`, 'bad');
     }
 }
 
