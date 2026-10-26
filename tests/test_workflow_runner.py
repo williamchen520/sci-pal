@@ -108,6 +108,24 @@ class WorkflowRunnerTests(unittest.TestCase):
         self.assertEqual(self.calls["plan"], 1)
         self.assertEqual(self.calls["retrieve"], 2)
 
+    def test_cancel_file_stops_before_next_stage(self) -> None:
+        self.dir.mkdir(parents=True)
+        (self.dir / "CANCEL").write_text("1", encoding="utf-8")
+        result = run_workflow(self.spec(), self.stages(), run_dir=self.dir, approve=True)
+        self.assertEqual(result["status"], "cancelled")
+        self.assertEqual(self.calls.get("plan", 0), 0)
+
+    def test_cancelled_error_marks_run_cancelled(self) -> None:
+        from services.workflow.cancel import CancelledError
+
+        def cancelling(context):
+            raise CancelledError("stop")
+
+        stages = self.stages()
+        stages["plan"] = cancelling
+        result = run_workflow(self.spec(), stages, run_dir=self.dir, approve=True)
+        self.assertEqual(result["status"], "cancelled")
+
     def test_refuses_existing_run_without_resume(self) -> None:
         self.dir.mkdir(parents=True)
         (self.dir / "run.json").write_text("{}", encoding="utf-8")

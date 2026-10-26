@@ -247,18 +247,29 @@ def _default_retrieve(
     """Adapter over the existing review pipeline (models load on first call)."""
     from services.review.review_generator import search_and_assign_papers
 
+    from services.workflow.cancel import CancelledError, is_cancelled
+
+    should_cancel = context.services.get("should_cancel") or (
+        lambda: is_cancelled(context.run_dir)
+    )
+    if should_cancel():
+        raise CancelledError("cancelled before retrieve")
+
     retriever = context.services.get("retriever") or _build_retriever()
+    outline_payload: dict[str, Any] = {"sections": sections}
     outline, papers = search_and_assign_papers(
-        outline={"sections": sections},
+        outline=outline_payload,
         topic=topic,
         max_papers=max_papers,
         retriever=retriever,
+        should_cancel=should_cancel,
     )
     return {
         "sections": outline.get("sections", sections),
         "papers": papers,
         "evidence_cards": outline.get("evidence_cards") or [],
         "max_papers": max_papers,
+        "timings": outline.get("timings") or {},
     }
 
 
@@ -272,7 +283,7 @@ def _build_retriever() -> Any:
         from services.search.unified_retriever import UnifiedRetriever
 
         _RETRIEVER = UnifiedRetriever(
-            rerank=True, routing=True, expand=True, graph_expand=True
+            rerank=True, routing=True, expand=True, graph_expand=True, diagnostics=True
         )
     return _RETRIEVER
 

@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
+from services.workflow.cancel import CancelledError, is_cancelled
 from services.workflow.types import (
     DEFAULT_STAGES,
     StageContext,
@@ -74,6 +75,12 @@ def run_workflow(
         if state["status"] == "ok":
             continue
 
+        if is_cancelled(directory):
+            manifest["status"] = "cancelled"
+            _touch(manifest, completed=False)
+            _write_json(manifest_path, manifest)
+            return manifest
+
         if name in {"retrieve", "evidence", "draft", "verify", "store", "export"}:
             if manifest["approval"]["required"] and not manifest["approval"]["approved"]:
                 manifest["status"] = "approval_required"
@@ -93,6 +100,11 @@ def run_workflow(
             result = stages[name](context)
             if not isinstance(result, StageResult):
                 raise TypeError(f"stage {name} returned {type(result)!r}")
+        except CancelledError:
+            manifest["status"] = "cancelled"
+            _touch(manifest, completed=False)
+            _write_json(manifest_path, manifest)
+            return manifest
         except Exception as exc:  # noqa: BLE001 - recorded, never swallowed
             log.exception("workflow stage failed: %s", name)
             result = StageResult(

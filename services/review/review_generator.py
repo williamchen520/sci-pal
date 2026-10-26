@@ -2054,6 +2054,7 @@ def search_and_assign_papers(
     topic: str,
     max_papers: int = 100,
     retriever=None,
+    should_cancel=None,
 ) -> tuple[dict, list[dict]]:
     """V31.79: 按大纲内容搜索论文，然后自动分配给对应的章节和段落。
 
@@ -2107,6 +2108,11 @@ def search_and_assign_papers(
 
     # 1. 遍历每个章节，按章节关键词搜索
     for sec_idx, sec in enumerate(sections):
+        if should_cancel is not None and should_cancel():
+            from services.workflow.cancel import CancelledError
+
+            raise CancelledError(f"cancelled before section {sec_idx + 1}")
+
         sec_id = sec.get("section_id", "")
         sec_title = sec.get("title", "").strip()
 
@@ -2157,6 +2163,10 @@ def search_and_assign_papers(
                 top_figures=0,
             )
             paragraphs = result.get("paragraphs", [])
+            bucket = outline.setdefault("timings", {})
+            for key, value in (result.get("timings") or {}).items():
+                bucket[key] = round(float(bucket.get(key) or 0) + float(value or 0), 1)
+            bucket["sections"] = int(bucket.get("sections") or 0) + 1
             query_terms = query.split()
             paper_texts: dict[str, str] = {}
 

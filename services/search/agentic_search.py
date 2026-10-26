@@ -42,6 +42,12 @@ def _load_ner_model():
     return _ner_model, _ner_tokenizer, _ner_device
 
 
+def _ner_disabled() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_DISABLE_NER", "").strip() in {"1", "true", "yes"}
+
+
 def _extract_genes_with_ner(text: str) -> List[str]:
     """
     V31.17: Extract gene/protein entities using scispacy NER model.
@@ -163,14 +169,20 @@ def extract_key_entities(query: str) -> List[str]:
             seen.add(e.lower())
             entities.append(e)
 
-    # 1. Gene/protein names (highest priority) — V27.6: 先用 NER 模型
-    ner_genes = _extract_genes_with_ner(q)
+    # 1. Gene/protein names (highest priority)
+    # V33.20: regex first — loading the scispacy model costs ~87 s on the hot
+    # path; skip it when the rule-based pass already found a gene/protein token
+    # or when SCIPAL_DISABLE_NER is set.
+    regex_genes = [m.group(0) for m in GENE_PROTEIN_RE.finditer(q)]
+    ner_genes = []
+    if not regex_genes and not _ner_disabled():
+        ner_genes = _extract_genes_with_ner(q)
     for gene in ner_genes:
         add(gene)
 
     # 2. 基于规则的基因名提取（兜底）
-    for m in GENE_PROTEIN_RE.finditer(q):
-        add(m.group(0))
+    for gene in regex_genes:
+        add(gene)
 
     # 3. Method keywords
     q_lower = q.lower()
