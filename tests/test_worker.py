@@ -55,6 +55,29 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(result["status"], "failed")
         self.assertIn("boom", result["error"])
 
+    def test_ingest_job_uses_executor(self) -> None:
+        job = self.queue / "ingest-abc.job.json"
+        job.write_text(
+            json.dumps({"type": "ingest", "task_id": "ing_abc", "pmc_ids": ["PMC1"]}),
+            encoding="utf-8",
+        )
+        seen = []
+
+        def executor(task_id):
+            seen.append(task_id)
+            return "completed"
+
+        handled = process_once(
+            self.queue, runner=None, stages={}, ingest_executor=executor, log=lambda _: None
+        )
+        self.assertEqual(handled, 1)
+        self.assertEqual(seen, ["ing_abc"])
+        result = json.loads(
+            (self.queue / "processed" / "ingest-abc.job.json.result.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(result["status"], "completed")
+        self.assertFalse(job.exists())
+
     def test_empty_queue_is_a_noop(self) -> None:
         self.assertEqual(process_once(self.queue, runner=None, stages={}, log=lambda _: None), 0)
 

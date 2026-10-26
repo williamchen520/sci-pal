@@ -131,6 +131,26 @@ class IngestServiceTests(unittest.TestCase):
         task = wait_for(service, task_id)
         self.assertEqual(task["status"], "cancelled")
 
+    def test_queue_mode_writes_job_instead_of_thread(self) -> None:
+        service = self._service()
+        service.queue_dir = self.root / "queue"
+        task_id = service.start(self.ids[:2], batch_size=2)
+        task = service.status(task_id)
+        self.assertEqual(task["status"], "queued")
+        jobs = list((self.root / "queue").glob("ingest-*.job.json"))
+        self.assertEqual(len(jobs), 1)
+        payload = json.loads(jobs[0].read_text(encoding="utf-8"))
+        self.assertEqual(payload["type"], "ingest")
+        self.assertEqual(payload["task_id"], task_id)
+
+    def test_execute_runs_queued_task(self) -> None:
+        service = self._service()
+        service.queue_dir = self.root / "queue"
+        task_id = service.start(self.ids[:4], batch_size=2)
+        task = service.execute(task_id)
+        self.assertEqual(task["status"], "completed")
+        self.assertEqual(task["imported"], 4)
+
     def test_unknown_task_returns_none(self) -> None:
         self.assertIsNone(self._service().status("ing_missing"))
 
