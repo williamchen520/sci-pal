@@ -101,6 +101,7 @@ async function loadDetail(protocolId) {
                 ${escapeHtml(protocol.doi || '')}${protocol.version ? ` · v${escapeHtml(protocol.version)}` : ''}
                 ${protocol.license ? ` · ${escapeHtml(protocol.license)}` : ''}
                 · ${steps.length} 步 ${link ? ` · ${link}` : ''}
+                · <a href="/api/protocols/${encodeURIComponent(protocol.protocol_id)}/export">导出 Markdown</a>
             </div>
             ${steps.map((step) => `
                 <div class="step">

@@ -146,6 +146,9 @@ class FakeService:
     def delete_run(self, run_id):
         return self.service.delete_run(run_id)
 
+    def export_markdown(self, protocol_id):
+        return self.service.export_markdown(protocol_id)
+
 
 class ProtocolRoutesTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -219,6 +222,24 @@ class ProtocolRoutesTests(unittest.TestCase):
         self.assertEqual(
             self.client.post("/api/protocols/nope/runs", json={"title": "x"}).status_code, 404
         )
+
+    def test_export_markdown_contains_steps_and_runs(self) -> None:
+        self.client.post("/api/protocols/import", json={"payload": FIXTURE})
+        self.client.post(
+            "/api/protocols/px_test_001/runs",
+            json={"title": "Run A", "operator": "chen", "done_steps": ["s1"]},
+        )
+        response = self.client.get("/api/protocols/px_test_001/export")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/markdown", response.headers["Content-Type"])
+        body = response.get_data(as_text=True)
+        self.assertIn("TLR4 stimulation assay", body)
+        self.assertIn("Seed macrophages", body)
+        self.assertIn("Run A", body)
+        self.assertIn("1/2", body)
+
+    def test_export_missing_protocol_returns_404(self) -> None:
+        self.assertEqual(self.client.get("/api/protocols/nope/export").status_code, 404)
 
 
 if __name__ == "__main__":

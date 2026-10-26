@@ -109,4 +109,18 @@ def build_protocols_blueprint(
             return jsonify({"ok": False, "error": "run not found"}), 404
         return jsonify({"ok": True})
 
+    @bp.get("/protocols/<protocol_id>/export")
+    def export_protocol(protocol_id: str):
+        content = get_service().export_markdown(protocol_id)
+        if content is None:
+            return jsonify({"ok": False, "error": "protocol not found"}), 404
+        from flask import Response
+
+        filename = f"protocol_{protocol_id}.md"
+        return Response(
+            content,
+            mimetype="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
     return bp
