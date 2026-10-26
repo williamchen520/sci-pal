@@ -162,7 +162,11 @@ def _download_task_manager():
 
 # B3c: 下载状态/历史/队列三条只读路由已移入 routes/search.py
 app.register_blueprint(
-    build_search_blueprint(get_task_manager=_download_task_manager, log=app.logger)
+    build_search_blueprint(
+        get_task_manager=_download_task_manager,
+        log=app.logger,
+        get_hybrid_retriever=lambda: get_hybrid_retriever(),
+    )
 )
 
 # B4a: 综述查询（reviews 表，CLI/外部生成的综述对前端可见）
@@ -1303,130 +1307,6 @@ def list_local_papers():
     # 已解析的排前面，然后按文件名
     result.sort(key=lambda x: (not x["parsed"], x["filename"].lower()))
     return jsonify({"papers": result, "total": len(result), "parsed_count": sum(1 for p in result if p["parsed"])})
-
-
-# ============================================================
-# V33.1: 混合搜索 API（本地 + 在线 NCBI/PMC）
-# ============================================================
-
-@app.route("/api/search/hybrid", methods=["GET", "POST"])
-def hybrid_search_api():
-    """
-    V33.1: 混合搜索论文（本地数据库 + 在线 NCBI PubMed/PMC）。
-
-    同时搜索本地和在线，结果合并、三级去重（PMCID/PMID/DOI）、统一排序。
-    本地论文标 source="local"，在线新论文标 source="online"。
-
-    参数（GET query 或 POST JSON）：
-      q: 搜索关键词（必填）
-      top_k: 返回最大结果数（默认 20）
-      use_online: 是否使用在线搜索（默认 true）
-      online_max: 在线搜索每个数据库最大结果数（默认 30）
-
-    返回：
-      {
-        "query": str,
-        "total": int,
-        "local_count": int,
-        "online_count": int,
-        "online_in_local_count": int,
-        "papers": [...],           // 合并后的论文列表
-        "local_papers": [...],     // 仅本地论文
-        "online_papers": [...],    // 仅在线新论文
-      }
-    """
-    # 兼容 GET 和 POST
-    if request.method == "POST":
-        data = request.get_json(silent=True) or {}
-        query = data.get("q", "").strip()
-        top_k = int(data.get("top_k", 20))
-        use_online = bool(data.get("use_online", True))
-        online_max = int(data.get("online_max", 30))
-    else:
-        query = request.args.get("q", "").strip()
-        top_k = int(request.args.get("top_k", 20))
-        use_online = request.args.get("use_online", "true").lower() == "true"
-        online_max = int(request.args.get("online_max", 30))
-
-    if not query:
-        return jsonify({"error": "缺少搜索关键词 q"}), 400
-
-    try:
-        retriever = get_hybrid_retriever()
-        result = retriever.search_papers(
-            query=query,
-            top_k=top_k,
-            use_online=use_online,
-            online_max_results=online_max,
-        )
-        return jsonify(result)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"混合搜索失败: {str(e)}"}), 500
-
-
-@app.route("/api/search/online", methods=["GET", "POST"])
-def online_search_api():
-    """
-    V33.1: 仅在线搜索 NCBI PubMed/PMC（不搜本地）。
-
-    参数：
-      q: 搜索关键词（必填）
-      max_results: 每个数据库最大结果数（默认 30）
-      search_pubmed: 是否搜 PubMed（默认 true）
-      search_pmc: 是否搜 PMC（默认 true）
-
-    返回：
-      {
-        "query": str,
-        "total": int,
-        "pubmed_count": int,
-        "pmc_count": int,
-        "papers": [...],
-      }
-    """
-    if request.method == "POST":
-        data = request.get_json(silent=True) or {}
-        query = data.get("q", "").strip()
-        max_results = int(data.get("max_results", 30))
-        search_pubmed = bool(data.get("search_pubmed", True))
-        search_pmc = bool(data.get("search_pmc", True))
-    else:
-        query = request.args.get("q", "").strip()
-        max_results = int(request.args.get("max_results", 30))
-        search_pubmed = request.args.get("search_pubmed", "true").lower() == "true"
-        search_pmc = request.args.get("search_pmc", "true").lower() == "true"
-
-    if not query:
-        return jsonify({"error": "缺少搜索关键词 q"}), 400
-
-    try:
-        from services.search.online_search import get_online_searcher
-        searcher = get_online_searcher()
-
-        results = searcher.search(
-            query,
-            max_results=max_results,
-            search_pubmed=search_pubmed,
-            search_pmc=search_pmc,
-        )
-
-        # 统计
-        pubmed_count = sum(1 for r in results if r.source == "online_pubmed")
-        pmc_count = sum(1 for r in results if r.source == "online_pmc")
-
-        return jsonify({
-            "query": query,
-            "total": len(results),
-            "pubmed_count": pubmed_count,
-            "pmc_count": pmc_count,
-            "papers": [r.to_dict() for r in results],
-        })
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"在线搜索失败: {str(e)}"}), 500
 
 
 # ============================================================
