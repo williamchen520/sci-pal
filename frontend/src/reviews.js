@@ -98,10 +98,18 @@ function renderDetail(review) {
     const references = review.references || [];
     const guard = review.guard || null;
     const guardCounts = (guard && guard.counts) || {};
+    const defined = (guard && guard.defined_abbreviations) || {};
+    const definedEntries = Object.entries(defined);
+    const definedText = definedEntries.length ? ` · 文中定义 ${definedEntries.length}` : '';
     const guardBadge = guard && guard.checked
         ? `<div class="guard-badge">🛡 术语校验：checked ${guard.checked} · curated ${guardCounts.known_curated || 0}` +
           ` · ambiguous ${guardCounts.ambiguous || 0} · unknown ${guard.unknown || 0}` +
-          `（${((guard.unknown_ratio || 0) * 100).toFixed(2)}%）</div>`
+          `（${((guard.unknown_ratio || 0) * 100).toFixed(2)}%）${definedText}</div>` +
+          (definedEntries.length
+              ? `<details class="guard-defs"><summary>文中定义的缩写（${definedEntries.length}）</summary><ul>` +
+                definedEntries.map(([abbr, full]) => `<li><strong>${escapeHtml(abbr)}</strong> = ${escapeHtml(full)}</li>`).join('') +
+                '</ul></details>'
+              : '')
         : '';
     detailEl.innerHTML = `
         <h2>${escapeHtml(review.topic || '(无标题)')}</h2>

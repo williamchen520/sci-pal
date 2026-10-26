@@ -66,6 +66,15 @@ class GuardTests(unittest.TestCase):
         terms = {issue.term.upper(): issue.status for issue in report.issues}
         self.assertNotEqual(terms.get("EGFR"), "undefined_abbrev")
 
+    def test_definition_is_recorded_and_used(self) -> None:
+        report = self.guard().check(
+            "Toll-like receptor 4 (TLR4) was measured in the samples."
+        )
+        self.assertEqual(report.defined_abbreviations.get("TLR4"), "Toll-like receptor 4")
+        terms = {issue.term.upper(): issue.status for issue in report.issues}
+        self.assertEqual(terms.get("TLR4"), "known_curated")
+        self.assertIn("defined_abbreviations", report.summary())
+
     def test_unknown_ratio(self) -> None:
         report = self.guard().check("EGFR STAT3 tumor FOOBARX")
         self.assertGreater(report.unknown_ratio, 0.0)

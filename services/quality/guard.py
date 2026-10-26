@@ -57,6 +57,7 @@ class Issue:
 class GuardReport:
     issues: list[Issue] = field(default_factory=list)
     counts: dict[str, int] = field(default_factory=dict)
+    defined_abbreviations: dict[str, str] = field(default_factory=dict)
 
     @property
     def unknown(self) -> int:
@@ -81,6 +82,7 @@ class GuardReport:
             "unknown": self.unknown,
             "unknown_ratio": round(self.unknown_ratio, 4),
             "counts": dict(self.counts),
+            "defined_abbreviations": dict(self.defined_abbreviations),
             "issues": [issue.__dict__ for issue in self.issues[:50]],
         }
 
@@ -141,6 +143,9 @@ class VocabularyGuard:
     def check(self, text: str) -> GuardReport:
         report = GuardReport()
         body = str(text or "")
+        for match in _DEFINITION.finditer(body):
+            name, abbreviation = match.group(1).strip(), match.group(2).strip()
+            report.defined_abbreviations.setdefault(abbreviation.upper(), name)
         self._check_entities(body, report)
         self._check_tokens(body, report)
         self._check_phrases(body, report)
@@ -208,6 +213,15 @@ class VocabularyGuard:
                 reported.add(upper)
                 continue
             if normalize_surface(token) in known_surfaces:
+                continue
+            if upper in report.defined_abbreviations:
+                self._add(
+                    report,
+                    token,
+                    "known_curated",
+                    f"文中定义：{report.defined_abbreviations[upper]}",
+                )
+                reported.add(upper)
                 continue
             expansion = lookup_abbreviation(token)
             if expansion:
