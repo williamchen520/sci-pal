@@ -47,7 +47,8 @@
 - **多词疾病**：MeSH 短语按 2–4 gram 贪心扫描（如 `Burkitt lymphoma`、
   `diffuse large B-cell lymphoma`），命中即 `known_curated`；与已有词条重叠时只计一次。
 
-当前词表：**62,132 条**（PubTator 1,829 + HGNC 45,277 + MeSH 15,756，按 type+ID 去重）。
+当前词表：**62,180 条**（PubTator 1,829 + HGNC 45,277 + MeSH 15,756 + 药品商品名 48 组，按 type+ID 去重）。
+另有 **~90 个常用缩写**（LPS / PBS / PBMC / LDL / CRISPR…）走独立词典，不占词表条目。
 
 ## 4. 接口
 

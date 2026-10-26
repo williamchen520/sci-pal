@@ -29,6 +29,8 @@ DEFAULT_LEXICON = (
 HGNC_LEXICON = Path(__file__).resolve().parent / "data" / "hgnc_symbols.tsv"
 #: MeSH descriptors (C = disease, D = chemical) — lookup only, never scanned.
 MESH_LEXICON = Path(__file__).resolve().parent / "data" / "mesh_descriptors.tsv"
+#: Curated brand -> generic drug names (small; openFDA bulk fetch is unreliable).
+DRUG_BRANDS = Path(__file__).resolve().parent / "data" / "drug_brands.tsv"
 
 #: Terms that are real entities but too generic to validate against.
 BROAD_TERMS = frozenset(
@@ -86,8 +88,8 @@ class Entry:
 
     @property
     def tier(self) -> str:
-        if self.source in {"hgnc", "mesh"}:
-            return "curated"  # official vocabularies
+        if self.source in {"hgnc", "mesh", "fda"}:
+            return "curated"  # official / curated vocabularies
         if normalize_surface(self.canonical) in BROAD_TERMS or self.papers >= 100:
             return "broad"
         if self.papers < 2 or len(self.canonical.strip()) < 3:
@@ -137,6 +139,8 @@ class Lexicon:
             lexicon.merge(cls.load(HGNC_LEXICON, source="hgnc"))
         if MESH_LEXICON.exists():
             lexicon.merge(cls.load(MESH_LEXICON, source="mesh"))
+        if DRUG_BRANDS.exists():
+            lexicon.merge(cls.load(DRUG_BRANDS, source="fda"))
         return lexicon
 
     def merge(self, other: "Lexicon") -> "Lexicon":
@@ -166,11 +170,16 @@ class Lexicon:
         return self.index.get(normalize_surface(surface), [])
 
     def preferred(self, surface: str) -> list[Entry]:
-        """Resolve multi-source duplicates: a single HGNC row wins over PubTator."""
+        """Resolve multi-source duplicates: HGNC, then MeSH, win over the rest."""
         entries = self.lookup(surface)
         hgnc = [entry for entry in entries if entry.database == "hgnc"]
         if len(hgnc) == 1:
             return hgnc
+        mesh = [
+            entry for entry in entries if entry.database == "ncbi_mesh" and entry.source == "mesh"
+        ]
+        if len(mesh) == 1:
+            return mesh
         return entries
 
     def is_curated(self, surface: str) -> bool:

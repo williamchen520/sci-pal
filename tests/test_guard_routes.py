@@ -58,6 +58,10 @@ class GuardRoutesTests(unittest.TestCase):
         self.assertEqual(body["entries"][0]["canonical"], "EGFR")
         self.assertEqual(body["entries"][0]["tier"], "curated")
 
+    def test_term_includes_abbreviation(self) -> None:
+        body = self.client.get("/api/guard/term/PBMC").get_json()
+        self.assertIn("peripheral blood mononuclear cell", body["abbreviation"])
+
 
 if __name__ == "__main__":
     unittest.main()
