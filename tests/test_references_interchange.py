@@ -121,6 +121,18 @@ class ReferenceRoutesTests(unittest.TestCase):
         body = self.client.get("/api/references").get_json()
         self.assertEqual(body["count"], 1)
 
+    def test_multipart_file_upload(self) -> None:
+        import io
+
+        data = {"file": (io.BytesIO(to_ris([SAMPLE]).encode("utf-8")), "refs.ris")}
+        response = self.client.post(
+            "/api/references/import", data=data, content_type="multipart/form-data"
+        )
+        body = response.get_json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(body["format"], "ris")
+        self.assertEqual(body["added"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
