@@ -452,6 +452,98 @@ class ExportManager:
         self.update_task_progress(task_id, 90, "正在保存文件...")
         return self.complete_task(task_id, file_name, buffer.getvalue())
 
+    def export_to_pdf(
+        self,
+        task_id: str,
+        title: str,
+        sections: list[dict],
+        references: list[dict] = None,
+    ) -> Optional[ExportTask]:
+        """导出为 PDF（reportlab；无 LibreOffice 依赖）。"""
+        import io
+
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import mm
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+        from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer
+
+        task = self.get_task(task_id)
+        if not task:
+            return None
+
+        self.update_task_progress(task_id, 10, "正在生成 PDF...")
+        try:
+            pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
+            font = "STSong-Light"
+        except Exception:  # noqa: BLE001 - fall back to Helvetica
+            font = "Helvetica"
+
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            "ReviewTitle", parent=styles["Title"], fontName=font, fontSize=18, leading=22
+        )
+        heading_style = ParagraphStyle(
+            "ReviewHeading", parent=styles["Heading2"], fontName=font, fontSize=13, leading=16
+        )
+        body_style = ParagraphStyle(
+            "ReviewBody", parent=styles["BodyText"], fontName=font, fontSize=10, leading=14
+        )
+        meta_style = ParagraphStyle(
+            "ReviewMeta", parent=body_style, fontSize=8, textColor="#666666"
+        )
+
+        def escape(text: str) -> str:
+            return (
+                str(text)
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
+
+        story = [Paragraph(escape(title), title_style), Spacer(1, 4 * mm)]
+        story.append(
+            Paragraph(
+                f"导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", meta_style
+            )
+        )
+        story.append(Spacer(1, 6 * mm))
+
+        for i, section in enumerate(sections, 1):
+            story.append(Paragraph(escape(section.get("title") or f"Section {i}"), heading_style))
+            for block in str(section.get("content") or "").split("\n\n"):
+                if block.strip():
+                    story.append(Paragraph(escape(block.strip()), body_style))
+                    story.append(Spacer(1, 2 * mm))
+            if task.include_evidence_ids:
+                evidence_ids = section.get("evidence_ids") or []
+                if evidence_ids:
+                    story.append(
+                        Paragraph(f"证据 ID: {escape(', '.join(evidence_ids))}", meta_style)
+                    )
+
+        if task.include_references and references:
+            story.append(PageBreak())
+            story.append(Paragraph("References", heading_style))
+            for i, ref in enumerate(references, 1):
+                story.append(
+                    Paragraph(
+                        escape(
+                            f"{i}. {ref.get('authors', '')} ({ref.get('year', '')}). "
+                            f"{ref.get('title', '')}. {ref.get('journal', '')}. {ref.get('doi', '')}"
+                        ),
+                        body_style,
+                    )
+                )
+
+        buffer = io.BytesIO()
+        document = SimpleDocTemplate(buffer, pagesize=A4, title=str(title))
+        document.build(story)
+        file_name = f"{task.review_id}_{task.format}.pdf"
+        self.update_task_progress(task_id, 90, "正在保存文件...")
+        return self.complete_task(task_id, file_name, buffer.getvalue())
+
     def export_to_bibtex(
         self,
         task_id: str,

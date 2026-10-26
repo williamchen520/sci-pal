@@ -707,6 +707,16 @@ def _default_export(record: Mapping[str, Any], context: StageContext) -> list[st
     except Exception as exc:  # noqa: BLE001 - docx is optional (python-docx may be absent)
         context.logger.warning("docx export skipped: %s", exc)
 
+    try:
+        pdf_task = manager.create_export(review_id, format="pdf")
+        pdf_task = manager.export_to_pdf(
+            pdf_task.task_id, title, _export_sections(review), references
+        )
+        if pdf_task and pdf_task.file_path:
+            artifacts.append(_relative_artifact(pdf_task.file_path, context.run_dir))
+    except Exception as exc:  # noqa: BLE001 - pdf is optional (reportlab may be absent)
+        context.logger.warning("pdf export skipped: %s", exc)
+
     write_artifact(
         context,
         "exports/manifest.json",
