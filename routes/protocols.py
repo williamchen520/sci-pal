@@ -11,6 +11,7 @@ def build_protocols_blueprint(
     *,
     get_service: Callable[[], Any],
     log: Any,
+    get_review_repo: Callable[[], Any] | None = None,
 ) -> Blueprint:
     bp = Blueprint("protocols", __name__, url_prefix="/api")
 
@@ -159,5 +160,28 @@ def build_protocols_blueprint(
             mimetype="text/markdown; charset=utf-8",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
+
+    @bp.post("/reviews/<review_id>/to-protocol")
+    def review_to_protocol(review_id: str):
+        if get_review_repo is None:
+            return jsonify({"ok": False, "error": "review repository not configured"}), 501
+        review = get_review_repo().get(review_id)
+        if review is None:
+            return jsonify({"ok": False, "error": "review not found"}), 404
+        from services.protocols.from_review import build_protocol_payload
+
+        payload = build_protocol_payload(review)
+        if not payload["protocol"]["steps"]:
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "error": "未找到方法类句子：该综述可能没有实验方法描述，无法生成方案草稿",
+                    }
+                ),
+                400,
+            )
+        result = get_service().import_payload(payload)
+        return jsonify({"ok": True, **result, "draft": True})
 
     return bp

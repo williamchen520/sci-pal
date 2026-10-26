@@ -293,9 +293,19 @@ def get_protocol_service():
     return _protocol_service
 
 
-# B4e: protocols.io P1（导入 / 列表 / 详情）
+# B4e: protocols.io P1（导入 / 列表 / 详情 / 综述转草稿）
+def get_review_repository():
+    from services.review.review_repository import ReviewRepository
+
+    return ReviewRepository(DB_PATH)
+
+
 app.register_blueprint(
-    build_protocols_blueprint(get_service=get_protocol_service, log=app.logger)
+    build_protocols_blueprint(
+        get_service=get_protocol_service,
+        log=app.logger,
+        get_review_repo=get_review_repository,
+    )
 )
 
 
