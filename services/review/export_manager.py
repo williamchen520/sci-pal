@@ -421,6 +421,7 @@ class ExportManager:
 
         self.update_task_progress(task_id, 10, "正在生成 Word 文档...")
         document = Document()
+        self._docx_header_footer(document, title)
         document.add_heading(title, level=0)
         document.add_paragraph(
             f"导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -451,6 +452,24 @@ class ExportManager:
         file_name = f"{task.review_id}_{task.format}.docx"
         self.update_task_progress(task_id, 90, "正在保存文件...")
         return self.complete_task(task_id, file_name, buffer.getvalue())
+
+    @staticmethod
+    def _docx_header_footer(document, title: str) -> None:
+        """页眉放标题，页脚放「第 X 页」（PAGE 域）。"""
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+
+        section = document.sections[0]
+        header = section.header.paragraphs[0] if section.header.paragraphs else section.header.add_paragraph()
+        header.text = str(title)[:80]
+
+        footer = section.footer.paragraphs[0] if section.footer.paragraphs else section.footer.add_paragraph()
+        footer.text = "第 "
+        run = footer.add_run()
+        field = OxmlElement("w:fldSimple")
+        field.set(qn("w:instr"), "PAGE")
+        run._r.addnext(field)
+        footer.add_run(" 页")
 
     def export_to_pdf(
         self,
@@ -539,7 +558,15 @@ class ExportManager:
 
         buffer = io.BytesIO()
         document = SimpleDocTemplate(buffer, pagesize=A4, title=str(title))
-        document.build(story)
+
+        def draw_header_footer(canvas, doc):
+            canvas.saveState()
+            canvas.setFont(font, 8)
+            canvas.drawString(20 * mm, A4[1] - 12 * mm, str(title)[:90])
+            canvas.drawCentredString(A4[0] / 2, 10 * mm, f"第 {doc.page} 页")
+            canvas.restoreState()
+
+        document.build(story, onFirstPage=draw_header_footer, onLaterPages=draw_header_footer)
         file_name = f"{task.review_id}_{task.format}.pdf"
         self.update_task_progress(task_id, 90, "正在保存文件...")
         return self.complete_task(task_id, file_name, buffer.getvalue())

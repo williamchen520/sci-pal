@@ -40,6 +40,9 @@ class DocxExportTests(unittest.TestCase):
         self.assertIn("First paragraph.", text)
         self.assertIn("References", text)
 
+        header = document.sections[0].header.paragraphs[0].text
+        self.assertIn("Demo review", header)
+
 
 if __name__ == "__main__":
     unittest.main()

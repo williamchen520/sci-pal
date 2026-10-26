@@ -80,6 +80,17 @@ class TitleRecallTests(unittest.TestCase):
         ):
             self.assertEqual(_title_recall_limits(), (10, 5))
 
+    def test_default_limits(self) -> None:
+        import os
+        from unittest.mock import patch
+
+        from services.review.review_generator import _title_recall_limits
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("SCIPAL_TITLE_RECALL_LIMIT", None)
+            os.environ.pop("SCIPAL_TITLE_RECALL_MAX", None)
+            self.assertEqual(_title_recall_limits(), (10, 8))
+
 
 class AbstractRecallTests(unittest.TestCase):
     def setUp(self) -> None:

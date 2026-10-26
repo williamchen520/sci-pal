@@ -2032,8 +2032,8 @@ def _title_recall_limits() -> tuple[int, int]:
     """(title-match candidates, extra papers per section), env-tunable."""
     import os
 
-    limit = max(1, min(int(os.environ.get("SCIPAL_TITLE_RECALL_LIMIT", "8")), 20))
-    max_add = max(0, min(int(os.environ.get("SCIPAL_TITLE_RECALL_MAX", "6")), 10))
+    limit = max(1, min(int(os.environ.get("SCIPAL_TITLE_RECALL_LIMIT", "10")), 20))
+    max_add = max(0, min(int(os.environ.get("SCIPAL_TITLE_RECALL_MAX", "8")), 12))
     return limit, max_add
 
 
