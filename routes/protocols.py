@@ -11,6 +11,7 @@ def build_protocols_blueprint(
     *,
     get_service: Callable[[], Any],
     log: Any,
+    get_review_repo: Callable[[], Any] | None = None,
 ) -> Blueprint:
     bp = Blueprint("protocols", __name__, url_prefix="/api")
 
@@ -108,5 +109,79 @@ def build_protocols_blueprint(
         if not get_service().delete_run(run_id):
             return jsonify({"ok": False, "error": "run not found"}), 404
         return jsonify({"ok": True})
+
+    # -------------------------------------------------------- attachments
+    @bp.post("/experiments/<run_id>/attachments")
+    def upload_attachment(run_id: str):
+        upload = request.files.get("file")
+        if upload is None:
+            return jsonify({"ok": False, "error": "file is required"}), 400
+        try:
+            record = get_service().add_attachment(
+                run_id,
+                upload.filename or "file",
+                upload.mimetype or "application/octet-stream",
+                upload.read(),
+            )
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        return jsonify({"ok": True, "file": record})
+
+    @bp.get("/experiments/<run_id>/attachments")
+    def list_attachments(run_id: str):
+        rows = get_service().list_attachments(run_id)
+        return jsonify({"ok": True, "count": len(rows), "files": rows})
+
+    @bp.get("/experiments/<run_id>/attachments/<file_id>")
+    def download_attachment(run_id: str, file_id: str):
+        path = get_service().attachment_path(run_id, file_id)
+        if path is None:
+            return jsonify({"ok": False, "error": "file not found"}), 404
+        from flask import send_file
+
+        return send_file(path, as_attachment=True, download_name=path.name)
+
+    @bp.delete("/experiments/<run_id>/attachments/<file_id>")
+    def delete_attachment(run_id: str, file_id: str):
+        if not get_service().delete_attachment(run_id, file_id):
+            return jsonify({"ok": False, "error": "file not found"}), 404
+        return jsonify({"ok": True})
+
+    @bp.get("/protocols/<protocol_id>/export")
+    def export_protocol(protocol_id: str):
+        content = get_service().export_markdown(protocol_id)
+        if content is None:
+            return jsonify({"ok": False, "error": "protocol not found"}), 404
+        from flask import Response
+
+        filename = f"protocol_{protocol_id}.md"
+        return Response(
+            content,
+            mimetype="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    @bp.post("/reviews/<review_id>/to-protocol")
+    def review_to_protocol(review_id: str):
+        if get_review_repo is None:
+            return jsonify({"ok": False, "error": "review repository not configured"}), 501
+        review = get_review_repo().get(review_id)
+        if review is None:
+            return jsonify({"ok": False, "error": "review not found"}), 404
+        from services.protocols.from_review import build_protocol_payload
+
+        payload = build_protocol_payload(review)
+        if not payload["protocol"]["steps"]:
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "error": "未找到方法类句子：该综述可能没有实验方法描述，无法生成方案草稿",
+                    }
+                ),
+                400,
+            )
+        result = get_service().import_payload(payload)
+        return jsonify({"ok": True, **result, "draft": True})
 
     return bp

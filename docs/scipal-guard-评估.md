@@ -18,7 +18,7 @@
 
 1. **实体校验可靠**：真基因落到 HGNC/MeSH 标准 ID（TLR4 → HGNC:11850、NLRP3 → HGNC:16400、EGFR → HGNC:3236、STAT3 → HGNC:11364）。
 2. **方法类不误报**：CRISPR 这类词若在正文出现过，落 `corpus` 而不是 `unknown`，符合“方法不判”的设计。
-3. **block 阈值**：正常综述 unknown 通常是 0；编造比例 50% 的文本会被 `SCIPAL_GUARD_MAX_UNKNOWN=0.05` 拦下。默认 `warn` 合理，`block` 适合终稿验收。
+3. **block 阈值**：正常综述 unknown 通常是 0；编造比例 50% 的文本会被 `SCIPAL_GUARD_MAX_UNKNOWN=0.05` 拦下。**默认已是 `block`**（2026-10-26 起），需要放宽时显式设 `SCIPAL_GUARD_MODE=warn`。
 
 ## 已知边界
 
@@ -29,6 +29,6 @@
 
 ## 建议
 
-- 默认 `SCIPAL_GUARD_MODE=warn`；
-- 终稿验收或对外发布前用 `block`（阈值 5%）跑一遍；
+- 默认 `SCIPAL_GUARD_MODE=block`（阈值 5%）：unknown 超限的综述不会进入 store/export；
+- 只想告警时设 `SCIPAL_GUARD_MODE=warn`，完全关闭设 `off`；
 - 若出现误报，把词加入 `services/quality/lexicon.py` 的 `BROAD_TERMS` 或 `COMMON_WORDS`，而不是放宽阈值。

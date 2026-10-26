@@ -55,6 +55,19 @@ SCHEMA = (
     """,
     "CREATE INDEX IF NOT EXISTS idx_experiment_runs_protocol "
     "ON experiment_runs (protocol_id, run_date DESC)",
+    """
+    CREATE TABLE IF NOT EXISTS experiment_run_files (
+        file_id      TEXT PRIMARY KEY,
+        run_id       TEXT NOT NULL,
+        filename     TEXT,
+        stored_name  TEXT NOT NULL,
+        content_type TEXT,
+        size         INTEGER,
+        uploaded_at  TEXT NOT NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_experiment_run_files_run "
+    "ON experiment_run_files (run_id, uploaded_at)",
 )
 
 RUN_STATUSES = ("planned", "running", "completed", "failed")
@@ -145,9 +158,17 @@ def _reagents(step: Mapping) -> list[str]:
 
 
 class ProtocolService:
-    def __init__(self, db_path: str | Path, client: Any | None = None) -> None:
+    def __init__(
+        self,
+        db_path: str | Path,
+        client: Any | None = None,
+        storage_root: str | Path | None = None,
+    ) -> None:
         self.db_path = Path(db_path)
         self.client = client
+        self.storage_root = (
+            Path(storage_root) if storage_root else self.db_path.parent / "experiments"
+        )
 
     def ensure_schema(self) -> None:
         with self._session() as conn:
@@ -400,6 +421,134 @@ class ProtocolService:
         self.ensure_schema()
         with self._session() as conn:
             cursor = conn.execute("DELETE FROM experiment_runs WHERE run_id = ?", (run_id,))
+        return cursor.rowcount > 0
+
+    def export_markdown(self, protocol_id: str) -> str | None:
+        """Render one protocol (steps + runs) as a Markdown lab sheet."""
+        record = self.get(protocol_id)
+        if record is None:
+            return None
+        lines = [f"# {record.get('title') or protocol_id}", ""]
+        meta = []
+        if record.get("doi"):
+            meta.append(f"DOI: {record['doi']}")
+        if record.get("version"):
+            meta.append(f"版本: {record['version']}")
+        if record.get("license"):
+            meta.append(f"许可: {record['license']}")
+        if record.get("url"):
+            meta.append(f"来源: {record['url']}")
+        if meta:
+            lines.extend([" · ".join(meta), ""])
+        lines.extend(["## 步骤", ""])
+        steps = record.get("steps") or []
+        if not steps:
+            lines.extend(["（该协议没有解析出步骤）", ""])
+        for step in steps:
+            lines.append(f"### {step['ordinal']}. {step.get('title') or '(未命名步骤)'}")
+            if step.get("duration"):
+                lines.append(f"- 时长：{step['duration']}")
+            if step.get("reagents"):
+                lines.append(f"- 试剂：{'、'.join(step['reagents'])}")
+            if step.get("instructions"):
+                lines.extend(["", step["instructions"]])
+            lines.append("")
+        runs = self.list_runs(protocol_id, limit=200)
+        lines.extend(["## 实验记录", ""])
+        if not runs:
+            lines.append("（还没有实验记录）")
+        else:
+            lines.append("| 日期 | 标题 | 操作人 | 状态 | 步骤进度 | 结果 |")
+            lines.append("|---|---|---|---|---|---|")
+            for run in runs:
+                done = len(run.get("done_steps") or [])
+                lines.append(
+                    f"| {run.get('run_date') or ''} | {run.get('title') or ''} | "
+                    f"{run.get('operator') or ''} | {run.get('status') or ''} | "
+                    f"{done}/{len(steps)} | {(run.get('result') or '').replace('|', '/')} |"
+                )
+        lines.append("")
+        return "\n".join(lines)
+
+    # ---------------------------------------------------------- attachments
+    MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
+
+    def add_attachment(
+        self, run_id: str, filename: str, content_type: str, data: bytes
+    ) -> dict[str, Any]:
+        import re as re_lib
+        import uuid
+
+        self.ensure_schema()
+        with self._session() as conn:
+            exists = conn.execute(
+                "SELECT 1 FROM experiment_runs WHERE run_id = ?", (run_id,)
+            ).fetchone()
+        if not exists:
+            raise ValueError("run not found")
+        if len(data) > self.MAX_ATTACHMENT_BYTES:
+            raise ValueError("file too large (max 20 MB)")
+        safe = re_lib.sub(r"[^A-Za-z0-9._-]+", "_", Path(str(filename or "file")).name)[:120]
+        safe = safe or "file"
+        file_id = "file_" + uuid.uuid4().hex[:12]
+        folder = self.storage_root / run_id
+        folder.mkdir(parents=True, exist_ok=True)
+        stored_name = f"{file_id}_{safe}"
+        (folder / stored_name).write_bytes(data)
+        now = _now()
+        with self._session() as conn:
+            conn.execute(
+                """
+                INSERT INTO experiment_run_files
+                (file_id, run_id, filename, stored_name, content_type, size, uploaded_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (file_id, run_id, safe, stored_name, _text(content_type), len(data), now),
+            )
+        return {
+            "file_id": file_id,
+            "run_id": run_id,
+            "filename": safe,
+            "content_type": _text(content_type),
+            "size": len(data),
+            "uploaded_at": now,
+        }
+
+    def list_attachments(self, run_id: str) -> list[dict[str, Any]]:
+        self.ensure_schema()
+        with self._session() as conn:
+            rows = conn.execute(
+                "SELECT * FROM experiment_run_files WHERE run_id = ? ORDER BY uploaded_at",
+                (run_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def attachment_path(self, run_id: str, file_id: str) -> Path | None:
+        self.ensure_schema()
+        with self._session() as conn:
+            row = conn.execute(
+                "SELECT stored_name FROM experiment_run_files WHERE run_id = ? AND file_id = ?",
+                (run_id, file_id),
+            ).fetchone()
+        if row is None:
+            return None
+        path = self.storage_root / run_id / row["stored_name"]
+        return path if path.exists() else None
+
+    def delete_attachment(self, run_id: str, file_id: str) -> bool:
+        path = self.attachment_path(run_id, file_id)
+        self.ensure_schema()
+        with self._session() as conn:
+            cursor = conn.execute(
+                "DELETE FROM experiment_run_files WHERE run_id = ? AND file_id = ?",
+                (run_id, file_id),
+            )
+        if path is not None:
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                # Windows: file may still be held by a download response
+                pass
         return cursor.rowcount > 0
 
     def recent_runs(self, limit: int = 20) -> list[dict[str, Any]]:

@@ -101,6 +101,7 @@ async function loadDetail(protocolId) {
                 ${escapeHtml(protocol.doi || '')}${protocol.version ? ` · v${escapeHtml(protocol.version)}` : ''}
                 ${protocol.license ? ` · ${escapeHtml(protocol.license)}` : ''}
                 · ${steps.length} 步 ${link ? ` · ${link}` : ''}
+                · <a href="/api/protocols/${encodeURIComponent(protocol.protocol_id)}/export">导出 Markdown</a>
             </div>
             ${steps.map((step) => `
                 <div class="step">
@@ -166,11 +167,16 @@ async function loadRuns(protocolId) {
                 </summary>
                 ${run.result ? `<div class="hint">结果：${escapeHtml(run.result)}</div>` : ''}
                 <div class="run-steps">${checklist}</div>
+                <div class="run-files" id="files_${escapeHtml(run.run_id)}"></div>
+                <label class="hint">附件
+                    <input type="file" data-run="${escapeHtml(run.run_id)}" onchange="uploadAttachment(this)">
+                </label>
             </details>`;
         }).join('');
         container.querySelectorAll('.run-step input').forEach((box) => {
             box.addEventListener('change', () => toggleStep(protocolId, box.dataset.run));
         });
+        body.runs.forEach((run) => loadAttachments(run.run_id));
     } catch (err) {
         container.innerHTML = `<div class="hint bad">加载失败：${escapeHtml(err.message)}</div>`;
     }
@@ -192,6 +198,60 @@ async function toggleStep(protocolId, runId) {
         await loadRuns(protocolId);
     } catch (err) {
         setStatus(`更新进度失败：${err.message}`, 'bad');
+    }
+}
+
+async function loadAttachments(runId) {
+    const box = document.getElementById(`files_${runId}`);
+    if (!box) return;
+    try {
+        const resp = await fetch(`/api/experiments/${encodeURIComponent(runId)}/attachments`);
+        const body = await resp.json();
+        if (!resp.ok || !body.ok) return;
+        box.innerHTML = body.files.map((file) => {
+            const sizeKb = Math.max(1, Math.round((file.size || 0) / 1024));
+            return `<span class="file-item">
+                <a href="/api/experiments/${encodeURIComponent(runId)}/attachments/${encodeURIComponent(file.file_id)}">${escapeHtml(file.filename)}</a>
+                <span class="hint">${sizeKb} KB</span>
+                <button class="link" onclick="deleteAttachment('${escapeHtml(runId)}','${escapeHtml(file.file_id)}')">删除</button>
+            </span>`;
+        }).join('') || '<span class="hint">暂无附件</span>';
+    } catch (err) {
+        box.innerHTML = `<span class="hint bad">附件加载失败：${escapeHtml(err.message)}</span>`;
+    }
+}
+
+async function uploadAttachment(input) {
+    const runId = input.dataset.run;
+    const file = input.files[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append('file', file);
+    try {
+        const resp = await fetch(`/api/experiments/${encodeURIComponent(runId)}/attachments`, {
+            method: 'POST',
+            body: form,
+        });
+        const body = await resp.json();
+        if (!resp.ok || !body.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+        input.value = '';
+        await loadAttachments(runId);
+    } catch (err) {
+        setStatus(`附件上传失败：${err.message}`, 'bad');
+    }
+}
+
+async function deleteAttachment(runId, fileId) {
+    try {
+        const resp = await fetch(
+            `/api/experiments/${encodeURIComponent(runId)}/attachments/${encodeURIComponent(fileId)}`,
+            { method: 'DELETE' }
+        );
+        const body = await resp.json();
+        if (!resp.ok || !body.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+        await loadAttachments(runId);
+    } catch (err) {
+        setStatus(`附件删除失败：${err.message}`, 'bad');
     }
 }
 

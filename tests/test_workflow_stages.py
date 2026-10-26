@@ -372,6 +372,9 @@ class VerifyStageTests(unittest.TestCase):
         self.assertEqual(result.errors[0]["kind"], "quality")
 
     def test_guard_warn_mode_keeps_stage_ok(self) -> None:
+        import os
+        from unittest.mock import patch
+
         self.write_review({"topic": "demo", "markdown": "text", "sentences": [], "evidence_cards": {}})
 
         def checker(review, ctx):
@@ -380,10 +383,46 @@ class VerifyStageTests(unittest.TestCase):
         def guard(text):
             return {"unknown": 2, "unknown_ratio": 0.2, "counts": {"unknown": 2}, "issues": []}
 
-        result = build_verify_stage(checker, guard)(context(self.dir, self.spec()))
+        with patch.dict(os.environ, {"SCIPAL_GUARD_MODE": "warn"}):
+            result = build_verify_stage(checker, guard)(context(self.dir, self.spec()))
         self.assertEqual(result.status, "ok")
         record = json.loads((self.dir / "verify.json").read_text(encoding="utf-8"))
         self.assertEqual(record["vocabulary"]["unknown_ratio"], 0.2)
+
+    def test_default_mode_blocks_high_unknown(self) -> None:
+        import os
+        from unittest.mock import patch
+
+        self.write_review({"topic": "demo", "markdown": "text", "sentences": [], "evidence_cards": {}})
+
+        def checker(review, ctx):
+            return {"stats": {"total_sentences": 1, "verified": 1, "pass_rate": 1.0}}
+
+        def guard(text):
+            return {"unknown": 2, "unknown_ratio": 0.2, "counts": {"unknown": 2}, "issues": []}
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("SCIPAL_GUARD_MODE", None)
+            result = build_verify_stage(checker, guard)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.errors[0]["kind"], "quality")
+
+    def test_default_mode_allows_clean_review(self) -> None:
+        import os
+        from unittest.mock import patch
+
+        self.write_review({"topic": "demo", "markdown": "text", "sentences": [], "evidence_cards": {}})
+
+        def checker(review, ctx):
+            return {"stats": {"total_sentences": 1, "verified": 1, "pass_rate": 1.0}}
+
+        def guard(text):
+            return {"unknown": 0, "unknown_ratio": 0.0, "counts": {"known_curated": 5}, "issues": []}
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("SCIPAL_GUARD_MODE", None)
+            result = build_verify_stage(checker, guard)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok")
 
     def test_checker_error_is_reported(self) -> None:
         self.write_review({"topic": "demo"})

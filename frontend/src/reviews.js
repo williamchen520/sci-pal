@@ -111,6 +111,10 @@ function renderDetail(review) {
             ${review.run_id ? ` · run ${escapeHtml(review.run_id)}` : ''}
         </div>
         ${guardBadge}
+        <div class="actions">
+            <button onclick="createProtocolDraft('${escapeHtml(review.review_id)}')">🧪 生成实验方案草稿</button>
+            <span id="draftStatus" class="meta"></span>
+        </div>
         <div class="markdown">${renderMarkdown(stripDuplicateTitle(review.markdown, review.topic))}</div>
         ${references.length ? `
             <div class="refs">
@@ -129,6 +133,22 @@ function renderDetail(review) {
                 </ol>
             </div>` : ''}
     `;
+}
+
+async function createProtocolDraft(reviewId) {
+    const status = document.getElementById('draftStatus');
+    if (!status) return;
+    status.textContent = '生成中…';
+    try {
+        const resp = await fetch(`/api/reviews/${encodeURIComponent(reviewId)}/to-protocol`, {
+            method: 'POST',
+        });
+        const body = await resp.json();
+        if (!resp.ok || !body.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+        status.innerHTML = `已生成草稿 <a href="/protocols.html">${escapeHtml(body.protocol_id)}</a>（${body.steps} 步）`;
+    } catch (err) {
+        status.textContent = `生成失败：${err.message}`;
+    }
 }
 
 async function loadReview(reviewId) {
