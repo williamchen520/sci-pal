@@ -71,3 +71,8 @@ documents/**/*.png
 qwen.txt
 #推送安全配置文件
 .codebuddy/
+
+# 临时测试脚本与配置备份（2026-10 清理）
+_test_*.py
+tests/backups/
+
