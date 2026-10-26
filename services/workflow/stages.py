@@ -15,6 +15,7 @@ time with their own tests.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 from datetime import datetime, timezone
@@ -168,6 +169,27 @@ def build_verify_stage(
                 payload["vocabulary"] = {"error": str(exc)[:200]}
 
         write_artifact(context, "verify.json", payload)
+
+        mode = os.environ.get("SCIPAL_GUARD_MODE", "warn").strip().lower()
+        if mode == "block":
+            vocabulary = payload.get("vocabulary") or {}
+            limit = float(os.environ.get("SCIPAL_GUARD_MAX_UNKNOWN", "0.05"))
+            ratio = float(vocabulary.get("unknown_ratio") or 0.0)
+            if ratio > limit:
+                return StageResult(
+                    status="failed",
+                    artifacts=["verify.json"],
+                    errors=[
+                        {
+                            "kind": "quality",
+                            "message": (
+                                f"vocabulary guard blocked: unknown_ratio={ratio:.2%} "
+                                f"> {limit:.0%}"
+                            ),
+                            "retryable": False,
+                        }
+                    ],
+                )
         stats = payload.get("stats") or {}
         metrics = {
             key: stats.get(key)
