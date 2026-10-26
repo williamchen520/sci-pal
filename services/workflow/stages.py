@@ -170,7 +170,10 @@ def build_verify_stage(
 
         write_artifact(context, "verify.json", payload)
 
-        mode = os.environ.get("SCIPAL_GUARD_MODE", "warn").strip().lower()
+        # default is now block: a review whose entity vocabulary is >5% unknown
+        # is not allowed to reach store/export. Set SCIPAL_GUARD_MODE=warn to
+        # downgrade it to a warning.
+        mode = os.environ.get("SCIPAL_GUARD_MODE", "block").strip().lower()
         if mode == "block":
             vocabulary = payload.get("vocabulary") or {}
             limit = float(os.environ.get("SCIPAL_GUARD_MAX_UNKNOWN", "0.05"))
