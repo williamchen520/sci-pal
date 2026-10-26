@@ -72,6 +72,33 @@ class ProtocolServiceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.service.import_protocol("px_test_001")
 
+    def test_html_step_is_stripped_and_zero_duration_dropped(self) -> None:
+        payload = {
+            "protocol": {
+                "id": "px_html",
+                "title": "HTML protocol",
+                "steps": [
+                    {"id": "a", "step": "<p>Wash <b>3x</b> with PBS.</p>", "duration": "0"},
+                ],
+            }
+        }
+        self.service.import_payload(payload)
+        step = self.service.get("px_html")["steps"][0]
+        self.assertEqual(step["instructions"], "Wash 3x with PBS.")
+        self.assertEqual(step["duration"], "")
+
+    def test_prefixed_protocol_id_is_normalized(self) -> None:
+        captured = {}
+
+        class FakeClient:
+            def fetch_protocol(self, protocol_id):
+                captured["id"] = protocol_id
+                return {"protocol": {"id": protocol_id, "title": "t", "steps": []}}
+
+        service = ProtocolService(Path(self.tmp.name) / "p2.db", client=FakeClient())
+        service.import_protocol("protocols_io_325000")
+        self.assertEqual(captured["id"], "325000")
+
 
 class FakeService:
     def __init__(self, service: ProtocolService) -> None:
