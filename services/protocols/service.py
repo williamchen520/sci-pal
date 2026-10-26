@@ -472,6 +472,7 @@ class ProtocolService:
 
     # ---------------------------------------------------------- attachments
     MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
+    MAX_RUN_ATTACHMENT_BYTES = 100 * 1024 * 1024
 
     def add_attachment(
         self, run_id: str, filename: str, content_type: str, data: bytes
@@ -488,6 +489,13 @@ class ProtocolService:
             raise ValueError("run not found")
         if len(data) > self.MAX_ATTACHMENT_BYTES:
             raise ValueError("file too large (max 20 MB)")
+        with self._session() as conn:
+            used = conn.execute(
+                "SELECT COALESCE(SUM(size), 0) FROM experiment_run_files WHERE run_id = ?",
+                (run_id,),
+            ).fetchone()[0]
+        if used + len(data) > self.MAX_RUN_ATTACHMENT_BYTES:
+            raise ValueError("run attachment quota exceeded (max 100 MB)")
         safe = re_lib.sub(r"[^A-Za-z0-9._-]+", "_", Path(str(filename or "file")).name)[:120]
         safe = safe or "file"
         file_id = "file_" + uuid.uuid4().hex[:12]

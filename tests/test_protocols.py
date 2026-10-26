@@ -99,6 +99,16 @@ class ProtocolServiceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.service.add_attachment(run["run_id"], "big.bin", "application/octet-stream", b"12345")
 
+    def test_attachment_run_quota(self) -> None:
+        self.service.import_payload(FIXTURE)
+        run = self.service.add_run("px_test_001", title="Run")
+        original = self.service.MAX_RUN_ATTACHMENT_BYTES
+        self.service.MAX_RUN_ATTACHMENT_BYTES = 6
+        self.addCleanup(setattr, self.service, "MAX_RUN_ATTACHMENT_BYTES", original)
+        self.service.add_attachment(run["run_id"], "a.txt", "text/plain", b"1234")
+        with self.assertRaises(ValueError):
+            self.service.add_attachment(run["run_id"], "b.txt", "text/plain", b"123")
+
     def test_html_step_is_stripped_and_zero_duration_dropped(self) -> None:
         payload = {
             "protocol": {

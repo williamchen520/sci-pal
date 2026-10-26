@@ -210,8 +210,13 @@ async function loadAttachments(runId) {
         if (!resp.ok || !body.ok) return;
         box.innerHTML = body.files.map((file) => {
             const sizeKb = Math.max(1, Math.round((file.size || 0) / 1024));
+            const url = `/api/experiments/${encodeURIComponent(runId)}/attachments/${encodeURIComponent(file.file_id)}`;
+            const preview = String(file.content_type || '').startsWith('image/')
+                ? `<a href="${url}" target="_blank" rel="noreferrer"><img class="thumb" src="${url}" alt="${escapeHtml(file.filename)}" loading="lazy"></a>`
+                : '';
             return `<span class="file-item">
-                <a href="/api/experiments/${encodeURIComponent(runId)}/attachments/${encodeURIComponent(file.file_id)}">${escapeHtml(file.filename)}</a>
+                ${preview}
+                <a href="${url}">${escapeHtml(file.filename)}</a>
                 <span class="hint">${sizeKb} KB</span>
                 <button class="link" onclick="deleteAttachment('${escapeHtml(runId)}','${escapeHtml(file.file_id)}')">删除</button>
             </span>`;
