@@ -262,10 +262,25 @@ def _default_retrieve(
     }
 
 
-def _build_retriever() -> Any:
-    from services.search.unified_retriever import UnifiedRetriever
+_RETRIEVER: Any | None = None
 
-    return UnifiedRetriever(rerank=True, routing=True, expand=True, graph_expand=True)
+
+def _build_retriever() -> Any:
+    """Build once and reuse: a resident worker should not reload models per run."""
+    global _RETRIEVER
+    if _RETRIEVER is None:
+        from services.search.unified_retriever import UnifiedRetriever
+
+        _RETRIEVER = UnifiedRetriever(
+            rerank=True, routing=True, expand=True, graph_expand=True
+        )
+    return _RETRIEVER
+
+
+def reset_retriever_cache() -> None:
+    """Drop the cached retriever (tests / config changes)."""
+    global _RETRIEVER
+    _RETRIEVER = None
 
 
 def _default_draft(
