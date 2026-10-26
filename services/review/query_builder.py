@@ -98,3 +98,30 @@ def _unique(items: Sequence[str]) -> list[str]:
             seen.add(key)
             ordered.append(text)
     return ordered
+
+
+def count_term_hits(text: str, terms: Sequence[str]) -> int:
+    """How many distinct query terms appear in ``text`` (case-insensitive)."""
+    haystack = str(text or "").lower()
+    return sum(1 for term in terms if term and term.lower() in haystack)
+
+
+def is_paper_relevant(
+    text: str,
+    terms: Sequence[str],
+    *,
+    title: str | None = None,
+    min_hits: int | None = None,
+) -> bool:
+    """Judge whether a paper is on-topic.
+
+    With ``title`` provided, the paper must mention at least one query term in
+    its title (text-body mentions alone are too weak: generic reviews often
+    name-drop the topic in passing).
+    """
+    if not terms:
+        return True
+    if title is not None and count_term_hits(title, terms) == 0:
+        return False
+    required = min_hits if min_hits is not None else (1 if len(terms) <= 1 else 2)
+    return count_term_hits(f"{title or ''} {text}", terms) >= required
