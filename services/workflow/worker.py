@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
@@ -114,7 +115,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--queue-dir", default=str(DEFAULT_QUEUE))
     parser.add_argument("--once", action="store_true", help="process the queue once and exit")
     parser.add_argument("--interval", type=float, default=5.0, help="idle poll interval (seconds)")
+    parser.add_argument(
+        "--log-file",
+        default=None,
+        help="append stdout/stderr to this file (used by the scheduled task)",
+    )
     args = parser.parse_args(list(argv) if argv is not None else None)
+
+    if args.log_file:
+        log_path = Path(args.log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        handle = open(log_path, "a", encoding="utf-8", buffering=1)
+        sys.stdout = handle
+        sys.stderr = handle
 
     print(f"worker watching {args.queue_dir}")
     while True:

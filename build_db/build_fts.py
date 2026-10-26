@@ -71,6 +71,38 @@ def rebuild_paragraphs_triggers(cursor) -> None:
         cursor.execute(ddl)
 
 
+PAPERS_TRIGGER_NAMES = ("papers_ai", "papers_ad", "papers_au")
+
+PAPERS_TRIGGER_DDL = (
+    """
+CREATE TRIGGER papers_ai AFTER INSERT ON papers BEGIN
+  INSERT INTO papers_fts (paper_id, title, authors, journal)
+  VALUES (new.paper_id, new.title, new.authors, new.journal);
+END
+""",
+    """
+CREATE TRIGGER papers_ad AFTER DELETE ON papers BEGIN
+  DELETE FROM papers_fts WHERE paper_id = old.paper_id;
+END
+""",
+    """
+CREATE TRIGGER papers_au AFTER UPDATE ON papers BEGIN
+  DELETE FROM papers_fts WHERE paper_id = old.paper_id;
+  INSERT INTO papers_fts (paper_id, title, authors, journal)
+  VALUES (new.paper_id, new.title, new.authors, new.journal);
+END
+""",
+)
+
+
+def rebuild_papers_triggers(cursor) -> None:
+    """论文级 FTS 触发器：入库/更新/删除论文时同步 papers_fts。"""
+    for name in PAPERS_TRIGGER_NAMES:
+        cursor.execute(f"DROP TRIGGER IF EXISTS {name}")
+    for ddl in PAPERS_TRIGGER_DDL:
+        cursor.execute(ddl)
+
+
 # `INSERT INTO paragraphs_fts(...)` 的列清单里，这两个不是 FTS 表的真实列：
 #   paragraphs_fts —— FTS5 的命令列（`'delete'` 用）
 #   rowid          —— 隐式列
@@ -203,8 +235,10 @@ def build_fts(db_path: str | Path | None = None):
         INSERT INTO papers_fts (paper_id, title, authors, journal)
         VALUES (?, ?, ?, ?)
     """, [(p["paper_id"], p["title"] or "", p["authors"] or "", p["journal"] or "") for p in papers])
+    rebuild_papers_triggers(conn)
     conn.commit()
     print(f"   Indexed {len(papers)} papers")
+    print("🔧 触发器：papers_ai/ad/au 已重建（入库即进 papers_fts）")
 
     conn.close()
     print("\n✅ FTS5 index built successfully!")
