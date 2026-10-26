@@ -17,6 +17,7 @@ the batch and rollback behaviour can be tested without network or models.
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import threading
 import time
@@ -44,6 +45,8 @@ class IngestService:
         download: Callable[[str], Path | None] | None = None,
         parse: Callable[[Path], Mapping[str, Any] | None] | None = None,
         embed: Callable[[Sequence[Mapping[str, Any]]], int] | None = None,
+        embed_client: Callable[[Sequence[Mapping[str, Any]]], int] | None = None,
+        batch_timeout: float = 300.0,
         queue_dir: str | Path | None = None,
         log: Callable[[str], None] = print,
     ) -> None:
@@ -55,6 +58,8 @@ class IngestService:
         self._download = download
         self._parse = parse
         self._embed = embed
+        self._embed_client = embed_client
+        self.batch_timeout = float(batch_timeout)
         self.log = log
 
     # ---------------------------------------------------------------- submit
@@ -155,7 +160,14 @@ class IngestService:
                         written = 0
                     embedded = 0
                     try:
-                        embedded = self._embed_batch(parsed)
+                        embedded = _call_with_timeout(
+                            lambda: self._embed_batch(parsed), self.batch_timeout
+                        )
+                    except TimeoutError:
+                        for item in parsed:
+                            failures.append(
+                                {"pmc_id": item["pmc_id"], "error": "embed: timeout"}
+                            )
                     except Exception as exc:  # noqa: BLE001 - index can be rebuilt later
                         for item in parsed:
                             failures.append({"pmc_id": item["pmc_id"], "error": f"embed: {exc}"})
@@ -221,41 +233,72 @@ class IngestService:
 
     def _write_batch(self, conn: sqlite3.Connection, parsed: Sequence[Mapping[str, Any]]) -> int:
         written = 0
-        with conn:  # BEGIN ... COMMIT; any exception rolls the whole batch back
-            for item in parsed:
-                data = item["data"]
-                paper_id = _paper_id(item["pmc_id"])
-                conn.execute(
-                    """
-                    INSERT OR REPLACE INTO papers
-                    (paper_id, filename, title, abstract, authors, parse_engine)
-                    VALUES (?, ?, ?, ?, ?, 'xml')
-                    """,
-                    (
-                        paper_id,
-                        f"{item['pmc_id']}.xml",
-                        data.get("title"),
-                        data.get("abstract") or "",
-                        data.get("authors") or "",
-                    ),
-                )
-                conn.execute("DELETE FROM paragraphs WHERE paper_id = ?", (paper_id,))
-                for index, para in enumerate(data.get("paragraphs") or []):
+        # `paragraphs_ad` deletes from FTS5 with `WHERE para_id = ?`, which is a
+        # full scan per deleted row (para_id is UNINDEXED). Dropping it for the
+        # batch and deleting by a single set-based join keeps re-ingest fast.
+        has_fts = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='paragraphs_fts'"
+        ).fetchone() is not None
+        if has_fts:
+            conn.execute("DROP TRIGGER IF EXISTS paragraphs_ad")
+        try:
+            with conn:  # BEGIN ... COMMIT; any exception rolls the whole batch back
+                for item in parsed:
+                    data = item["data"]
+                    paper_id = _paper_id(item["pmc_id"])
+                    if has_fts:
+                        # REPLACE does not fire DELETE triggers by default, so the
+                        # old papers_fts row must be removed explicitly.
+                        conn.execute(
+                            "DELETE FROM papers_fts WHERE paper_id = ?", (paper_id,)
+                        )
                     conn.execute(
                         """
-                        INSERT OR REPLACE INTO paragraphs
-                        (para_id, paper_id, section_level1, text, sequence, parse_engine)
+                        INSERT OR REPLACE INTO papers
+                        (paper_id, filename, title, abstract, authors, parse_engine)
                         VALUES (?, ?, ?, ?, ?, 'xml')
                         """,
                         (
-                            f"{paper_id}_para_{index:05d}",
                             paper_id,
-                            para.get("section") or "",
-                            para.get("text") or "",
-                            para.get("sequence") or index,
+                            f"{item['pmc_id']}.xml",
+                            data.get("title"),
+                            data.get("abstract") or "",
+                            data.get("authors") or "",
                         ),
                     )
-                written += 1
+                    if has_fts:
+                        conn.execute(
+                            "DELETE FROM paragraphs_fts WHERE para_id IN "
+                            "(SELECT para_id FROM paragraphs WHERE paper_id = ?)",
+                            (paper_id,),
+                        )
+                    conn.execute("DELETE FROM paragraphs WHERE paper_id = ?", (paper_id,))
+                    for index, para in enumerate(data.get("paragraphs") or []):
+                        conn.execute(
+                            """
+                            INSERT OR REPLACE INTO paragraphs
+                            (para_id, paper_id, section_level1, text, sequence, parse_engine)
+                            VALUES (?, ?, ?, ?, ?, 'xml')
+                            """,
+                            (
+                                f"{paper_id}_para_{index:05d}",
+                                paper_id,
+                                para.get("section") or "",
+                                para.get("text") or "",
+                                para.get("sequence") or index,
+                            ),
+                        )
+                    written += 1
+        finally:
+            if has_fts:
+                conn.execute(
+                    """
+                    CREATE TRIGGER IF NOT EXISTS paragraphs_ad AFTER DELETE ON paragraphs BEGIN
+                      DELETE FROM paragraphs_fts WHERE para_id = old.para_id;
+                    END
+                    """
+                )
+                conn.commit()
         return written
 
     def _embed_batch(self, parsed: Sequence[Mapping[str, Any]]) -> int:
@@ -276,7 +319,7 @@ class IngestService:
         rows = [row for row in rows if row["text"].strip()]
         if not rows:
             return 0
-        embedder = self._embed or self._default_embed
+        embedder = self._embed_client or self._embed or self._default_embed
         return int(embedder(rows))
 
     # ----------------------------------------------------------------- real IO
@@ -303,7 +346,10 @@ class IngestService:
         model_path = Path(r"D:\models\models\BAAI--bge-base-en-v1.5")
         model = getattr(self, "_model", None)
         if model is None:
-            model = SentenceTransformer(str(model_path))
+            # Default to CPU: worker + Flask both load models, and two CUDA
+            # contexts on one GPU made ingest stall indefinitely.
+            device = os.environ.get("SCIPAL_INGEST_DEVICE", "cpu").strip() or "cpu"
+            model = SentenceTransformer(str(model_path), device=device)
             self._model = model
         client = chromadb.PersistentClient(path=str(self.chroma_path))
         collection = client.get_collection("paragraphs")
@@ -403,3 +449,27 @@ def _paper_id(pmc_id: str) -> str:
 
 def _clamp_batch(value: int) -> int:
     return max(1, min(int(value), MAX_BATCH_SIZE))
+
+
+def _call_with_timeout(func: Callable[[], Any], timeout: float) -> Any:
+    """Run ``func`` in a daemon thread; raise TimeoutError if it overruns.
+
+    A hung Chroma/embedding call cannot be cancelled, but the batch is marked
+    failed instead of blocking the whole task forever.
+    """
+    box: dict[str, Any] = {}
+
+    def target() -> None:
+        try:
+            box["value"] = func()
+        except BaseException as exc:  # noqa: BLE001 - re-raised in caller
+            box["error"] = exc
+
+    thread = threading.Thread(target=target, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    if thread.is_alive():
+        raise TimeoutError(f"batch exceeded {timeout:.0f}s")
+    if "error" in box:
+        raise box["error"]
+    return box.get("value")

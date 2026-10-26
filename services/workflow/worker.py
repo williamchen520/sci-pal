@@ -96,15 +96,54 @@ def _finish(processed: Path, job_path: Path, result: Mapping[str, Any]) -> None:
     job_path.unlink()
 
 
+class HttpEmbedder:
+    """Single-writer bridge: post paragraphs to Flask, which owns Chroma."""
+
+    def __init__(self, base_url: str | None = None) -> None:
+        import os
+
+        self.base_url = (
+            base_url or os.environ.get("SCIPAL_BASE_URL", "http://127.0.0.1:5000")
+        ).rstrip("/")
+
+    def __call__(self, rows: Sequence[Mapping[str, Any]]) -> int:
+        import urllib.request
+
+        payload = {
+            "rows": [
+                {
+                    "para_id": row["para_id"],
+                    "paper_id": row["paper_id"],
+                    "text": row["text"],
+                    "section": row.get("section", ""),
+                }
+                for row in rows
+            ]
+        }
+        request = urllib.request.Request(
+            self.base_url + "/api/embed",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=300) as response:
+            body = json.loads(response.read().decode("utf-8"))
+        return int(body.get("count") or 0)
+
+
 def run_ingest_job(task_id: str) -> str:
     """Run an ingest task inside the worker process (models reused across jobs)."""
+    import os
+
     from services.search.ingest import IngestService
 
     root = Path(__file__).resolve().parents[2]
+    local_embed = os.environ.get("SCIPAL_INGEST_EMBED", "").strip().lower() == "local"
     service = IngestService(
         db_path=root / "data" / "research.db",
         xml_dir=root / "documents_xml",
         chroma_path=root / "data" / "chroma",
+        embed_client=None if local_embed else HttpEmbedder(),
     )
     task = service.execute(task_id)
     return (task or {}).get("status", "unknown")

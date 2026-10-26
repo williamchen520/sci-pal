@@ -35,9 +35,13 @@ class FakeService:
         return True
 
 
-def make_app(service):
+def make_app(service, embed_rows=None):
     app = Flask(__name__)
-    app.register_blueprint(build_ingest_blueprint(get_service=lambda: service, log=app.logger))
+    app.register_blueprint(
+        build_ingest_blueprint(
+            get_service=lambda: service, log=app.logger, embed_rows=embed_rows
+        )
+    )
     return app
 
 
@@ -66,6 +70,24 @@ class IngestRoutesTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/ingest/ing_test/cancel").status_code, 200)
         body = self.client.get("/api/ingest/ing_test").get_json()
         self.assertEqual(body["task"]["status"], "cancelled")
+
+
+    def test_embed_bridge_writes_through_callback(self) -> None:
+        seen = []
+
+        def embed_rows(rows):
+            seen.extend(rows)
+            return len(rows)
+
+        client = make_app(self.service, embed_rows=embed_rows).test_client()
+        resp = client.post("/api/embed", json={"rows": [{"para_id": "p1", "text": "x"}]})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.get_json()["count"], 1)
+        self.assertEqual(seen[0]["para_id"], "p1")
+
+    def test_embed_disabled_returns_503(self) -> None:
+        resp = self.client.post("/api/embed", json={"rows": [{"para_id": "p1"}]})
+        self.assertEqual(resp.status_code, 503)
 
 
 if __name__ == "__main__":

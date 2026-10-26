@@ -151,6 +151,57 @@ class IngestServiceTests(unittest.TestCase):
         self.assertEqual(task["status"], "completed")
         self.assertEqual(task["imported"], 4)
 
+    def test_embed_client_is_used_instead_of_local_model(self) -> None:
+        seen = []
+
+        def embed_client(rows):
+            seen.append(len(rows))
+            return len(rows)
+
+        service = IngestService(
+            db_path=self.db,
+            xml_dir=self.root,
+            download=lambda pmc_id: self.root / f"{pmc_id}.xml",
+            parse=lambda path: {
+                "title": path.stem,
+                "abstract": "",
+                "authors": "",
+                "paragraphs": [{"section": "Intro", "text": "body", "sequence": 0}],
+            },
+            embed_client=embed_client,
+            log=lambda _: None,
+        )
+        task_id = service.start(self.ids[:2], batch_size=2)
+        task = wait_for(service, task_id)
+        self.assertEqual(task["status"], "completed")
+        self.assertTrue(seen)
+
+    def test_embed_timeout_marks_failure(self) -> None:
+        import time as _time
+
+        def slow_embed(rows):
+            _time.sleep(1.0)
+            return len(rows)
+
+        service = IngestService(
+            db_path=self.db,
+            xml_dir=self.root,
+            download=lambda pmc_id: self.root / f"{pmc_id}.xml",
+            parse=lambda path: {
+                "title": path.stem,
+                "abstract": "",
+                "authors": "",
+                "paragraphs": [{"section": "Intro", "text": "body", "sequence": 0}],
+            },
+            embed_client=slow_embed,
+            batch_timeout=0.2,
+            log=lambda _: None,
+        )
+        task_id = service.start(self.ids[:1], batch_size=1)
+        task = wait_for(service, task_id)
+        self.assertIn(task["status"], {"partial", "failed"})
+        self.assertIn("timeout", task["error"] or "")
+
     def test_unknown_task_returns_none(self) -> None:
         self.assertIsNone(self._service().status("ing_missing"))
 

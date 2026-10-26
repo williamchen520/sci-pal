@@ -10,8 +10,31 @@ from typing import Any, Callable
 from flask import Blueprint, jsonify, request
 
 
-def build_ingest_blueprint(*, get_service: Callable[[], Any], log: Any) -> Blueprint:
+def build_ingest_blueprint(
+    *,
+    get_service: Callable[[], Any],
+    log: Any,
+    embed_rows: Callable[[list[dict[str, Any]]], int] | None = None,
+) -> Blueprint:
     bp = Blueprint("ingest", __name__, url_prefix="/api")
+
+    @bp.post("/embed")
+    def embed():
+        """Single-writer bridge: the worker posts paragraphs, Flask owns Chroma."""
+        if embed_rows is None:
+            return jsonify({"ok": False, "error": "embedding disabled"}), 503
+        body = request.get_json(silent=True) or {}
+        rows = body.get("rows") or []
+        if not isinstance(rows, list) or not rows:
+            return jsonify({"ok": False, "error": "rows must be a non-empty list"}), 400
+        if len(rows) > 256:
+            return jsonify({"ok": False, "error": "too many rows (max 256)"}), 400
+        try:
+            count = embed_rows(rows)
+        except Exception as exc:  # noqa: BLE001
+            log.exception("embed failed")
+            return jsonify({"ok": False, "error": str(exc)}), 500
+        return jsonify({"ok": True, "count": count})
 
     @bp.post("/ingest")
     def start_ingest():
