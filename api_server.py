@@ -25,6 +25,7 @@ from services.review.task_manager import task_manager
 
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
 from contracts import InternalError, fail, ok
+from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
 from routes.reviews import build_reviews_blueprint
@@ -233,6 +234,22 @@ app.register_blueprint(
         embed_rows=get_embed_rows(),
     )
 )
+
+_guard = None
+
+
+def get_guard():
+    """Lazy scipal-guard (PubTator3 lexicon + corpus FTS landing)."""
+    global _guard
+    if _guard is None:
+        from services.quality.guard import FtsLanding, VocabularyGuard
+
+        _guard = VocabularyGuard(fts_lookup=FtsLanding())
+    return _guard
+
+
+# B4c: guard 实体校验（/api/guard/check、/stats、/term/<t>）
+app.register_blueprint(build_guard_blueprint(get_guard=get_guard, log=app.logger))
 
 
 def _unified_list_tasks(**kwargs):

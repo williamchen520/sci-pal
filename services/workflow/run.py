@@ -31,6 +31,7 @@ from services.workflow import (
     build_verify_stage,
     run_workflow,
 )
+from services.workflow.stages import _default_guard
 
 EXIT_OK = 0
 EXIT_FAILED = 1
@@ -68,7 +69,7 @@ def build_stages() -> dict[str, Any]:
         "retrieve": build_retrieve_stage(),
         "evidence": build_evidence_stage(),
         "draft": build_draft_stage(),
-        "verify": build_verify_stage(),
+        "verify": build_verify_stage(guard=_default_guard),
         "store": build_store_stage(),
         "export": build_export_stage(),
     }
