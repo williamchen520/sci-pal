@@ -172,29 +172,37 @@ def _log_backup_path(index: int) -> Path:
     return WATCHDOG_LOG.parent / f"{WATCHDOG_LOG.name}.{index}"
 
 
-def _rotate_if_needed() -> None:
-    """L-4: 按大小轮转（纯标准库 os.replace）。失败不影响运行，只向 stderr 提示。"""
+def _rotate_file_if_needed(path: Path, max_bytes: int = LOG_MAX_BYTES,
+                           backups: int = LOG_BACKUPS) -> bool:
+    """按大小轮转任意日志（纯标准库 os.replace），返回是否发生轮转。"""
     try:
-        if not WATCHDOG_LOG.exists() or WATCHDOG_LOG.stat().st_size < LOG_MAX_BYTES:
-            return
+        if not path.exists() or path.stat().st_size < max_bytes:
+            return False
     except OSError:
-        return
+        return False
 
     try:
-        oldest = _log_backup_path(LOG_BACKUPS)
+        oldest = path.parent / f"{path.name}.{backups}"
         if oldest.exists():
             oldest.unlink()
-        for index in range(LOG_BACKUPS - 1, 0, -1):
-            src = _log_backup_path(index)
+        for index in range(backups - 1, 0, -1):
+            src = path.parent / f"{path.name}.{index}"
             if src.exists():
-                os.replace(src, _log_backup_path(index + 1))
-        os.replace(WATCHDOG_LOG, _log_backup_path(1))
+                os.replace(src, path.parent / f"{path.name}.{index + 1}")
+        os.replace(path, path.parent / f"{path.name}.1")
+        return True
     except OSError as exc:
         print(
-            f"[WARN] 看门狗日志轮转失败（继续写原文件）：{exc}",
+            f"[WARN] 日志轮转失败（继续写原文件）：{path}：{exc}",
             file=sys.stderr,
             flush=True,
         )
+        return False
+
+
+def _rotate_if_needed() -> None:
+    """L-4: 看门狗日志按大小轮转（失败不影响运行）。"""
+    _rotate_file_if_needed(WATCHDOG_LOG)
 
 
 def log(message: str) -> None:
@@ -719,6 +727,9 @@ def launch() -> int | None:
 
     for with_breakaway in (True, False):
         try:
+            # API 日志同样按大小轮转，避免长期运行无限增长
+            if _rotate_file_if_needed(API_LOG):
+                log("API 日志已轮转（超过阈值）")
             handle = open(API_LOG, "a", encoding="utf-8")
             proc = subprocess.Popen(
                 [str(VENV_PYTHON), str(API_SCRIPT)],
