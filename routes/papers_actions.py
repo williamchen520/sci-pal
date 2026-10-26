@@ -687,6 +687,16 @@ def build_papers_actions_blueprint(
         if not page or not annot_type or not rect:
             return jsonify({"error": "ç¼ºå°‘å¿…è¦å‚æ•°: page, type, rect"}), 400
 
+        conn = sqlite3.connect(str(db_path))
+        try:
+            exists = conn.execute(
+                "SELECT 1 FROM papers WHERE paper_id = ?", (paper_id,)
+            ).fetchone()
+        finally:
+            conn.close()
+        if not exists:
+            return jsonify({"error": "paper not found"}), 404
+
         annotator = PdfAnnotator(str(db_path), str(DOCUMENTS_DIR))
 
         if action == "delete":
@@ -711,6 +721,17 @@ def build_papers_actions_blueprint(
         from services.pdf.annotator import PdfAnnotator
 
         page = request.args.get("page", type=int)
+
+        conn = sqlite3.connect(str(db_path))
+        try:
+            exists = conn.execute(
+                "SELECT 1 FROM papers WHERE paper_id = ?", (paper_id,)
+            ).fetchone()
+        finally:
+            conn.close()
+        if not exists:
+            return jsonify({"error": "paper not found"}), 404
+
         annotator = PdfAnnotator(str(db_path), str(DOCUMENTS_DIR))
         result = annotator.list_annotations(paper_id, page)
 

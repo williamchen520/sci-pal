@@ -95,6 +95,16 @@ class PapersDownloadTests(unittest.TestCase):
         response = self.client.post("/api/search/retry_download", json={"task_id": "nope"})
         self.assertIn(response.status_code, (400, 404))
 
+    def test_annotations_unknown_paper_returns_404(self) -> None:
+        self.assertEqual(self.client.get("/api/papers/nope/annotations").status_code, 404)
+
+    def test_annotate_unknown_paper_returns_404(self) -> None:
+        response = self.client.post(
+            "/api/papers/nope/annotate",
+            json={"page": 1, "type": "highlight", "rect": [0, 0, 1, 1]},
+        )
+        self.assertEqual(response.status_code, 404)
+
 
 if __name__ == "__main__":
     unittest.main()
