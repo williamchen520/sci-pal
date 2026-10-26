@@ -615,6 +615,32 @@ class ExportManager:
         file_name = f"{task_id}_references.bib"
         return self.complete_task(task_id, file_name, content)
 
+    def export_to_ris(self, task_id: str, references: list[dict]) -> Optional[ExportTask]:
+        """导出为 RIS（EndNote / Mendeley / Zotero 均可导入）。"""
+        from services.references.interchange import to_ris
+
+        task = self.get_task(task_id)
+        if not task:
+            return None
+        self.update_task_progress(task_id, 10, "正在生成 RIS...")
+        content = to_ris(references)
+        file_name = f"{task.review_id}_{task.format}.ris"
+        return self.complete_task(task_id, file_name, content)
+
+    def export_to_endnote_xml(
+        self, task_id: str, references: list[dict]
+    ) -> Optional[ExportTask]:
+        """导出为 EndNote XML。"""
+        from services.references.interchange import to_endnote_xml
+
+        task = self.get_task(task_id)
+        if not task:
+            return None
+        self.update_task_progress(task_id, 10, "正在生成 EndNote XML...")
+        content = to_endnote_xml(references)
+        file_name = f"{task.review_id}_{task.format}.xml"
+        return self.complete_task(task_id, file_name, content)
+
     def export_to_json(
         self,
         task_id: str,

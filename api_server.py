@@ -28,6 +28,7 @@ from contracts import InternalError, fail, ok
 from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
+from routes.references import build_references_blueprint
 from routes.reviews import build_reviews_blueprint
 from routes.search import build_search_blueprint
 from routes.system import build_system_blueprint
@@ -252,6 +253,23 @@ def get_guard():
 
 # B4c: guard 实体校验（/api/guard/check、/stats、/term/<t>）
 app.register_blueprint(build_guard_blueprint(get_guard=get_guard, log=app.logger))
+
+_reference_library = None
+
+
+def get_reference_library():
+    global _reference_library
+    if _reference_library is None:
+        from services.references.library import ReferenceLibrary
+
+        _reference_library = ReferenceLibrary(DB_PATH)
+    return _reference_library
+
+
+# B4d: 参考文献互通（RIS / EndNote XML 导入 + 库列表）
+app.register_blueprint(
+    build_references_blueprint(get_library=get_reference_library, log=app.logger)
+)
 
 
 def _unified_list_tasks(**kwargs):

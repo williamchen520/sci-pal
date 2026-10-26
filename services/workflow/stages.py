@@ -741,6 +741,15 @@ def _default_export(record: Mapping[str, Any], context: StageContext) -> list[st
         if bibtex_task and bibtex_task.file_path:
             artifacts.append(_relative_artifact(bibtex_task.file_path, context.run_dir))
 
+        for fmt, method in (("ris", manager.export_to_ris), ("endnote_xml", manager.export_to_endnote_xml)):
+            try:
+                task = manager.create_export(review_id, format=fmt)
+                task = method(task.task_id, references)
+                if task and task.file_path:
+                    artifacts.append(_relative_artifact(task.file_path, context.run_dir))
+            except Exception as exc:  # noqa: BLE001 - interchange formats are optional
+                context.logger.warning("%s export skipped: %s", fmt, exc)
+
     try:
         docx_task = manager.create_export(review_id, format="word")
         docx_task = manager.export_to_docx(
