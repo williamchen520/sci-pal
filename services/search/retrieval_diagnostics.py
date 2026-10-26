@@ -86,6 +86,15 @@ class RetrievalDiagnostics:
             self.stages[self._current_stage]["elapsed_ms"] = round(elapsed * 1000, 2)
             self._current_stage = None
 
+    def mark(self, name: str, elapsed_ms: float) -> None:
+        """Record timing for a phase measured outside :meth:`stage`."""
+        if not self.enabled:
+            return
+        if name not in self.stages:
+            self.stages[name] = {}
+            self.stage_order.append(name)
+        self.stages[name]["elapsed_ms"] = round(float(elapsed_ms), 2)
+
     def log(self, stage: str, key: str, value: Any):
         """Log a key-value pair for a stage."""
         if not self.enabled:

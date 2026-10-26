@@ -25,6 +25,7 @@ from services.review.task_manager import task_manager
 
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
 from contracts import InternalError, fail, ok
+from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
 from routes.reviews import build_reviews_blueprint
 from routes.search import build_search_blueprint
@@ -163,6 +164,29 @@ app.register_blueprint(
 # B4a: 综述查询（reviews 表，CLI/外部生成的综述对前端可见）
 app.register_blueprint(
     build_reviews_blueprint(db_path=DB_PATH, log=app.logger)
+)
+
+_ingest_service = None
+
+
+def get_ingest_service():
+    """Lazy: importing ingest pulls chromadb/torch only when first used."""
+    global _ingest_service
+    if _ingest_service is None:
+        from services.search.ingest import IngestService
+
+        _ingest_service = IngestService(
+            db_path=DB_PATH,
+            xml_dir=PROJECT_ROOT / "documents_xml",
+            chroma_path=PROJECT_ROOT / "data" / "chroma",
+            log=app.logger.info,
+        )
+    return _ingest_service
+
+
+# B4b: 异步“下载 + 入库 + 向量化”（只提交、立即返回 task_id）
+app.register_blueprint(
+    build_ingest_blueprint(get_service=get_ingest_service, log=app.logger)
 )
 
 

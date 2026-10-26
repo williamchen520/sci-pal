@@ -82,6 +82,7 @@ def main(argv: Sequence[str] | None = None, *, stages: Mapping[str, Any] | None 
     parser.add_argument("--resume", action="store_true", help="continue an existing run")
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--json", action="store_true", help="print the full manifest")
+    parser.add_argument("--profile", action="store_true", help="print retrieval phase timings")
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     try:
@@ -109,11 +110,28 @@ def main(argv: Sequence[str] | None = None, *, stages: Mapping[str, Any] | None 
     else:
         _print_summary(manifest, Path(args.run_dir))
 
+    if args.profile:
+        _print_profile(Path(args.run_dir))
+
     if manifest["status"] == "approval_required":
         return EXIT_APPROVAL_REQUIRED
     if manifest["status"] == "failed":
         return EXIT_FAILED
     return EXIT_OK
+
+
+def _print_profile(run_dir: Path) -> None:
+    """Print per-phase retrieval timings (written by the retrieve stage)."""
+    artifact = run_dir / "retrieve.json"
+    if not artifact.exists():
+        return
+    timings = json.loads(artifact.read_text(encoding="utf-8")).get("timings") or {}
+    if not timings:
+        print("profile: no timings recorded")
+        return
+    print("retrieve profile (ms):")
+    for key in sorted(timings, key=lambda name: str(timings[name]), reverse=True):
+        print(f"  {key:<16} {timings[key]}")
 
 
 def _print_summary(manifest: Mapping[str, Any], run_dir: Path) -> None:

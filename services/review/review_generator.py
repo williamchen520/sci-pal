@@ -28,6 +28,7 @@ from typing import Optional
 from .citation_formatter import PaperMetadata, build_metadata_from_db_row, format_citation, format_citation_list, get_missing_fields_report, get_supported_styles, metadata_to_csl_json
 from .citation_verifier import CitationVerifier
 from .evidence_extractor import EvidenceExtractor
+from .query_builder import build_section_query, is_paper_relevant
 from .section_loop import write_section_loop
 from .section_prompts import build_write_prompt
 from .llm_client import LLMClient, LLMError
@@ -2053,6 +2054,7 @@ def search_and_assign_papers(
     topic: str,
     max_papers: int = 100,
     retriever=None,
+    should_cancel=None,
 ) -> tuple[dict, list[dict]]:
     """V31.79: 按大纲内容搜索论文，然后自动分配给对应的章节和段落。
 
@@ -2106,6 +2108,11 @@ def search_and_assign_papers(
 
     # 1. 遍历每个章节，按章节关键词搜索
     for sec_idx, sec in enumerate(sections):
+        if should_cancel is not None and should_cancel():
+            from services.workflow.cancel import CancelledError
+
+            raise CancelledError(f"cancelled before section {sec_idx + 1}")
+
         sec_id = sec.get("section_id", "")
         sec_title = sec.get("title", "").strip()
 
@@ -2140,24 +2147,28 @@ def search_and_assign_papers(
                 if para_topic and para_topic not in search_keywords:
                     search_keywords.append(para_topic)
 
-        # 去重
+        # 去重 + 收窄：优先专有名词，限制在 3 个词以内（避免 inflammation 这类泛词稀释）
         search_keywords = list(dict.fromkeys(search_keywords))
-
-        # 组合成搜索查询（最多用前5个关键词）
-        query = " ".join(search_keywords[:5])
+        query = build_section_query(search_keywords, title=sec_title)
 
         print(f"\n  [{sec_idx+1}/{num_sections}] 章节: {sec_title[:40]}")
-        print(f"    搜索关键词: {search_keywords[:5]}")
+        print(f"    搜索关键词: {query.split()}")
         print(f"    搜索查询: {query[:60]}...")
 
         # 按章节关键词搜索
         try:
             result = retriever.retrieve(
                 query=query,
-                top_paragraphs=papers_per_section * 3,  # 多搜一些，后面去重
+                top_paragraphs=papers_per_section * 6,  # 多搜一些，供相关性过滤
                 top_figures=0,
             )
             paragraphs = result.get("paragraphs", [])
+            bucket = outline.setdefault("timings", {})
+            for key, value in (result.get("timings") or {}).items():
+                bucket[key] = round(float(bucket.get(key) or 0) + float(value or 0), 1)
+            bucket["sections"] = int(bucket.get("sections") or 0) + 1
+            query_terms = query.split()
+            paper_texts: dict[str, str] = {}
 
             # V31.83: 收集这个章节的论文和证据卡片（去重，按搜索排名）
             sec_paper_ids = []
@@ -2174,6 +2185,13 @@ def search_and_assign_papers(
                     }
                 if pid not in sec_paper_ids:
                     sec_paper_ids.append(pid)
+                paper_texts[pid] = (
+                    paper_texts.get(pid, "")
+                    + " "
+                    + str(p.get("paper_title", ""))
+                    + " "
+                    + str(p.get("content") or p.get("text") or "")
+                )
 
                 # V31.83: 从段落构造证据卡片，直接分配到章节
                 para_id = p.get("para_id", f"{pid}_para_{len(sec_evidence_ids)}")
@@ -2200,9 +2218,6 @@ def search_and_assign_papers(
 
                 if evidence_id not in sec_evidence_ids:
                     sec_evidence_ids.append(evidence_id)
-
-                if len(sec_paper_ids) >= papers_per_section and len(sec_evidence_ids) >= papers_per_section * 2:
-                    break
 
             # V33.17: 摘要回退 —— 无全文段落的论文，把摘要当作一条证据
             # 规则：
@@ -2248,6 +2263,13 @@ def search_and_assign_papers(
                         }
                     if target_pid not in sec_paper_ids:
                         sec_paper_ids.append(target_pid)
+                    paper_texts[target_pid] = (
+                        paper_texts.get(target_pid, "")
+                        + " "
+                        + str(a.get("title", ""))
+                        + " "
+                        + abstract_text
+                    )
 
                     para_id = f"abstract_{pmid}"
                     evidence_id = f"ev_{target_pid}_{para_id}_{evidence_seq}"
@@ -2272,6 +2294,31 @@ def search_and_assign_papers(
                     abstract_added += 1
                 if abstract_added:
                     print(f"    📄 V33.17 摘要回退：补充 {abstract_added} 条摘要证据")
+
+            # 相关性过滤：多词查询至少命中 2 个词；单词查询命中 1 个即可
+            relevant = [
+                pid
+                for pid in sec_paper_ids
+                if is_paper_relevant(paper_texts.get(pid, ""), query_terms)
+            ]
+            if relevant and len(relevant) < len(sec_paper_ids):
+                dropped = len(sec_paper_ids) - len(relevant)
+                sec_paper_ids = relevant
+                sec_evidence_ids = [
+                    eid
+                    for eid in sec_evidence_ids
+                    if all_evidence_cards.get(eid, {}).get("paper_id") in relevant
+                ]
+                print(f"    🎯 相关性过滤：保留 {len(relevant)} 篇，剔除 {dropped} 篇")
+
+            # 每章论文上限
+            if len(sec_paper_ids) > papers_per_section:
+                sec_paper_ids = sec_paper_ids[:papers_per_section]
+                sec_evidence_ids = [
+                    eid
+                    for eid in sec_evidence_ids
+                    if all_evidence_cards.get(eid, {}).get("paper_id") in sec_paper_ids
+                ]
 
             # V31.83: 直接分配论文ID和证据ID到这个章节
             sec["assigned_paper_ids"] = sec_paper_ids

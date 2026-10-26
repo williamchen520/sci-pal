@@ -247,25 +247,51 @@ def _default_retrieve(
     """Adapter over the existing review pipeline (models load on first call)."""
     from services.review.review_generator import search_and_assign_papers
 
+    from services.workflow.cancel import CancelledError, is_cancelled
+
+    should_cancel = context.services.get("should_cancel") or (
+        lambda: is_cancelled(context.run_dir)
+    )
+    if should_cancel():
+        raise CancelledError("cancelled before retrieve")
+
     retriever = context.services.get("retriever") or _build_retriever()
+    outline_payload: dict[str, Any] = {"sections": sections}
     outline, papers = search_and_assign_papers(
-        outline={"sections": sections},
+        outline=outline_payload,
         topic=topic,
         max_papers=max_papers,
         retriever=retriever,
+        should_cancel=should_cancel,
     )
     return {
         "sections": outline.get("sections", sections),
         "papers": papers,
         "evidence_cards": outline.get("evidence_cards") or [],
         "max_papers": max_papers,
+        "timings": outline.get("timings") or {},
     }
 
 
-def _build_retriever() -> Any:
-    from services.search.unified_retriever import UnifiedRetriever
+_RETRIEVER: Any | None = None
 
-    return UnifiedRetriever(rerank=True, routing=True, expand=True, graph_expand=True)
+
+def _build_retriever() -> Any:
+    """Build once and reuse: a resident worker should not reload models per run."""
+    global _RETRIEVER
+    if _RETRIEVER is None:
+        from services.search.unified_retriever import UnifiedRetriever
+
+        _RETRIEVER = UnifiedRetriever(
+            rerank=True, routing=True, expand=True, graph_expand=True, diagnostics=True
+        )
+    return _RETRIEVER
+
+
+def reset_retriever_cache() -> None:
+    """Drop the cached retriever (tests / config changes)."""
+    global _RETRIEVER
+    _RETRIEVER = None
 
 
 def _default_draft(
@@ -383,7 +409,10 @@ def _references_from_cards(
             continue
         entry = papers.setdefault(
             paper_id,
-            {"paper_id": paper_id, "title": str(card.get("paper_title") or paper_id)},
+            {
+                "paper_id": paper_id,
+                "title": _clean_title(card.get("paper_title") or paper_id),
+            },
         )
         if card.get("source_type") == "abstract":
             entry["source"] = "abstract"
@@ -394,9 +423,63 @@ def _references_from_cards(
     metadata = _paper_metadata(list(papers), context)
     for paper_id, entry in papers.items():
         for key, value in metadata.get(paper_id, {}).items():
-            if value not in (None, ""):
-                entry[key] = value
-    return list(papers.values())
+            if value in (None, ""):
+                continue
+            entry[key] = _clean_title(value) if key == "title" else value
+    return sanitize_references(list(papers.values()))
+
+
+def sanitize_references(references: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Clean common parser leaks and drop duplicate papers."""
+    cleaned: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for raw in references:
+        if not isinstance(raw, Mapping):
+            continue
+        item = dict(raw)
+        item["title"] = _clean_title(item.get("title"))
+        item["authors"] = _clean_authors(item.get("authors"), item["title"])
+        item["year"] = _clean_scalar(item.get("year"))
+        item["journal"] = _clean_scalar(item.get("journal"))
+        key = " ".join(str(item["title"]).lower().split())[:80]
+        if key and key in seen:
+            continue
+        if key:
+            seen.add(key)
+        cleaned.append(item)
+    return cleaned
+
+
+def _clean_authors(value: Any, title: str) -> str:
+    """Parsers sometimes write a heading or the whole title into ``authors``."""
+    text = re.sub(r"^[#\s]+", "", str(value or "")).strip()
+    if not text or text.lower() in {"none", "null"}:
+        return ""
+    if text.startswith("#") or len(text) > 200:
+        return ""
+    if title and " ".join(text.lower().split())[:60] == " ".join(title.lower().split())[:60]:
+        return ""
+    return text
+
+
+def _clean_scalar(value: Any) -> str:
+    text = str(value or "").strip()
+    return "" if text.lower() in {"none", "null"} else text
+
+
+def _clean_title(value: Any) -> str:
+    """Strip heading markers and collapse parser-concatenated duplicates.
+
+    Some parsed titles contain the same opening twice (e.g. ``"A B C ... A B C ..."``).
+    If the first 40 characters reappear later, cut the title at the repeat.
+    """
+    text = re.sub(r"^[#\s]+", "", str(value or "")).strip()
+    prefix = text[:40].strip().lower()
+    if len(prefix) >= 20:
+        repeat_at = text.lower().find(prefix, 40)
+        if repeat_at > 0:
+            text = text[:repeat_at].strip(" -;,:")
+    return text
 
 
 def _paper_metadata(
@@ -420,7 +503,7 @@ def _paper_metadata(
             conn.close()
     return {
         row["paper_id"]: {
-            "title": row["title"],
+            "title": _clean_title(row["title"]),
             "authors": row["authors"],
             "journal": row["journal"],
             "year": row["year"],
@@ -537,12 +620,23 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
 
     draft = _rebuild_draft(review, context)
     markdown = str(review.get("markdown") or "") or _render_markdown(draft)
+
+    # store runs after verify; the draft's own stats are "all unverified", so the
+    # verified numbers must come from verify.json.
+    verify = _read_json(context.run_dir / "verify.json") or {}
+    stats = dict(review.get("stats") or {})
+    if isinstance(verify.get("stats"), Mapping):
+        stats.update(verify["stats"])
+    if not stats:
+        stats = draft.stats()
+    warnings = list(verify.get("warnings") or review.get("warnings") or [])
+
     output = ReviewOutput(
         topic=draft.topic,
         markdown=markdown,
         references=list(review.get("references") or []),
-        stats=dict(review.get("stats") or draft.stats()),
-        warnings=list(review.get("warnings") or []),
+        stats=stats,
+        warnings=warnings,
     )
     review_id = get_review_store().store(
         output, draft, list(draft.evidence_cards.values())

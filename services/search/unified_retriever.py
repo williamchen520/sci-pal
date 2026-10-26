@@ -10,6 +10,7 @@ parent section (small-to-big). Paper hits are expanded via CITES/SIMILAR
 graph edges to find related papers vector search might miss.
 """
 from typing import Dict, List, Optional
+import time
 from services.search.hybrid_search import HybridSearch
 from services.search.reranker import Reranker
 from services.search.query_router import QueryRouter
@@ -124,19 +125,26 @@ class UnifiedRetriever:
                                                     vector_weight=vec_w, fts_weight=fts_w)
 
                 # V27.5: 实体精确检索 - 确保包含关键实体的段落一定被召回
+                _entity_started = time.time()
                 from services.search.agentic_search import extract_key_entities
+                _ner_started = time.time()
                 key_entities = extract_key_entities(query)
+                self.diagnostics.mark("entity_ner", (time.time() - _ner_started) * 1000)
                 print(f"  🎯 Key entities: {key_entities[:5]}")
 
                 # 对每个实体做一次 FTS 搜索，加到候选池里
                 entity_hits = []
+                _entity_search_ms = 0.0
                 for entity in key_entities[:3]:  # 只搜前 3 个最重要的实体
                     try:
+                        _one_started = time.time()
                         entity_results = self.searcher.fts_search(entity, top_k=10, paper_id=paper_id, filters=filters)
+                        _entity_search_ms += (time.time() - _one_started) * 1000
                         entity_hits.extend(entity_results)
                         print(f"     → Entity '{entity}': {len(entity_results)} hits")
                     except Exception as e:
                         print(f"     → Entity '{entity}': search failed ({e})")
+                self.diagnostics.mark("entity_fts_total", _entity_search_ms)
 
                 # 去重，然后加到 fused 里
                 if entity_hits:
@@ -146,6 +154,7 @@ class UnifiedRetriever:
                     print(f"  📊 Entity boost: total {len(entity_hits)} hits, +{len(new_hits)} new paragraphs added")
                 else:
                     print(f"  📊 Entity boost: no new paragraphs found")
+                self.diagnostics.mark("entity_boost", (time.time() - _entity_started) * 1000)
 
                 # V27.2: 增加 rerank_k，让 MMR 有更多候选做多样性选择
                 rerank_k = min(top_paragraphs * 4, len(fused)) if fused else top_paragraphs
@@ -186,10 +195,12 @@ class UnifiedRetriever:
 
         # 1b. Small-to-big: expand precise hits to parent section context
         parent_contexts = []
+        _parents_started = time.time()
         if self.expand and paragraphs:
             parent_contexts = self.expander.expand(
                 paragraphs, mode="section", max_parents=top_paragraphs
             )
+        self.diagnostics.mark("parent_contexts", (time.time() - _parents_started) * 1000)
 
         # 2. Figures (caption semantics)
         figures = []
@@ -224,6 +235,7 @@ class UnifiedRetriever:
 
         # 6. Abstracts (V30.0): 摘要库检索，跟全文库并列
         abstracts = []
+        _abstracts_started = time.time()
         if self.abstract_searcher and not paper_id:  # 不指定单篇论文时才搜摘要库
             try:
                 print(f"  📚 Searching abstracts database...")
@@ -232,6 +244,7 @@ class UnifiedRetriever:
             except Exception as e:
                 print(f"  ⚠️  Abstract search failed: {e}")
                 abstracts = []
+        self.diagnostics.mark("abstracts", (time.time() - _abstracts_started) * 1000)
 
         result = {
             "query": query,
@@ -257,6 +270,11 @@ class UnifiedRetriever:
                 "graph_neighbors": len(graph_neighbors),
                 "chunks": len(chunks),
             })
+            stages = result["diagnostics"].get("stages") or {}
+            result["timings"] = {
+                name: info.get("elapsed_ms") for name, info in stages.items()
+            }
+            result["timings"]["total_ms"] = result["diagnostics"].get("total_time_ms")
 
         return result
 
