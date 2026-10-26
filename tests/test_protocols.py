@@ -72,6 +72,33 @@ class ProtocolServiceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.service.import_protocol("px_test_001")
 
+    def test_attachment_roundtrip(self) -> None:
+        self.service.import_payload(FIXTURE)
+        run = self.service.add_run("px_test_001", title="Run")
+        record = self.service.add_attachment(
+            run["run_id"], "result.png", "image/png", b"png-bytes"
+        )
+        files = self.service.list_attachments(run["run_id"])
+        self.assertEqual(files[0]["filename"], "result.png")
+        path = self.service.attachment_path(run["run_id"], record["file_id"])
+        self.assertIsNotNone(path)
+        self.assertTrue(path.exists())
+        self.assertTrue(self.service.delete_attachment(run["run_id"], record["file_id"]))
+        self.assertFalse(path.exists())
+
+    def test_attachment_rejects_missing_run(self) -> None:
+        with self.assertRaises(ValueError):
+            self.service.add_attachment("run_nope", "a.txt", "text/plain", b"x")
+
+    def test_attachment_rejects_oversize(self) -> None:
+        self.service.import_payload(FIXTURE)
+        run = self.service.add_run("px_test_001", title="Run")
+        original = self.service.MAX_ATTACHMENT_BYTES
+        self.service.MAX_ATTACHMENT_BYTES = 4
+        self.addCleanup(setattr, self.service, "MAX_ATTACHMENT_BYTES", original)
+        with self.assertRaises(ValueError):
+            self.service.add_attachment(run["run_id"], "big.bin", "application/octet-stream", b"12345")
+
     def test_html_step_is_stripped_and_zero_duration_dropped(self) -> None:
         payload = {
             "protocol": {
@@ -148,6 +175,18 @@ class FakeService:
 
     def export_markdown(self, protocol_id):
         return self.service.export_markdown(protocol_id)
+
+    def add_attachment(self, run_id, filename, content_type, data):
+        return self.service.add_attachment(run_id, filename, content_type, data)
+
+    def list_attachments(self, run_id):
+        return self.service.list_attachments(run_id)
+
+    def attachment_path(self, run_id, file_id):
+        return self.service.attachment_path(run_id, file_id)
+
+    def delete_attachment(self, run_id, file_id):
+        return self.service.delete_attachment(run_id, file_id)
 
 
 class ProtocolRoutesTests(unittest.TestCase):
@@ -240,6 +279,43 @@ class ProtocolRoutesTests(unittest.TestCase):
 
     def test_export_missing_protocol_returns_404(self) -> None:
         self.assertEqual(self.client.get("/api/protocols/nope/export").status_code, 404)
+
+    def test_attachment_routes_roundtrip(self) -> None:
+        import io
+
+        self.client.post("/api/protocols/import", json={"payload": FIXTURE})
+        run = self.client.post(
+            "/api/protocols/px_test_001/runs", json={"title": "R"}
+        ).get_json()["run"]
+        uploaded = self.client.post(
+            f"/api/experiments/{run['run_id']}/attachments",
+            data={"file": (io.BytesIO(b"raw-data"), "result.txt")},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(uploaded.status_code, 200)
+        file_id = uploaded.get_json()["file"]["file_id"]
+
+        listed = self.client.get(
+            f"/api/experiments/{run['run_id']}/attachments"
+        ).get_json()
+        self.assertEqual(listed["count"], 1)
+
+        downloaded = self.client.get(
+            f"/api/experiments/{run['run_id']}/attachments/{file_id}"
+        )
+        self.assertEqual(downloaded.status_code, 200)
+        self.assertEqual(downloaded.data, b"raw-data")
+        downloaded.close()
+
+        deleted = self.client.delete(
+            f"/api/experiments/{run['run_id']}/attachments/{file_id}"
+        )
+        self.assertEqual(deleted.status_code, 200)
+        self.assertEqual(
+            self.client.get(f"/api/experiments/{run['run_id']}/attachments")
+            .get_json()["count"],
+            0,
+        )
 
 
 if __name__ == "__main__":

@@ -109,6 +109,43 @@ def build_protocols_blueprint(
             return jsonify({"ok": False, "error": "run not found"}), 404
         return jsonify({"ok": True})
 
+    # -------------------------------------------------------- attachments
+    @bp.post("/experiments/<run_id>/attachments")
+    def upload_attachment(run_id: str):
+        upload = request.files.get("file")
+        if upload is None:
+            return jsonify({"ok": False, "error": "file is required"}), 400
+        try:
+            record = get_service().add_attachment(
+                run_id,
+                upload.filename or "file",
+                upload.mimetype or "application/octet-stream",
+                upload.read(),
+            )
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        return jsonify({"ok": True, "file": record})
+
+    @bp.get("/experiments/<run_id>/attachments")
+    def list_attachments(run_id: str):
+        rows = get_service().list_attachments(run_id)
+        return jsonify({"ok": True, "count": len(rows), "files": rows})
+
+    @bp.get("/experiments/<run_id>/attachments/<file_id>")
+    def download_attachment(run_id: str, file_id: str):
+        path = get_service().attachment_path(run_id, file_id)
+        if path is None:
+            return jsonify({"ok": False, "error": "file not found"}), 404
+        from flask import send_file
+
+        return send_file(path, as_attachment=True, download_name=path.name)
+
+    @bp.delete("/experiments/<run_id>/attachments/<file_id>")
+    def delete_attachment(run_id: str, file_id: str):
+        if not get_service().delete_attachment(run_id, file_id):
+            return jsonify({"ok": False, "error": "file not found"}), 404
+        return jsonify({"ok": True})
+
     @bp.get("/protocols/<protocol_id>/export")
     def export_protocol(protocol_id: str):
         content = get_service().export_markdown(protocol_id)
