@@ -180,7 +180,11 @@ class VocabularyGuard:
         for match in _ENTITY_TOKEN.finditer(body):
             token = match.group(0)
             upper = token.upper()
-            if upper in STOP_ACRONYMS or upper in reported:
+            if (
+                upper in STOP_ACRONYMS
+                or upper in reported
+                or normalize_surface(token) in COMMON_WORDS
+            ):
                 continue
             entries = self.lexicon.preferred(token)
             if entries:
