@@ -61,6 +61,15 @@ class ReviewRepositoryTests(unittest.TestCase):
             self.repo.save(review_id=f"rev_{index}", topic="t", markdown="m")
         self.assertEqual(len(self.repo.list(limit=2)), 2)
 
+    def test_guard_is_persisted_and_returned(self) -> None:
+        guard = {"unknown": 1, "unknown_ratio": 0.02, "counts": {"unknown": 1}}
+        self.repo.save(review_id="rev_g", topic="t", markdown="m", guard=guard)
+        self.assertEqual(self.repo.get("rev_g")["guard"], guard)
+
+    def test_existing_rows_without_guard_return_none(self) -> None:
+        self.repo.save(review_id="rev_plain", topic="t", markdown="m")
+        self.assertIsNone(self.repo.get("rev_plain")["guard"])
+
 
 if __name__ == "__main__":
     unittest.main()

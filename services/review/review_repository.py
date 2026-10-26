@@ -28,6 +28,7 @@ SCHEMA = (
         stats_json      TEXT,
         references_json TEXT,
         warnings_json   TEXT,
+        guard_json      TEXT,
         created_at      TEXT NOT NULL
     )
     """,
@@ -43,6 +44,10 @@ class ReviewRepository:
         with self._session() as conn:
             for statement in SCHEMA:
                 conn.execute(statement)
+            try:
+                conn.execute("ALTER TABLE reviews ADD COLUMN guard_json TEXT")
+            except sqlite3.OperationalError:
+                pass
 
     def save(
         self,
@@ -54,6 +59,7 @@ class ReviewRepository:
         stats: Mapping[str, Any] | None = None,
         references: list[dict[str, Any]] | None = None,
         warnings: list[str] | None = None,
+        guard: Mapping[str, Any] | None = None,
         created_at: str | None = None,
     ) -> str:
         self.ensure_schema()
@@ -62,8 +68,8 @@ class ReviewRepository:
                 """
                 INSERT OR REPLACE INTO reviews
                     (review_id, run_id, topic, markdown, stats_json,
-                     references_json, warnings_json, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                     references_json, warnings_json, guard_json, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     review_id,
@@ -73,6 +79,7 @@ class ReviewRepository:
                     _dump(stats or {}),
                     _dump(references or []),
                     _dump(warnings or []),
+                    _dump(guard) if guard is not None else None,
                     created_at or _now(),
                 ),
             )
@@ -118,6 +125,7 @@ def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
         "stats": _load(row["stats_json"], {}),
         "references": _load(row["references_json"], []),
         "warnings": _load(row["warnings_json"], []),
+        "guard": _load(row["guard_json"], None),
         "created_at": row["created_at"],
     }
 

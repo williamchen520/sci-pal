@@ -684,6 +684,7 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
         stats=output.stats,
         references=output.references,
         warnings=output.warnings,
+        guard=verify.get("vocabulary") if isinstance(verify, Mapping) else None,
     )
     return {
         "review_id": review_id,
