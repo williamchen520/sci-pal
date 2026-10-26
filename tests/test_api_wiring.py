@@ -12,6 +12,7 @@ import unittest
 from pathlib import Path
 
 API = Path(__file__).resolve().parents[1] / "api_server.py"
+ROUTES_DIR = Path(__file__).resolve().parents[1] / "routes"
 
 PILOT_ROUTES = {"review_llm_status"}
 
@@ -20,8 +21,20 @@ def _tree() -> ast.Module:
     return ast.parse(API.read_text(encoding="utf-8"))
 
 
+def _all_trees() -> list[ast.Module]:
+    trees = [_tree()]
+    for path in sorted(ROUTES_DIR.glob("*.py")):
+        trees.append(ast.parse(path.read_text(encoding="utf-8")))
+    return trees
+
+
 def _functions(tree: ast.Module) -> dict[str, ast.FunctionDef]:
-    return {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+    functions: dict[str, ast.FunctionDef] = {}
+    for source in _all_trees():
+        for node in ast.walk(source):
+            if isinstance(node, ast.FunctionDef):
+                functions.setdefault(node.name, node)
+    return functions
 
 
 def _called_names(node: ast.AST) -> set[str]:
