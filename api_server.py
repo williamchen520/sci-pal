@@ -25,6 +25,7 @@ from services.review.task_manager import task_manager
 
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
 from contracts import InternalError, fail, ok
+from routes.abstracts import build_abstracts_blueprint
 from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
@@ -167,6 +168,11 @@ app.register_blueprint(
         log=app.logger,
         get_hybrid_retriever=lambda: get_hybrid_retriever(),
     )
+)
+
+# B3d: 摘要库只读路由已移入 routes/abstracts.py
+app.register_blueprint(
+    build_abstracts_blueprint(db_path=PROJECT_ROOT / "data" / "abstracts.db")
 )
 
 # B4a: 综述查询（reviews 表，CLI/外部生成的综述对前端可见）
@@ -1894,98 +1900,6 @@ def serve_pdf(paper_id):
 # ============================================================
 # V26.4: Abstract API - 根据 PMID 查询摘要
 # ============================================================
-
-@app.route("/api/abstracts/list", methods=["GET"])
-def list_abstracts():
-    """V26.5: 查询摘要库论文列表"""
-    import sqlite3
-
-    page = request.args.get('page', 1, type=int)
-    page_size = request.args.get('page_size', 20, type=int)
-    search = request.args.get('search', '', type=str)
-
-    abstract_db_path = PROJECT_ROOT / "data" / "abstracts.db"
-
-    if not abstract_db_path.exists():
-        return jsonify({"error": "摘要数据库不存在"}), 404
-
-    conn = sqlite3.connect(str(abstract_db_path))
-    conn.row_factory = sqlite3.Row
-
-    # 查询总数
-    if search:
-        count_sql = "SELECT COUNT(*) as total FROM papers WHERE title LIKE ? OR abstract LIKE ?"
-        count_row = conn.execute(count_sql, (f'%{search}%', f'%{search}%')).fetchone()
-    else:
-        count_row = conn.execute("SELECT COUNT(*) as total FROM papers").fetchone()
-    total = count_row["total"]
-
-    # 查询分页数据
-    offset = (page - 1) * page_size
-    if search:
-        list_sql = "SELECT pmid, doi, title, authors, journal, year, topic FROM papers WHERE title LIKE ? OR abstract LIKE ? ORDER BY year DESC LIMIT ? OFFSET ?"
-        rows = conn.execute(list_sql, (f'%{search}%', f'%{search}%', page_size, offset)).fetchall()
-    else:
-        list_sql = "SELECT pmid, doi, title, authors, journal, year, topic FROM papers ORDER BY year DESC LIMIT ? OFFSET ?"
-        rows = conn.execute(list_sql, (page_size, offset)).fetchall()
-
-    conn.close()
-
-    papers = []
-    for row in rows:
-        papers.append({
-            "paper_id": str(row["pmid"]),
-            "title": row["title"],
-            "authors": row["authors"],
-            "journal": row["journal"],
-            "year": row["year"],
-            "topic": row["topic"],
-            "source": "abstract",
-        })
-
-    return jsonify({
-        "papers": papers,
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "total_pages": (total + page_size - 1) // page_size,
-    })
-
-
-@app.route("/api/abstracts/<paper_id>", methods=["GET"])
-def get_abstract(paper_id):
-    """根据 PMID 查询摘要内容"""
-    import sqlite3
-    from pathlib import Path
-
-    # abstracts.db 的路径
-    abstract_db_path = PROJECT_ROOT / "data" / "abstracts.db"
-
-    if not abstract_db_path.exists():
-        return jsonify({"error": "摘要数据库不存在"}), 404
-
-    conn = sqlite3.connect(str(abstract_db_path))
-    conn.row_factory = sqlite3.Row
-    row = conn.execute(
-        "SELECT pmid, doi, title, abstract, authors, journal, year, topic FROM papers WHERE pmid = ?",
-        (paper_id,)
-    ).fetchone()
-    conn.close()
-
-    if not row:
-        return jsonify({"error": "摘要未找到"}), 404
-
-    return jsonify({
-        "pmid": row["pmid"],
-        "doi": row["doi"],
-        "title": row["title"],
-        "abstract": row["abstract"],
-        "authors": row["authors"],
-        "journal": row["journal"],
-        "year": row["year"],
-        "topic": row["topic"],
-    })
-
 
 # ============================================================
 # V25.17: Supplementary files API
