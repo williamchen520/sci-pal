@@ -193,9 +193,44 @@ def get_ingest_service():
     return _ingest_service
 
 
+def get_embed_rows():
+    """Flask owns Chroma writes: the worker posts paragraphs here to be embedded."""
+
+    def embed(rows: list[dict]) -> int:
+        import chromadb
+
+        from services.search.shared import get_shared_hybrid
+
+        hybrid = get_shared_hybrid()
+        client = chromadb.PersistentClient(path=str(PROJECT_ROOT / "data" / "chroma"))
+        collection = client.get_collection("paragraphs")
+        documents = [str(row.get("text") or "") for row in rows]
+        embeddings = hybrid.model.encode(documents, show_progress_bar=False).tolist()
+        collection.add(
+            ids=[str(row["para_id"]) for row in rows],
+            documents=documents,
+            metadatas=[
+                {
+                    "paper_id": str(row.get("paper_id") or ""),
+                    "section_l1": str(row.get("section") or ""),
+                    "section_l2": "",
+                }
+                for row in rows
+            ],
+            embeddings=embeddings,
+        )
+        return len(rows)
+
+    return embed
+
+
 # B4b: 异步“下载 + 入库 + 向量化”（只提交、立即返回 task_id）
 app.register_blueprint(
-    build_ingest_blueprint(get_service=get_ingest_service, log=app.logger)
+    build_ingest_blueprint(
+        get_service=get_ingest_service,
+        log=app.logger,
+        embed_rows=get_embed_rows(),
+    )
 )
 
 

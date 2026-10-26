@@ -8,6 +8,7 @@ from services.review.query_builder import (
     build_section_query,
     count_term_hits,
     is_paper_relevant,
+    rank_papers,
 )
 
 
@@ -62,6 +63,16 @@ class RelevanceTests(unittest.TestCase):
         self.assertTrue(
             is_paper_relevant(body, ["TLR4", "sepsis"], title="TLR4 signaling in sepsis")
         )
+
+
+    def test_rank_papers_orders_by_title_hits_then_score(self) -> None:
+        ranked = rank_papers(
+            ["a", "b", "c"],
+            {"a": "Metabolic review", "b": "TLR4 in sepsis", "c": "sepsis outcomes"},
+            ["TLR4", "sepsis"],
+            {"a": 9.0, "b": 1.0, "c": 5.0},
+        )
+        self.assertEqual(ranked, ["b", "c", "a"])
 
 
 if __name__ == "__main__":
