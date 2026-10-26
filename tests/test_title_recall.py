@@ -81,5 +81,48 @@ class TitleRecallTests(unittest.TestCase):
             self.assertEqual(_title_recall_limits(), (10, 5))
 
 
+class AbstractRecallTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.addCleanup(self.tmp.cleanup)
+        self.db = Path(self.tmp.name) / "abstracts.db"
+        conn = sqlite3.connect(self.db)
+        conn.executescript(
+            """
+            CREATE TABLE papers (
+                id INTEGER PRIMARY KEY, pmid TEXT, doi TEXT, title TEXT, abstract TEXT,
+                authors TEXT, journal TEXT, year TEXT, topic TEXT, source TEXT
+            );
+            CREATE VIRTUAL TABLE papers_fts USING fts5(
+                pmid UNINDEXED, title, abstract, authors, journal, topic,
+                tokenize = 'unicode61 remove_diacritics 2'
+            );
+            """
+        )
+        conn.execute(
+            "INSERT INTO papers (pmid, title, abstract, authors, journal, year) "
+            "VALUES ('9001', 'Sepsis biomarkers', 'TLR4 and sepsis outcomes', 'A', 'J', '2026')"
+        )
+        conn.execute(
+            "INSERT INTO papers_fts (pmid, title, abstract, authors, journal, topic) "
+            "VALUES ('9001', 'Sepsis biomarkers', 'TLR4 and sepsis outcomes', 'A', 'J', '')"
+        )
+        conn.commit()
+        conn.close()
+
+    def test_recalls_abstract_titles(self) -> None:
+        from services.review.title_recall import recall_abstracts_by_title
+
+        self.assertEqual(recall_abstracts_by_title(self.db, ["TLR4", "sepsis"]), ["9001"])
+
+    def test_abstract_for_requires_term_hit(self) -> None:
+        from services.review.title_recall import abstract_for
+
+        record = abstract_for(self.db, "9001", ["TLR4", "sepsis"])
+        self.assertIsNotNone(record)
+        self.assertEqual(record["title"], "Sepsis biomarkers")
+        self.assertIsNone(abstract_for(self.db, "9001", ["melanoma"]))
+
+
 if __name__ == "__main__":
     unittest.main()
