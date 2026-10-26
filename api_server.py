@@ -188,6 +188,8 @@ def get_ingest_service():
             db_path=DB_PATH,
             xml_dir=PROJECT_ROOT / "documents_xml",
             chroma_path=PROJECT_ROOT / "data" / "chroma",
+            # inline 模式复用 Flask 已加载的嵌入模型（不新建 CUDA 上下文）
+            embed_client=get_embed_rows() if inline else None,
             # 默认交给常驻 worker，Flask 进程只负责提交与查询
             queue_dir=None if inline else PROJECT_ROOT / "data" / "runs" / "_queue",
             log=app.logger.info,

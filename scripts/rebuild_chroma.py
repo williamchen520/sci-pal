@@ -34,9 +34,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", required=True)
     parser.add_argument("--db", default=str(DB))
-    parser.add_argument("--batch", type=int, default=512)
+    parser.add_argument("--batch", type=int, default=32)
     parser.add_argument("--limit", type=int, default=0, help="0 = all paragraphs")
-    parser.add_argument("--device", default="cpu", help="cpu or cuda")
+    parser.add_argument("--device", default="cuda", help="cpu or cuda (cuda ~150 eps)")
     args = parser.parse_args()
 
     target = Path(args.target)
