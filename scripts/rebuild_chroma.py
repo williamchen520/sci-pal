@@ -37,6 +37,8 @@ def main() -> int:
     parser.add_argument("--batch", type=int, default=512, help="outer batch (512 measured ~2x faster than 32)")
     parser.add_argument("--limit", type=int, default=0, help="0 = all paragraphs")
     parser.add_argument("--device", default="cuda", help="cpu or cuda (cuda ~150 eps)")
+    parser.add_argument("--ef-construction", type=int, default=100, help="HNSW construction_ef")
+    parser.add_argument("--m", type=int, default=16, help="HNSW M")
     args = parser.parse_args()
 
     target = Path(args.target)
@@ -57,7 +59,14 @@ def main() -> int:
         client.delete_collection(COLLECTION)
     except Exception:
         pass
-    collection = client.create_collection(COLLECTION, metadata={"hnsw:space": "cosine"})
+    collection = client.create_collection(
+        COLLECTION,
+        metadata={
+            "hnsw:space": "cosine",
+            "hnsw:construction_ef": int(args.ef_construction),
+            "hnsw:M": int(args.m),
+        },
+    )
 
     started = time.time()
     for start in range(0, len(rows), args.batch):
