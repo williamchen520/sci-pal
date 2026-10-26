@@ -78,7 +78,23 @@
         toolCallTimeoutMs: 60000
         failOnStartupError: false
 
-# ── 工具出现形式（重启 DSH 后应有 20 个 mcp__ 工具 = 1 + 10 + 9）─────────────
+    # ── 领域词表校验（scipal-guard：实体 / 正文落地 / 缩写）──────────────────
+    - id: mcp-scipal-guard
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: scipal-guard
+        transport: stdio
+        command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+        args: ['D:/sciPal/mcp_server/guard_server.py']
+        cwd: 'D:/sciPal'
+        env:
+          PYTHONUTF8: '1'
+          no_proxy: '127.0.0.1,localhost'
+          NO_PROXY: '127.0.0.1,localhost'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: false
+
+# ── 工具出现形式（重启 DSH 后应有 23 个 mcp__ 工具 = 1 + 10 + 9 + 3）──────────
 # 哨兵：
 #   mcp__scipalhello__ping
 # scipal-search（10）：
@@ -102,6 +118,10 @@
 #   mcp__scipal-generate__generate_outline         ← 立即返回 task_id（异步，实测 ~0.1s）
 #   mcp__scipal-generate__cancel_review_task
 #   mcp__scipal-generate__generate_review         ← 综述正文（分钟级，立即返 task_id）
+# scipal-guard（3，领域词表校验）：
+#   mcp__scipal-guard__guard_check                ← 文本实体校验（unknown/ambiguous/curated）
+#   mcp__scipal-guard__guard_term                 ← 单词条标准 ID / 别名 / 分层
+#   mcp__scipal-guard__guard_stats                ← 词表规模统计
 #
 # 前置：SciPal Flask 需先启动（python api_server.py，端口 5000）。
 #       未启动时工具会返回明确错误文本，不会崩。
