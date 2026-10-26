@@ -242,9 +242,11 @@ def _unified_list_tasks(**kwargs):
 
 
 def _unified_get_task(task_id):
-    from services.unified_task_manager import get_task
+    """统一入口：先查 unified，再回退 review / export / ingest 三个任务库。"""
+    from services.task_lookup import lookup_task
 
-    return get_task(task_id)
+    found = lookup_task(task_id)
+    return found["task"] if found else None
 
 
 def _unified_subscribe(task_id):
