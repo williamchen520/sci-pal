@@ -29,6 +29,11 @@
   .tag { display: inline-block; font-size: 11px; background: #eef2f7; border-radius: 6px; padding: 1px 6px; margin-right: 6px; color: #4b5563; }
   .empty { text-align: center; padding: 50px 20px; color: #9ca3af; }
   .error { color: #991b1b; font-size: 12px; }
+  .hint { font-size: 11px; color: #9ca3af; margin: 0 0 8px 2px; }
+  .hint.ok { color: #166534; }
+  .hint.bad { color: #991b1b; }
+  button:disabled { opacity: 0.55; cursor: default; }
+  .step a, .detail a { color: #4f6b9a; }
 </style>
 </head>
 <body>
@@ -39,9 +44,11 @@
 <div class="layout">
   <aside class="list">
     <div class="import-bar">
-      <input id="importId" placeholder="protocols.io ID 或 URL">
-      <button onclick="importProtocol()">导入</button>
+      <input id="importId" placeholder="粘贴 protocols.io 链接或 ID">
+      <button id="importBtn" onclick="importProtocol()">导入</button>
     </div>
+    <div class="hint">支持 https://www.protocols.io/view/…-123456 或数字 ID</div>
+    <div id="importStatus" class="hint"></div>
     <div id="protocolList"><div class="empty">加载中...</div></div>
   </aside>
   <section class="detail" id="protocolDetail"><div class="empty">从左侧选择协议</div></section>
