@@ -193,9 +193,10 @@ app.register_blueprint(
 def get_hybrid():
     global _hybrid
     if _hybrid is None:
-        # V31.71: 回退到旧的混合检索（hybrid_search.py），检索层不改，只改数据层
-        from services.search.hybrid_search import HybridSearch
-        _hybrid = HybridSearch()
+        # V33.20: 复用 UnifiedRetriever 的那套 HybridSearch（避免第二个嵌入模型）
+        from services.search.shared import get_shared_hybrid
+
+        _hybrid = get_shared_hybrid()
     return _hybrid
 
 
