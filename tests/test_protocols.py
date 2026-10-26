@@ -99,6 +99,18 @@ class ProtocolServiceTests(unittest.TestCase):
         service.import_protocol("protocols_io_325000")
         self.assertEqual(captured["id"], "325000")
 
+    def test_view_url_with_digits_in_slug(self) -> None:
+        from services.protocols.service import _normalize_protocol_id
+
+        cases = {
+            "325000": "325000",
+            "protocols_io_325000": "325000",
+            "https://www.protocols.io/view/western-blot-2024-325000": "325000",
+            "https://www.protocols.io/view/abc-123456": "123456",
+        }
+        for raw, expected in cases.items():
+            self.assertEqual(_normalize_protocol_id(raw), expected, raw)
+
 
 class FakeService:
     def __init__(self, service: ProtocolService) -> None:

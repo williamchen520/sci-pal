@@ -55,12 +55,19 @@ def _first(mapping: Mapping, *keys: str) -> str:
 
 
 def _normalize_protocol_id(value: Any) -> str:
-    """Accept ``325000``, ``protocols_io_325000`` or a /view/...-325000 URL."""
+    """Accept ``325000``, ``protocols_io_325000`` or a /view/...-325000 URL.
+
+    URL slugs may contain digits before the real id (``western-blot-2024-325000``),
+    so trailing digits win over the first digit group.
+    """
     import re as re_lib
 
     text = str(value or "").strip()
-    match = re_lib.search(r"(\d{2,})", text)
-    return match.group(1) if match else text
+    for pattern in (r"(\d+)\s*$", r"protocols_io_(\d+)", r"(\d{2,})"):
+        match = re_lib.search(pattern, text)
+        if match:
+            return match.group(1)
+    return text
 
 
 def _html_text(value: Any) -> str:
