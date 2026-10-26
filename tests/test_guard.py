@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import sqlite3
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 
@@ -116,6 +118,27 @@ class HgncTokenTests(unittest.TestCase):
         pubtator.merge(hgnc)
         self.assertEqual(len(pubtator.lookup("EGFR")), 2)
         self.assertEqual(len(pubtator.preferred("EGFR")), 1)
+
+
+class FtsLandingThreadTests(unittest.TestCase):
+    def test_connection_works_across_threads(self) -> None:
+        from services.quality.guard import FtsLanding
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            db = Path(tmp) / "fts.db"
+            conn = sqlite3.connect(db)
+            conn.execute("CREATE VIRTUAL TABLE paragraphs_fts USING fts5(text)")
+            conn.execute("INSERT INTO paragraphs_fts(text) VALUES ('TLR4 signaling in sepsis')")
+            conn.commit()
+            conn.close()
+
+            landing = FtsLanding(db)
+            result = []
+            worker = threading.Thread(target=lambda: result.append(landing("sepsis")))
+            worker.start()
+            worker.join()
+            self.assertEqual(result, [True])
+            self.assertTrue(landing("TLR4"))
 
 
 if __name__ == "__main__":
