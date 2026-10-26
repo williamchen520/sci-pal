@@ -9,7 +9,7 @@ terms first and caps the query at a few words.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 #: Words that carry almost no discriminative power in this corpus.
 GENERIC_TERMS = frozenset(
@@ -125,3 +125,25 @@ def is_paper_relevant(
         return False
     required = min_hits if min_hits is not None else (1 if len(terms) <= 1 else 2)
     return count_term_hits(f"{title or ''} {text}", terms) >= required
+
+
+def rank_papers(
+    paper_ids: Sequence[str],
+    titles: Mapping[str, str],
+    terms: Sequence[str],
+    scores: Mapping[str, float] | None = None,
+) -> list[str]:
+    """Order papers by title-term hits, then by their best paragraph score.
+
+    Hard filters on titles cut recall too aggressively (an earlier attempt left
+    only 3 evidence cards); ordering keeps every candidate and only decides
+    which papers survive the per-section cap.
+    """
+    scores = scores or {}
+
+    def key(index: int) -> tuple[int, float, int]:
+        paper_id = paper_ids[index]
+        hits = count_term_hits(titles.get(paper_id, ""), terms)
+        return (-hits, -float(scores.get(paper_id, 0.0)), index)
+
+    return [paper_ids[index] for index in sorted(range(len(paper_ids)), key=key)]

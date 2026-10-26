@@ -28,7 +28,7 @@ from typing import Optional
 from .citation_formatter import PaperMetadata, build_metadata_from_db_row, format_citation, format_citation_list, get_missing_fields_report, get_supported_styles, metadata_to_csl_json
 from .citation_verifier import CitationVerifier
 from .evidence_extractor import EvidenceExtractor
-from .query_builder import build_section_query, is_paper_relevant
+from .query_builder import build_section_query, is_paper_relevant, rank_papers
 from .section_loop import write_section_loop
 from .section_prompts import build_write_prompt
 from .llm_client import LLMClient, LLMError
@@ -2019,6 +2019,28 @@ def assign_papers_to_outline(
 # ──────────────────────────────────────────────
 
 _FULLTEXT_DOI_MAP: Optional[dict[str, str]] = None
+_PAPER_TITLE_CACHE: dict[str, str] = {}
+
+
+def _paper_titles(paper_ids: list[str]) -> dict[str, str]:
+    """Titles for the candidate papers (module-level cache, DB-backed)."""
+    missing = [pid for pid in paper_ids if pid not in _PAPER_TITLE_CACHE]
+    if missing:
+        try:
+            db_path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
+            if db_path.exists():
+                conn = sqlite3.connect(str(db_path))
+                placeholders = ",".join("?" for _ in missing)
+                rows = conn.execute(
+                    f"SELECT paper_id, title FROM papers WHERE paper_id IN ({placeholders})",
+                    missing,
+                ).fetchall()
+                conn.close()
+                for paper_id, title in rows:
+                    _PAPER_TITLE_CACHE[paper_id] = title or ""
+        except Exception:
+            pass
+    return {pid: _PAPER_TITLE_CACHE.get(pid, "") for pid in paper_ids}
 
 
 def _get_fulltext_doi_map() -> dict[str, str]:
@@ -2173,6 +2195,7 @@ def search_and_assign_papers(
             # V31.83: 收集这个章节的论文和证据卡片（去重，按搜索排名）
             sec_paper_ids = []
             sec_evidence_ids = []
+            paper_scores: dict[str, float] = {}
             for p in paragraphs:
                 pid = p.get("paper_id", "")
                 if not pid:
@@ -2185,6 +2208,9 @@ def search_and_assign_papers(
                     }
                 if pid not in sec_paper_ids:
                     sec_paper_ids.append(pid)
+                paper_scores[pid] = max(
+                    paper_scores.get(pid, 0.0), float(p.get("score") or 0.0)
+                )
                 paper_texts[pid] = (
                     paper_texts.get(pid, "")
                     + " "
@@ -2310,6 +2336,13 @@ def search_and_assign_papers(
                     if all_evidence_cards.get(eid, {}).get("paper_id") in relevant
                 ]
                 print(f"    🎯 相关性过滤：保留 {len(relevant)} 篇，剔除 {dropped} 篇")
+
+            # 标题命中优先排序（保留全部候选，只影响上限截断时谁留下）
+            titles = _paper_titles(sec_paper_ids)
+            for pid, title in titles.items():
+                if title and pid in all_papers and all_papers[pid].get("title") in (pid, "", None):
+                    all_papers[pid]["title"] = title
+            sec_paper_ids = rank_papers(sec_paper_ids, titles, query_terms, paper_scores)
 
             # 每章论文上限
             if len(sec_paper_ids) > papers_per_section:
