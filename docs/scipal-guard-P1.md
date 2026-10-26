@@ -41,7 +41,11 @@
 - **weak**：单篇出现 → 不进入匹配（避免 "and"/"as" 这类噪声）；
 - 短词（≤3 字符）只有全大写才匹配（避免 AS = ankylosing spondylitis 撞 "as"）；
 - 同一 surface 多个 ID → `ambiguous`（如 STAT3、STING），不判错；
-- canonical 精确命中 → 视为 `known_curated`（TLR4 这类即使只标了 1 篇也是真词）。
+- canonical 精确命中 → 视为 `known_curated`（TLR4 这类即使只标了 1 篇也是真词）；
+- **官方词表**：HGNC（45,277 基因符号）按 token 匹配；MeSH（15,756 条 C/D 描述符）
+  只做查表，不进扫描正则（否则 6 万条 alternation 会拖慢每次校验）。
+
+当前词表：**62,132 条**（PubTator 1,829 + HGNC 45,277 + MeSH 15,756，按 type+ID 去重）。
 
 ## 4. 接口
 

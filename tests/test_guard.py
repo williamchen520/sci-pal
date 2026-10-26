@@ -120,6 +120,24 @@ class HgncTokenTests(unittest.TestCase):
         self.assertEqual(len(pubtator.preferred("EGFR")), 1)
 
 
+class MeshLexiconTests(unittest.TestCase):
+    def test_mesh_entries_are_curated_and_lookup_only(self) -> None:
+        from services.quality.lexicon import Lexicon
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            path = Path(tmp) / "mesh.tsv"
+            path.write_text(
+                HEADER
+                + "Disease\tD018805\tncbi_mesh\tSepsis\tsepticemia; blood poisoning\t0\t0\n"
+                + "Chemical\tD000001\tncbi_mesh\tDimethyl Sulfoxide\tDMSO\t0\t0\n",
+                encoding="utf-8",
+            )
+            lexicon = Lexicon.load(path, source="mesh")
+        self.assertEqual(lexicon.lookup("sepsis")[0].tier, "curated")
+        self.assertEqual(lexicon.lookup("DMSO")[0].type, "Chemical")
+        self.assertEqual(list(lexicon.match_surfaces()), [])
+
+
 class FtsLandingThreadTests(unittest.TestCase):
     def test_connection_works_across_threads(self) -> None:
         from services.quality.guard import FtsLanding
