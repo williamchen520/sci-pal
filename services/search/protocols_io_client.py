@@ -370,6 +370,15 @@ class ProtocolsIOClient:
         self._cache_set(cache_key, data)
         return data
 
+    def fetch_protocol(self, protocol_id: str) -> Dict:
+        """拉取单个协议详情（GET /protocols/<id>），失败抛错。"""
+        data = self._request(f"protocols/{protocol_id}")
+        if not data:
+            raise RuntimeError(
+                f"protocols.io 拉取失败：{protocol_id}（检查 SCIPAL_PROTOCOLS_IO_TOKEN）"
+            )
+        return data
+
     def search_and_format(
         self,
         query: str,
