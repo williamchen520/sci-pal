@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sci-Pal 综述生成与预览</title>
 <link rel="stylesheet" href="/src/review.css">
+<style>
+  .history-panel { position: absolute; right: 16px; top: 52px; width: 320px; max-height: 60vh;
+    overflow-y: auto; background: #fff; border: 1px solid #e4e3dd; border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 8px; z-index: 50; }
+  .history-panel.hidden { display: none; }
+  .history-item { display: block; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: inherit; }
+  .history-item:hover { background: #f5f7fb; }
+  .history-title { font-size: 13px; font-weight: 600; color: #1a1b1c; }
+  .history-meta { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .history-empty { padding: 16px; text-align: center; color: #9ca3af; font-size: 12px; }
+</style>
 </head>
 <body>
 
@@ -15,7 +26,9 @@
   <div class="stats" id="statsDisplay"></div>
   <button onclick="location.href='/'">← 返回搜索</button>
   <button onclick="location.href='/reviews.html'">📚 历史综述</button>
+  <button id="historyToggle" title="在页面内展开最近综述列表">🗂 最近</button>
 </div>
+<div id="historyPanel" class="history-panel hidden"></div>
 
 <!-- V25.9: 大纲编辑器（默认显示，有 review_id 时隐藏） -->
 <div class="outline-editor" id="outlineEditor">
@@ -186,6 +199,7 @@
 <script src="/src/paper_importer.js"></script>
 <!-- 综述预览逻辑 -->
 <script src="/src/review.js"></script>
+<script src="/src/history_panel.js"></script>
 
 </body>
 </html>
