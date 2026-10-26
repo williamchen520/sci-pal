@@ -39,8 +39,17 @@ def build_protocols_blueprint(
             limit = max(1, min(int(request.args.get("limit", 50)), 200))
         except (TypeError, ValueError):
             limit = 50
-        rows = get_service().list(limit)
-        return jsonify({"ok": True, "count": len(rows), "protocols": rows})
+        try:
+            offset = max(0, int(request.args.get("offset", 0)))
+        except (TypeError, ValueError):
+            offset = 0
+        query = str(request.args.get("q") or "").strip()
+        service = get_service()
+        rows = service.list(limit, offset, query)
+        total = service.count(query) if hasattr(service, "count") else len(rows)
+        return jsonify(
+            {"ok": True, "count": len(rows), "total": total, "offset": offset, "protocols": rows}
+        )
 
     @bp.get("/protocols/<protocol_id>")
     def get_protocol(protocol_id: str):

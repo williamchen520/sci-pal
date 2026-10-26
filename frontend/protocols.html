@@ -32,6 +32,8 @@
   .hint { font-size: 11px; color: #9ca3af; margin: 0 0 8px 2px; }
   .hint.ok { color: #166534; }
   .hint.bad { color: #991b1b; }
+  #protocolSearch { width: 100%; padding: 7px 10px; border: 1px solid #e4e3dd; border-radius: 8px; font-size: 13px; margin-bottom: 10px; }
+  .load-more { width: 100%; padding: 8px; border: 1px dashed #cbd5e1; background: #fff; border-radius: 8px; color: #4f6b9a; cursor: pointer; font-size: 13px; }
   button:disabled { opacity: 0.55; cursor: default; }
   .step a, .detail a { color: #4f6b9a; }
 </style>
@@ -39,7 +41,7 @@
 <body>
 <header>
   <h1>🧪 实验方案</h1>
-  <a href="/">← 返回搜索</a> · <a href="/reviews.html">📚 历史综述</a> · <a href="/review.html">📝 综述生成</a>
+  <a href="/">← 返回搜索</a> · <a href="/reviews.html">📚 历史综述</a> · <a href="/review.html">📝 综述生成</a> · <a href="/references.html">📚 文献库</a>
 </header>
 <div class="layout">
   <aside class="list">
@@ -49,7 +51,9 @@
     </div>
     <div class="hint">支持 https://www.protocols.io/view/…-123456 或数字 ID</div>
     <div id="importStatus" class="hint"></div>
+    <input id="protocolSearch" placeholder="搜索标题 / DOI" oninput="onSearch()">
     <div id="protocolList"><div class="empty">加载中...</div></div>
+    <div id="loadMoreWrap" style="display:none"><button id="loadMoreBtn" class="load-more" onclick="loadMore()">加载更多</button></div>
   </aside>
   <section class="detail" id="protocolDetail"><div class="empty">从左侧选择协议</div></section>
 </div>

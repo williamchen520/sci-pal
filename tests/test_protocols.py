@@ -122,8 +122,11 @@ class FakeService:
     def import_protocol(self, protocol_id):
         raise RuntimeError("no token")
 
-    def list(self, limit=50):
-        return self.service.list(limit)
+    def list(self, limit=50, offset=0, query=""):
+        return self.service.list(limit, offset, query)
+
+    def count(self, query=""):
+        return self.service.count(query)
 
     def get(self, protocol_id):
         return self.service.get(protocol_id)
@@ -154,6 +157,17 @@ class ProtocolRoutesTests(unittest.TestCase):
         self.client.post("/api/protocols/import", json={"payload": FIXTURE})
         listing = self.client.get("/api/protocols").get_json()
         self.assertEqual(listing["count"], 1)
+        self.assertEqual(listing["total"], 1)
+
+    def test_list_filters_by_query(self) -> None:
+        self.client.post("/api/protocols/import", json={"payload": FIXTURE})
+        other = {
+            "protocol": {"id": "px_other", "title": "Western blot", "steps": []}
+        }
+        self.client.post("/api/protocols/import", json={"payload": other})
+        listing = self.client.get("/api/protocols?q=TLR4").get_json()
+        self.assertEqual(listing["total"], 1)
+        self.assertEqual(listing["protocols"][0]["protocol_id"], "px_test_001")
         detail = self.client.get("/api/protocols/px_test_001").get_json()
         self.assertEqual(len(detail["protocol"]["steps"]), 2)
 

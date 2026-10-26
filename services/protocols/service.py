@@ -200,18 +200,39 @@ class ProtocolService:
             url=f"https://www.protocols.io/view/{normalized}",
         )
 
-    def list(self, limit: int = 50) -> list[dict[str, Any]]:
+    def list(self, limit: int = 50, offset: int = 0, query: str = "") -> list[dict[str, Any]]:
         self.ensure_schema()
+        where = ""
+        params: list[Any] = []
+        text = str(query or "").strip()
+        if text:
+            where = "WHERE p.title LIKE ? OR p.doi LIKE ?"
+            params.extend([f"%{text}%", f"%{text}%"])
+        params.extend([max(1, limit), max(0, offset)])
         with self._session() as conn:
             rows = conn.execute(
-                """
+                f"""
                 SELECT p.protocol_id, p.title, p.doi, p.version, p.url, p.fetched_at,
                        (SELECT COUNT(*) FROM protocol_steps s WHERE s.protocol_id = p.protocol_id) AS steps
-                FROM protocol_imports p ORDER BY p.fetched_at DESC LIMIT ?
+                FROM protocol_imports p {where}
+                ORDER BY p.fetched_at DESC LIMIT ? OFFSET ?
                 """,
-                (max(1, limit),),
+                tuple(params),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def count(self, query: str = "") -> int:
+        self.ensure_schema()
+        text = str(query or "").strip()
+        with self._session() as conn:
+            if text:
+                return int(
+                    conn.execute(
+                        "SELECT COUNT(*) FROM protocol_imports WHERE title LIKE ? OR doi LIKE ?",
+                        (f"%{text}%", f"%{text}%"),
+                    ).fetchone()[0]
+                )
+            return int(conn.execute("SELECT COUNT(*) FROM protocol_imports").fetchone()[0])
 
     def get(self, protocol_id: str) -> dict[str, Any] | None:
         self.ensure_schema()
