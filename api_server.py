@@ -177,7 +177,13 @@ app.register_blueprint(
 
 # B4a: 综述查询（reviews 表，CLI/外部生成的综述对前端可见）
 app.register_blueprint(
-    build_reviews_blueprint(db_path=DB_PATH, log=app.logger)
+    build_reviews_blueprint(
+        db_path=DB_PATH,
+        log=app.logger,
+        get_task_manager=lambda: task_manager,
+        get_review_store=lambda: get_review_store(),
+        get_llm_client=lambda: get_llm_client(),
+    )
 )
 
 _ingest_service = None
@@ -746,47 +752,6 @@ def generate_outline():
     return jsonify({"task_id": task_id})
 
 
-# V26.5: 查询当前运行中的任务（用于刷新页面后恢复任务）
-@app.route("/api/review/running_task", methods=["GET"])
-def get_running_task():
-    """
-    查询当前是否有运行中的任务
-    用于刷新页面后恢复任务
-    """
-    task = task_manager.get_running_task()
-    if not task:
-        return jsonify({"running": False})
-    return jsonify({"running": True, "task": task})
-
-
-# V26.3: 查询任务状态
-@app.route("/api/review/task/<task_id>", methods=["GET"])
-def get_task_status(task_id):
-    """
-    查询任务状态
-    返回:
-      - status: running / completed / failed / cancelled
-      - result: 任务结果（如果完成了）
-      - error: 错误信息（如果失败了）
-    """
-    task = task_manager.get_task(task_id)
-    if not task:
-        return jsonify({"error": "Task not found"}), 404
-    return jsonify(task)
-
-
-# V26.3: 取消任务
-@app.route("/api/review/cancel/<task_id>", methods=["POST"])
-def cancel_task(task_id):
-    """
-    取消一个正在运行的任务
-    """
-    success = task_manager.cancel_task(task_id)
-    if not success:
-        return jsonify({"error": "Task not found or already finished"}), 404
-    return jsonify({"success": True, "message": "Task cancelled"})
-
-
 # ── V26.1: 自动发配论文到章节 ──
 
 @app.route("/api/review/assign_papers", methods=["POST"])
@@ -1162,51 +1127,6 @@ def generate_review_async():
     thread.start()
 
     return jsonify({"task_id": task_id})
-
-
-@app.route("/api/review/<review_id>", methods=["GET"])
-def get_review_detail(review_id):
-    """V25.6: 获取综述详情（含 sentences 和 evidence_cards，用于前端预览页点击溯源）。"""
-    store = get_review_store()
-    entry = store.get(review_id)
-    if entry is None:
-        return jsonify({"error": "Review not found or expired"}), 404
-    return jsonify(entry)
-
-
-@app.route("/api/review/<review_id>/sentence/<sentence_id>", methods=["GET"])
-def get_review_sentence(review_id, sentence_id):
-    """V25.6: 获取单个句子的溯源信息（句子详情 + 关联的证据卡片列表）。"""
-    store = get_review_store()
-    result = store.get_sentence(review_id, sentence_id)
-    if result is None:
-        return jsonify({"error": "Sentence not found"}), 404
-    return jsonify(result)
-
-
-@app.route("/api/review/llm_status", methods=["GET"])
-def review_llm_status():
-    """检查综述生成所需的 LLM 服务状态（V25.4: 支持 Ollama 和云端 API）。"""
-    try:
-        llm = get_llm_client()
-        available = llm.is_available()
-        models = llm.list_models() if available else []
-        provider = llm.provider
-        if provider == "openai":
-            hint = None if available else "配置 API key: export SCIPAL_LLM_API_KEY=sk-你的key"
-        else:
-            hint = None if available else "Start Ollama: ollama serve && ollama pull qwen2.5:14b"
-        return jsonify(ok({
-            "available": available,
-            "provider": provider,
-            "configured_model": llm.model,
-            "installed_models": models,
-            "hint": hint,
-        }))
-    except Exception:
-        app.logger.exception("review_llm_status failed")
-        error = InternalError("LLM status check failed")
-        return jsonify(fail(error)), error.status
 
 
 # ---------------------------------------------------------------------------
