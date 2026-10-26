@@ -351,6 +351,40 @@ class VerifyStageTests(unittest.TestCase):
         self.assertEqual(result.metrics["verified"], 1)
         self.assertTrue((self.dir / "verify.json").exists())
 
+    def test_guard_block_mode_fails_on_high_unknown(self) -> None:
+        import os
+        from unittest.mock import patch
+
+        self.write_review({"topic": "demo", "markdown": "text", "sentences": [], "evidence_cards": {}})
+
+        def checker(review, ctx):
+            return {"stats": {"total_sentences": 1, "verified": 1, "pass_rate": 1.0}}
+
+        def guard(text):
+            return {"unknown": 2, "unknown_ratio": 0.2, "counts": {"unknown": 2}, "issues": []}
+
+        with patch.dict(
+            os.environ, {"SCIPAL_GUARD_MODE": "block", "SCIPAL_GUARD_MAX_UNKNOWN": "0.05"}
+        ):
+            result = build_verify_stage(checker, guard)(context(self.dir, self.spec()))
+
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.errors[0]["kind"], "quality")
+
+    def test_guard_warn_mode_keeps_stage_ok(self) -> None:
+        self.write_review({"topic": "demo", "markdown": "text", "sentences": [], "evidence_cards": {}})
+
+        def checker(review, ctx):
+            return {"stats": {"total_sentences": 1, "verified": 1, "pass_rate": 1.0}}
+
+        def guard(text):
+            return {"unknown": 2, "unknown_ratio": 0.2, "counts": {"unknown": 2}, "issues": []}
+
+        result = build_verify_stage(checker, guard)(context(self.dir, self.spec()))
+        self.assertEqual(result.status, "ok")
+        record = json.loads((self.dir / "verify.json").read_text(encoding="utf-8"))
+        self.assertEqual(record["vocabulary"]["unknown_ratio"], 0.2)
+
     def test_checker_error_is_reported(self) -> None:
         self.write_review({"topic": "demo"})
 

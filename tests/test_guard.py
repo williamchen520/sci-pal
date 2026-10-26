@@ -73,5 +73,39 @@ class GuardTests(unittest.TestCase):
         self.assertLessEqual(len(summary["issues"]), 50)
 
 
+class HgncTokenTests(unittest.TestCase):
+    def test_hgnc_symbol_is_known_and_not_flagged(self) -> None:
+        from services.quality.guard import VocabularyGuard
+        from services.quality.lexicon import Entry, Lexicon
+
+        lexicon = Lexicon(
+            entries=[
+                Entry("Gene", "hgnc:1234", "FOO1", (), 0, 0, "hgnc", "hgnc"),
+                Entry("Gene", "1956", "EGFR", ("ERBB",), 20, 5, "ncbi_gene"),
+            ]
+        )
+        lexicon._build_index()
+        guard = VocabularyGuard(lexicon, fts_lookup=lambda term: False)
+        report = guard.check("FOO1 and EGFR were measured.")
+        statuses = {issue.term.upper(): issue.status for issue in report.issues}
+        self.assertEqual(statuses.get("FOO1"), "known_curated")
+        self.assertEqual(statuses.get("EGFR"), "known_curated")
+        self.assertEqual(report.counts.get("unknown", 0), 0)
+
+    def test_hgnc_row_wins_over_pubtator_duplicate(self) -> None:
+        from services.quality.lexicon import Entry, Lexicon
+
+        lexicon = Lexicon(
+            entries=[
+                Entry("Gene", "1956", "TLR4", (), 20, 5, "ncbi_gene"),
+                Entry("Gene", "HGNC:11850", "TLR4", (), 0, 0, "hgnc", "hgnc"),
+            ]
+        )
+        lexicon._build_index()
+        preferred = lexicon.preferred("TLR4")
+        self.assertEqual(len(preferred), 1)
+        self.assertEqual(preferred[0].normalized_id, "HGNC:11850")
+
+
 if __name__ == "__main__":
     unittest.main()

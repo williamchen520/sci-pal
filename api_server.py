@@ -28,6 +28,8 @@ from contracts import InternalError, fail, ok
 from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
+from routes.protocols import build_protocols_blueprint
+from routes.references import build_references_blueprint
 from routes.reviews import build_reviews_blueprint
 from routes.search import build_search_blueprint
 from routes.system import build_system_blueprint
@@ -188,6 +190,8 @@ def get_ingest_service():
             db_path=DB_PATH,
             xml_dir=PROJECT_ROOT / "documents_xml",
             chroma_path=PROJECT_ROOT / "data" / "chroma",
+            # inline 模式复用 Flask 已加载的嵌入模型（不新建 CUDA 上下文）
+            embed_client=get_embed_rows() if inline else None,
             # 默认交给常驻 worker，Flask 进程只负责提交与查询
             queue_dir=None if inline else PROJECT_ROOT / "data" / "runs" / "_queue",
             log=app.logger.info,
@@ -250,6 +254,49 @@ def get_guard():
 
 # B4c: guard 实体校验（/api/guard/check、/stats、/term/<t>）
 app.register_blueprint(build_guard_blueprint(get_guard=get_guard, log=app.logger))
+
+_reference_library = None
+
+
+def get_reference_library():
+    global _reference_library
+    if _reference_library is None:
+        from services.references.library import ReferenceLibrary
+
+        _reference_library = ReferenceLibrary(DB_PATH)
+    return _reference_library
+
+
+# B4d: 参考文献互通（RIS / EndNote XML 导入 + 库列表）
+app.register_blueprint(
+    build_references_blueprint(get_library=get_reference_library, log=app.logger)
+)
+
+_protocol_service = None
+
+
+def get_protocol_service():
+    global _protocol_service
+    if _protocol_service is None:
+        from services.protocols.service import ProtocolService
+
+        service = ProtocolService(DB_PATH)
+        try:
+            from services.search.protocols_io_client import ProtocolsIOClient
+
+            client = ProtocolsIOClient()
+            if client.is_enabled:
+                service.client = client
+        except Exception:  # noqa: BLE001 - token/config optional
+            pass
+        _protocol_service = service
+    return _protocol_service
+
+
+# B4e: protocols.io P1（导入 / 列表 / 详情）
+app.register_blueprint(
+    build_protocols_blueprint(get_service=get_protocol_service, log=app.logger)
+)
 
 
 def _unified_list_tasks(**kwargs):

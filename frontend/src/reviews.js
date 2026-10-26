@@ -96,6 +96,13 @@ function renderList(reviews) {
 function renderDetail(review) {
     const stats = review.stats || {};
     const references = review.references || [];
+    const guard = review.guard || null;
+    const guardCounts = (guard && guard.counts) || {};
+    const guardBadge = guard && guard.checked
+        ? `<div class="guard-badge">🛡 术语校验：checked ${guard.checked} · curated ${guardCounts.known_curated || 0}` +
+          ` · ambiguous ${guardCounts.ambiguous || 0} · unknown ${guard.unknown || 0}` +
+          `（${((guard.unknown_ratio || 0) * 100).toFixed(2)}%）</div>`
+        : '';
     detailEl.innerHTML = `
         <h2>${escapeHtml(review.topic || '(无标题)')}</h2>
         <div class="meta">
@@ -103,6 +110,7 @@ function renderDetail(review) {
             ${stats.total_sentences != null ? ` · ${stats.verified}/${stats.total_sentences} 句通过校验` : ''}
             ${review.run_id ? ` · run ${escapeHtml(review.run_id)}` : ''}
         </div>
+        ${guardBadge}
         <div class="markdown">${renderMarkdown(stripDuplicateTitle(review.markdown, review.topic))}</div>
         ${references.length ? `
             <div class="refs">

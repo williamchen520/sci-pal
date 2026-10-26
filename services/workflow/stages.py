@@ -15,6 +15,7 @@ time with their own tests.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 from datetime import datetime, timezone
@@ -168,6 +169,27 @@ def build_verify_stage(
                 payload["vocabulary"] = {"error": str(exc)[:200]}
 
         write_artifact(context, "verify.json", payload)
+
+        mode = os.environ.get("SCIPAL_GUARD_MODE", "warn").strip().lower()
+        if mode == "block":
+            vocabulary = payload.get("vocabulary") or {}
+            limit = float(os.environ.get("SCIPAL_GUARD_MAX_UNKNOWN", "0.05"))
+            ratio = float(vocabulary.get("unknown_ratio") or 0.0)
+            if ratio > limit:
+                return StageResult(
+                    status="failed",
+                    artifacts=["verify.json"],
+                    errors=[
+                        {
+                            "kind": "quality",
+                            "message": (
+                                f"vocabulary guard blocked: unknown_ratio={ratio:.2%} "
+                                f"> {limit:.0%}"
+                            ),
+                            "retryable": False,
+                        }
+                    ],
+                )
         stats = payload.get("stats") or {}
         metrics = {
             key: stats.get(key)
@@ -662,6 +684,7 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
         stats=output.stats,
         references=output.references,
         warnings=output.warnings,
+        guard=verify.get("vocabulary") if isinstance(verify, Mapping) else None,
     )
     return {
         "review_id": review_id,
@@ -717,6 +740,15 @@ def _default_export(record: Mapping[str, Any], context: StageContext) -> list[st
         bibtex_task = manager.export_to_bibtex(bibtex_task.task_id, references)
         if bibtex_task and bibtex_task.file_path:
             artifacts.append(_relative_artifact(bibtex_task.file_path, context.run_dir))
+
+        for fmt, method in (("ris", manager.export_to_ris), ("endnote_xml", manager.export_to_endnote_xml)):
+            try:
+                task = manager.create_export(review_id, format=fmt)
+                task = method(task.task_id, references)
+                if task and task.file_path:
+                    artifacts.append(_relative_artifact(task.file_path, context.run_dir))
+            except Exception as exc:  # noqa: BLE001 - interchange formats are optional
+                context.logger.warning("%s export skipped: %s", fmt, exc)
 
     try:
         docx_task = manager.create_export(review_id, format="word")
