@@ -39,14 +39,24 @@ SCENARIOS = {
 
 
 def main() -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--json", action="store_true", help="machine-readable output")
+    args = parser.parse_args()
+
     landing = FtsLanding()
     guard = VocabularyGuard(fts_lookup=landing)
     failures = 0
+    results = {}
     for name, (text, expected) in SCENARIOS.items():
         report = guard.check(text)
         summary = report.summary()
         ok = all(summary.get(key) == value for key, value in expected.items())
         failures += 0 if ok else 1
+        results[name] = {"ok": ok, "expected": expected, **summary}
+        if args.json:
+            continue
         print(f"[{'PASS' if ok else 'FAIL'}] {name}: checked={summary['checked']} "
               f"unknown={summary['unknown']} ratio={summary['unknown_ratio']:.2f} "
               f"counts={json.dumps(summary['counts'], ensure_ascii=False)}")
@@ -54,6 +64,8 @@ def main() -> int:
             if issue["status"] in {"unknown", "undefined_abbrev"}:
                 print(f"    - {issue['term']}: {issue['status']}")
     landing.close()
+    if args.json:
+        print(json.dumps({"ok": failures == 0, "scenarios": results}, ensure_ascii=False, indent=2))
     return 0 if failures == 0 else 1
 
 

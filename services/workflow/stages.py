@@ -647,6 +647,7 @@ def _paragraphs_from_retrieve(payload: Mapping[str, Any]) -> list[dict[str, Any]
 def _default_save_review(review: Mapping[str, Any], context: StageContext) -> dict[str, Any]:
     """Persist into the in-process ReviewStore *and* the durable reviews table."""
     from services.review.models import ReviewOutput
+    from services.review.reference_link import enrich_references
     from services.review.review_repository import ReviewRepository
     from services.review.review_store import get_review_store
 
@@ -666,7 +667,9 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
     output = ReviewOutput(
         topic=draft.topic,
         markdown=markdown,
-        references=list(review.get("references") or []),
+        references=enrich_references(
+            list(review.get("references") or []), _default_db_path()
+        ),
         stats=stats,
         warnings=warnings,
     )

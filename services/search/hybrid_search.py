@@ -579,6 +579,10 @@ class HybridSearch:
 
     def search_papers(self, query: str, top_k: int = 5) -> List[Dict]:
         """Search across papers by title/abstract."""
+        if self.paper_collection is None:
+            # paragraph-only index (e.g. rebuilt without the side collections):
+            # aggregate paper ids from paragraph hits instead of returning [].
+            return self._papers_from_paragraphs(query, top_k)
         # Vector search on papers
         query_emb = self.model.encode([query]).tolist()
         results = self.paper_collection.query(
@@ -603,6 +607,38 @@ class HybridSearch:
                     "score": 1.0 - results["distances"][0][i],
                 })
         return hits
+
+    def _papers_from_paragraphs(self, query: str, top_k: int) -> List[Dict]:
+        """Fallback: rank papers by their best paragraph hit."""
+        best: dict[str, float] = {}
+        hits = []
+        try:
+            hits.extend(self.vector_search(query, top_k=max(top_k * 4, 20)))
+            hits.extend(self.fts_search(query, top_k=max(top_k * 4, 20)))
+        except Exception:  # noqa: BLE001 - fallback must not raise
+            return []
+        for hit in hits:
+            paper_id = hit.get("paper_id")
+            score = float(hit.get("score") or 0.0)
+            if paper_id and score > best.get(paper_id, 0.0):
+                best[paper_id] = score
+        results = []
+        for paper_id, score in sorted(best.items(), key=lambda item: item[1], reverse=True)[:top_k]:
+            paper = self.conn.execute(
+                "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)
+            ).fetchone()
+            if paper:
+                results.append(
+                    {
+                        "paper_id": paper_id,
+                        "title": paper["title"],
+                        "authors": paper["authors"],
+                        "journal": paper["journal"],
+                        "year": paper["year"],
+                        "score": score,
+                    }
+                )
+        return results
 
     def search_figures(self, query: str, top_k: int = 5,
                        paper_id: str = None) -> List[Dict]:

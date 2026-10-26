@@ -39,8 +39,17 @@ def build_protocols_blueprint(
             limit = max(1, min(int(request.args.get("limit", 50)), 200))
         except (TypeError, ValueError):
             limit = 50
-        rows = get_service().list(limit)
-        return jsonify({"ok": True, "count": len(rows), "protocols": rows})
+        try:
+            offset = max(0, int(request.args.get("offset", 0)))
+        except (TypeError, ValueError):
+            offset = 0
+        query = str(request.args.get("q") or "").strip()
+        service = get_service()
+        rows = service.list(limit, offset, query)
+        total = service.count(query) if hasattr(service, "count") else len(rows)
+        return jsonify(
+            {"ok": True, "count": len(rows), "total": total, "offset": offset, "protocols": rows}
+        )
 
     @bp.get("/protocols/<protocol_id>")
     def get_protocol(protocol_id: str):
@@ -48,5 +57,56 @@ def build_protocols_blueprint(
         if record is None:
             return jsonify({"ok": False, "error": "protocol not found"}), 404
         return jsonify({"ok": True, "protocol": record})
+
+    # ------------------------------------------------------------- runs
+    @bp.post("/protocols/<protocol_id>/runs")
+    def add_run(protocol_id: str):
+        service = get_service()
+        if service.get(protocol_id) is None:
+            return jsonify({"ok": False, "error": "protocol not found"}), 404
+        body = request.get_json(silent=True) or {}
+        run = service.add_run(
+            protocol_id,
+            title=str(body.get("title") or ""),
+            operator=str(body.get("operator") or ""),
+            run_date=str(body.get("run_date") or ""),
+            status=str(body.get("status") or "planned"),
+            result=str(body.get("result") or ""),
+            notes=str(body.get("notes") or ""),
+            done_steps=body.get("done_steps"),
+        )
+        return jsonify({"ok": True, "run": run})
+
+    @bp.get("/protocols/<protocol_id>/runs")
+    def list_runs(protocol_id: str):
+        try:
+            limit = max(1, min(int(request.args.get("limit", 50)), 200))
+        except (TypeError, ValueError):
+            limit = 50
+        rows = get_service().list_runs(protocol_id, limit)
+        return jsonify({"ok": True, "count": len(rows), "runs": rows})
+
+    @bp.get("/experiments")
+    def recent_runs():
+        try:
+            limit = max(1, min(int(request.args.get("limit", 20)), 100))
+        except (TypeError, ValueError):
+            limit = 20
+        rows = get_service().recent_runs(limit)
+        return jsonify({"ok": True, "count": len(rows), "runs": rows})
+
+    @bp.patch("/experiments/<run_id>")
+    def update_run(run_id: str):
+        body = request.get_json(silent=True) or {}
+        run = get_service().update_run(run_id, **body)
+        if run is None:
+            return jsonify({"ok": False, "error": "run not found or no fields"}), 404
+        return jsonify({"ok": True, "run": run})
+
+    @bp.delete("/experiments/<run_id>")
+    def delete_run(run_id: str):
+        if not get_service().delete_run(run_id):
+            return jsonify({"ok": False, "error": "run not found"}), 404
+        return jsonify({"ok": True})
 
     return bp

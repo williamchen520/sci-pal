@@ -39,11 +39,56 @@ SCHEMA = (
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_protocol_steps_protocol ON protocol_steps (protocol_id, ordinal)",
+    """
+    CREATE TABLE IF NOT EXISTS experiment_runs (
+        run_id       TEXT PRIMARY KEY,
+        protocol_id  TEXT NOT NULL,
+        title        TEXT,
+        operator     TEXT,
+        run_date     TEXT,
+        status       TEXT NOT NULL DEFAULT 'planned',
+        result       TEXT,
+        notes        TEXT,
+        created_at   TEXT NOT NULL,
+        updated_at   TEXT NOT NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_experiment_runs_protocol "
+    "ON experiment_runs (protocol_id, run_date DESC)",
 )
+
+RUN_STATUSES = ("planned", "running", "completed", "failed")
 
 
 def _text(value: Any) -> str:
     return str(value or "").strip()
+
+
+def _run_status(value: Any) -> str:
+    status = _text(value).lower() or "planned"
+    return status if status in RUN_STATUSES else "planned"
+
+
+def _done_steps(value: Any) -> list[str]:
+    if isinstance(value, (list, tuple)):
+        return [str(item) for item in value if str(item).strip()]
+    if isinstance(value, str) and value:
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            return []
+        return [str(item) for item in parsed] if isinstance(parsed, list) else []
+    return []
+
+
+def _run_row(row: Any) -> dict[str, Any]:
+    record = dict(row)
+    record["done_steps"] = _done_steps(record.get("done_steps"))
+    return record
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _first(mapping: Mapping, *keys: str) -> str:
@@ -108,6 +153,10 @@ class ProtocolService:
         with self._session() as conn:
             for statement in SCHEMA:
                 conn.execute(statement)
+            try:
+                conn.execute("ALTER TABLE experiment_runs ADD COLUMN done_steps TEXT")
+            except sqlite3.OperationalError:
+                pass
 
     def import_payload(self, payload: Mapping[str, Any], *, url: str = "") -> dict[str, Any]:
         """Parse and store one protocol payload (already fetched or a fixture)."""
@@ -200,18 +249,39 @@ class ProtocolService:
             url=f"https://www.protocols.io/view/{normalized}",
         )
 
-    def list(self, limit: int = 50) -> list[dict[str, Any]]:
+    def list(self, limit: int = 50, offset: int = 0, query: str = "") -> list[dict[str, Any]]:
         self.ensure_schema()
+        where = ""
+        params: list[Any] = []
+        text = str(query or "").strip()
+        if text:
+            where = "WHERE p.title LIKE ? OR p.doi LIKE ?"
+            params.extend([f"%{text}%", f"%{text}%"])
+        params.extend([max(1, limit), max(0, offset)])
         with self._session() as conn:
             rows = conn.execute(
-                """
+                f"""
                 SELECT p.protocol_id, p.title, p.doi, p.version, p.url, p.fetched_at,
                        (SELECT COUNT(*) FROM protocol_steps s WHERE s.protocol_id = p.protocol_id) AS steps
-                FROM protocol_imports p ORDER BY p.fetched_at DESC LIMIT ?
+                FROM protocol_imports p {where}
+                ORDER BY p.fetched_at DESC LIMIT ? OFFSET ?
                 """,
-                (max(1, limit),),
+                tuple(params),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def count(self, query: str = "") -> int:
+        self.ensure_schema()
+        text = str(query or "").strip()
+        with self._session() as conn:
+            if text:
+                return int(
+                    conn.execute(
+                        "SELECT COUNT(*) FROM protocol_imports WHERE title LIKE ? OR doi LIKE ?",
+                        (f"%{text}%", f"%{text}%"),
+                    ).fetchone()[0]
+                )
+            return int(conn.execute("SELECT COUNT(*) FROM protocol_imports").fetchone()[0])
 
     def get(self, protocol_id: str) -> dict[str, Any] | None:
         self.ensure_schema()
@@ -234,6 +304,117 @@ class ProtocolService:
             ]
             record.pop("raw_json", None)
         return record
+
+    # ------------------------------------------------------------------ runs
+    def add_run(
+        self,
+        protocol_id: str,
+        *,
+        title: str = "",
+        operator: str = "",
+        run_date: str = "",
+        status: str = "planned",
+        result: str = "",
+        notes: str = "",
+        done_steps: Any = None,
+    ) -> dict[str, Any]:
+        import uuid
+
+        self.ensure_schema()
+        status = _run_status(status)
+        run_id = "run_" + uuid.uuid4().hex[:12]
+        now = _now()
+        steps_done = _done_steps(done_steps)
+        with self._session() as conn:
+            conn.execute(
+                """
+                INSERT INTO experiment_runs
+                (run_id, protocol_id, title, operator, run_date, status, result, notes, done_steps, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    run_id,
+                    protocol_id,
+                    _text(title),
+                    _text(operator),
+                    _text(run_date) or now[:10],
+                    status,
+                    _text(result),
+                    _text(notes),
+                    json.dumps(steps_done, ensure_ascii=False),
+                    now,
+                    now,
+                ),
+            )
+        return {
+            "run_id": run_id,
+            "protocol_id": protocol_id,
+            "title": _text(title),
+            "operator": _text(operator),
+            "run_date": _text(run_date) or now[:10],
+            "status": status,
+            "result": _text(result),
+            "notes": _text(notes),
+            "done_steps": steps_done,
+            "created_at": now,
+            "updated_at": now,
+        }
+
+    def list_runs(self, protocol_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        self.ensure_schema()
+        with self._session() as conn:
+            rows = conn.execute(
+                "SELECT * FROM experiment_runs WHERE protocol_id = ? "
+                "ORDER BY run_date DESC, created_at DESC LIMIT ?",
+                (protocol_id, max(1, limit)),
+            ).fetchall()
+        return [_run_row(row) for row in rows]
+
+    def update_run(self, run_id: str, **fields: Any) -> dict[str, Any] | None:
+        allowed = {"title", "operator", "run_date", "status", "result", "notes", "done_steps"}
+        updates = {key: value for key, value in fields.items() if key in allowed}
+        if "status" in updates:
+            updates["status"] = _run_status(updates["status"])
+        if "done_steps" in updates:
+            updates["done_steps"] = json.dumps(
+                _done_steps(updates["done_steps"]), ensure_ascii=False
+            )
+        if not updates:
+            return None
+        self.ensure_schema()
+        assignments = ", ".join(f"{key} = ?" for key in updates)
+        values = [str(value) for value in updates.values()]
+        with self._session() as conn:
+            cursor = conn.execute(
+                f"UPDATE experiment_runs SET {assignments}, updated_at = ? WHERE run_id = ?",
+                (*values, _now(), run_id),
+            )
+            if cursor.rowcount == 0:
+                return None
+            row = conn.execute(
+                "SELECT * FROM experiment_runs WHERE run_id = ?", (run_id,)
+            ).fetchone()
+        return _run_row(row) if row else None
+
+    def delete_run(self, run_id: str) -> bool:
+        self.ensure_schema()
+        with self._session() as conn:
+            cursor = conn.execute("DELETE FROM experiment_runs WHERE run_id = ?", (run_id,))
+        return cursor.rowcount > 0
+
+    def recent_runs(self, limit: int = 20) -> list[dict[str, Any]]:
+        self.ensure_schema()
+        with self._session() as conn:
+            rows = conn.execute(
+                """
+                SELECT r.*, p.title AS protocol_title
+                FROM experiment_runs r
+                LEFT JOIN protocol_imports p ON p.protocol_id = r.protocol_id
+                ORDER BY r.run_date DESC, r.created_at DESC LIMIT ?
+                """,
+                (max(1, limit),),
+            ).fetchall()
+        return [_run_row(row) for row in rows]
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.db_path), timeout=10)
