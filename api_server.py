@@ -173,12 +173,21 @@ def get_ingest_service():
     """Lazy: importing ingest pulls chromadb/torch only when first used."""
     global _ingest_service
     if _ingest_service is None:
+        import os
+
         from services.search.ingest import IngestService
 
+        inline = os.environ.get("SCIPAL_INGEST_INLINE", "").strip().lower() in {
+            "1",
+            "true",
+            "yes",
+        }
         _ingest_service = IngestService(
             db_path=DB_PATH,
             xml_dir=PROJECT_ROOT / "documents_xml",
             chroma_path=PROJECT_ROOT / "data" / "chroma",
+            # 默认交给常驻 worker，Flask 进程只负责提交与查询
+            queue_dir=None if inline else PROJECT_ROOT / "data" / "runs" / "_queue",
             log=app.logger.info,
         )
     return _ingest_service
@@ -193,9 +202,10 @@ app.register_blueprint(
 def get_hybrid():
     global _hybrid
     if _hybrid is None:
-        # V31.71: 回退到旧的混合检索（hybrid_search.py），检索层不改，只改数据层
-        from services.search.hybrid_search import HybridSearch
-        _hybrid = HybridSearch()
+        # V33.20: 复用 UnifiedRetriever 的那套 HybridSearch（避免第二个嵌入模型）
+        from services.search.shared import get_shared_hybrid
+
+        _hybrid = get_shared_hybrid()
     return _hybrid
 
 

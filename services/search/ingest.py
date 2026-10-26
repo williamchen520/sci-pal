@@ -44,11 +44,13 @@ class IngestService:
         download: Callable[[str], Path | None] | None = None,
         parse: Callable[[Path], Mapping[str, Any] | None] | None = None,
         embed: Callable[[Sequence[Mapping[str, Any]]], int] | None = None,
+        queue_dir: str | Path | None = None,
         log: Callable[[str], None] = print,
     ) -> None:
         self.db_path = Path(db_path)
         self.xml_dir = Path(xml_dir)
         self.chroma_path = Path(chroma_path) if chroma_path else None
+        self.queue_dir = Path(queue_dir) if queue_dir else None
         self.default_batch_size = _clamp_batch(batch_size)
         self._download = download
         self._parse = parse
@@ -83,12 +85,51 @@ class IngestService:
         finally:
             conn.close()
 
+        self.log(f"ingest queued: {task_id} ({len(ids)} papers, batch={size})")
+        if self.queue_dir is not None:
+            self._enqueue_job(task_id, ids, size)
+            return task_id
+
         thread = threading.Thread(
             target=self._run, args=(task_id, ids, size), name=f"ingest-{task_id}", daemon=True
         )
         thread.start()
-        self.log(f"ingest queued: {task_id} ({len(ids)} papers, batch={size})")
         return task_id
+
+    def _enqueue_job(self, task_id: str, ids: list[str], size: int) -> None:
+        """Hand the job to the resident worker (Flask stays out of the CPU path)."""
+        queue = Path(self.queue_dir)
+        queue.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "type": "ingest",
+            "task_id": task_id,
+            "pmc_ids": ids,
+            "batch_size": size,
+        }
+        path = queue / f"ingest-{task_id}.job.json"
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp.replace(path)
+        self.log(f"ingest job queued for worker: {path.name}")
+
+    def execute(self, task_id: str) -> dict[str, Any] | None:
+        """Run an already-created task (called by the worker)."""
+        conn = self._connect()
+        try:
+            _ensure_schema(conn)
+            row = conn.execute(
+                "SELECT status, pmc_ids, batch_size FROM ingest_tasks WHERE task_id = ?",
+                (task_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"unknown ingest task: {task_id}")
+            ids = json.loads(row["pmc_ids"] or "[]")
+            size = int(row["batch_size"] or self.default_batch_size)
+        finally:
+            conn.close()
+
+        self._run(task_id, ids, size)
+        return self.status(task_id)
 
     # ------------------------------------------------------------------ work
     def _run(self, task_id: str, pmc_ids: list[str], batch_size: int) -> None:

@@ -12,6 +12,7 @@ graph edges to find related papers vector search might miss.
 from typing import Dict, List, Optional
 import time
 from services.search.hybrid_search import HybridSearch
+from services.search.shared import get_shared_hybrid
 from services.search.reranker import Reranker
 from services.search.query_router import QueryRouter
 from services.search.context_expander import ContextExpander, HIT_START, HIT_END
@@ -25,7 +26,7 @@ class UnifiedRetriever:
                  expand: bool = True, graph_expand: bool = True,
                  use_chunks: bool = True, diagnostics: bool = False,
                  use_abstracts: bool = True):  # V30.0: 是否用摘要库
-        self.searcher = HybridSearch(diagnostics=diagnostics)
+        self.searcher = get_shared_hybrid(diagnostics=diagnostics)
         self.rerank = rerank
         self.routing = routing
         self.expand = expand
