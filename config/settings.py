@@ -24,12 +24,8 @@ DEBUG = False
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB
 
-# Parser config
-PARSER_CONFIG = {
-    "primary": "mineru",  # mineru / docling
-    "use_grobid": True,
-    "use_pdfplumber": True,
-}
+# Parser policy lives in build_db/parsers/pipeline.py
+# (Docling body + GROBID enrichment + MinerU quality fallback).
 
 # Retrieval config
 RETRIEVAL_CONFIG = {
