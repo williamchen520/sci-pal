@@ -16,8 +16,79 @@ def build_search_blueprint(
     *,
     get_task_manager: Callable[[], Any],
     log: Any,
+    get_hybrid_retriever: Callable[[], Any] | None = None,
 ) -> Blueprint:
     bp = Blueprint("search", __name__, url_prefix="/api")
+
+    @bp.route("/search/hybrid", methods=["GET", "POST"])
+    def hybrid_search():
+        if get_hybrid_retriever is None:
+            return jsonify({"error": "混合检索器未配置"}), 501
+        if request.method == "POST":
+            data = request.get_json(silent=True) or {}
+            query = data.get("q", "").strip()
+            top_k = int(data.get("top_k", 20))
+            use_online = bool(data.get("use_online", True))
+            online_max = int(data.get("online_max", 30))
+        else:
+            query = request.args.get("q", "").strip()
+            top_k = int(request.args.get("top_k", 20))
+            use_online = request.args.get("use_online", "true").lower() == "true"
+            online_max = int(request.args.get("online_max", 30))
+
+        if not query:
+            return jsonify({"error": "缺少搜索关键词 q"}), 400
+        try:
+            result = get_hybrid_retriever().search_papers(
+                query=query,
+                top_k=top_k,
+                use_online=use_online,
+                online_max_results=online_max,
+            )
+            return jsonify(result)
+        except Exception as exc:  # noqa: BLE001
+            log.exception("hybrid search failed")
+            return jsonify({"error": f"混合搜索失败: {str(exc)}"}), 500
+
+    @bp.route("/search/online", methods=["GET", "POST"])
+    def online_search():
+        if request.method == "POST":
+            data = request.get_json(silent=True) or {}
+            query = data.get("q", "").strip()
+            max_results = int(data.get("max_results", 30))
+            search_pubmed = bool(data.get("search_pubmed", True))
+            search_pmc = bool(data.get("search_pmc", True))
+        else:
+            query = request.args.get("q", "").strip()
+            max_results = int(request.args.get("max_results", 30))
+            search_pubmed = request.args.get("search_pubmed", "true").lower() == "true"
+            search_pmc = request.args.get("search_pmc", "true").lower() == "true"
+
+        if not query:
+            return jsonify({"error": "缺少搜索关键词 q"}), 400
+        try:
+            from services.search.online_search import get_online_searcher
+
+            results = get_online_searcher().search(
+                query,
+                max_results=max_results,
+                search_pubmed=search_pubmed,
+                search_pmc=search_pmc,
+            )
+            pubmed_count = sum(1 for r in results if r.source == "online_pubmed")
+            pmc_count = sum(1 for r in results if r.source == "online_pmc")
+            return jsonify(
+                {
+                    "query": query,
+                    "total": len(results),
+                    "pubmed_count": pubmed_count,
+                    "pmc_count": pmc_count,
+                    "papers": [r.to_dict() for r in results],
+                }
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.exception("online search failed")
+            return jsonify({"error": f"在线搜索失败: {str(exc)}"}), 500
 
     @bp.get("/search/download_status")
     def download_status():

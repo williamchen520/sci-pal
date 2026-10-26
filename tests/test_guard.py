@@ -39,7 +39,7 @@ class GuardTests(unittest.TestCase):
         path = Path(self.tmp.name) / "lex.tsv"
         write_lexicon(path)
         self.lexicon = Lexicon.load(path)
-        self.fts = {"CAS9": True}
+        self.fts = {"HEK293": True}
 
     def guard(self) -> VocabularyGuard:
         return VocabularyGuard(self.lexicon, fts_lookup=lambda term: self.fts.get(term.upper(), False))
@@ -54,9 +54,9 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(report.counts["unknown"], 1)
 
     def test_corpus_landing_silences_method_terms(self) -> None:
-        report = self.guard().check("We used CAS9 editing and FOOBARX.")
+        report = self.guard().check("We used HEK293 cells and FOOBARX.")
         statuses = {issue.term.upper(): issue.status for issue in report.issues}
-        self.assertEqual(statuses.get("CAS9"), "corpus")
+        self.assertEqual(statuses.get("HEK293"), "corpus")
         self.assertEqual(statuses.get("FOOBARX"), "unknown")
 
     def test_defined_abbreviation_is_not_flagged(self) -> None:
@@ -73,6 +73,14 @@ class GuardTests(unittest.TestCase):
         summary = report.summary()
         self.assertIn("counts", summary)
         self.assertLessEqual(len(summary["issues"]), 50)
+
+    def test_known_abbreviation_is_not_unknown(self) -> None:
+        report = self.guard().check("PBMC were isolated and ZZZZ was not.")
+        statuses = {issue.term.upper(): issue.status for issue in report.issues}
+        self.assertEqual(statuses.get("PBMC"), "known_curated")
+        self.assertEqual(statuses.get("ZZZZ"), "unknown")
+        detail = next(i.detail for i in report.issues if i.term.upper() == "PBMC")
+        self.assertIn("peripheral blood mononuclear cell", detail)
 
 
 class HgncTokenTests(unittest.TestCase):
@@ -118,6 +126,69 @@ class HgncTokenTests(unittest.TestCase):
         pubtator.merge(hgnc)
         self.assertEqual(len(pubtator.lookup("EGFR")), 2)
         self.assertEqual(len(pubtator.preferred("EGFR")), 1)
+
+
+class MeshLexiconTests(unittest.TestCase):
+    def test_mesh_entries_are_curated_and_lookup_only(self) -> None:
+        from services.quality.lexicon import Lexicon
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            path = Path(tmp) / "mesh.tsv"
+            path.write_text(
+                HEADER
+                + "Disease\tD018805\tncbi_mesh\tSepsis\tsepticemia; blood poisoning\t0\t0\n"
+                + "Chemical\tD000001\tncbi_mesh\tDimethyl Sulfoxide\tDMSO\t0\t0\n",
+                encoding="utf-8",
+            )
+            lexicon = Lexicon.load(path, source="mesh")
+        self.assertEqual(lexicon.lookup("sepsis")[0].tier, "curated")
+        self.assertEqual(lexicon.lookup("DMSO")[0].type, "Chemical")
+        self.assertEqual(list(lexicon.match_surfaces()), [])
+
+    def test_multiword_mesh_phrase_is_matched(self) -> None:
+        from services.quality.guard import VocabularyGuard
+        from services.quality.lexicon import Lexicon
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            path = Path(tmp) / "mesh.tsv"
+            path.write_text(
+                HEADER
+                + "Disease\tD002051\tncbi_mesh\tBurkitt Lymphoma\tBurkitt's lymphoma\t0\t0\n",
+                encoding="utf-8",
+            )
+            lexicon = Lexicon.load(path, source="mesh")
+        guard = VocabularyGuard(lexicon, fts_lookup=lambda term: False)
+        report = guard.check("Burkitt lymphoma was diagnosed in two patients.")
+        statuses = {issue.term.lower(): issue.status for issue in report.issues}
+        self.assertEqual(statuses.get("burkitt lymphoma"), "known_curated")
+
+    def test_unknown_multiword_phrase_is_not_flagged(self) -> None:
+        from services.quality.guard import VocabularyGuard
+        from services.quality.lexicon import Lexicon
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            path = Path(tmp) / "mesh.tsv"
+            path.write_text(HEADER, encoding="utf-8")
+            lexicon = Lexicon.load(path, source="mesh")
+        guard = VocabularyGuard(lexicon, fts_lookup=lambda term: False)
+        report = guard.check("Zorblax syndrome was observed in the cohort.")
+        self.assertEqual(report.counts.get("unknown", 0), 0)
+
+    def test_brand_name_resolves_to_generic(self) -> None:
+        from services.quality.guard import VocabularyGuard
+        from services.quality.lexicon import Lexicon
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            path = Path(tmp) / "brands.tsv"
+            path.write_text(
+                HEADER + "Chemical\tfda:atorvastatin\tfda_ndc\tatorvastatin\tLipitor\t0\t0\n",
+                encoding="utf-8",
+            )
+            lexicon = Lexicon.load(path, source="fda")
+        guard = VocabularyGuard(lexicon, fts_lookup=lambda term: False)
+        report = guard.check("Lipitor reduced LDL cholesterol.")
+        statuses = {issue.term: issue.status for issue in report.issues}
+        self.assertEqual(statuses.get("Lipitor"), "known_curated")
 
 
 class FtsLandingThreadTests(unittest.TestCase):

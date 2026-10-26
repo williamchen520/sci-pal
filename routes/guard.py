@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Callable
 
+from services.quality.abbreviations import lookup_abbreviation
+
 from flask import Blueprint, jsonify, request
 
 
@@ -48,6 +50,7 @@ def build_guard_blueprint(*, get_guard: Callable[[], Any], log: Any) -> Blueprin
             {
                 "ok": True,
                 "term": term,
+                "abbreviation": lookup_abbreviation(term),
                 "entries": [
                     {
                         "type": entry.type,

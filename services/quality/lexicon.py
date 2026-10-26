@@ -27,6 +27,10 @@ DEFAULT_LEXICON = (
 )
 #: Official gene symbols (45k rows) — matched by token, not by the big phrase regex.
 HGNC_LEXICON = Path(__file__).resolve().parent / "data" / "hgnc_symbols.tsv"
+#: MeSH descriptors (C = disease, D = chemical) — lookup only, never scanned.
+MESH_LEXICON = Path(__file__).resolve().parent / "data" / "mesh_descriptors.tsv"
+#: Curated brand -> generic drug names (small; openFDA bulk fetch is unreliable).
+DRUG_BRANDS = Path(__file__).resolve().parent / "data" / "drug_brands.tsv"
 
 #: Terms that are real entities but too generic to validate against.
 BROAD_TERMS = frozenset(
@@ -84,8 +88,8 @@ class Entry:
 
     @property
     def tier(self) -> str:
-        if self.database == "hgnc":
-            return "curated"  # official gene symbol list
+        if self.source in {"hgnc", "mesh", "fda"}:
+            return "curated"  # official / curated vocabularies
         if normalize_surface(self.canonical) in BROAD_TERMS or self.papers >= 100:
             return "broad"
         if self.papers < 2 or len(self.canonical.strip()) < 3:
@@ -133,6 +137,10 @@ class Lexicon:
         lexicon = cls.load(DEFAULT_LEXICON, source="pubtator")
         if HGNC_LEXICON.exists():
             lexicon.merge(cls.load(HGNC_LEXICON, source="hgnc"))
+        if MESH_LEXICON.exists():
+            lexicon.merge(cls.load(MESH_LEXICON, source="mesh"))
+        if DRUG_BRANDS.exists():
+            lexicon.merge(cls.load(DRUG_BRANDS, source="fda"))
         return lexicon
 
     def merge(self, other: "Lexicon") -> "Lexicon":
@@ -148,18 +156,30 @@ class Lexicon:
         for entry in self.entries:
             for surface in (entry.canonical, *entry.aliases):
                 key = normalize_surface(surface)
-                if key:
-                    self.index.setdefault(key, []).append(entry)
+                if not key:
+                    continue
+                bucket = self.index.setdefault(key, [])
+                if any(
+                    item.type == entry.type and item.normalized_id == entry.normalized_id
+                    for item in bucket
+                ):
+                    continue
+                bucket.append(entry)
 
     def lookup(self, surface: str) -> list[Entry]:
         return self.index.get(normalize_surface(surface), [])
 
     def preferred(self, surface: str) -> list[Entry]:
-        """Resolve multi-source duplicates: a single HGNC row wins over PubTator."""
+        """Resolve multi-source duplicates: HGNC, then MeSH, win over the rest."""
         entries = self.lookup(surface)
         hgnc = [entry for entry in entries if entry.database == "hgnc"]
         if len(hgnc) == 1:
             return hgnc
+        mesh = [
+            entry for entry in entries if entry.database == "ncbi_mesh" and entry.source == "mesh"
+        ]
+        if len(mesh) == 1:
+            return mesh
         return entries
 
     def is_curated(self, surface: str) -> bool:
@@ -175,12 +195,13 @@ class Lexicon:
     def match_surfaces(self) -> Iterable[str]:
         """Only surfaces worth matching: curated/broad tiers, no common words.
 
-        HGNC rows are excluded here: 45k alternatives would make the phrase
-        regex slow, and gene symbols are matched by token in ``guard`` instead.
+        HGNC and MeSH rows are excluded here: tens of thousands of alternatives
+        would make the phrase regex slow. Gene symbols are matched by token in
+        ``guard``; MeSH is lookup-only (``guard_term`` / disambiguation).
         """
         seen: set[str] = set()
         for entry in self.entries:
-            if entry.tier == "weak" or entry.source == "hgnc":
+            if entry.tier == "weak" or entry.source in {"hgnc", "mesh"}:
                 continue
             for surface in (entry.canonical, *entry.aliases):
                 text = surface.strip()

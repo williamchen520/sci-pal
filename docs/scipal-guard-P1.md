@@ -41,7 +41,14 @@
 - **weak**：单篇出现 → 不进入匹配（避免 "and"/"as" 这类噪声）；
 - 短词（≤3 字符）只有全大写才匹配（避免 AS = ankylosing spondylitis 撞 "as"）；
 - 同一 surface 多个 ID → `ambiguous`（如 STAT3、STING），不判错；
-- canonical 精确命中 → 视为 `known_curated`（TLR4 这类即使只标了 1 篇也是真词）。
+- canonical 精确命中 → 视为 `known_curated`（TLR4 这类即使只标了 1 篇也是真词）；
+- **官方词表**：HGNC（45,277 基因符号）按 token 匹配；MeSH（15,756 条 C/D 描述符）
+  只做查表，不进扫描正则（否则 6 万条 alternation 会拖慢每次校验）。
+- **多词疾病**：MeSH 短语按 2–4 gram 贪心扫描（如 `Burkitt lymphoma`、
+  `diffuse large B-cell lymphoma`），命中即 `known_curated`；与已有词条重叠时只计一次。
+
+当前词表：**62,180 条**（PubTator 1,829 + HGNC 45,277 + MeSH 15,756 + 药品商品名 48 组，按 type+ID 去重）。
+另有 **~90 个常用缩写**（LPS / PBS / PBMC / LDL / CRISPR…）走独立词典，不占词表条目。
 
 ## 4. 接口
 
