@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import time
 from typing import Any, Optional
 
@@ -63,8 +64,8 @@ class LLMClient:
         model: str = "qwen2.5:3b",
         host: str = "http://localhost:11434",
         api_key: Optional[str] = None,
-        timeout: int = 1800,
-        max_retries: int = 1,
+        timeout: Optional[int] = None,
+        max_retries: Optional[int] = None,
         retry_delay: float = 2.0,
         temperature: float = 0.3,
     ):
@@ -72,8 +73,13 @@ class LLMClient:
         self.model = model
         self.host = host.rstrip("/")
         self.api_key = api_key
-        self.timeout = timeout
-        self.max_retries = max_retries
+        # A hung Ollama call used to block a whole run for the 1800s default.
+        self.timeout = int(
+            timeout if timeout is not None else os.environ.get("SCIPAL_LLM_TIMEOUT", "300")
+        )
+        self.max_retries = int(
+            max_retries if max_retries is not None else os.environ.get("SCIPAL_LLM_RETRIES", "2")
+        )
         self.retry_delay = retry_delay
         self.temperature = temperature
         self._available: Optional[bool] = None
@@ -192,16 +198,32 @@ class LLMClient:
 
         last_error: Optional[Exception] = None
         for attempt in range(1, self.max_retries + 1):
+            started = time.time()
             try:
                 resp = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
                 resp.raise_for_status()
                 data = resp.json()
                 return self._parse_response(data)
+            except requests.Timeout as exc:
+                elapsed = time.time() - started
+                last_error = exc
+                print(
+                    f"  ⚠️ LLM 超时：{elapsed:.0f}s（第 {attempt}/{self.max_retries} 次）",
+                    file=sys.stderr,
+                )
+                if attempt < self.max_retries:
+                    time.sleep(self.retry_delay * attempt)
             except Exception as e:
                 last_error = e
                 if attempt < self.max_retries:
                     time.sleep(self.retry_delay * attempt)
 
+        if isinstance(last_error, requests.Timeout):
+            raise LLMError(
+                f"LLM 请求超时（{self.timeout}s × {self.max_retries} 次）："
+                f"检查 Ollama 是否卡住（ollama ps / ollama stop {self.model}），"
+                "或调大 SCIPAL_LLM_TIMEOUT"
+            )
         raise LLMError(f"LLM 调用失败（重试 {self.max_retries} 次）: {last_error}")
 
     def chat_json(
