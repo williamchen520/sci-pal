@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable
 
+from services.quality.abbreviations import lookup_abbreviation
 from services.quality.lexicon import COMMON_WORDS, Entry, Lexicon, normalize_surface
 
 STOP_ACRONYMS = frozenset(
@@ -208,6 +209,11 @@ class VocabularyGuard:
                 continue
             if normalize_surface(token) in known_surfaces:
                 continue
+            expansion = lookup_abbreviation(token)
+            if expansion:
+                self._add(report, token, "known_curated", f"缩写：{expansion}")
+                reported.add(upper)
+                continue
             landed = bool(self._fts and self._fts(token))
             if landed:
                 self._add(report, token, "corpus", "正文出现过（方法/技术类不判）")
@@ -277,7 +283,7 @@ class VocabularyGuard:
                 continue
             seen.add(upper)
             entries = self.lexicon.preferred(token)
-            if entries or (self._fts and self._fts(token)):
+            if entries or lookup_abbreviation(token) or (self._fts and self._fts(token)):
                 continue
             self._add(report, token, "undefined_abbrev", "缩写未定义")
 
