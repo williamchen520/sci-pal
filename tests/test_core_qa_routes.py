@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -118,8 +119,20 @@ class CoreAndQaRouteTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/agentic/search", json={}).status_code, 400)
 
     def test_agentic_async_returns_task_id(self) -> None:
-        response = self.client.post("/api/agentic/search_async", json={"q": "sepsis"})
-        self.assertEqual(response.status_code, 200)
+        class FakeAgentic:
+            def __init__(self, **kwargs):
+                pass
+
+            def search(self, q, paper_id=None, top_paragraphs=6):
+                return {"query": q, "entities": []}
+
+        # the endpoint runs a daemon thread; unpachted it imports the real
+        # searcher and keeps running while later tests execute (slow suite)
+        with patch("services.search.agentic_search.AgenticSearcher", FakeAgentic):
+            response = self.client.post("/api/agentic/search_async", json={"q": "sepsis"})
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("task_id", response.get_json())
+            time.sleep(0.05)
 
 
 if __name__ == "__main__":
