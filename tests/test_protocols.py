@@ -203,9 +203,11 @@ class ProtocolRoutesTests(unittest.TestCase):
         self.assertEqual(listed["count"], 1)
 
         updated = self.client.patch(
-            f"/api/experiments/{run['run_id']}", json={"status": "completed", "result": "OK"}
+            f"/api/experiments/{run['run_id']}",
+            json={"status": "completed", "result": "OK", "done_steps": ["s1", "s2"]},
         ).get_json()
         self.assertEqual(updated["run"]["status"], "completed")
+        self.assertEqual(updated["run"]["done_steps"], ["s1", "s2"])
 
         recent = self.client.get("/api/experiments").get_json()
         self.assertEqual(recent["runs"][0]["protocol_title"], "TLR4 stimulation assay")

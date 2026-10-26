@@ -91,6 +91,7 @@ async function loadDetail(protocolId) {
         if (!resp.ok || !body.ok) throw new Error(body.error || `HTTP ${resp.status}`);
         const protocol = body.protocol;
         const steps = protocol.steps || [];
+        currentSteps = steps;
         const link = protocol.url
             ? `<a href="${escapeHtml(protocol.url)}" target="_blank" rel="noreferrer">在 protocols.io 打开 ↗</a>`
             : '';
@@ -132,6 +133,7 @@ async function loadDetail(protocolId) {
 }
 
 const RUN_LABELS = { planned: '计划', running: '进行中', completed: '完成', failed: '失败' };
+let currentSteps = [];
 
 async function loadRuns(protocolId) {
     const container = document.getElementById('runList');
@@ -144,17 +146,52 @@ async function loadRuns(protocolId) {
             container.innerHTML = '<div class="hint">还没有实验记录</div>';
             return;
         }
-        container.innerHTML = body.runs.map((run) => `
-            <div class="run-item">
-                <div>
+        container.innerHTML = body.runs.map((run) => {
+            const done = run.done_steps || [];
+            const checklist = currentSteps.length
+                ? currentSteps.map((step) => `
+                    <label class="run-step">
+                        <input type="checkbox" data-run="${escapeHtml(run.run_id)}"
+                               data-step="${escapeHtml(step.step_id)}"
+                               ${done.includes(step.step_id) ? 'checked' : ''}>
+                        ${step.ordinal}. ${escapeHtml(step.title || '')}
+                    </label>`).join('')
+                : '<span class="hint">该协议没有步骤</span>';
+            return `
+            <details class="run-item">
+                <summary>
                     <span class="badge ${escapeHtml(run.status)}">${escapeHtml(RUN_LABELS[run.status] || run.status)}</span>
                     <strong>${escapeHtml(run.title || '(无标题)')}</strong>
-                    <span class="hint">${escapeHtml(run.run_date || '')} · ${escapeHtml(run.operator || '')}</span>
-                </div>
+                    <span class="hint">${escapeHtml(run.run_date || '')} · ${escapeHtml(run.operator || '')} · ${done.length}/${currentSteps.length} 步</span>
+                </summary>
                 ${run.result ? `<div class="hint">结果：${escapeHtml(run.result)}</div>` : ''}
-            </div>`).join('');
+                <div class="run-steps">${checklist}</div>
+            </details>`;
+        }).join('');
+        container.querySelectorAll('.run-step input').forEach((box) => {
+            box.addEventListener('change', () => toggleStep(protocolId, box.dataset.run));
+        });
     } catch (err) {
         container.innerHTML = `<div class="hint bad">加载失败：${escapeHtml(err.message)}</div>`;
+    }
+}
+
+async function toggleStep(protocolId, runId) {
+    const boxes = Array.from(
+        document.querySelectorAll(`.run-step input[data-run="${runId}"]`)
+    );
+    const done = boxes.filter((box) => box.checked).map((box) => box.dataset.step);
+    try {
+        const resp = await fetch(`/api/experiments/${encodeURIComponent(runId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ done_steps: done }),
+        });
+        const body = await resp.json();
+        if (!resp.ok || !body.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+        await loadRuns(protocolId);
+    } catch (err) {
+        setStatus(`更新进度失败：${err.message}`, 'bad');
     }
 }
 

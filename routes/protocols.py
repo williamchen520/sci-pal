@@ -73,6 +73,7 @@ def build_protocols_blueprint(
             status=str(body.get("status") or "planned"),
             result=str(body.get("result") or ""),
             notes=str(body.get("notes") or ""),
+            done_steps=body.get("done_steps"),
         )
         return jsonify({"ok": True, "run": run})
 
