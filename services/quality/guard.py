@@ -40,6 +40,7 @@ def _phrase_pattern(surfaces: Iterable[str]) -> re.Pattern[str]:
 _ENTITY_TOKEN = re.compile(
     r"\b(?:[A-Z][A-Z0-9]{1,}[A-Z0-9-]*|[A-Z]{2,}\d+[A-Za-z0-9-]*|IL-\d+|CD\d+|miR-\d+[a-z]?)\b"
 )
+_WORD = re.compile(r"[A-Za-z][A-Za-z0-9'\-]*")
 _DEFINITION = re.compile(r"([A-Za-z][A-Za-z0-9 ,\-]{3,60})\s*\(([A-Z][A-Za-z0-9-]{1,9})\)")
 
 
@@ -141,6 +142,7 @@ class VocabularyGuard:
         body = str(text or "")
         self._check_entities(body, report)
         self._check_tokens(body, report)
+        self._check_phrases(body, report)
         self._check_abbreviations(body, report)
         return report
 
@@ -212,6 +214,55 @@ class VocabularyGuard:
             else:
                 self._add(report, token, "unknown", "词表与正文均未见")
             reported.add(upper)
+
+    def _check_phrases(self, body: str, report: GuardReport) -> None:
+        """Multi-word MeSH terms (e.g. "Burkitt lymphoma") via 2-4 gram lookup.
+
+        A giant alternation would be slow, so phrases are matched by walking the
+        token stream and probing the lexicon with greedy longest spans.
+        """
+        words = [(match.group(0), match.start(), match.end()) for match in _WORD.finditer(body)]
+        if not words:
+            return
+        reported = {normalize_surface(issue.term) for issue in report.issues}
+        index = 0
+        while index < len(words):
+            matched = False
+            for size in (4, 3, 2):
+                if index + size > len(words):
+                    continue
+                span = body[words[index][1]:words[index + size - 1][2]]
+                key = normalize_surface(span)
+                if not key or key in reported:
+                    continue
+                entries = self.lexicon.preferred(span)
+                if not entries:
+                    continue
+                existing = {normalize_surface(issue.term) for issue in report.issues}
+                if any(key in term or term in key for term in existing if term):
+                    index += size
+                    matched = True
+                    break
+                official = [
+                    entry
+                    for entry in entries
+                    if entry.source in {"mesh", "pubtator", "hgnc"} and entry.tier != "weak"
+                ]
+                if not official:
+                    continue
+                ids = {(entry.type, entry.normalized_id) for entry in official}
+                if len(ids) > 1:
+                    self._add(report, span, "ambiguous", "多个标准 ID")
+                elif all(entry.tier == "broad" for entry in official):
+                    self._add(report, span, "known_broad", "泛词，不判")
+                else:
+                    self._add(report, span, "known_curated", official[0].normalized_id)
+                reported.add(key)
+                index += size
+                matched = True
+                break
+            if not matched:
+                index += 1
 
     def _check_abbreviations(self, body: str, report: GuardReport) -> None:
         defined = {match.group(2).upper() for match in _DEFINITION.finditer(body)}

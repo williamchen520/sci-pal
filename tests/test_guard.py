@@ -137,6 +137,35 @@ class MeshLexiconTests(unittest.TestCase):
         self.assertEqual(lexicon.lookup("DMSO")[0].type, "Chemical")
         self.assertEqual(list(lexicon.match_surfaces()), [])
 
+    def test_multiword_mesh_phrase_is_matched(self) -> None:
+        from services.quality.guard import VocabularyGuard
+        from services.quality.lexicon import Lexicon
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            path = Path(tmp) / "mesh.tsv"
+            path.write_text(
+                HEADER
+                + "Disease\tD002051\tncbi_mesh\tBurkitt Lymphoma\tBurkitt's lymphoma\t0\t0\n",
+                encoding="utf-8",
+            )
+            lexicon = Lexicon.load(path, source="mesh")
+        guard = VocabularyGuard(lexicon, fts_lookup=lambda term: False)
+        report = guard.check("Burkitt lymphoma was diagnosed in two patients.")
+        statuses = {issue.term.lower(): issue.status for issue in report.issues}
+        self.assertEqual(statuses.get("burkitt lymphoma"), "known_curated")
+
+    def test_unknown_multiword_phrase_is_not_flagged(self) -> None:
+        from services.quality.guard import VocabularyGuard
+        from services.quality.lexicon import Lexicon
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            path = Path(tmp) / "mesh.tsv"
+            path.write_text(HEADER, encoding="utf-8")
+            lexicon = Lexicon.load(path, source="mesh")
+        guard = VocabularyGuard(lexicon, fts_lookup=lambda term: False)
+        report = guard.check("Zorblax syndrome was observed in the cohort.")
+        self.assertEqual(report.counts.get("unknown", 0), 0)
+
 
 class FtsLandingThreadTests(unittest.TestCase):
     def test_connection_works_across_threads(self) -> None:
