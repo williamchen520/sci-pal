@@ -47,6 +47,8 @@ class IngestService:
         embed: Callable[[Sequence[Mapping[str, Any]]], int] | None = None,
         embed_client: Callable[[Sequence[Mapping[str, Any]]], int] | None = None,
         batch_timeout: float = 300.0,
+        download_retries: int | None = None,
+        download_retry_delay: float = 2.0,
         queue_dir: str | Path | None = None,
         log: Callable[[str], None] = print,
     ) -> None:
@@ -60,6 +62,12 @@ class IngestService:
         self._embed = embed
         self._embed_client = embed_client
         self.batch_timeout = float(batch_timeout)
+        self.download_retries = int(
+            download_retries
+            if download_retries is not None
+            else os.environ.get("SCIPAL_DOWNLOAD_RETRIES", "3")
+        )
+        self.download_retry_delay = float(download_retry_delay)
         self.log = log
 
     # ---------------------------------------------------------------- submit
@@ -218,9 +226,14 @@ class IngestService:
         parsed: list[dict[str, Any]] = []
         for pmc_id in batch:
             try:
-                path = (self._download or self._default_download)(pmc_id)
+                path = self._download_with_retry(pmc_id)
                 if not path:
-                    failures.append({"pmc_id": pmc_id, "error": "download failed"})
+                    failures.append(
+                        {
+                            "pmc_id": pmc_id,
+                            "error": f"download failed after {self.download_retries} attempts",
+                        }
+                    )
                     continue
                 data = (self._parse or self._default_parse)(path)
                 if not data or not data.get("title"):
@@ -230,6 +243,20 @@ class IngestService:
             except Exception as exc:  # noqa: BLE001 - one bad paper must not kill the batch
                 failures.append({"pmc_id": pmc_id, "error": str(exc)[:200]})
         return parsed
+
+    def _download_with_retry(self, pmc_id: str) -> Path | None:
+        """Retry transient download failures with a small backoff."""
+        downloader = self._download or self._default_download
+        for attempt in range(1, self.download_retries + 1):
+            try:
+                path = downloader(pmc_id)
+                if path:
+                    return path
+            except Exception as exc:  # noqa: BLE001 - retried below
+                self.log(f"download {pmc_id} attempt {attempt} failed: {exc}")
+            if attempt < self.download_retries:
+                time.sleep(self.download_retry_delay * attempt)
+        return None
 
     def _write_batch(self, conn: sqlite3.Connection, parsed: Sequence[Mapping[str, Any]]) -> int:
         written = 0

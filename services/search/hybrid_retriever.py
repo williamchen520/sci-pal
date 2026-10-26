@@ -22,6 +22,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Tuple
 
 from services.search.hybrid_search import HybridSearch
+from services.search.shared import get_shared_hybrid
 from services.search.online_search import OnlineSearcher, OnlineSearchResult
 from services.search.protocols_io_client import ProtocolsIOClient
 
@@ -59,9 +60,9 @@ class HybridRetriever:
         self.protocols_io_max_results = protocols_io_max_results
         self.verbose = verbose
 
-        # 本地检索器（复用现有 HybridSearch）
+        # 本地检索器（复用进程级 HybridSearch，避免第三套嵌入模型）
         try:
-            self.local_searcher = HybridSearch()
+            self.local_searcher = get_shared_hybrid()
             if self.verbose:
                 print("✅ 混合检索器：本地检索已加载")
         except Exception as e:

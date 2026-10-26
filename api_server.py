@@ -25,11 +25,13 @@ from services.review.task_manager import task_manager
 
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
 from contracts import InternalError, fail, ok
+from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
 from routes.reviews import build_reviews_blueprint
 from routes.search import build_search_blueprint
 from routes.system import build_system_blueprint
+from routes.tasks import build_tasks_blueprint
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -233,6 +235,52 @@ app.register_blueprint(
     )
 )
 
+_guard = None
+
+
+def get_guard():
+    """Lazy scipal-guard (PubTator3 lexicon + corpus FTS landing)."""
+    global _guard
+    if _guard is None:
+        from services.quality.guard import FtsLanding, VocabularyGuard
+
+        _guard = VocabularyGuard(fts_lookup=FtsLanding())
+    return _guard
+
+
+# B4c: guard 实体校验（/api/guard/check、/stats、/term/<t>）
+app.register_blueprint(build_guard_blueprint(get_guard=get_guard, log=app.logger))
+
+
+def _unified_list_tasks(**kwargs):
+    from services.unified_task_manager import list_tasks
+
+    return list_tasks(**kwargs)
+
+
+def _unified_get_task(task_id):
+    """统一入口：先查 unified，再回退 review / export / ingest 三个任务库。"""
+    from services.task_lookup import lookup_task
+
+    found = lookup_task(task_id)
+    return found["task"] if found else None
+
+
+def _unified_subscribe(task_id):
+    from services.unified_task_manager import subscribe
+
+    return subscribe(task_id)
+
+
+# B5: 统一任务只读路由（列表 / 详情 / SSE）已移入 routes/tasks.py
+app.register_blueprint(
+    build_tasks_blueprint(
+        list_tasks=_unified_list_tasks,
+        get_task=_unified_get_task,
+        subscribe=_unified_subscribe,
+    )
+)
+
 
 def get_hybrid():
     global _hybrid
@@ -289,37 +337,6 @@ def health():
 # ---------------------------------------------------------------------------
 # V33.12: Unified Task API
 # ---------------------------------------------------------------------------
-@app.route("/api/tasks", methods=["GET"])
-def list_unified_tasks():
-    """List all tasks with optional filters: type, status, limit."""
-    from services.unified_task_manager import list_tasks
-    task_type = request.args.get("type")
-    status = request.args.get("status")
-    limit = int(request.args.get("limit", 50))
-    tasks = list_tasks(task_type=task_type, status=status, limit=limit)
-    return jsonify({"tasks": tasks, "count": len(tasks)})
-
-
-@app.route("/api/tasks/<task_id>", methods=["GET"])
-def get_unified_task(task_id):
-    """Get task details by ID."""
-    from services.unified_task_manager import get_task
-    task = get_task(task_id)
-    if not task:
-        return jsonify({"error": "task not found"}), 404
-    return jsonify(task)
-
-
-@app.route("/api/tasks/<task_id>/events", methods=["GET"])
-def task_sse_events(task_id):
-    """SSE stream for real-time task progress."""
-    from services.unified_task_manager import subscribe
-    def generate():
-        for event, data in subscribe(task_id):
-            yield f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
-    return Response(generate(), mimetype="text/event-stream")
-
-
 @app.route("/api/retrieve", methods=["GET", "POST"])
 def retrieve():
     """

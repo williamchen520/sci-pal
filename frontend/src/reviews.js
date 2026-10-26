@@ -145,4 +145,7 @@ async function loadList() {
     }
 }
 
-loadList();
+loadList().then(() => {
+    const requested = new URLSearchParams(location.search).get('review_id');
+    if (requested) loadReview(requested);
+});

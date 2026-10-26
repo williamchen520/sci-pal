@@ -441,7 +441,7 @@ class ExportManager:
         if task.include_references and references:
             document.add_page_break()
             document.add_heading("References", level=2)
-            for i, ref in enumerate(references, 1):
+            for i, ref in enumerate(self._sorted_references(references), 1):
                 document.add_paragraph(
                     f"{i}. {ref.get('authors', '')} ({ref.get('year', '')}). "
                     f"{ref.get('title', '')}. {ref.get('journal', '')}. {ref.get('doi', '')}"
@@ -452,6 +452,17 @@ class ExportManager:
         file_name = f"{task.review_id}_{task.format}.docx"
         self.update_task_progress(task_id, 90, "正在保存文件...")
         return self.complete_task(task_id, file_name, buffer.getvalue())
+
+    @staticmethod
+    def _sorted_references(references: list[dict]) -> list[dict]:
+        """Newest first, then author; missing/invalid years go last."""
+
+        def key(ref: dict) -> tuple[int, str]:
+            year = str(ref.get("year") or "").strip()
+            year_num = int(year) if year.isdigit() else 0
+            return (-year_num, str(ref.get("authors") or ""))
+
+        return sorted(references, key=key)
 
     @staticmethod
     def _docx_header_footer(document, title: str) -> None:
@@ -545,7 +556,7 @@ class ExportManager:
         if task.include_references and references:
             story.append(PageBreak())
             story.append(Paragraph("References", heading_style))
-            for i, ref in enumerate(references, 1):
+            for i, ref in enumerate(self._sorted_references(references), 1):
                 story.append(
                     Paragraph(
                         escape(

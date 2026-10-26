@@ -202,6 +202,49 @@ class IngestServiceTests(unittest.TestCase):
         self.assertIn(task["status"], {"partial", "failed"})
         self.assertIn("timeout", task["error"] or "")
 
+    def test_download_retries_then_succeeds(self) -> None:
+        attempts = []
+
+        def flaky(pmc_id):
+            attempts.append(pmc_id)
+            return self.root / f"{pmc_id}.xml" if len(attempts) >= 3 else None
+
+        service = IngestService(
+            db_path=self.db,
+            xml_dir=self.root,
+            download=flaky,
+            parse=lambda path: {
+                "title": path.stem,
+                "abstract": "",
+                "authors": "",
+                "paragraphs": [{"section": "Intro", "text": "body", "sequence": 0}],
+            },
+            embed=lambda rows: len(rows),
+            download_retries=3,
+            download_retry_delay=0,
+            log=lambda _: None,
+        )
+        task_id = service.start(self.ids[:1], batch_size=1)
+        task = wait_for(service, task_id)
+        self.assertEqual(task["status"], "completed")
+        self.assertEqual(len(attempts), 3)
+
+    def test_download_retries_exhausted(self) -> None:
+        service = IngestService(
+            db_path=self.db,
+            xml_dir=self.root,
+            download=lambda pmc_id: None,
+            parse=lambda path: None,
+            embed=lambda rows: len(rows),
+            download_retries=2,
+            download_retry_delay=0,
+            log=lambda _: None,
+        )
+        task_id = service.start(self.ids[:1], batch_size=1)
+        task = wait_for(service, task_id)
+        self.assertEqual(task["status"], "failed")
+        self.assertIn("2 attempts", task["error"] or "")
+
     def test_unknown_task_returns_none(self) -> None:
         self.assertIsNone(self._service().status("ing_missing"))
 

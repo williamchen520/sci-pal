@@ -143,8 +143,11 @@ def build_draft_stage(draft: Draft | None = None) -> Callable[[StageContext], St
     return stage
 
 
-def build_verify_stage(verify: Verify | None = None) -> Callable[[StageContext], StageResult]:
-    """Deterministic citation check. Reads ``review.json``, writes ``verify.json``."""
+def build_verify_stage(
+    verify: Verify | None = None,
+    guard: Callable[[str], dict[str, Any]] | None = None,
+) -> Callable[[StageContext], StageResult]:
+    """Deterministic citation check + optional vocabulary guard (``verify.json``)."""
     checker = verify or _default_verify
 
     def stage(context: StageContext) -> StageResult:
@@ -156,6 +159,13 @@ def build_verify_stage(verify: Verify | None = None) -> Callable[[StageContext],
             payload = dict(checker(review, context))
         except Exception as exc:  # noqa: BLE001 - reported, not swallowed
             return _failed("internal", f"verification failed: {exc}")
+
+        guard_check = guard or context.services.get("guard")
+        if guard_check is not None:
+            try:
+                payload["vocabulary"] = dict(guard_check(str(review.get("markdown") or "")))
+            except Exception as exc:  # noqa: BLE001 - guard must not fail the stage
+                payload["vocabulary"] = {"error": str(exc)[:200]}
 
         write_artifact(context, "verify.json", payload)
         stats = payload.get("stats") or {}
@@ -665,6 +675,17 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
 
 def _default_db_path() -> Path:
     return Path(__file__).resolve().parents[2] / "data" / "research.db"
+
+
+def _default_guard(text: str) -> dict[str, Any]:
+    """Vocabulary guard: shipped PubTator3 lexicon + corpus FTS landing."""
+    from services.quality.guard import FtsLanding, VocabularyGuard
+
+    landing = FtsLanding()
+    try:
+        return VocabularyGuard(fts_lookup=landing).check(text).summary()
+    finally:
+        landing.close()
 
 
 def _default_export(record: Mapping[str, Any], context: StageContext) -> list[str]:

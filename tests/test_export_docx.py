@@ -43,6 +43,15 @@ class DocxExportTests(unittest.TestCase):
         header = document.sections[0].header.paragraphs[0].text
         self.assertIn("Demo review", header)
 
+    def test_references_sorted_newest_first(self) -> None:
+        references = [
+            {"title": "old", "year": 2020, "authors": "B"},
+            {"title": "new", "year": 2026, "authors": "A"},
+            {"title": "unknown", "year": "", "authors": "C"},
+        ]
+        ordered = ExportManager._sorted_references(references)
+        self.assertEqual([ref["title"] for ref in ordered], ["new", "old", "unknown"])
+
 
 if __name__ == "__main__":
     unittest.main()
