@@ -29,6 +29,7 @@ from .citation_formatter import PaperMetadata, build_metadata_from_db_row, forma
 from .citation_verifier import CitationVerifier
 from .evidence_extractor import EvidenceExtractor
 from .query_builder import build_section_query, is_paper_relevant, rank_papers
+from . import title_recall
 from .section_loop import write_section_loop
 from .section_prompts import build_write_prompt
 from .llm_client import LLMClient, LLMError
@@ -2022,6 +2023,11 @@ _FULLTEXT_DOI_MAP: Optional[dict[str, str]] = None
 _PAPER_TITLE_CACHE: dict[str, str] = {}
 
 
+def _research_db_path() -> Optional[Path]:
+    path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
+    return path if path.exists() else None
+
+
 def _paper_titles(paper_ids: list[str]) -> dict[str, str]:
     """Titles for the candidate papers (module-level cache, DB-backed)."""
     missing = [pid for pid in paper_ids if pid not in _PAPER_TITLE_CACHE]
@@ -2321,11 +2327,55 @@ def search_and_assign_papers(
                 if abstract_added:
                     print(f"    📄 V33.17 摘要回退：补充 {abstract_added} 条摘要证据")
 
+            # 标题召回通道：把「标题就命中查询词」的论文拉进候选（绕开段落级漂移）
+            title_ids: set[str] = set()
+            db_path = _research_db_path()
+            if db_path is not None:
+                try:
+                    extras = title_recall.recall(db_path, query_terms, limit=6)
+                except Exception:
+                    extras = []
+                added = 0
+                for item in extras:
+                    pid = item["paper_id"]
+                    if pid in sec_paper_ids or added >= 4:
+                        continue
+                    for row in item["paragraphs"]:
+                        evidence_id = f"ev_title_{pid}_{row['para_id'][-8:]}_{evidence_seq}"
+                        evidence_seq += 1
+                        content = row["text"][:1000]
+                        all_evidence_cards[evidence_id] = {
+                            "evidence_id": evidence_id,
+                            "paper_id": pid,
+                            "para_id": row["para_id"],
+                            "paper_title": row["paper_title"],
+                            "section_l1": row["section_l1"],
+                            "page": 0,
+                            "content": content,
+                            "original_quote": content[:200],
+                            "confidence": 0.75,
+                            "verified": False,
+                            "source_type": "title_match",
+                        }
+                        sec_evidence_ids.append(evidence_id)
+                    sec_paper_ids.append(pid)
+                    title_ids.add(pid)
+                    paper_scores[pid] = max(paper_scores.get(pid, 0.0), 1.0)
+                    all_papers[pid] = {
+                        "paper_id": pid,
+                        "title": item["paragraphs"][0].get("paper_title", pid),
+                        "source": "title_match",
+                    }
+                    added += 1
+                if added:
+                    print(f"    🔎 标题召回：补充 {added} 篇")
+
             # 相关性过滤：多词查询至少命中 2 个词；单词查询命中 1 个即可
             relevant = [
                 pid
                 for pid in sec_paper_ids
-                if is_paper_relevant(paper_texts.get(pid, ""), query_terms)
+                if pid in title_ids
+                or is_paper_relevant(paper_texts.get(pid, ""), query_terms)
             ]
             if relevant and len(relevant) < len(sec_paper_ids):
                 dropped = len(sec_paper_ids) - len(relevant)
