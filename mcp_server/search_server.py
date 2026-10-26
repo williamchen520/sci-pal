@@ -275,6 +275,36 @@ def parse_paper(filename: str) -> str:
     return _call("POST", "/api/papers/parse_async", {"filename": filename})
 
 
+@mcp.tool(
+    description=(
+        "异步提交「下载 + 入库 + 向量化」任务（POST /api/ingest），"
+        "**立即返回 task_id，不要同步等待**；用 check_ingest_status 轮询（间隔 ≥5 s）。"
+        "每 batch_size 篇提交一次数据库事务（默认 5），中途失败只回滚当批，"
+        "已完成的批次保留；任务状态存 ingest_tasks 表，Flask 重启后仍可查。"
+        "pmc_ids 传 PMCID 列表，例如 [\"PMC13613157\", \"PMC13615804\"]。"
+    )
+)
+def download_and_index(pmc_ids: list[str], batch_size: int = 5) -> str:
+    """提交下载并向量化任务，立即返回 {"task_id": ...}。"""
+    return _call(
+        "POST",
+        "/api/ingest",
+        {"pmc_ids": pmc_ids, "batch_size": batch_size},
+    )
+
+
+@mcp.tool(
+    description=(
+        "查询下载/入库任务状态（GET /api/ingest/<task_id>）。"
+        "status 取值：queued / running / partial / completed / failed / cancelled；"
+        "返回 processed（已处理）、imported（已入库）、failed（失败数）、error（失败明细）。"
+    )
+)
+def check_ingest_status(task_id: str) -> str:
+    """按 task_id 查询下载并向量化任务的进度。"""
+    return _call("GET", f"/api/ingest/{_path_segment(task_id)}")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
