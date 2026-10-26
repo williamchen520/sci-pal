@@ -2028,6 +2028,15 @@ def _research_db_path() -> Optional[Path]:
     return path if path.exists() else None
 
 
+def _title_recall_limits() -> tuple[int, int]:
+    """(title-match candidates, extra papers per section), env-tunable."""
+    import os
+
+    limit = max(1, min(int(os.environ.get("SCIPAL_TITLE_RECALL_LIMIT", "8")), 20))
+    max_add = max(0, min(int(os.environ.get("SCIPAL_TITLE_RECALL_MAX", "6")), 10))
+    return limit, max_add
+
+
 def _paper_titles(paper_ids: list[str]) -> dict[str, str]:
     """Titles for the candidate papers (module-level cache, DB-backed)."""
     missing = [pid for pid in paper_ids if pid not in _PAPER_TITLE_CACHE]
@@ -2331,14 +2340,15 @@ def search_and_assign_papers(
             title_ids: set[str] = set()
             db_path = _research_db_path()
             if db_path is not None:
+                recall_limit, recall_max = _title_recall_limits()
                 try:
-                    extras = title_recall.recall(db_path, query_terms, limit=6)
+                    extras = title_recall.recall(db_path, query_terms, limit=recall_limit)
                 except Exception:
                     extras = []
                 added = 0
                 for item in extras:
                     pid = item["paper_id"]
-                    if pid in sec_paper_ids or added >= 4:
+                    if pid in sec_paper_ids or added >= recall_max:
                         continue
                     for row in item["paragraphs"]:
                         evidence_id = f"ev_title_{pid}_{row['para_id'][-8:]}_{evidence_seq}"

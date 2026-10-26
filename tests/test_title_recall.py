@@ -69,6 +69,17 @@ class TitleRecallTests(unittest.TestCase):
     def test_unknown_db_returns_empty(self) -> None:
         self.assertEqual(recall_papers_by_title(Path(self.tmp.name) / "missing.db", ["x"]), [])
 
+    def test_limits_are_env_tunable(self) -> None:
+        import os
+        from unittest.mock import patch
+
+        from services.review.review_generator import _title_recall_limits
+
+        with patch.dict(
+            os.environ, {"SCIPAL_TITLE_RECALL_LIMIT": "10", "SCIPAL_TITLE_RECALL_MAX": "5"}
+        ):
+            self.assertEqual(_title_recall_limits(), (10, 5))
+
 
 if __name__ == "__main__":
     unittest.main()
