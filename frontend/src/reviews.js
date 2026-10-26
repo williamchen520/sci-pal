@@ -116,7 +116,16 @@ function renderDetail(review) {
             <div class="refs">
                 <h3>参考文献（${references.length}）</h3>
                 <ol>
-                    ${references.map((ref) => `<li>${escapeHtml(ref.authors || '')} ${escapeHtml(ref.year || '')} ${escapeHtml(String(ref.title || '').replace(/^[#\s]+/, ''))} ${escapeHtml(ref.journal || '')}</li>`).join('')}
+                    ${references.map((ref) => {
+                        const title = escapeHtml(String(ref.title || '').replace(/^[#\s]+/, ''));
+                        const linkedTitle = ref.paper_id
+                            ? `<a href="/paper.html?id=${encodeURIComponent(ref.paper_id)}">${title}</a>`
+                            : title;
+                        const doi = ref.doi_url
+                            ? ` · <a href="${escapeHtml(ref.doi_url)}" target="_blank" rel="noreferrer">DOI</a>`
+                            : '';
+                        return `<li>${escapeHtml(ref.authors || '')} ${escapeHtml(ref.year || '')} ${linkedTitle} ${escapeHtml(ref.journal || '')}${doi}</li>`;
+                    }).join('')}
                 </ol>
             </div>` : ''}
     `;
