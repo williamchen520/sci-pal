@@ -276,8 +276,12 @@ class ExportManager:
         # 保存文件
         file_path = self._files_dir / file_name
         try:
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(file_content)
+            if isinstance(file_content, (bytes, bytearray)):
+                with open(file_path, "wb") as f:
+                    f.write(file_content)
+            else:
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(file_content)
             file_size = file_path.stat().st_size
         except Exception as e:
             task.status = ExportStatus.FAILED.value
@@ -398,6 +402,55 @@ class ExportManager:
         file_name = f"{task.review_id}_{task.format}.md"
         self.update_task_progress(task_id, 90, "正在保存文件...")
         return self.complete_task(task_id, file_name, content)
+
+    def export_to_docx(
+        self,
+        task_id: str,
+        title: str,
+        sections: list[dict],
+        references: list[dict] = None,
+    ) -> Optional[ExportTask]:
+        """导出为 Word (.docx)。"""
+        import io
+
+        from docx import Document
+
+        task = self.get_task(task_id)
+        if not task:
+            return None
+
+        self.update_task_progress(task_id, 10, "正在生成 Word 文档...")
+        document = Document()
+        document.add_heading(title, level=0)
+        document.add_paragraph(
+            f"导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+
+        for i, section in enumerate(sections, 1):
+            document.add_heading(section.get("title") or f"Section {i}", level=2)
+            content = str(section.get("content") or "")
+            for block in content.split("\n\n"):
+                if block.strip():
+                    document.add_paragraph(block.strip())
+            if task.include_evidence_ids:
+                evidence_ids = section.get("evidence_ids") or []
+                if evidence_ids:
+                    document.add_paragraph(f"证据 ID: {', '.join(evidence_ids)}")
+
+        if task.include_references and references:
+            document.add_page_break()
+            document.add_heading("References", level=2)
+            for i, ref in enumerate(references, 1):
+                document.add_paragraph(
+                    f"{i}. {ref.get('authors', '')} ({ref.get('year', '')}). "
+                    f"{ref.get('title', '')}. {ref.get('journal', '')}. {ref.get('doi', '')}"
+                )
+
+        buffer = io.BytesIO()
+        document.save(buffer)
+        file_name = f"{task.review_id}_{task.format}.docx"
+        self.update_task_progress(task_id, 90, "正在保存文件...")
+        return self.complete_task(task_id, file_name, buffer.getvalue())
 
     def export_to_bibtex(
         self,

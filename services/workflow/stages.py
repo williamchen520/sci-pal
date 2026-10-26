@@ -697,6 +697,16 @@ def _default_export(record: Mapping[str, Any], context: StageContext) -> list[st
         if bibtex_task and bibtex_task.file_path:
             artifacts.append(_relative_artifact(bibtex_task.file_path, context.run_dir))
 
+    try:
+        docx_task = manager.create_export(review_id, format="word")
+        docx_task = manager.export_to_docx(
+            docx_task.task_id, title, _export_sections(review), references
+        )
+        if docx_task and docx_task.file_path:
+            artifacts.append(_relative_artifact(docx_task.file_path, context.run_dir))
+    except Exception as exc:  # noqa: BLE001 - docx is optional (python-docx may be absent)
+        context.logger.warning("docx export skipped: %s", exc)
+
     write_artifact(
         context,
         "exports/manifest.json",
