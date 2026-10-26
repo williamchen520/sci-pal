@@ -144,6 +144,7 @@ class Lexicon:
         return self
 
     def _build_index(self) -> None:
+        self.index = {}
         for entry in self.entries:
             for surface in (entry.canonical, *entry.aliases):
                 key = normalize_surface(surface)

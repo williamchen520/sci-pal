@@ -106,6 +106,17 @@ class HgncTokenTests(unittest.TestCase):
         self.assertEqual(len(preferred), 1)
         self.assertEqual(preferred[0].normalized_id, "HGNC:11850")
 
+    def test_merge_does_not_duplicate_index_rows(self) -> None:
+        from services.quality.lexicon import Entry, Lexicon
+
+        pubtator = Lexicon(entries=[Entry("Gene", "1956", "EGFR", (), 20, 5, "ncbi_gene")])
+        pubtator._build_index()
+        hgnc = Lexicon(entries=[Entry("Gene", "HGNC:3236", "EGFR", (), 0, 0, "hgnc", "hgnc")])
+        hgnc._build_index()
+        pubtator.merge(hgnc)
+        self.assertEqual(len(pubtator.lookup("EGFR")), 2)
+        self.assertEqual(len(pubtator.preferred("EGFR")), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
