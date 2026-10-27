@@ -142,8 +142,9 @@ XML 论文：2,032 → 3,214
 jats 章节 58,341 / 句子 800,375 / xref 链接 291,857
 ```
 
-后三个主题（cardiology / CRISPR / vaccine）在检索阶段被 EPMC 503 限流，
-自动停止且未导入；稍后可重试。
+后三个主题（cardiology / CRISPR / vaccine）重试时 EPMC 搜索服务整体 503
+（errMsg: Search service is temporarily unavailable），自动停止且未导入；
+恢复后重跑同一条命令即可。
 
 ## 外部引用边
 
@@ -154,8 +155,8 @@ python -m build_db.build_external_edges --limit 200
 Crossref 参考文献 + OpenAlex `referenced_works`（批量解析 DOI）→ `paper_links`：
 
 ```
-200 篇：crossref_edges 2,164 / openalex_edges 1,607
-去重后 paper_links +2,208（crossref_refs 2,169 / openalex_refs 3,535）
+两轮 500 篇：crossref_edges 6,584 / openalex_edges 4,632
+去重后 paper_links 159,948 → 164,430（crossref_refs 3,626 / openalex_refs 6,560）
 ```
 
 ## 实网验证（2026-10-27）

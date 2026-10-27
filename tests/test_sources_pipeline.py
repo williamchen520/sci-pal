@@ -100,17 +100,23 @@ class EuropePmcBatchTests(unittest.TestCase):
         self.assertEqual(europe_pmc_batch.select_open_access(results), ["PMC1"])
 
     def test_batch_import_counts(self) -> None:
-        summary = europe_pmc_batch.batch_import(
-            ["PMC1", "PMC2"], client=FakeClient([]), xml_dir="x", db_path="d"
-        )
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            summary = europe_pmc_batch.batch_import(
+                ["PMC1", "PMC2"], client=FakeClient([]),
+                xml_dir=tmp, db_path=Path(tmp) / "t.db",
+            )
         self.assertEqual(summary["imported"], 2)
         self.assertEqual(summary["sections"], 2)
 
     def test_run_query_filters(self) -> None:
         client = FakeClient([{"pmcid": "PMC1", "isOpenAccess": "Y"}])
-        summary = europe_pmc_batch.run_query(
-            "q", max_items=1, client=client, xml_dir="x", db_path="d"
-        )
+        with tempfile.TemporaryDirectory() as tmp:
+            summary = europe_pmc_batch.run_query(
+                "q", max_items=1, client=client,
+                xml_dir=tmp, db_path=Path(tmp) / "t.db",
+            )
         self.assertEqual(summary["candidates"], 1)
         self.assertEqual(summary["imported"], 1)
 
