@@ -13,6 +13,7 @@ by default.
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -42,6 +43,57 @@ class EuropePMCClient:
         response.raise_for_status()
         payload = response.json()
         return payload.get("resultList", {}).get("result", []) or []
+
+    def search_all(
+        self, query: str, max_items: int = 1000, page_size: int = 100
+    ) -> List[Dict[str, Any]]:
+        """Cursor-based pagination (Europe PMC caps pageSize at 1000).
+
+        ``resultType=lite`` is used for discovery: 1000+core often returns 503;
+        full metadata is not needed because each PMCID is fetched as full text.
+        """
+        results: List[Dict[str, Any]] = []
+        cursor = "*"
+        while len(results) < max_items:
+            payload = None
+            for attempt in range(4):
+                try:
+                    response = requests.get(
+                        f"{self.base_url}/search",
+                        params={
+                            "query": query,
+                            "format": "json",
+                            "pageSize": min(page_size, 1000),
+                            "resultType": "lite",
+                            "cursorMark": cursor,
+                        },
+                        timeout=self.timeout,
+                    )
+                    response.raise_for_status()
+                    payload = response.json()
+                    break
+                except Exception:  # noqa: BLE001
+                    if attempt == 3:
+                        print(
+                            f"search_all: giving up at cursor {cursor} "
+                            f"after {len(results)} rows",
+                            flush=True,
+                        )
+                        payload = None
+                        break
+                    time.sleep(5 * (attempt + 1))
+            if payload is None:
+                break
+            batch = (payload or {}).get("resultList", {}).get("result", []) or []
+            if not batch:
+                break
+            results.extend(batch)
+            next_cursor = (payload or {}).get("nextCursorMark")
+            if not next_cursor or next_cursor == cursor:
+                break
+            cursor = next_cursor
+            time.sleep(1.5)  # EPMC rate-limits rapid cursor walks (503)
+        return results[:max_items]
 
     def fetch_fulltext_xml(self, pmcid: str) -> str | None:
         if not pmcid.upper().startswith("PMC"):
