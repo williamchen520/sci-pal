@@ -73,11 +73,37 @@ docker run -d --rm --name grobid -p 8070:8070 lfoppiano/grobid:latest-crf
 
 | 镜像 | 下载/磁盘 | 说明 |
 |---|---|---|
-| `lfoppiano/grobid:latest-crf` | ~0.5 GB 下载 / 1.7 GB 磁盘 | 当前使用，CRF 模型 |
-| `grobid/grobid:0.9.1-full` | 13.8 GB 下载 / **37.4 GB 磁盘** | 含深度学习模型，已闲置可删 |
+| `lfoppiano/grobid:latest-crf` | ~0.5 GB 下载 / 1.7 GB 磁盘 | 日常批量解析（快、省内存） |
+| `grobid/grobid:0.9.1-full` | 13.8 GB 下载 / **37.4 GB 磁盘** | 难例解析（Deep Learning，慢约 1.8x） |
 
 实测（PMC13613046，13 页）：Docling 引用 0 → GROBID **60 条引用 + 89 个正文引用链接**，
-并补齐标题/作者/DOI；`provenance = text:docling, meta:grobid, refs:grobid`，耗时 72s。
+并补齐标题/作者/DOI；`provenance = text:docling, meta:grobid, refs:grobid`。
+同一篇 CRF 72s、Full 132s，输出一致。
+
+### 按任务切换 CRF / Full
+
+两个容器可以同时跑，pipeline 按 `grobid_mode` 选端点：
+
+```powershell
+# CRF 常驻 8070（默认）
+docker run -d --rm --name grobid-crf -p 8070:8070 lfoppiano/grobid:latest-crf
+# Full 常驻 8071（可选）
+docker run -d --rm --name grobid-full -p 8071:8071 grobid/grobid:0.9.1-full
+```
+
+```powershell
+SCIPAL_GROBID_URL=http://127.0.0.1:8070         # auto / crf
+SCIPAL_GROBID_URL_FULL=http://127.0.0.1:8071    # full（未设则回退 CRF）
+```
+
+`POST /api/papers/parse` 与 `/api/papers/parse_async` 支持请求体：
+
+```json
+{"filename": "paper.pdf", "grobid": "full"}   // auto | crf | full
+```
+
+> 解析入口已统一到 `build_db/parse_service.py`（`parse_and_store` / 单把解析锁 /
+> `PARSE_MAX_CONCURRENT`），路由层不再持有解析实现。
 
 > Docker Desktop 数据盘在 `D:\DockerDesktopWSL\disk\docker_data.vhdx`；
 > vhdx 不会自动收缩，删镜像后需 `wsl --shutdown` + `diskpart compact vdisk`（或 Docker Desktop 的 Clean/Purge）。

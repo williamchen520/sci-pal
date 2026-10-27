@@ -15,6 +15,15 @@ from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request, send_from_directory
 
+from build_db.parse_service import (
+    PARSE_MAX_CONCURRENT,
+    ParseCancelled,
+    ParseStoreError,
+    parse_admit_lock,
+    parse_and_store,
+    parse_running_count,
+)
+
 _PARSED_PAPER_ORDER = (
     "ORDER BY (total_paragraphs IS NULL) ASC, total_paragraphs DESC"
 )
@@ -125,6 +134,7 @@ def build_papers_actions_blueprint(
         """
         data = request.get_json(silent=True) or {}
         filename = data.get("filename", "").strip()
+        grobid_mode = str(data.get("grobid", "auto")).strip().lower()
 
         if not filename:
             return jsonify({"error": "ç¼ºå°‘ filename å‚æ•°"}), 400
@@ -174,7 +184,7 @@ def build_papers_actions_blueprint(
         try:
             # ä¸Žå¼‚æ­¥è·¯ç”±å…±ç”¨åŒä¸€æŠŠé”ï¼ˆ_parse_and_store å†…éƒ¨æŒæœ‰ï¼‰ï¼Œ
             # å‰ç«¯ã€Œè§£æžã€æŒ‰é’®ä¸Ž MCP æäº¤ä¸ä¼šå†æœ‰ä¸¤æ¬¡ docling å¹¶å‘ã€‚
-            result = _parse_and_store(pdf_path, filename)
+            result = parse_and_store(db_path, pdf_path, filename, grobid_mode=grobid_mode)
         except ParseStoreError:
             # å­—æ®µä¸Žæ–‡æ¡ˆä¿æŒåŽŸæ ·ï¼ˆå‰ç«¯æŒ‰ error å±•ç¤ºï¼‰
             return jsonify({"error": "è§£æžæˆåŠŸä½†å†™å…¥æ•°æ®åº“å¤±è´¥"}), 500
@@ -239,6 +249,7 @@ def build_papers_actions_blueprint(
         """
         data = request.get_json(silent=True) or {}
         filename = str(data.get("filename", "")).strip()
+        grobid_mode = str(data.get("grobid", "auto")).strip().lower()
 
         # ===== åŒæ­¥æ ¡éªŒï¼ˆå¿…é¡»åœ¨ create_task ä¹‹å‰ï¼‰=====
         if not filename:
@@ -259,8 +270,8 @@ def build_papers_actions_blueprint(
 
         # T3-3: å¹¶å‘å‡†å…¥ã€‚ã€ŒæŸ¥ running æ•°ã€ä¸Žã€Œcreate_taskã€å¿…é¡»åœ¨åŒä¸€æŠŠçŸ­é”é‡Œï¼Œ
         # å¦åˆ™ä¸¤ä¸ªè¯·æ±‚å¯èƒ½åŒæ—¶è¯»åˆ° running=2 éƒ½æ”¾è¡Œã€‚è¶…é™**ä¸å»ºä»»åŠ¡è¡Œ**ã€‚
-        with _parse_admit_lock:
-            running = _parse_running_count()
+        with parse_admit_lock:
+            running = parse_running_count(db_path)
             if running >= PARSE_MAX_CONCURRENT:
                 return jsonify({
                     "error": f"è§£æžä»»åŠ¡å·²è¾¾ä¸Šé™ï¼ˆ{PARSE_MAX_CONCURRENT}ï¼‰ï¼Œè¯·ç­‰å‰é¢çš„å®Œæˆæˆ–å–æ¶ˆ",
@@ -331,9 +342,11 @@ def build_papers_actions_blueprint(
                 # ä»¥å‰è¿™é‡Œæ— æ¡ä»¶å†™ã€Œè§£æžä¸­ã€ï¼Œç´§æŽ¥å°±é˜»å¡žåœ¨é”ä¸Š â†’ æŽ’é˜Ÿä¸å¯è§‚æµ‹ï¼›
                 # è¯•æŠ¢ä¹Ÿä¸èƒ½æ”¾åœ¨è·¯ç”±å±‚ï¼š_parse_and_store é‡Œçš„ docling import é¦–æ¬¡è¦
                 # 10~15 ç§’ï¼Œé‚£æ—¶é”è¿˜æ˜¯ç©ºçš„ï¼Œä¼šæ¼æŠ¥æŽ’é˜Ÿã€‚
-                result = _parse_and_store(
+                result = parse_and_store(
+                    db_path,
                     pdf_path,
                     filename,
+                    grobid_mode=grobid_mode,
                     before_store=_before_store,
                     on_waiting=lambda: get_task_manager().update_progress(
                         task_id, "æŽ’é˜Ÿä¸­ï¼ˆå‰é¢è¿˜æœ‰è§£æžä»»åŠ¡ï¼‰"

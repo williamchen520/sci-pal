@@ -78,6 +78,23 @@ def journal_from_doi(doi: str) -> Optional[str]:
     return None
 
 
+def resolve_grobid_url(mode: str = "auto") -> str:
+    """Pick the GROBID endpoint for a parse.
+
+    ``SCIPAL_GROBID_URL``      -> CRF / default endpoint
+    ``SCIPAL_GROBID_URL_FULL`` -> full (deep-learning) endpoint, optional
+    """
+    base = (
+        os.environ.get("SCIPAL_GROBID_URL")
+        or os.environ.get("GROBID_URL")
+        or "http://127.0.0.1:8070"
+    ).rstrip("/")
+    if (mode or "auto").strip().lower() == "full":
+        full = (os.environ.get("SCIPAL_GROBID_URL_FULL") or "").strip()
+        return (full or base).rstrip("/")
+    return base
+
+
 @dataclass
 class GateThresholds:
     """Quality gate for the Docling body result."""
@@ -187,6 +204,7 @@ class PdfParsePipeline:
         thresholds: GateThresholds | None = None,
         enable_grobid: bool = True,
         enable_mineru: bool = True,
+        grobid_url: str | None = None,
         log: Callable[[str], None] = print,
     ) -> None:
         self.thresholds = thresholds or GateThresholds()
@@ -194,15 +212,19 @@ class PdfParsePipeline:
         self.docling = docling or DoclingParser()
         self._mineru = mineru
         self._mineru_enabled = enable_mineru
+        self.grobid_url = grobid_url or resolve_grobid_url("auto")
         self.grobid = grobid
         if grobid is None and enable_grobid and _GROBID_CLASS is not None:
             try:
-                candidate = _GROBID_CLASS()
+                candidate = _GROBID_CLASS(self.grobid_url)
                 if candidate.is_alive():
                     self.grobid = candidate
-                    self.log("✅ GROBID active: will enrich metadata + references")
+                    self.log(f"✅ GROBID active ({self.grobid_url}): metadata + references")
                 else:
-                    self.log("ℹ️  GROBID server not running; metadata/citations rely on Docling")
+                    self.log(
+                        f"ℹ️  GROBID not reachable at {self.grobid_url}; "
+                        "metadata/citations rely on Docling"
+                    )
             except Exception as exc:  # noqa: BLE001
                 self.log(f"⚠️  GROBID init failed: {str(exc)[:80]}")
 
