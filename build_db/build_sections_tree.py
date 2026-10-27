@@ -120,7 +120,9 @@ def build_all(db_path: Path | str = DEFAULT_DB, limit: int = 0) -> Dict[str, Any
     papers = [
         row[0]
         for row in conn.execute(
-            "SELECT DISTINCT paper_id FROM paragraphs ORDER BY paper_id"
+            "SELECT DISTINCT p.paper_id FROM paragraphs p "
+            "JOIN papers pp ON pp.paper_id = p.paper_id "
+            "WHERE COALESCE(pp.parse_engine, '') != 'xml' ORDER BY p.paper_id"
         )
     ]
     conn.close()
