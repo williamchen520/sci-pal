@@ -16,6 +16,7 @@ from typing import Dict, List, Any, Optional
 from services.search.unified_retriever import UnifiedRetriever
 from services.review.llm_client import LLMClient, LLMError
 from services.ai.rag_validator import RAGValidator
+from services.qa.verify import verify_answer
 
 
 # ============================================================
@@ -234,7 +235,10 @@ class QAService:
             "3. If the evidence is insufficient to answer the question, state so clearly. Do not guess.\n"
             "4. Answer in English by default (matching the literature language for maximum accuracy).\n"
             "5. Be concise, precise, and well-structured for academic reading.\n"
-            "6. Prioritize citing passages [P], then figures [F]/tables [T], and related papers [R]."
+            "6. Prioritize citing passages [P], then figures [F]/tables [T], and related papers [R].\n"
+            "7. If sources or passages conflict, do NOT merge them into a vague conclusion. "
+            "List each conflicting claim with its paper, section, quote, and limiting condition "
+            "(population, dose, subgroup); write 'not stated' when the condition is missing."
         )
 
         user_prompt = f"{envelope}\n\nQuestion: {question}\n\nAnswer based on the evidence above:"
@@ -314,6 +318,17 @@ class QAService:
         # Step 5: 构建来源详情
         sources = self._build_sources(retrieval_result, citations)
 
+        # Step 5b: deterministic verification (blocking for formal conclusions)
+        evidence_items = [
+            {"evidence_id": f"P{index}", "text": ctx.get("text", "")}
+            for index, ctx in enumerate(retrieval_result.get("parent_contexts") or [], 1)
+        ]
+        verification = verify_answer(
+            answer,
+            evidence_ids=[item["evidence_id"] for item in evidence_items],
+            evidence=evidence_items,
+        )
+
         result = {
             "answer": answer,
             "citations": citations,
@@ -327,6 +342,8 @@ class QAService:
                 "papers": len(retrieval_result.get("papers", [])),
             },
             "validation": validation_info,
+            "verification": verification,
+            "answer_status": "formal" if verification["ok"] else "draft",
         }
 
         if include_diagnostics:

@@ -33,7 +33,10 @@ HTTP_TIMEOUT_SECONDS = 45.0
 
 def base_url() -> str:
     """当前 SciPal API 基址（不含尾部斜杠）。"""
-    return os.environ.get("SCIPAL_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
+    return (
+        os.environ.get("SCIPAL_API_BASE")
+        or os.environ.get("SCIPAL_BASE_URL", DEFAULT_BASE_URL)
+    ).rstrip("/")
 
 
 def _not_running_error(detail: str) -> ToolError:
@@ -60,6 +63,9 @@ def _http_raw(method: str, path: str, payload: dict[str, Any] | None = None) -> 
     """
     url = f"{base_url()}{path}"
     headers = {"Accept": "application/json"}
+    token = os.environ.get("SCIPAL_API_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     data: bytes | None = None
     if payload is not None:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")

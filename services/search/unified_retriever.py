@@ -10,12 +10,18 @@ parent section (small-to-big). Paper hits are expanded via CITES/SIMILAR
 graph edges to find related papers vector search might miss.
 """
 from typing import Dict, List, Optional
+import sqlite3
 import time
 from services.search.hybrid_search import HybridSearch
 from services.search.shared import get_shared_hybrid
 from services.search.reranker import Reranker
 from services.search.query_router import QueryRouter
-from services.search.context_expander import ContextExpander, HIT_START, HIT_END
+from services.search.context_expander import (
+    ContextExpander,
+    DB_PATH as STRUCT_DB,
+    HIT_START,
+    HIT_END,
+)
 from services.search.graph_traverser import GraphTraverser
 from services.search.retrieval_diagnostics import RetrievalDiagnostics
 from services.search.abstract_search import AbstractSearch  # V30.0: 摘要库检索
@@ -199,7 +205,7 @@ class UnifiedRetriever:
         _parents_started = time.time()
         if self.expand and paragraphs:
             parent_contexts = self.expander.expand(
-                paragraphs, mode="section", max_parents=top_paragraphs
+                paragraphs, mode="section", max_parents=top_paragraphs, query=query
             )
         self.diagnostics.mark("parent_contexts", (time.time() - _parents_started) * 1000)
 
@@ -302,6 +308,8 @@ class UnifiedRetriever:
                          f"{HIT_START} marks the matched paragraph {HIT_END})")
             for i, pctx in enumerate(env["parent_contexts"], 1):
                 sec = pctx.get("section") or ""
+                if pctx.get("section_path"):
+                    sec = " › ".join(pctx["section_path"])
                 tag = f" ({sec})" if sec else ""
                 page = f", p{pctx['page']}" if pctx.get("page") else ""
                 lines.append(f"[P{i}]{tag}{page}\n{pctx['text']}")
@@ -365,6 +373,89 @@ class UnifiedRetriever:
         lines.append("=" * 50)
         lines.append("Cite evidence using the IDs above (e.g. [P1], [F2]).")
         return "\n".join(lines)
+
+
+    def to_evidence_json(self, query: str, paper_id: Optional[str] = None,
+                         **kwargs) -> Dict:
+        """Structured evidence bundle for DSH (no bare sentences).
+
+        Each item carries the parent paragraph context, explicit section path,
+        the matched sentence(s) with page/bbox, and sentence-level links to
+        citations/figures/tables.
+        """
+        env = self.retrieve(query, paper_id, **kwargs)
+        conn = sqlite3.connect(str(STRUCT_DB))
+        conn.row_factory = sqlite3.Row
+        meta_cache: Dict[str, Dict] = {}
+        try:
+            def paper_meta(pid: str) -> Dict:
+                if pid not in meta_cache:
+                    row = conn.execute(
+                        "SELECT title, journal, year, doi FROM papers WHERE paper_id = ?",
+                        (pid,),
+                    ).fetchone()
+                    meta_cache[pid] = dict(row) if row else {}
+                return meta_cache[pid]
+
+            def link_details(sentence_ids: List[str]) -> List[Dict]:
+                ids = sorted({sid for sid in sentence_ids if sid})
+                if not ids:
+                    return []
+                marks = ",".join("?" * len(ids))
+                rows = conn.execute(
+                    "SELECT target_type, target_id, relation, source, confidence "
+                    f"FROM sentence_links WHERE sentence_id IN ({marks})",
+                    ids,
+                ).fetchall()
+                out = []
+                for row in rows:
+                    item = dict(row)
+                    if item["target_type"] == "citation":
+                        detail = conn.execute(
+                            "SELECT raw_text, doi, title FROM citations WHERE citation_id = ?",
+                            (item["target_id"],),
+                        ).fetchone()
+                    elif item["target_type"] == "figure":
+                        detail = conn.execute(
+                            "SELECT fig_number, caption FROM figures WHERE fig_id = ?",
+                            (item["target_id"],),
+                        ).fetchone()
+                    elif item["target_type"] == "table":
+                        detail = conn.execute(
+                            "SELECT table_number, caption FROM tables WHERE table_id = ?",
+                            (item["target_id"],),
+                        ).fetchone()
+                    else:
+                        detail = None
+                    item["detail"] = dict(detail) if detail else {}
+                    out.append(item)
+                return out
+
+            evidence = []
+            for index, pctx in enumerate(env.get("parent_contexts") or [], 1):
+                pid = pctx.get("paper_id")
+                highlights = pctx.get("matched_sentences") or []
+                evidence.append(
+                    {
+                        "evidence_id": f"P{index}",
+                        "paper": {"paper_id": pid, **paper_meta(pid)},
+                        "section_path": pctx.get("section_path") or [],
+                        "section": pctx.get("section") or "",
+                        "page": pctx.get("page"),
+                        "paragraphs": [p.get("text", "") for p in pctx.get("paragraphs") or []],
+                        "text": pctx.get("text", ""),
+                        "highlight": highlights,
+                        "links": link_details([h.get("sentence_id") for h in highlights]),
+                    }
+                )
+        finally:
+            conn.close()
+        return {
+            "query": query,
+            "evidence": evidence,
+            "figures": env.get("figures") or [],
+            "tables": env.get("tables") or [],
+        }
 
 
 if __name__ == "__main__":

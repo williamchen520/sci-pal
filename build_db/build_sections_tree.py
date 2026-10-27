@@ -109,6 +109,9 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
             if trigger_sql:
                 conn.execute(trigger_sql[0])
         stats["sections"] = len(section_rows)
+        from build_db.structure_v3 import refresh_for_paper
+
+        refresh_for_paper(conn, paper_id)
         conn.commit()
     finally:
         conn.close()

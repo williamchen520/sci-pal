@@ -27,6 +27,7 @@ from services.review.task_manager import task_manager
 from contracts import InternalError, fail, ok
 from routes.abstracts import build_abstracts_blueprint
 from routes.core import build_core_blueprint
+from routes.evidence import build_evidence_blueprint
 from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
@@ -208,6 +209,11 @@ app.register_blueprint(
 # B0: 健康检查 + 统一检索已移入 routes/core.py
 app.register_blueprint(
     build_core_blueprint(db_path=DB_PATH, get_retriever=lambda: get_retriever())
+)
+app.register_blueprint(
+    build_evidence_blueprint(
+        db_path=DB_PATH, get_retriever=lambda: get_retriever(), log=app.logger
+    )
 )
 
 # B3e: RAG 问答 + agentic 检索已移入 routes/qa.py
