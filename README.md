@@ -4,7 +4,7 @@
 （向量 + FTS5/BM25 + RRF 融合 + Cross-Encoder 重排 + 查询路由 + 小→大上下文扩展），
 生成层可交给本地 Ollama，也可交给 DSH 大模型。
 
-> 当前版本：**V33.41**（2026-10-27）
+> 当前版本：**V33.42**（2026-10-28）
 > Python 3.12 · Flask · ChromaDB · SQLite · Ollama / OpenAI 兼容 API
 > 原生 HTML/CSS/JS 前端（无框架），DSH 作为主入口
 
@@ -132,7 +132,7 @@ sci-pal/
 ├─ mcp_server/               search / generate / guard（MCP 薄转发）
 ├─ frontend/                 viewer / compare / trace
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    447 项测试
+├─ tests/                    471 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -156,7 +156,7 @@ sci-pal/
 ## 测试
 
 ```
-447 tests, ~11s
+471 tests, ~14s
 ```
 
 覆盖：检索、路由、guard、结构 v2、JATS 导入、文献源、trace API、解析流水线。
