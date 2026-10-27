@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response, g, jsonify, request
 
 from services.watch import discovery, repo, runner
 
@@ -10,15 +10,26 @@ from services.watch import discovery, repo, runner
 def build_watch_blueprint(*, db_path, log) -> Blueprint:
     bp = Blueprint("watch", __name__, url_prefix="/api/watch")
 
+    def _owner() -> str:
+        return getattr(g, "owner", "default")
+
+    def _owned_run(conn, run_id: int):
+        row = repo.get_run(conn, run_id)
+        if row and (row.get("owner") or "default") != _owner():
+            return None
+        return row
+
     @bp.route("/profiles", methods=["GET", "POST"])
     def profiles():
         conn = repo.connect(db_path)
         try:
+            owner = getattr(g, "owner", "default")
             if request.method == "GET":
-                return jsonify({"profiles": repo.list_profiles(conn)})
+                return jsonify({"profiles": repo.list_profiles(conn, owner)})
             data = request.get_json(silent=True) or {}
             if not (data.get("name") or "").strip():
                 return jsonify({"error": "name required"}), 400
+            data["owner"] = owner
             profile_id = repo.create_profile(conn, data)
             return jsonify({"profile_id": profile_id}), 201
         finally:
@@ -28,14 +39,15 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def profile(profile_id: int):
         conn = repo.connect(db_path)
         try:
+            owner = getattr(g, "owner", "default")
+            row = repo.get_profile(conn, profile_id, owner)
+            if not row:
+                return jsonify({"error": "profile not found"}), 404
             if request.method == "GET":
-                row = repo.get_profile(conn, profile_id)
-                if not row:
-                    return jsonify({"error": "profile not found"}), 404
                 return jsonify(row)
             if request.method == "PUT":
                 repo.update_profile(conn, profile_id, request.get_json(silent=True) or {})
-                return jsonify(repo.get_profile(conn, profile_id))
+                return jsonify(repo.get_profile(conn, profile_id, owner))
             repo.delete_profile(conn, profile_id)
             return jsonify({"ok": True})
         finally:
@@ -45,6 +57,8 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def journals(profile_id: int):
         conn = repo.connect(db_path)
         try:
+            if not repo.get_profile(conn, profile_id, getattr(g, "owner", "default")):
+                return jsonify({"error": "profile not found"}), 404
             if request.method == "GET":
                 return jsonify({"journals": repo.list_journals(conn, profile_id)})
             data = request.get_json(silent=True) or {}
@@ -60,7 +74,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def discover(profile_id: int):
         conn = repo.connect(db_path)
         try:
-            profile = repo.get_profile(conn, profile_id)
+            profile = repo.get_profile(conn, profile_id, getattr(g, "owner", "default"))
             if not profile:
                 return jsonify({"error": "profile not found"}), 404
             entries = discovery.discover_journals(conn, profile)
@@ -73,6 +87,12 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
 
     @bp.route("/profiles/<int:profile_id>/run", methods=["POST"])
     def run(profile_id: int):
+        conn = repo.connect(db_path)
+        try:
+            if not repo.get_profile(conn, profile_id, getattr(g, "owner", "default")):
+                return jsonify({"error": "profile not found"}), 404
+        finally:
+            conn.close()
         try:
             result = runner.run_profile(db_path, profile_id)
         except ValueError as exc:
@@ -86,6 +106,8 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def runs(profile_id: int):
         conn = repo.connect(db_path)
         try:
+            if not repo.get_profile(conn, profile_id, _owner()):
+                return jsonify({"error": "profile not found"}), 404
             return jsonify({"runs": repo.list_runs(conn, profile_id)})
         finally:
             conn.close()
@@ -94,7 +116,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def run_detail(run_id: int):
         conn = repo.connect(db_path)
         try:
-            row = repo.get_run(conn, run_id)
+            row = _owned_run(conn, run_id)
             if not row:
                 return jsonify({"error": "run not found"}), 404
             return jsonify({"run": row, "items": repo.list_items(conn, run_id)})
@@ -105,7 +127,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def digest(run_id: int):
         conn = repo.connect(db_path)
         try:
-            row = repo.get_run(conn, run_id)
+            row = _owned_run(conn, run_id)
             if not row:
                 return jsonify({"error": "run not found"}), 404
             return Response(row.get("digest_md") or "", mimetype="text/markdown")
@@ -116,6 +138,8 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def latest_profile(profile_id: int):
         conn = repo.connect(db_path)
         try:
+            if not repo.get_profile(conn, profile_id, _owner()):
+                return jsonify({"error": "profile not found"}), 404
             runs = repo.list_runs(conn, profile_id, limit=1)
             if not runs:
                 return jsonify({"run": None, "items": []})
@@ -130,7 +154,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def latest(run_id: int):
         conn = repo.connect(db_path)
         try:
-            row = repo.get_run(conn, run_id)
+            row = _owned_run(conn, run_id)
             if not row:
                 return jsonify({"error": "run not found"}), 404
             profile_id = row["profile_id"]
@@ -155,6 +179,11 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def read_item(item_id: int):
         conn = repo.connect(db_path)
         try:
+            row = conn.execute(
+                "SELECT owner FROM watch_items WHERE id = ?", (item_id,)
+            ).fetchone()
+            if not row or (row["owner"] or "default") != _owner():
+                return jsonify({"error": "item not found"}), 404
             repo.mark_item_read(conn, item_id)
             return jsonify({"ok": True})
         finally:
@@ -164,6 +193,8 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def read_all(run_id: int):
         conn = repo.connect(db_path)
         try:
+            if not _owned_run(conn, run_id):
+                return jsonify({"error": "run not found"}), 404
             for item in repo.list_items(conn, run_id):
                 repo.mark_item_read(conn, item["id"])
             return jsonify({"ok": True})

@@ -88,6 +88,17 @@ class WatchRunnerTests(unittest.TestCase):
         self.assertEqual(result["selected"], 0)
         self.assertEqual(result["skipped"], 2)
 
+    def test_owner_isolation(self) -> None:
+        conn = repo.connect(self.db)
+        alice = repo.create_profile(conn, {"name": "A", "owner": "alice"})
+        bob = repo.create_profile(conn, {"name": "B", "owner": "bob"})
+        self.assertEqual(
+            [p["id"] for p in repo.list_profiles(conn, "alice")], [alice]
+        )
+        self.assertIsNone(repo.get_profile(conn, bob, "alice"))
+        self.assertIsNotNone(repo.get_profile(conn, bob, "bob"))
+        conn.close()
+
     def test_empty_run_heartbeat(self) -> None:
         first = run_profile(
             self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: []

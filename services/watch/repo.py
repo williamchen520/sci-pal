@@ -28,25 +28,39 @@ def _row(row) -> Optional[Dict[str, Any]]:
 
 
 # ---------------------------------------------------------------- profiles
-def list_profiles(conn: sqlite3.Connection) -> List[Dict]:
-    return [dict(r) for r in conn.execute("SELECT * FROM watch_profiles ORDER BY id")]
+def list_profiles(conn: sqlite3.Connection, owner: Optional[str] = None) -> List[Dict]:
+    if owner:
+        rows = conn.execute(
+            "SELECT * FROM watch_profiles WHERE owner = ? ORDER BY id", (owner,)
+        )
+    else:
+        rows = conn.execute("SELECT * FROM watch_profiles ORDER BY id")
+    return [dict(r) for r in rows]
 
 
-def get_profile(conn: sqlite3.Connection, profile_id: int) -> Optional[Dict]:
-    return _row(conn.execute("SELECT * FROM watch_profiles WHERE id = ?", (profile_id,)).fetchone())
+def get_profile(
+    conn: sqlite3.Connection, profile_id: int, owner: Optional[str] = None
+) -> Optional[Dict]:
+    row = conn.execute(
+        "SELECT * FROM watch_profiles WHERE id = ?", (profile_id,)
+    ).fetchone()
+    if row and owner and (row["owner"] or "default") != owner:
+        return None
+    return _row(row)
 
 
 def create_profile(conn: sqlite3.Connection, data: Dict[str, Any]) -> int:
     fields = [
-        "name", "field_text", "keywords", "openalex_topic_ids", "interval_days",
+        "owner", "name", "field_text", "keywords", "openalex_topic_ids", "interval_days",
         "window_days", "top_journal_count", "max_items", "same_journal_limit",
         "metric_type", "metric_min", "language", "delivery", "enabled",
     ]
     values = [data.get(f) for f in fields]
     if isinstance(data.get("openalex_topic_ids"), (list, tuple)):
-        values[3] = json.dumps(list(data["openalex_topic_ids"]))
+        values[4] = json.dumps(list(data["openalex_topic_ids"]))
     if not data.get("name"):
         raise ValueError("name required")
+    values[0] = data.get("owner") or "default"
     cur = conn.execute(
         f"INSERT INTO watch_profiles ({', '.join(fields)}, created_at) "
         f"VALUES ({', '.join('?' * len(fields))}, ?)",
@@ -137,11 +151,17 @@ def journal_metrics(conn: sqlite3.Connection, issns: List[str]) -> Dict[str, Dic
 
 
 # ---------------------------------------------------------------- runs/items
-def create_run(conn: sqlite3.Connection, profile_id: int, start: str, end: str) -> int:
+def create_run(
+    conn: sqlite3.Connection,
+    profile_id: int,
+    start: str,
+    end: str,
+    owner: str = "default",
+) -> int:
     cur = conn.execute(
-        "INSERT INTO watch_runs (profile_id, window_start, window_end, status, started_at) "
-        "VALUES (?, ?, ?, 'running', ?)",
-        (profile_id, start, end, now_iso()),
+        "INSERT INTO watch_runs (owner, profile_id, window_start, window_end, status, started_at) "
+        "VALUES (?, ?, ?, ?, 'running', ?)",
+        (owner, profile_id, start, end, now_iso()),
     )
     conn.commit()
     return int(cur.lastrowid)
@@ -161,9 +181,10 @@ def finish_run(conn: sqlite3.Connection, run_id: int, **stats) -> None:
 
 def add_item(conn: sqlite3.Connection, run_id: int, profile_id: int, item: Dict) -> int:
     cur = conn.execute(
-        "INSERT INTO watch_items (run_id, profile_id, paper_id, doi, title, journal, "
-        "published, score, reason, acquisition, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')",
+        "INSERT INTO watch_items (owner, run_id, profile_id, paper_id, doi, title, journal, "
+        "published, score, reason, acquisition, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')",
         (
+            item.get("owner") or "default",
             run_id, profile_id, item.get("paper_id"), item.get("doi"), item.get("title"),
             item.get("journal"), item.get("published"), item.get("score"),
             item.get("reason"), item.get("acquisition"),

@@ -197,7 +197,10 @@ def run_profile(
     now = now or datetime.now(timezone.utc)
     window_days = max(int(profile.get("window_days") or 7), int(profile.get("interval_days") or 3))
     start = now - timedelta(days=window_days)
-    run_id = repo.create_run(conn, profile_id, start.isoformat(), now.isoformat())
+    owner = profile.get("owner") or "default"
+    run_id = repo.create_run(
+        conn, profile_id, start.isoformat(), now.isoformat(), owner=owner
+    )
     stats = {"found": 0, "selected": 0, "imported_full": 0, "imported_abstract": 0, "skipped": 0}
     try:
         journals = repo.list_journals(conn, profile_id)
@@ -289,6 +292,7 @@ def run_profile(
                 "score": candidate["score"],
                 "reason": reason,
                 "acquisition": acquisition,
+                "owner": owner,
                 "abstract": candidate.get("abstract") or "",
             }
             repo.add_item(conn, run_id, profile_id, item)
