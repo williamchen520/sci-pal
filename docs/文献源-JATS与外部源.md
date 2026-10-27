@@ -99,6 +99,17 @@ oa = unpaywall("10.1234/test.1", "you@example.org")
   paper_links 155,353
 ```
 
+## 实网验证（2026-10-27）
+
+```
+Europe PMC search("hepatocellular carcinoma AND OPEN_ACCESS:Y") -> 5 条
+Europe PMC fullTextXML(PMC11649735) -> 225 KB
+arXiv search("protein language model") -> 3 条
+
+下载并导入 PMC11649735：
+  23 章节 / 23 段 / 273 句 / 183 引用 / 4 图 / 219 条 xref 链接
+```
+
 ## 测试
 
 ```
