@@ -360,6 +360,31 @@ def verify_answer(answer: str, evidence_ids: list[str]) -> str:
     return _call("POST", "/api/verify", {"answer": answer, "evidence_ids": evidence_ids})
 
 
+@mcp.tool(description="列出文献监测 profile（GET /api/watch/profiles）。")
+def watch_profiles() -> str:
+    """返回所有 profile 的配置与上次/下次运行时间。"""
+    return _call("GET", "/api/watch/profiles")
+
+
+@mcp.tool(
+    description=(
+        "触发一次文献监测（POST /api/watch/profiles/<id>/run）："
+        "按窗口检索、去重、排序、摘要级入库并返回简报。"
+    )
+)
+def watch_run(profile_id: int) -> str:
+    """运行一个 profile，返回简报与统计。"""
+    return _call("POST", f"/api/watch/profiles/{profile_id}/run")
+
+
+@mcp.tool(
+    description="最近一期监测简报（GET /api/watch/profiles/<id>/latest），不触发新运行。"
+)
+def watch_latest(profile_id: int) -> str:
+    """返回最近一次运行与入选条目。"""
+    return _call("GET", f"/api/watch/profiles/{profile_id}/latest")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 

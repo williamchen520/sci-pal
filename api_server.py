@@ -41,6 +41,7 @@ from routes.search import build_search_blueprint
 from routes.search_downloads import build_search_downloads_blueprint
 from routes.system import build_system_blueprint
 from routes.tasks import build_tasks_blueprint
+from routes.watch import build_watch_blueprint
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -215,6 +216,7 @@ app.register_blueprint(
         db_path=DB_PATH, get_retriever=lambda: get_retriever(), log=app.logger
     )
 )
+app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
 
 # B3e: RAG 问答 + agentic 检索已移入 routes/qa.py
 app.register_blueprint(
