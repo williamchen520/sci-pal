@@ -99,6 +99,33 @@ oa = unpaywall("10.1234/test.1", "you@example.org")
   paper_links 155,353
 ```
 
+## 批量、预印本与元数据回填
+
+```powershell
+# Europe PMC 批量：检索 → OA 全文 XML → 结构化导入
+python -m services.search.europe_pmc_batch --query "hepatocellular carcinoma AND OPEN_ACCESS:Y" --max-items 20 --limit 10
+
+# 预印本：下载 PDF + 走三引擎流水线（--no-parse 只下载）
+python -m services.search.preprint_ingest --arxiv "protein language model" --max-items 1
+python -m services.search.preprint_ingest --biorxiv 10.1101/2025.01.01.000001 --no-parse
+
+# 元数据回填（Crossref：有 DOI 用 DOI，否则标题检索）
+python -m build_db.backfill_metadata --limit 50 --dry-run
+python -m build_db.backfill_metadata --limit 50
+
+# XML 图表回退链接（历史数据，新增 jats-regex 0.6）
+python -m build_db.backfill_jats_figure_links
+```
+
+实测（2026-10-27）：
+
+```
+Europe PMC 批量 3 篇 → 99 章节 / 188 段 / 791 句 / 356 条 xref 链接
+arXiv 下载+解析 1 篇 → 94 段 / 19 图，元数据补标题与年份
+Crossref 回填 20 篇 → journal 18 / year 11 / doi 8
+XML 图表回退 → 652 篇，+3,620 条 jats-regex 链接
+```
+
 ## 实网验证（2026-10-27）
 
 ```

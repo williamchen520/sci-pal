@@ -131,10 +131,14 @@ def import_file(
 
     # figures / tables / citations maps (original JATS id -> DB id)
     fig_map: Dict[str, str] = {}
+    fig_number_map: Dict[str, str] = {}
     for index, fig in enumerate(figures, 1):
         fig_id = f"fig_{paper_id}_{index:04d}"
         if fig.get("id"):
             fig_map[fig["id"]] = fig_id
+        number = re.search(r"(\d+)", fig.get("label") or "")
+        if number:
+            fig_number_map[number.group(1)] = fig_id
         conn.execute(
             "INSERT INTO figures "
             "(fig_id, paper_id, fig_number, caption, file_path, page, bbox) "
@@ -148,10 +152,14 @@ def import_file(
             ),
         )
     table_map: Dict[str, str] = {}
+    table_number_map: Dict[str, str] = {}
     for index, table in enumerate(tables, 1):
         table_id = f"table_{paper_id}_{index:04d}"
         if table.get("id"):
             table_map[table["id"]] = table_id
+        number = re.search(r"(\d+)", table.get("label") or "")
+        if number:
+            table_number_map[number.group(1)] = table_id
         conn.execute(
             "INSERT INTO tables (table_id, paper_id, table_number, caption, markdown) "
             "VALUES (?, ?, ?, ?, ?)",
@@ -248,6 +256,7 @@ def import_file(
             )
             stats["sentences"] += 1
 
+        linked = set()
         for xref in para.get("xrefs") or []:
             offset = xref.get("offset", 0)
             sentence_index = None
@@ -284,6 +293,51 @@ def import_file(
                 ),
             )
             stats["links"] += 1
+            linked.add((sentence_id, target_type, target_id))
+
+        # Fallback: sentences that mention "Fig 1"/"Table 2" but have no xref.
+        for sindex, sentence in enumerate(sentences, 1):
+            sentence_id = f"{para_id}_sent_{sindex:03d}"
+            for number in re.findall(r"\bFig(?:ure)?\.?\s*(\d+)", sentence):
+                target_id = fig_number_map.get(number)
+                key = (sentence_id, "figure", target_id)
+                if target_id and key not in linked:
+                    conn.execute(
+                        "INSERT OR REPLACE INTO sentence_links "
+                        "(link_id, sentence_id, para_id, paper_id, source_type, target_type, "
+                        " target_id, relation, page, bbox, source, confidence) "
+                        "VALUES (?, ?, ?, ?, 'sentence', 'figure', ?, 'mentions', "
+                        "        NULL, NULL, 'jats-regex', 0.6)",
+                        (
+                            f"jatsrx_{sentence_id}_figure_{target_id}",
+                            sentence_id,
+                            para_id,
+                            paper_id,
+                            target_id,
+                        ),
+                    )
+                    linked.add(key)
+                    stats["links"] += 1
+            for number in re.findall(r"\bTable\s*(\d+)", sentence):
+                target_id = table_number_map.get(number)
+                key = (sentence_id, "table", target_id)
+                if target_id and key not in linked:
+                    conn.execute(
+                        "INSERT OR REPLACE INTO sentence_links "
+                        "(link_id, sentence_id, para_id, paper_id, source_type, target_type, "
+                        " target_id, relation, page, bbox, source, confidence) "
+                        "VALUES (?, ?, ?, ?, 'sentence', 'table', ?, 'mentions', "
+                        "        NULL, NULL, 'jats-regex', 0.6)",
+                        (
+                            f"jatsrx_{sentence_id}_table_{target_id}",
+                            sentence_id,
+                            para_id,
+                            paper_id,
+                            target_id,
+                        ),
+                    )
+                    linked.add(key)
+                    stats["links"] += 1
 
     return stats
 

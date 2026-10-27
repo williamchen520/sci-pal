@@ -23,12 +23,17 @@ def _arxiv_entry(entry: ET.Element) -> Dict[str, Any]:
         if link.get("title") == "pdf" or link.get("type") == "application/pdf":
             pdf_url = link.get("href", "")
             break
+    authors = [
+        (author.findtext(f"{ATOM}name") or "").strip()
+        for author in entry.findall(f"{ATOM}author")
+    ]
     return {
         "source": "arxiv",
         "id": (entry.findtext(f"{ATOM}id") or "").rsplit("/", 1)[-1],
         "title": " ".join((entry.findtext(f"{ATOM}title") or "").split()),
         "abstract": " ".join((entry.findtext(f"{ATOM}summary") or "").split()),
         "published": entry.findtext(f"{ATOM}published"),
+        "authors": [a for a in authors if a],
         "pdf_url": pdf_url,
     }
 

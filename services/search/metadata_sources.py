@@ -45,6 +45,29 @@ def crossref_work(doi: str) -> Dict[str, Any]:
     }
 
 
+def crossref_search(title: str, rows: int = 1) -> Dict[str, Any]:
+    """Find the best Crossref candidate by bibliographic title."""
+    data = _get(
+        "https://api.crossref.org/works",
+        params={"query.bibliographic": title, "rows": rows},
+    )
+    items = (data.get("message") or {}).get("items") or []
+    if not items:
+        return {}
+    item = items[0]
+    return {
+        "source": "crossref_search",
+        "doi": item.get("DOI"),
+        "title": (item.get("title") or [""])[0],
+        "journal": (item.get("container-title") or [""])[0],
+        "year": (item.get("issued", {}).get("date-parts") or [[None]])[0][0],
+        "authors": [
+            f"{a.get('given', '')} {a.get('family', '')}".strip()
+            for a in item.get("author", [])
+        ],
+    }
+
+
 def openalex_work(doi: str) -> Dict[str, Any]:
     data = _get(f"https://api.openalex.org/works/https://doi.org/{doi}")
     return {
