@@ -389,6 +389,16 @@ def build_papers_actions_blueprint(
     def serve_pdf(paper_id):
         """Serve the original PDF file for a paper (for built-in PDF reader)."""
         import sqlite3
+        from services.security.signed_url import verify_path
+
+        path = f"/api/papers/{paper_id}/pdf"
+        token = request.args.get("token")
+        if token:
+            if not verify_path(path, token, request.args.get("expires")):
+                return jsonify({"error": "invalid or expired token"}), 403
+        elif os.environ.get("SCIPAL_REQUIRE_SIGNED_PDF") == "1":
+            return jsonify({"error": "signed URL required"}), 403
+
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         row = conn.execute(
@@ -403,7 +413,7 @@ def build_papers_actions_blueprint(
 
         return send_from_directory(
             str(DOCUMENTS_DIR), row["filename"],
-            mimetype="application/pdf")
+            mimetype="application/pdf", conditional=True)
 
 
     # ============================================================
@@ -759,6 +769,7 @@ def build_papers_actions_blueprint(
     # ---------------------------------------------------------------------------
 
     def _trace_payload(paper_id: str, sentence_id: str):
+        from services.security.signed_url import sign_path
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
@@ -820,7 +831,8 @@ def build_papers_actions_blueprint(
                 "bbox": row["bbox"],
                 "section_path": section_path,
                 "links": links,
-                "pdf_url": f"/api/papers/{paper_id}/pdf",
+                "pdf_url": sign_path(f"/api/papers/{paper_id}/pdf"),
+                "pdf_url_unsigned": f"/api/papers/{paper_id}/pdf",
                 "image_url": (
                     f"/api/papers/{paper_id}/trace.png?sentence_id={sentence_id}"
                 ),

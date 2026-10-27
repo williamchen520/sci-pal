@@ -50,6 +50,27 @@ OUTLINE_DIR = PROJECT_ROOT / "data" / "outlines"
 
 app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
 
+# Optional bearer-token guard for remote deployment (single-user token today).
+_API_TOKEN = os.environ.get("SCIPAL_API_TOKEN", "")
+_SIGNED_PDF = os.environ.get("SCIPAL_REQUIRE_SIGNED_PDF", "0") == "1"
+
+
+@app.before_request
+def _require_api_token():
+    if not _API_TOKEN:
+        return None
+    path = request.path
+    if not path.startswith("/api/"):
+        return None
+    if path in ("/api/health",):
+        return None
+    auth = request.headers.get("Authorization", "")
+    if auth == f"Bearer {_API_TOKEN}":
+        return None
+    if path.endswith("/pdf") and request.args.get("token"):
+        return None
+    return jsonify({"error": "unauthorized"}), 401
+
 # Lazy-loaded retrieval components (loaded on first request to keep startup fast)
 _retriever = None
 _hybrid = None
