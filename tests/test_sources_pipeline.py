@@ -174,5 +174,52 @@ class MetadataBackfillTests(unittest.TestCase):
             conn.close()
 
 
+class OpenAlexFallbackTests(unittest.TestCase):
+    def test_openalex_search_parses(self) -> None:
+        from services.search import metadata_sources
+
+        payload = {
+            "results": [
+                {
+                    "doi": "https://doi.org/10.1/x",
+                    "title": "T",
+                    "publication_year": 2026,
+                    "primary_location": {"source": {"display_name": "J"}},
+                    "authorships": [{"author": {"display_name": "A B"}}],
+                }
+            ]
+        }
+        with mock.patch.object(metadata_sources, "_get", return_value=payload):
+            data = metadata_sources.openalex_search("T")
+        self.assertEqual(data["journal"], "J")
+        self.assertEqual(data["doi"], "10.1/x")
+
+    def test_backfill_uses_openalex_when_crossref_misses(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "t.db"
+            conn = sqlite3.connect(db)
+            conn.execute(
+                "CREATE TABLE papers (paper_id TEXT PRIMARY KEY, title TEXT, "
+                "journal TEXT, year TEXT, doi TEXT, authors TEXT, updated_at TEXT)"
+            )
+            conn.execute("INSERT INTO papers VALUES ('p1','T',NULL,NULL,NULL,NULL,NULL)")
+            conn.commit()
+            conn.close()
+            with mock.patch.object(backfill_metadata, "crossref_work", return_value={}), \
+                 mock.patch.object(backfill_metadata, "crossref_search", return_value={}), \
+                 mock.patch.object(
+                     backfill_metadata, "openalex_search",
+                     return_value={"journal": "J", "year": 2026},
+                 ):
+                stats = backfill_metadata.backfill(db, limit=5, pause=0)
+            self.assertEqual(stats["updated"], 1)
+            conn = sqlite3.connect(db)
+            self.assertEqual(
+                conn.execute("SELECT journal FROM papers WHERE paper_id='p1'").fetchone()[0],
+                "J",
+            )
+            conn.close()
+
+
 if __name__ == "__main__":
     unittest.main()

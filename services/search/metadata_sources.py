@@ -68,6 +68,31 @@ def crossref_search(title: str, rows: int = 1) -> Dict[str, Any]:
     }
 
 
+def openalex_search(title: str, per_page: int = 1) -> Dict[str, Any]:
+    """Find the best OpenAlex candidate by title (used when Crossref misses)."""
+    data = _get(
+        "https://api.openalex.org/works",
+        params={"search": title, "per-page": per_page},
+    )
+    items = data.get("results") or []
+    if not items:
+        return {}
+    item = items[0]
+    venue = (item.get("primary_location") or {}).get("source") or {}
+    authors = [
+        (authorship.get("author") or {}).get("display_name", "")
+        for authorship in item.get("authorships", [])
+    ]
+    return {
+        "source": "openalex_search",
+        "doi": (item.get("doi") or "").replace("https://doi.org/", "") or None,
+        "title": item.get("title"),
+        "journal": venue.get("display_name"),
+        "year": item.get("publication_year"),
+        "authors": [a for a in authors if a],
+    }
+
+
 def openalex_work(doi: str) -> Dict[str, Any]:
     data = _get(f"https://api.openalex.org/works/https://doi.org/{doi}")
     return {

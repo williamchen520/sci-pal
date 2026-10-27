@@ -14,7 +14,11 @@ import time
 from pathlib import Path
 from typing import Any, Dict
 
-from services.search.metadata_sources import crossref_search, crossref_work
+from services.search.metadata_sources import (
+    crossref_search,
+    crossref_work,
+    openalex_search,
+)
 
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 
@@ -63,6 +67,10 @@ def backfill(
                     meta = crossref_work(row["doi"])
                 if not meta or not meta.get("journal"):
                     found = crossref_search(row["title"])
+                    if found:
+                        meta = {**found, **{k: v for k, v in meta.items() if v}}
+                if not meta or not meta.get("journal"):
+                    found = openalex_search(row["title"])
                     if found:
                         meta = {**found, **{k: v for k, v in meta.items() if v}}
             except Exception:  # noqa: BLE001

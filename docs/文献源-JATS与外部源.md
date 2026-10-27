@@ -109,7 +109,7 @@ python -m services.search.europe_pmc_batch --query "hepatocellular carcinoma AND
 python -m services.search.preprint_ingest --arxiv "protein language model" --max-items 1
 python -m services.search.preprint_ingest --biorxiv 10.1101/2025.01.01.000001 --no-parse
 
-# 元数据回填（Crossref：有 DOI 用 DOI，否则标题检索）
+# 元数据回填（Crossref 优先，OpenAlex 兜底）
 python -m build_db.backfill_metadata --limit 50 --dry-run
 python -m build_db.backfill_metadata --limit 50
 
