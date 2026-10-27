@@ -15,8 +15,10 @@ from xml.etree import ElementTree as ET
 import requests
 
 
-# Grobid server config
-GROBID_URL = os.environ.get("GROBID_URL", "http://localhost:8070")
+# Grobid server config (SCIPAL_GROBID_URL wins; GROBID_URL kept for compatibility)
+GROBID_URL = os.environ.get("SCIPAL_GROBID_URL") or os.environ.get(
+    "GROBID_URL", "http://localhost:8070"
+)
 
 # XML namespaces used in TEI
 TEI_NS = {

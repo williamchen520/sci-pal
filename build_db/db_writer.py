@@ -5,6 +5,7 @@ Follows our "physical single file, logical multi-table" architecture
 """
 import sqlite3
 import os
+import json
 from typing import Dict, List, Any
 from config.settings import DATABASE_PATH
 
@@ -67,6 +68,7 @@ class DatabaseWriter:
                 "total_tables": len(tables),
                 "total_citations": len(citations),
             })
+            self._write_provenance(cursor, paper_id, parsed_result.get("provenance"))
             
             # Insert paragraphs
             self._insert_paragraphs(cursor, paragraphs)
@@ -154,6 +156,42 @@ class DatabaseWriter:
         query = f"INSERT OR REPLACE INTO papers ({columns}) VALUES ({placeholders})"
         cursor.execute(query, values)
     
+    def _write_provenance(self, cursor, paper_id: str, provenance: Dict[str, Any] | None) -> None:
+        """Persist per-field engine provenance (text/meta/refs/tables + decision)."""
+        if not provenance:
+            return
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS parse_provenance (
+                paper_id      TEXT PRIMARY KEY,
+                text_engine   TEXT,
+                meta_engine   TEXT,
+                refs_engine   TEXT,
+                tables_engine TEXT,
+                decision      TEXT,
+                metrics_json  TEXT,
+                created_at    TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO parse_provenance
+                (paper_id, text_engine, meta_engine, refs_engine, tables_engine,
+                 decision, metrics_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """,
+            (
+                paper_id,
+                provenance.get("text_engine", ""),
+                provenance.get("meta_engine", ""),
+                provenance.get("refs_engine", ""),
+                provenance.get("tables_engine", ""),
+                provenance.get("decision", ""),
+                json.dumps(provenance.get("metrics") or {}, ensure_ascii=False),
+            ),
+        )
+
     def _insert_paragraphs(self, cursor, paragraphs: List[Dict[str, Any]]):
         """Insert paragraphs（V25.14修复: 匹配 build_database.py 的实际 paragraphs 表 schema）
         

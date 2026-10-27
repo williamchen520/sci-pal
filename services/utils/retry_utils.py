@@ -1,18 +1,18 @@
-"""
-Sci-Pal 统一错误处理与重试模块 V33.6
+﻿"""
+Sci-Pal ç»Ÿä¸€é”™è¯¯å¤„ç†ä¸Žé‡è¯•æ¨¡å— V33.6
 
-用途：提供统一的错误处理、重试、降级和死信队列机制。
-- @retry 装饰器：指数退避重试，支持可重试异常类型
-- LLM 调用重试+降级：主模型失败时自动切换到备用模型
-- 解析器 fallback 链：Docling失败→GROBID→MinerU→pdfplumber
-- 死信队列：多次失败的任务进入死信队列，支持人工重试
-- 错误统计：记录各类错误的发生次数，便于发现系统性问题
+ç”¨é€”ï¼šæä¾›ç»Ÿä¸€çš„é”™è¯¯å¤„ç†ã€é‡è¯•ã€é™çº§å’Œæ­»ä¿¡é˜Ÿåˆ—æœºåˆ¶ã€‚
+- @retry è£…é¥°å™¨ï¼šæŒ‡æ•°é€€é¿é‡è¯•ï¼Œæ”¯æŒå¯é‡è¯•å¼‚å¸¸ç±»åž‹
+- LLM è°ƒç”¨é‡è¯•+é™çº§ï¼šä¸»æ¨¡åž‹å¤±è´¥æ—¶è‡ªåŠ¨åˆ‡æ¢åˆ°å¤‡ç”¨æ¨¡åž‹
+- è§£æžå™¨ fallback é“¾ï¼šDoclingå¤±è´¥â†’GROBIDâ†’MinerUâ†’pdfplumber
+- æ­»ä¿¡é˜Ÿåˆ—ï¼šå¤šæ¬¡å¤±è´¥çš„ä»»åŠ¡è¿›å…¥æ­»ä¿¡é˜Ÿåˆ—ï¼Œæ”¯æŒäººå·¥é‡è¯•
+- é”™è¯¯ç»Ÿè®¡ï¼šè®°å½•å„ç±»é”™è¯¯çš„å‘ç”Ÿæ¬¡æ•°ï¼Œä¾¿äºŽå‘çŽ°ç³»ç»Ÿæ€§é—®é¢˜
 
-设计原则：
-- 优雅降级：失败时尽量提供可用的降级方案，而不是直接报错
-- 指数退避：重试间隔指数增长，避免打爆下游服务
-- 可观测：所有重试和降级都有日志记录
-- 可配置：重试次数、间隔、异常类型都可配置
+è®¾è®¡åŽŸåˆ™ï¼š
+- ä¼˜é›…é™çº§ï¼šå¤±è´¥æ—¶å°½é‡æä¾›å¯ç”¨çš„é™çº§æ–¹æ¡ˆï¼Œè€Œä¸æ˜¯ç›´æŽ¥æŠ¥é”™
+- æŒ‡æ•°é€€é¿ï¼šé‡è¯•é—´éš”æŒ‡æ•°å¢žé•¿ï¼Œé¿å…æ‰“çˆ†ä¸‹æ¸¸æœåŠ¡
+- å¯è§‚æµ‹ï¼šæ‰€æœ‰é‡è¯•å’Œé™çº§éƒ½æœ‰æ—¥å¿—è®°å½•
+- å¯é…ç½®ï¼šé‡è¯•æ¬¡æ•°ã€é—´éš”ã€å¼‚å¸¸ç±»åž‹éƒ½å¯é…ç½®
 """
 
 import time
@@ -28,11 +28,11 @@ from enum import Enum
 
 
 # =============================================================================
-# 数据结构
+# æ•°æ®ç»“æž„
 # =============================================================================
 
 class RetryStatus(str, Enum):
-    """重试状态"""
+    """é‡è¯•çŠ¶æ€"""
     PENDING = "pending"
     RETRYING = "retrying"
     SUCCESS = "success"
@@ -42,7 +42,7 @@ class RetryStatus(str, Enum):
 
 @dataclass
 class RetryRecord:
-    """重试记录"""
+    """é‡è¯•è®°å½•"""
     record_id: str = field(default_factory=lambda: f"retry_{uuid.uuid4().hex[:12]}")
     task_name: str = ""
     status: str = RetryStatus.PENDING.value
@@ -59,7 +59,7 @@ class RetryRecord:
 
 @dataclass
 class DeadLetterTask:
-    """死信队列任务"""
+    """æ­»ä¿¡é˜Ÿåˆ—ä»»åŠ¡"""
     task_id: str = field(default_factory=lambda: f"dl_{uuid.uuid4().hex[:12]}")
     task_name: str = ""
     task_type: str = ""  # llm_call / parser / download / other
@@ -76,7 +76,7 @@ class DeadLetterTask:
 
 @dataclass
 class ErrorStats:
-    """错误统计"""
+    """é”™è¯¯ç»Ÿè®¡"""
     total_errors: int = 0
     total_retries: int = 0
     total_success_after_retry: int = 0
@@ -88,7 +88,7 @@ class ErrorStats:
 
 
 # =============================================================================
-# 重试装饰器
+# é‡è¯•è£…é¥°å™¨
 # =============================================================================
 
 def retry(
@@ -103,25 +103,25 @@ def retry(
     jitter: bool = True,
 ):
     """
-    重试装饰器（指数退避）
+    é‡è¯•è£…é¥°å™¨ï¼ˆæŒ‡æ•°é€€é¿ï¼‰
 
     Args:
-        max_attempts: 最大尝试次数（包括第一次）
-        base_delay: 基础延迟（秒）
-        max_delay: 最大延迟（秒）
-        backoff_factor: 退避因子
-        retryable_exceptions: 可重试的异常类型元组
-        on_retry: 重试回调函数（attempt, error, delay）
-        on_success: 成功回调函数（result, attempt）
-        on_failure: 最终失败回调函数（error）
-        jitter: 是否添加随机抖动
+        max_attempts: æœ€å¤§å°è¯•æ¬¡æ•°ï¼ˆåŒ…æ‹¬ç¬¬ä¸€æ¬¡ï¼‰
+        base_delay: åŸºç¡€å»¶è¿Ÿï¼ˆç§’ï¼‰
+        max_delay: æœ€å¤§å»¶è¿Ÿï¼ˆç§’ï¼‰
+        backoff_factor: é€€é¿å› å­
+        retryable_exceptions: å¯é‡è¯•çš„å¼‚å¸¸ç±»åž‹å…ƒç»„
+        on_retry: é‡è¯•å›žè°ƒå‡½æ•°ï¼ˆattempt, error, delayï¼‰
+        on_success: æˆåŠŸå›žè°ƒå‡½æ•°ï¼ˆresult, attemptï¼‰
+        on_failure: æœ€ç»ˆå¤±è´¥å›žè°ƒå‡½æ•°ï¼ˆerrorï¼‰
+        jitter: æ˜¯å¦æ·»åŠ éšæœºæŠ–åŠ¨
 
-    用法：
+    ç”¨æ³•ï¼š
         @retry(max_attempts=3, base_delay=1.0)
         def call_llm(prompt):
             ...
 
-        # 只重试特定异常
+        # åªé‡è¯•ç‰¹å®šå¼‚å¸¸
         @retry(retryable_exceptions=(TimeoutError, ConnectionError))
         def download_file(url):
             ...
@@ -142,7 +142,7 @@ def retry(
                 except retryable_exceptions as e:
                     last_error = e
                     if attempt < max_attempts:
-                        # 计算延迟
+                        # è®¡ç®—å»¶è¿Ÿ
                         delay = min(base_delay * (backoff_factor ** (attempt - 1)), max_delay)
                         if jitter:
                             import random
@@ -162,7 +162,7 @@ def retry(
                             except Exception:
                                 pass
                 except Exception as e:
-                    # 不可重试的异常，直接抛出
+                    # ä¸å¯é‡è¯•çš„å¼‚å¸¸ï¼Œç›´æŽ¥æŠ›å‡º
                     raise
 
             raise last_error
@@ -171,22 +171,22 @@ def retry(
 
 
 # =============================================================================
-# LLM 调用重试+降级
+# LLM è°ƒç”¨é‡è¯•+é™çº§
 # =============================================================================
 
 class LLMRouter:
     """
-    LLM 调用路由器（重试+降级）
+    LLM è°ƒç”¨è·¯ç”±å™¨ï¼ˆé‡è¯•+é™çº§ï¼‰
 
-    用法：
+    ç”¨æ³•ï¼š
         router = LLMRouter()
 
-        # 注册主模型和备用模型
+        # æ³¨å†Œä¸»æ¨¡åž‹å’Œå¤‡ç”¨æ¨¡åž‹
         router.register_model('primary', call_primary_func)
         router.register_model('fallback1', call_fallback1_func)
         router.register_model('fallback2', call_fallback2_func)
 
-        # 调用（自动重试和降级）
+        # è°ƒç”¨ï¼ˆè‡ªåŠ¨é‡è¯•å’Œé™çº§ï¼‰
         result = router.call(prompt='...', max_retries=2)
     """
 
@@ -197,7 +197,7 @@ class LLMRouter:
         self._stats = {"total_calls": 0, "primary_success": 0, "fallback_used": 0, "total_failures": 0}
 
     def register_model(self, name: str, call_func: Callable, priority: int = -1):
-        """注册模型"""
+        """æ³¨å†Œæ¨¡åž‹"""
         with self._lock:
             self._models[name] = call_func
             if priority >= 0 and priority < len(self._model_order):
@@ -213,12 +213,12 @@ class LLMRouter:
         **kwargs,
     ) -> Any:
         """
-        调用 LLM（自动重试和降级）
+        è°ƒç”¨ LLMï¼ˆè‡ªåŠ¨é‡è¯•å’Œé™çº§ï¼‰
 
-        策略：
-        1. 先调用主模型，失败后重试 max_retries_per_model 次
-        2. 主模型彻底失败后，依次尝试备用模型
-        3. 所有模型都失败后，抛出最后一个错误
+        ç­–ç•¥ï¼š
+        1. å…ˆè°ƒç”¨ä¸»æ¨¡åž‹ï¼Œå¤±è´¥åŽé‡è¯• max_retries_per_model æ¬¡
+        2. ä¸»æ¨¡åž‹å½»åº•å¤±è´¥åŽï¼Œä¾æ¬¡å°è¯•å¤‡ç”¨æ¨¡åž‹
+        3. æ‰€æœ‰æ¨¡åž‹éƒ½å¤±è´¥åŽï¼ŒæŠ›å‡ºæœ€åŽä¸€ä¸ªé”™è¯¯
         """
         last_error = None
         self._stats["total_calls"] += 1
@@ -248,76 +248,21 @@ class LLMRouter:
         raise last_error if last_error else RuntimeError("All LLM models failed")
 
     def get_stats(self) -> dict:
-        """获取统计信息"""
+        """èŽ·å–ç»Ÿè®¡ä¿¡æ¯"""
         return dict(self._stats)
 
 
-# =============================================================================
-# 解析器 fallback 链
-# =============================================================================
-
-class ParserFallbackChain:
-    """
-    解析器 fallback 链
-
-    用法：
-        chain = ParserFallbackChain()
-        chain.add_parser('docling', parse_with_docling)
-        chain.add_parser('grobid', parse_with_grobid)
-        chain.add_parser('mineru', parse_with_mineru)
-        chain.add_parser('pdfplumber', parse_with_pdfplumber)
-
-        result, parser_used = chain.parse(pdf_path)
-    """
-
-    def __init__(self):
-        self._parsers: list[Tuple[str, Callable]] = []
-        self._stats = {"total_parses": 0, "by_parser": {}, "fallback_count": 0}
-
-    def add_parser(self, name: str, parse_func: Callable):
-        """添加解析器（按添加顺序尝试）"""
-        self._parsers.append((name, parse_func))
-        self._stats["by_parser"][name] = 0
-
-    def parse(self, *args, **kwargs) -> Tuple[Any, str]:
-        """
-        解析（依次尝试各解析器）
-
-        Returns:
-            (result, parser_used_name)
-        """
-        self._stats["total_parses"] += 1
-        last_error = None
-
-        for parser_name, parse_func in self._parsers:
-            try:
-                result = parse_func(*args, **kwargs)
-                self._stats["by_parser"][parser_name] += 1
-                return result, parser_name
-            except Exception as e:
-                last_error = e
-                self._stats["fallback_count"] += 1
-                continue
-
-        raise last_error if last_error else RuntimeError("All parsers failed")
-
-    def get_stats(self) -> dict:
-        """获取统计信息"""
-        return dict(self._stats)
-
-
-# =============================================================================
-# 死信队列
+# æ­»ä¿¡é˜Ÿåˆ—
 # =============================================================================
 
 class DeadLetterQueue:
     """
-    死信队列
+    æ­»ä¿¡é˜Ÿåˆ—
 
-    用法：
+    ç”¨æ³•ï¼š
         dlq = DeadLetterQueue()
 
-        # 添加失败任务
+        # æ·»åŠ å¤±è´¥ä»»åŠ¡
         dlq.add_task(
             task_name='call_llm',
             task_type='llm_call',
@@ -325,10 +270,10 @@ class DeadLetterQueue:
             error_message='Timeout',
         )
 
-        # 获取待处理任务
+        # èŽ·å–å¾…å¤„ç†ä»»åŠ¡
         tasks = dlq.get_pending_tasks()
 
-        # 重试任务
+        # é‡è¯•ä»»åŠ¡
         dlq.retry_task(task_id, result_handler_func)
     """
 
@@ -357,7 +302,7 @@ class DeadLetterQueue:
         error_type: str = "",
         attempt_count: int = 0,
     ) -> DeadLetterTask:
-        """添加失败任务到死信队列"""
+        """æ·»åŠ å¤±è´¥ä»»åŠ¡åˆ°æ­»ä¿¡é˜Ÿåˆ—"""
         task = DeadLetterTask(
             task_name=task_name,
             task_type=task_type,
@@ -370,7 +315,7 @@ class DeadLetterQueue:
         return task
 
     def get_task(self, task_id: str) -> Optional[DeadLetterTask]:
-        """获取死信任务"""
+        """èŽ·å–æ­»ä¿¡ä»»åŠ¡"""
         task_file = self._tasks_dir / f"{task_id}.json"
         if task_file.is_file():
             try:
@@ -382,7 +327,7 @@ class DeadLetterQueue:
         return None
 
     def get_pending_tasks(self, task_type: str = "", limit: int = 50) -> list[DeadLetterTask]:
-        """获取待处理的死信任务"""
+        """èŽ·å–å¾…å¤„ç†çš„æ­»ä¿¡ä»»åŠ¡"""
         with self._lock:
             task_ids = [
                 idx["task_id"] for idx in reversed(self._index)
@@ -399,14 +344,14 @@ class DeadLetterQueue:
 
     def retry_task(self, task_id: str, handler: Callable) -> bool:
         """
-        重试死信任务
+        é‡è¯•æ­»ä¿¡ä»»åŠ¡
 
         Args:
-            task_id: 任务 ID
-            handler: 处理函数，接收 payload，返回 True 表示成功
+            task_id: ä»»åŠ¡ ID
+            handler: å¤„ç†å‡½æ•°ï¼ŒæŽ¥æ”¶ payloadï¼Œè¿”å›ž True è¡¨ç¤ºæˆåŠŸ
 
         Returns:
-            是否成功
+            æ˜¯å¦æˆåŠŸ
         """
         task = self.get_task(task_id)
         if not task:
@@ -436,7 +381,7 @@ class DeadLetterQueue:
             return False
 
     def dismiss_task(self, task_id: str, reason: str = "") -> bool:
-        """驳回/忽略死信任务"""
+        """é©³å›ž/å¿½ç•¥æ­»ä¿¡ä»»åŠ¡"""
         task = self.get_task(task_id)
         if not task:
             return False
@@ -447,7 +392,7 @@ class DeadLetterQueue:
         return True
 
     def get_stats(self) -> dict:
-        """获取统计信息"""
+        """èŽ·å–ç»Ÿè®¡ä¿¡æ¯"""
         with self._lock:
             total = len(self._index)
             pending = sum(1 for idx in self._index if idx.get("status") == "pending")
@@ -466,7 +411,7 @@ class DeadLetterQueue:
         }
 
     def _save_task(self, task: DeadLetterTask):
-        """保存任务"""
+        """ä¿å­˜ä»»åŠ¡"""
         try:
             task_file = self._tasks_dir / f"{task.task_id}.json"
             with open(task_file, "w", encoding="utf-8") as f:
@@ -496,7 +441,7 @@ class DeadLetterQueue:
 
                 self._save_json(self._index_file, self._index)
         except Exception as e:
-            print(f"⚠️  保存死信任务失败: {e}")
+            print(f"âš ï¸  ä¿å­˜æ­»ä¿¡ä»»åŠ¡å¤±è´¥: {e}")
 
     def _load_json(self, file_path: Path, default):
         if file_path.is_file():
@@ -516,7 +461,7 @@ class DeadLetterQueue:
 
 
 # =============================================================================
-# 全局单例
+# å…¨å±€å•ä¾‹
 # =============================================================================
 
 _dlq_instance: Optional[DeadLetterQueue] = None
@@ -524,7 +469,7 @@ _dlq_lock = threading.Lock()
 
 
 def get_dead_letter_queue() -> DeadLetterQueue:
-    """获取全局死信队列单例"""
+    """èŽ·å–å…¨å±€æ­»ä¿¡é˜Ÿåˆ—å•ä¾‹"""
     global _dlq_instance
     if _dlq_instance is None:
         with _dlq_lock:

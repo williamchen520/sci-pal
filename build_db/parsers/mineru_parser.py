@@ -1,268 +1,286 @@
+"""MinerU 4.x parser adapter.
+
+MinerU 4 moved from the old ``magic_pdf`` Python API to a CLI + local parse
+server (``mineru-api`` on :8000). This adapter shells out to the CLI with
+``--json`` and converts the returned Markdown into our paragraph schema.
+
+Requirements (checked lazily):
+
+* ``mineru-api --tier basic --port 8000`` running in the background;
+* ``mineru config set parse_server.local.mode self_hosted`` and
+  ``... self_hosted_url http://127.0.0.1:8000``;
+* basic-tier models downloaded with ``mineru-models-download --tier basic``.
+
+When any of that is missing the parser falls back to a stub; the pipeline's
+quality gate keeps the stub from replacing a good Docling result.
 """
-MinerU Primary Parser Wrapper
-Best overall parser for academic PDFs
-"""
-import os
+
+from __future__ import annotations
+
 import json
-import hashlib
-from typing import Dict, List, Any
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, List
+
 from .base_parser import BaseParser
 
+_PAGE_MARKER = re.compile(r"<!--\s*page\s+(\d+)\s+of\s+(\d+)\s*-->")
+_IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
+
+
+def _section_type(title: str) -> str:
+    lower = (title or "").lower()
+    if any(k in lower for k in ("abstract", "summary")):
+        return "abstract"
+    if any(k in lower for k in ("introduction", "background")):
+        return "introduction"
+    if any(k in lower for k in ("method", "material", "experiment")):
+        return "methods"
+    if any(k in lower for k in ("result", "finding")):
+        return "results"
+    if any(k in lower for k in ("discussion", "conclusion")):
+        return "discussion"
+    if any(k in lower for k in ("reference", "bibliography")):
+        return "references"
+    return "body"
+
+
 class MinerUParser(BaseParser):
-    """Wrapper around MinerU for primary PDF parsing"""
-    
-    def __init__(self, output_dir: str = None):
+    """MinerU 4.x CLI adapter (markdown -> paragraphs)."""
+
+    def __init__(
+        self,
+        output_dir: str | None = None,
+        cli_path: str | None = None,
+        api_url: str = "http://127.0.0.1:8000",
+        wait_seconds: int = 900,
+    ) -> None:
         self.name = "mineru"
-        self._parser_loaded = False
-        self._parser = None
-        self.output_dir = output_dir or "data/parsed_output"
-    
-    def _load_parser(self):
-        """Lazy load MinerU to avoid startup delay"""
-        if self._parser_loaded:
-            return
-        
-        try:
-            # Try importing MinerU
-            from magic_pdf.cli.common import common_parse
-            self._parser = common_parse
-            self._parser_loaded = True
-            print("✅ MinerU parser loaded successfully")
-        except ImportError:
-            print("⚠️  MinerU not installed yet. Run: pip install mineru[all]")
-            self._parser = None
-    
+        self.output_dir = output_dir or str(Path("data") / "parsed_output")
+        self.api_url = api_url
+        self.wait_seconds = wait_seconds
+        self.cli_path = cli_path or self._find_cli()
+        self._available: bool | None = None
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _find_cli() -> str:
+        scripts = Path(sys.executable).parent
+        candidate = scripts / ("mineru.exe" if os.name == "nt" else "mineru")
+        return str(candidate)
+
     def get_parser_name(self) -> str:
         return self.name
-    
-    def parse(self, pdf_path: str, paper_id: str) -> Dict[str, Any]:
-        """
-        Parse PDF with MinerU
-        Returns our standardized format: {
-            "paragraphs": [...],
-            "figures": [...],
-            "metadata": {...}
-        }
-        """
-        self._load_parser()
-        
-        if not self._parser:
-            print("⚠️  Falling back to stub parser")
-            return self._stub_parse(pdf_path, paper_id)
-        
-        print(f"📄 Parsing {pdf_path} with MinerU...")
-        
+
+    def is_available(self) -> bool:
+        if self._available is not None:
+            return self._available
+        if not Path(self.cli_path).exists():
+            self._available = False
+            return False
         try:
-            # Create output directory for this paper
-            paper_output_dir = os.path.join(self.output_dir, paper_id)
-            os.makedirs(paper_output_dir, exist_ok=True)
-            
-            # Run MinerU parsing
-            # Note: This is the actual MinerU API call
-            # The exact API may vary by version
-            from magic_pdf.model.doc_analyze_by_custom_model import doc_analyze
-            from magic_pdf.data.data_reader_writer import FileBasedDataReader, FileBasedDataWriter
-            from magic_pdf.data.dataset import PymuDocDataset
-            
-            # Read PDF
-            pdf_bytes = open(pdf_path, "rb").read()
-            reader_writer = FileBasedDataWriter(paper_output_dir)
-            
-            # Create dataset
-            ds = PymuDocDataset(pdf_bytes)
-            
-            # Analyze with model
-            inference_res = doc_analyze(ds, ocr=True, langs=["en"])
-            
-            # Apply to dataset
-            ds.apply(inference_res)
-            
-            # Get markdown content
-            md_content = ds.get_markdown_text()
-            
-            # Parse the markdown into our structured format
-            return self._convert_mineru_output(ds, md_content, paper_id, pdf_path)
-            
-        except Exception as e:
-            print(f"⚠️  MinerU parse error: {e}")
-            print("Falling back to stub parser")
+            import urllib.request
+
+            for path in ("/openapi.json", "/health", "/healthz"):
+                try:
+                    with urllib.request.urlopen(f"{self.api_url}{path}", timeout=3) as response:
+                        if response.status == 200:
+                            self._available = True
+                            return True
+                except Exception:  # noqa: BLE001
+                    continue
+            self._available = False
+        except Exception:  # noqa: BLE001
+            self._available = False
+        return bool(self._available)
+
+    # ------------------------------------------------------------------
+    def parse(self, pdf_path: str, paper_id: str) -> Dict[str, Any]:
+        if not self.is_available():
+            print("⚠️  MinerU parse-server not available (mineru-api on 8000); using stub")
             return self._stub_parse(pdf_path, paper_id)
-    
-    def _convert_mineru_output(self, ds, markdown_text: str, paper_id: str, pdf_path: str) -> Dict[str, Any]:
-        """
-        Convert MinerU output to our standardized format
-        """
-        paragraphs = []
-        figures = []
-        para_index = 0
-        
-        # Extract metadata from first page
-        metadata = {
-            "title": self._extract_title_from_markdown(markdown_text),
-            "authors": [],  # TODO: Extract authors
-            "journal": None,
-            "year": None,
-            "doi": None,
-            "abstract": self._extract_abstract(markdown_text),
-            "page_count": self._estimate_page_count(markdown_text),
-            "parser_source": "mineru"
-        }
-        
-        # Parse markdown into paragraphs by section
-        sections = self._parse_markdown_sections(markdown_text)
-        
-        current_section = "body"
-        current_section_name = "Body"
-        
-        for i, section in enumerate(sections):
-            para_text = section["text"].strip()
-            if not para_text:
-                continue
-            
-            para_id = f"{paper_id}_p{para_index + 1:03d}"
-            
-            paragraphs.append({
-                "para_id": para_id,
-                "paper_id": paper_id,
-                "page_number": section.get("page", 1),
-                "section_type": self._detect_section_type(section["heading"]),
-                "section_name": section["heading"] or "Body",
-                "para_index": para_index,
-                "text_content": para_text,
-                "char_start": 0,
-                "char_end": len(para_text),
-                "parser_source": "mineru"
-            })
-            
-            para_index += 1
-        
-        # Extract figures (MinerU saves images to output dir)
-        fig_index = 0
-        image_dir = os.path.join(self.output_dir, paper_id, "images")
-        if os.path.exists(image_dir):
-            for img_file in sorted(os.listdir(image_dir)):
-                if img_file.endswith(('.png', '.jpg', '.jpeg')):
-                    fig_index += 1
-                    figures.append({
-                        "figure_id": f"{paper_id}_fig{fig_index:03d}",
-                        "paper_id": paper_id,
-                        "page_number": 1,  # TODO: Extract actual page
-                        "figure_type": "figure",
-                        "caption": f"Figure {fig_index}",
-                        "image_path": os.path.join(image_dir, img_file),
-                        "bbox": None,
-                        "para_id": paragraphs[0]["para_id"] if paragraphs else None,
-                        "parser_source": "mineru"
-                    })
-        
+
+        with tempfile.TemporaryDirectory(prefix="mineru_out_") as tmp:
+            out_path = Path(tmp) / "out"
+            command = [
+                self.cli_path,
+                "parse",
+                str(pdf_path),
+                "--pages",
+                "all",
+                "--wait",
+                str(self.wait_seconds),
+                "--json",
+                "-o",
+                str(out_path),
+            ]
+            try:
+                completed = subprocess.run(
+                    command,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=self.wait_seconds + 60,
+                )
+            except Exception as exc:  # noqa: BLE001
+                print(f"⚠️  MinerU CLI failed: {str(exc)[:120]}; using stub")
+                return self._stub_parse(pdf_path, paper_id)
+
+            payload = self._parse_cli_json(completed.stdout)
+            if payload.get("error"):
+                print(f"⚠️  MinerU error: {payload['error'].get('message', '')[:120]}; using stub")
+                return self._stub_parse(pdf_path, paper_id)
+
+            markdown = self._read_output(out_path)
+            if not markdown:
+                print("⚠️  MinerU produced no markdown; using stub")
+                return self._stub_parse(pdf_path, paper_id)
+
+        paragraphs, figures, title = self._markdown_to_result(markdown, paper_id)
         return {
+            "paper_id": paper_id,
             "paragraphs": paragraphs,
             "figures": figures,
-            "metadata": metadata
+            "tables": [],
+            "citations": [],
+            "metadata": {
+                "paper_id": paper_id,
+                "file_path": str(pdf_path),
+                "file_name": os.path.basename(pdf_path),
+                "title": title or Path(pdf_path).stem,
+                "parse_engine": "mineru",
+                "parse_status": "completed",
+            },
         }
-    
-    def _extract_title_from_markdown(self, md: str) -> str:
-        """Extract paper title from markdown"""
-        for line in md.split('\n'):
-            line = line.strip()
-            if line.startswith('# ') and len(line) > 5:
-                return line[2:].strip()
-        return "Unknown Title"
-    
-    def _extract_abstract(self, md: str) -> str:
-        """Extract abstract from markdown"""
-        in_abstract = False
-        abstract_lines = []
-        for line in md.split('\n'):
-            line_lower = line.lower().strip()
-            if 'abstract' in line_lower and len(line) < 50:
-                in_abstract = True
+
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _parse_cli_json(stdout: str) -> Dict[str, Any]:
+        text = (stdout or "").strip()
+        if not text:
+            return {}
+        start = text.find("{")
+        if start < 0:
+            return {}
+        try:
+            return json.loads(text[start:])
+        except json.JSONDecodeError:
+            return {}
+
+    @staticmethod
+    def _read_output(out_path: Path) -> str:
+        if out_path.is_file():
+            return out_path.read_text(encoding="utf-8", errors="replace")
+        if out_path.is_dir():
+            for candidate in sorted(out_path.rglob("*")):
+                if candidate.is_file():
+                    return candidate.read_text(encoding="utf-8", errors="replace")
+        return ""
+
+    def _markdown_to_result(
+        self, markdown: str, paper_id: str
+    ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]], str]:
+        paragraphs: List[Dict[str, Any]] = []
+        figures: List[Dict[str, Any]] = []
+        page = 1
+        section_title = ""
+        section_type = "body"
+        title = ""
+        buffer: List[str] = []
+        index = 0
+
+        def flush() -> None:
+            nonlocal buffer, index
+            text = "\n".join(line for line in buffer if line.strip()).strip()
+            buffer = []
+            if not text:
+                return
+            index += 1
+            paragraphs.append(
+                {
+                    "para_id": f"{paper_id}_p{index:03d}",
+                    "paper_id": paper_id,
+                    "page_number": page,
+                    "section_type": section_type,
+                    "section_title": section_title,
+                    "section_name": section_title or "Body",
+                    "para_index": index,
+                    "text_content": text,
+                    "parser_source": "mineru",
+                }
+            )
+
+        for raw_line in markdown.splitlines():
+            line = raw_line.rstrip()
+            page_match = _PAGE_MARKER.search(line)
+            if page_match:
+                flush()
+                page = int(page_match.group(1))
                 continue
-            if in_abstract:
-                if line.startswith('#') or line.strip() == '':
-                    if abstract_lines:
-                        break
-                    continue
-                abstract_lines.append(line.strip())
-        return ' '.join(abstract_lines) if abstract_lines else None
-    
-    def _parse_markdown_sections(self, md: str) -> List[Dict]:
-        """Parse markdown into sections with headings"""
-        sections = []
-        current_heading = None
-        current_text = []
-        
-        for line in md.split('\n'):
-            if line.startswith('#'):
-                if current_text:
-                    sections.append({
-                        "heading": current_heading,
-                        "text": '\n'.join(current_text)
-                    })
-                    current_text = []
-                current_heading = line.lstrip('#').strip()
-            else:
-                current_text.append(line)
-        
-        if current_text:
-            sections.append({
-                "heading": current_heading,
-                "text": '\n'.join(current_text)
-            })
-        
-        return sections
-    
-    def _detect_section_type(self, heading: str = None) -> str:
-        """Detect section type from heading"""
-        if not heading:
-            return "body"
-        
-        heading_lower = heading.lower()
-        
-        if "abstract" in heading_lower:
-            return "abstract"
-        elif "introduction" in heading_lower or "background" in heading_lower:
-            return "introduction"
-        elif "method" in heading_lower:
-            return "methodology"
-        elif "result" in heading_lower:
-            return "results"
-        elif "discussion" in heading_lower:
-            return "discussion"
-        elif "conclusion" in heading_lower:
-            return "conclusion"
-        elif "reference" in heading_lower:
-            return "references"
-        else:
-            return "body"
-    
-    def _estimate_page_count(self, md: str) -> int:
-        """Estimate page count from markdown length"""
-        # Rough estimate: ~3000 chars per page
-        return max(1, len(md) // 3000)
-    
+
+            heading_match = re.match(r"^(#{1,6})\s+(.*)$", line.strip())
+            if heading_match:
+                flush()
+                heading = heading_match.group(2).strip()
+                if not title and len(heading_match.group(1)) == 1:
+                    title = heading
+                section_title = heading
+                section_type = _section_type(heading)
+                continue
+
+            image_match = _IMAGE.search(line)
+            if image_match and not line.replace(image_match.group(0), "").strip():
+                figures.append(
+                    {
+                        "figure_id": f"{paper_id}_fig{len(figures) + 1:03d}",
+                        "paper_id": paper_id,
+                        "page_number": page,
+                        "figure_type": "figure",
+                        "caption": image_match.group(1) or "",
+                        "image_path": image_match.group(2),
+                        "parser_source": "mineru",
+                    }
+                )
+                continue
+
+            if not line.strip():
+                flush()
+                continue
+            buffer.append(line)
+
+        flush()
+        return paragraphs, figures, title
+
+    # ------------------------------------------------------------------
     def _stub_parse(self, pdf_path: str, paper_id: str) -> Dict[str, Any]:
-        """Stub parser used when MinerU is not installed"""
-        filename = os.path.basename(pdf_path).replace('.pdf', '')
-        
         return {
+            "paper_id": paper_id,
             "paragraphs": [
                 {
                     "para_id": f"{paper_id}_p001",
                     "paper_id": paper_id,
                     "page_number": 1,
-                    "section_type": "abstract",
-                    "section_name": "Abstract",
-                    "para_index": 0,
-                    "text_content": f"[STUB] Parsing {filename} with MinerU stub. Install MinerU to get real results.",
-                    "parser_source": "stub"
+                    "section_type": "body",
+                    "section_title": "",
+                    "para_index": 1,
+                    "text_content": f"[MinerU stub] {Path(pdf_path).stem}",
+                    "parser_source": "mineru-stub",
                 }
             ],
             "figures": [],
+            "tables": [],
+            "citations": [],
             "metadata": {
-                "title": filename.replace('_', ' ').title(),
-                "authors": [],
-                "year": None,
-                "parser_source": "stub"
-            }
+                "paper_id": paper_id,
+                "file_path": str(pdf_path),
+                "file_name": os.path.basename(pdf_path),
+                "title": Path(pdf_path).stem,
+                "parse_engine": "mineru-stub",
+                "parse_status": "stub",
+            },
         }
