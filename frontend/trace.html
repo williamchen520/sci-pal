@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>SciPal 句子溯源</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; color: #222; }
+    input { padding: 6px 8px; width: 520px; }
+    button { padding: 6px 14px; }
+    .meta { margin: 12px 0; color: #555; }
+    .sentence { background: #f4f6f8; padding: 12px; border-left: 4px solid #4a90d9; }
+    .links li { margin: 6px 0; }
+    img { max-width: 100%; border: 1px solid #ddd; margin-top: 12px; }
+    code { background: #eee; padding: 2px 4px; }
+  </style>
+</head>
+<body>
+  <h2>句子溯源（sentence → page/bbox → 引用/图表）</h2>
+  <p>
+    <input id="paper" placeholder="paper_id">
+    <input id="sentence" placeholder="sentence_id">
+    <button onclick="load()">查看</button>
+  </p>
+  <div class="meta" id="meta"></div>
+  <div class="sentence" id="sentence-text"></div>
+  <ul class="links" id="links"></ul>
+  <img id="crop" alt="句子区域" hidden>
+  <script>
+    async function load() {
+      const paper = document.getElementById('paper').value.trim();
+      const sentence = document.getElementById('sentence').value.trim();
+      const meta = document.getElementById('meta');
+      const text = document.getElementById('sentence-text');
+      const links = document.getElementById('links');
+      const crop = document.getElementById('crop');
+      meta.textContent = '加载中…';
+      text.textContent = '';
+      links.innerHTML = '';
+      crop.hidden = true;
+      try {
+        const r = await fetch(`/api/papers/${paper}/trace?sentence_id=${encodeURIComponent(sentence)}`);
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || r.statusText);
+        meta.textContent =
+          `页码 ${data.page ?? '-'} ｜ bbox ${data.bbox ?? '-'} ｜ 章节 ${(data.section_path || []).join(' > ') || '-'}`;
+        text.textContent = data.sentence;
+        for (const link of data.links || []) {
+          const li = document.createElement('li');
+          const d = link.detail || {};
+          const label = link.target_type === 'citation'
+            ? (d.title || d.raw_text || link.target_id)
+            : (d.fig_number || d.table_number || link.target_id);
+          li.innerHTML = `<code>${link.target_type}</code> ${label}
+            <small>（${link.source}，置信度 ${link.confidence}）</small>`;
+          links.appendChild(li);
+        }
+        if (data.image_url && data.bbox) {
+          crop.src = data.image_url;
+          crop.hidden = false;
+        }
+      } catch (e) {
+        meta.textContent = '失败：' + e.message;
+      }
+    }
+  </script>
+</body>
+</html>

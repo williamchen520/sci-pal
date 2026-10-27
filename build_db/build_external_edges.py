@@ -19,6 +19,7 @@ from typing import Any, Dict
 
 from services.search.metadata_sources import (
     crossref_work,
+    openalex_cited_by,
     openalex_resolve_ids,
     openalex_work,
 )
@@ -76,13 +77,16 @@ def build(
     limit: int = 50,
     dry_run: bool = False,
     pause: float = 0.2,
+    cited_by: bool = False,
 ) -> Dict[str, Any]:
     conn = sqlite3.connect(str(db_path))
+    conn.execute("PRAGMA busy_timeout=60000")
     conn.row_factory = sqlite3.Row
     stats: Dict[str, Any] = {
         "papers": 0,
         "crossref_edges": 0,
         "openalex_edges": 0,
+        "cited_by_edges": 0,
         "failed": 0,
         "no_match": 0,
     }
@@ -133,6 +137,21 @@ def build(
                             stats["openalex_edges"] += 1
                 except Exception:  # noqa: BLE001
                     stats["failed"] += 1
+            if cited_by:
+                try:
+                    for work in openalex_cited_by(doi):
+                        citing_doi = work.get("doi")
+                        if not citing_doi:
+                            continue
+                        if not dry_run and _insert(
+                            conn, paper_id, citing_doi, "cited_by", "openalex_cited_by",
+                            0.9, local_dois,
+                        ):
+                            stats["cited_by_edges"] += 1
+                        elif dry_run:
+                            stats["cited_by_edges"] += 1
+                except Exception:  # noqa: BLE001
+                    stats["failed"] += 1
             time.sleep(pause)
         if not dry_run:
             conn.commit()
@@ -150,10 +169,11 @@ if __name__ == "__main__":
     parser.add_argument("--source", choices=["crossref", "openalex", "both"], default="both")
     parser.add_argument("--limit", type=int, default=50)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--cited-by", action="store_true")
     args = parser.parse_args()
     print(
         json.dumps(
-            build(args.db, source=args.source, limit=args.limit, dry_run=args.dry_run),
+            build(args.db, source=args.source, limit=args.limit, dry_run=args.dry_run, cited_by=args.cited_by),
             ensure_ascii=False,
         )
     )

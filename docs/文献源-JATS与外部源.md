@@ -170,6 +170,33 @@ umber_conflict=1（已修正 211 条）。
 重建后：图链接 40,487、表链接 7,458；启发式（regex/jats-regex）误连补充材料
 从约 3,200 条降到 63 条。
 
+## 旧 PDF 的引用位置回填
+
+`powershell
+python -m build_db.backfill_grobid_mentions            # 只补没有 mentions 的 PDF
+python -m build_db.backfill_grobid_mentions --all      # 强制重跑
+`
+
+42 篇旧 PDF：5,400 条正文引用位置，3,192 条句级引用链接（source=grobid, 0.9）。
+
+## 被引边（cited_by）
+
+`powershell
+python -m build_db.build_external_edges --limit 100 --cited-by
+`
+
+OpenAlex ilter=cites:W...：100 篇新增 372 条 
+elation='cited_by' 的 paper_links。
+
+## 句子溯源 API / 前端
+
+`powershell
+GET /api/papers/<paper_id>/trace?sentence_id=...      # JSON：page/bbox/章节/引用/图表
+GET /api/papers/<paper_id>/trace.png?sentence_id=...  # 高亮裁剪 PNG
+`
+
+页面：/trace.html（输入 paper_id + sentence_id，显示句子、页码、bbox、链接列表与截图）。
+
 ## 实网验证（2026-10-27）
 
 ```
