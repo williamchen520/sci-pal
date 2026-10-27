@@ -260,6 +260,9 @@ class PdfParsePipeline:
 
         provenance.tables_engine = provenance.text_engine
 
+        # citations may have been replaced by GROBID; refresh the metrics
+        provenance.metrics = body_metrics(result, pages)
+
         metadata = result.setdefault("metadata", {})
         engines = {provenance.text_engine, provenance.meta_engine, provenance.refs_engine}
         metadata["parse_engine"] = "+".join(sorted(e for e in engines if e))

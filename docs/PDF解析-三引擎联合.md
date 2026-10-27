@@ -62,7 +62,22 @@ mineru config set parse_server.local.self_hosted_url http://127.0.0.1:8000
 把返回的 Markdown（含 `<!-- page n of m -->` 与 `#` 标题）转成段落/图；
 服务不可用时返回 stub，质量门保证 stub 不会顶掉 Docling。
 
-## GROBID（待部署）
+## GROBID（已用 Docker CRF 镜像打通）
 
-无 Docker；方案：Java 17 + GROBID 0.9.1 发行包，常驻 8070。
-部署后由 pipeline 自动探测并接管元数据/引用，provenance 记为 `meta_engine=grobid`。
+```powershell
+docker run -d --rm --name grobid -p 8070:8070 lfoppiano/grobid:latest-crf
+# isalive → true 后，pipeline 自动接管元数据/引用
+```
+
+镜像体积（重要）：
+
+| 镜像 | 下载/磁盘 | 说明 |
+|---|---|---|
+| `lfoppiano/grobid:latest-crf` | ~0.5 GB 下载 / 1.7 GB 磁盘 | 当前使用，CRF 模型 |
+| `grobid/grobid:0.9.1-full` | 13.8 GB 下载 / **37.4 GB 磁盘** | 含深度学习模型，已闲置可删 |
+
+实测（PMC13613046，13 页）：Docling 引用 0 → GROBID **60 条引用 + 89 个正文引用链接**，
+并补齐标题/作者/DOI；`provenance = text:docling, meta:grobid, refs:grobid`，耗时 72s。
+
+> Docker Desktop 数据盘在 `D:\DockerDesktopWSL\disk\docker_data.vhdx`；
+> vhdx 不会自动收缩，删镜像后需 `wsl --shutdown` + `diskpart compact vdisk`（或 Docker Desktop 的 Clean/Purge）。
