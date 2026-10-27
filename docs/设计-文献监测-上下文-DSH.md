@@ -10,7 +10,7 @@
 | 证据包 / get_context / verify_answer | ✅ 已实现 |
 | 正式结论阻断 | ✅ QA 返回 answer_status=formal/draft |
 | Watch P1（profile/期刊发现/运行/摘要入库/简报/已读） | ✅ 已实现 |
-| Watch OA 全文入库（P2） | ⏳ 待做 |
+| Watch OA 全文入库（P2） | ✅ 已实现（Europe PMC OA JATS 优先，失败回退摘要） |
 | DSH headless（MCP base/token、签名 URL、Range） | ✅ 已实现 |
 | 页面裁剪（S3） | ⏳ 待做 |
 | 多用户 / owner | ⏳ 以后 |
