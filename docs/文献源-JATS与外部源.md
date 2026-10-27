@@ -122,7 +122,7 @@ python -m build_db.backfill_jats_figure_links
 ```
 Europe PMC 批量 3 篇 → 99 章节 / 188 段 / 791 句 / 356 条 xref 链接
 arXiv 下载+解析 1 篇 → 94 段 / 19 图，元数据补标题与年份
-Crossref 回填 20 篇 → journal 18 / year 11 / doi 8
+Crossref/OpenAlex 回填两轮共 85 篇；全库 2,118 篇中仅 1 篇缺期刊/年份、0 篇缺 DOI
 XML 图表回退 → 652 篇，+3,620 条 jats-regex 链接
 ```
 
