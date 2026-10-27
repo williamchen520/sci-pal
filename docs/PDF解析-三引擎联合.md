@@ -199,10 +199,23 @@ python -m build_db.sync_paper_links                    # 汇总文章图谱
 句子↔引用 7 条（GROBID 位置优先）
 ```
 
+全量回填结果（2026-10-27）：
+
+```
+章节：43,033 个，覆盖 2,076 篇；段落绑定 145,315 / 147,910（98.2%）
+句子：248,179 条；PDF 的 82 篇重建后 61,739 句，其中 48,188 条带 bbox
+句子链接：引用 3,649 / 图 118 / 表 257
+文章图谱：47,382 条（cites 36,950、similar 6,798）；cites 多为外部 DOI
+```
+
+性能注意：`paragraphs_au` 触发器会在每次 UPDATE 时重建 FTS，且 DELETE 无
+`para_id` 索引（全表扫描）。`build_sections_tree` 在批量更新期间临时 DROP
+该触发器、同一事务内恢复；未处理时单篇 549 段要 3 分钟以上，处理后 0.2 秒。
+
 已知限制：
 
-- 全量回填较慢：段落数大的论文逐段 `UPDATE` 会拖到分钟级，建议按需回填；
-- 目前只回填了样例论文；`sections` 已建 34 篇，其余论文待跑；
-- XML 论文没有坐标，句子 bbox 为空（`has_bbox=false`）；
-- MinerU 兜底路径没有 bbox。
+- XML 论文没有坐标，句子 bbox 为空；
+- MinerU 兜底路径没有 bbox；
+- 文章图谱的 cites 大多是外部文献（target_doi），本地互引很少；
+- GROBID 句级位置只对“新解析”的 PDF 生效（`citation_mentions`），旧数据未回填。
 

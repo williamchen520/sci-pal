@@ -52,6 +52,8 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
 
         conn.execute("DELETE FROM sections WHERE paper_id = ?", (paper_id,))
         path_ids: Dict[Tuple[str, ...], str] = {}
+        section_rows: List[Tuple[Any, ...]] = []
+        para_map: List[Tuple[str, Any]] = []
         seq = 0
         for row in rows:
             path = _heading_path(row)
@@ -62,10 +64,7 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
                     seq += 1
                     section_id = f"sec_{paper_id}_{seq:04d}"
                     path_ids[key] = section_id
-                    conn.execute(
-                        "INSERT INTO sections "
-                        "(section_id, paper_id, parent_id, level, title, seq, page, bbox, source) "
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    section_rows.append(
                         (
                             section_id,
                             paper_id,
@@ -76,19 +75,40 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
                             row["page"],
                             row["bbox"],
                             "docling" if row["section_path"] else "legacy",
-                        ),
+                        )
                     )
-                    stats["sections"] += 1
                 parent_id = path_ids[key]
 
             section_id = path_ids[tuple(path)] if path else None
-            conn.execute(
-                "UPDATE paragraphs SET section_id = ? WHERE para_id = ?",
-                (section_id, row["para_id"]),
-            )
+            para_map.append((row["para_id"], section_id))
             stats["paragraphs"] += 1
             if section_id:
                 stats["bound"] += 1
+
+        if section_rows:
+            conn.executemany(
+                "INSERT INTO sections "
+                "(section_id, paper_id, parent_id, level, title, seq, page, bbox, source) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                section_rows,
+            )
+        # ``paragraphs_au`` re-indexes FTS on every UPDATE and its DELETE has no
+        # index on para_id (full FTS scan per row). Drop it for the bulk update
+        # and restore it in the same transaction.
+        trigger_sql = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='trigger' AND name='paragraphs_au'"
+        ).fetchone()
+        if trigger_sql:
+            conn.execute("DROP TRIGGER paragraphs_au")
+        try:
+            conn.executemany(
+                "UPDATE paragraphs SET section_id = ? WHERE para_id = ?",
+                [(sid, para_id) for para_id, sid in para_map],
+            )
+        finally:
+            if trigger_sql:
+                conn.execute(trigger_sql[0])
+        stats["sections"] = len(section_rows)
         conn.commit()
     finally:
         conn.close()
