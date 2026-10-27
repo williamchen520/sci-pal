@@ -151,3 +151,58 @@ VBS 以隐藏窗口调用上面的脚本；若后续拿到管理员权限，可�
 ```powershell
 schtasks /create /tn SciPalParserServices /sc onlogon /tr "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"D:\sciPal\scripts\start_parser_services.ps1\""
 ```
+
+## 结构 v2：章节树 / 句子树 / 句级 bbox / 文章图谱
+
+Schema 迁移（幂等）：
+
+```powershell
+python -m build_db.structure_v2
+```
+
+新增/补充：
+
+| 表 | 关键字段 |
+|---|---|
+| `sections` | section_id, parent_id, level, title, seq, page, bbox |
+| `paragraphs` | + section_id, section_path(JSON) |
+| `sentences` | + page, bbox, section_id, char_start, char_end |
+| `citations` | + page, bbox |
+| `tables` | + page, bbox |
+| `citation_mentions` | 正文引用出现位置（ref_number/page/bbox/context） |
+| `sentence_links` | + page, bbox, source, confidence |
+| `paper_links` | 统一文章间关系（cites/similar/mentions，含 target_doi/置信度） |
+
+构建步骤（按论文粒度，可增量跑）：
+
+```powershell
+python -m build_db.sentence_geometry --paper-id <id>   # 句子切分 + bbox
+python -m build_db.build_sections_tree --paper-id <id> # 章节树 + 段落绑定
+python -m build_db.rebuild_sentence_links --paper-id <id>  # 句子↔引用/图表
+python -m build_db.sync_paper_links                    # 汇总文章图谱
+```
+
+几何来源：
+
+- 段落 bbox：Docling `chunk.meta.doc_items[*].prov` 并集；
+- 句子 bbox：PyMuPDF `search_for(sentence)`（限制在段落 rect 内），失败回退段落 bbox；
+- 引用 bbox：GROBID `coords="page,x,y,w,h"`（bottom-left，落库前转 top-left）；
+- MinerU 只给文本，无 bbox；扫描件句子暂回退段落 bbox。
+
+样例实测（PMC13612245，2 页）：
+
+```
+段落 29/29 有 bbox，28/29 有 section_path
+句子 127/127 有 bbox（55 条回退段落 bbox）
+章节 8 个，29 段落全部绑定
+引用 mention 8/8 带 page
+句子↔引用 7 条（GROBID 位置优先）
+```
+
+已知限制：
+
+- 全量回填较慢：段落数大的论文逐段 `UPDATE` 会拖到分钟级，建议按需回填；
+- 目前只回填了样例论文；`sections` 已建 34 篇，其余论文待跑；
+- XML 论文没有坐标，句子 bbox 为空（`has_bbox=false`）；
+- MinerU 兜底路径没有 bbox。
+

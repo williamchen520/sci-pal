@@ -80,6 +80,9 @@ class DatabaseWriter:
             
             # Insert citations
             self._insert_citations(cursor, citations)
+            self._insert_citation_mentions(
+                cursor, paper_id, parsed_result.get("intext_citations") or []
+            )
             print(f"  ✅ Inserted {len(citations)} citations")
             
             # Insert tables
@@ -193,18 +196,18 @@ class DatabaseWriter:
         )
 
     def _insert_paragraphs(self, cursor, paragraphs: List[Dict[str, Any]]):
-        """Insert paragraphs（V25.14修复: 匹配 build_database.py 的实际 paragraphs 表 schema）
-        
-        实际表结构: para_id, paper_id, section_level1, section_level2, section_level3,
-                    text, sequence, page, bbox
-        """
+        """Insert paragraphs; section_path is stored as JSON when available."""
+        existing = self._get_table_columns("paragraphs")
+        include_path = "section_path" in existing
+        columns = [
+            "para_id", "paper_id", "section_level1", "section_level2",
+            "section_level3", "text", "sequence", "page", "bbox",
+        ]
+        if include_path:
+            columns.append("section_path")
+        placeholders = ", ".join("?" for _ in columns)
         for para in paragraphs:
-            cursor.execute('''
-            INSERT OR REPLACE INTO paragraphs 
-            (para_id, paper_id, section_level1, section_level2, section_level3,
-             text, sequence, page, bbox)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
+            values = [
                 para.get("para_id"),
                 para.get("paper_id"),
                 para.get("section_type") or para.get("section_level1"),
@@ -214,7 +217,15 @@ class DatabaseWriter:
                 para.get("para_index") or para.get("sequence"),
                 para.get("page_number") or para.get("page"),
                 str(para.get("bbox", "")) if para.get("bbox") else None,
-            ))
+            ]
+            if include_path:
+                path = para.get("section_path") or []
+                values.append(json.dumps(path, ensure_ascii=False) if path else None)
+            cursor.execute(
+                f"INSERT OR REPLACE INTO paragraphs ({', '.join(columns)}) "
+                f"VALUES ({placeholders})",
+                values,
+            )
     
     def _insert_figures(self, cursor, figures: List[Dict[str, Any]]):
         """Insert figures（V25.14修复: 匹配实际 figures 表 schema）
@@ -237,16 +248,17 @@ class DatabaseWriter:
             ))
     
     def _insert_citations(self, cursor, citations: List[Dict[str, Any]]):
-        """Insert citations（V25.14修复: 匹配实际 citations 表 schema）
-        
-        实际表结构: citation_id, paper_id, ref_number, raw_text, doi, title, authors, journal, year
-        """
+        """Insert citations; page/bbox are stored when the schema has them."""
+        columns = [
+            "citation_id", "paper_id", "ref_number", "raw_text",
+            "doi", "title", "authors", "journal", "year",
+        ]
+        existing = self._get_table_columns("citations")
+        optional = [c for c in ("page", "bbox") if c in existing]
+        columns.extend(optional)
+        placeholders = ", ".join("?" for _ in columns)
         for cit in citations:
-            cursor.execute('''
-            INSERT OR REPLACE INTO citations 
-            (citation_id, paper_id, ref_number, raw_text, doi, title, authors, journal, year)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
+            base = [
                 cit.get("citation_id"),
                 cit.get("paper_id"),
                 cit.get("ref_index") or cit.get("ref_number"),
@@ -256,7 +268,50 @@ class DatabaseWriter:
                 cit.get("author") or cit.get("authors"),
                 cit.get("journal"),
                 cit.get("year"),
-            ))
+            ]
+            values = base + [
+                cit.get("page") if col == "page" else cit.get("bbox")
+                for col in optional
+            ]
+            cursor.execute(
+                f"INSERT OR REPLACE INTO citations ({', '.join(columns)}) "
+                f"VALUES ({placeholders})",
+                values,
+            )
+
+    def _insert_citation_mentions(self, cursor, paper_id: str, mentions: List[Dict[str, Any]]):
+        """Persist in-text citation mentions (GROBID page/bbox/context)."""
+        if not mentions:
+            return
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS citation_mentions (
+                mention_id TEXT PRIMARY KEY,
+                paper_id   TEXT NOT NULL,
+                ref_number TEXT,
+                page       INTEGER,
+                bbox       TEXT,
+                context    TEXT,
+                source     TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        for index, mention in enumerate(mentions, 1):
+            cursor.execute(
+                "INSERT OR REPLACE INTO citation_mentions "
+                "(mention_id, paper_id, ref_number, page, bbox, context, source) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    f"mention_{paper_id}_{index:04d}",
+                    paper_id,
+                    mention.get("ref_number"),
+                    mention.get("page"),
+                    mention.get("bbox"),
+                    mention.get("context"),
+                    mention.get("source") or "grobid",
+                ),
+            )
     
     def _insert_tables(self, cursor, tables: List[Dict[str, Any]]):
         """Insert tables（V25.14修复: 插入实际 tables 表，而非 figures 表）

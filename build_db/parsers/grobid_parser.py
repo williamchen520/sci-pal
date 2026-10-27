@@ -323,7 +323,9 @@ class GrobidParser:
             # Get surrounding text (context)
             context = ''.join(ref_elem.itertext()).strip()
 
-            # Get coordinates if available
+            # Get coordinates if available. GROBID puts them in the
+            # ``coords="page,x,y,w,h"`` attribute (teiCoordinates=ref), older
+            # TEI variants use a child <coords> element.
             coords = ref_elem.find('.//tei:coords', TEI_NS)
             page = None
             bbox = None
@@ -332,6 +334,14 @@ class GrobidParser:
                 bbox_str = coords.get('points', '')
                 if bbox_str:
                     bbox = bbox_str
+            raw_coords = ref_elem.get('coords')
+            if raw_coords:
+                try:
+                    page_s, x, y, w, h = [float(v) for v in raw_coords.split(',')[:5]]
+                    page = int(page_s)
+                    bbox = f"{x:.2f},{y:.2f},{x + w:.2f},{y + h:.2f}"
+                except (TypeError, ValueError):
+                    pass
 
             intext_citations.append({
                 'target_id': target_id,
