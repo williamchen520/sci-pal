@@ -187,27 +187,64 @@ class DoclingParser:
         
         return ""
     
+    @staticmethod
+    def _prov_bbox(items) -> tuple:
+        """Union the provenance bboxes of a chunk's items -> (page, 'l,t,r,b')."""
+        boxes = []
+        page = None
+        for item in items or []:
+            for prov in getattr(item, "prov", None) or []:
+                bbox = getattr(prov, "bbox", None)
+                if bbox is None:
+                    continue
+                try:
+                    boxes.append(
+                        (
+                            float(getattr(bbox, "l", 0)),
+                            float(getattr(bbox, "t", 0)),
+                            float(getattr(bbox, "r", 0)),
+                            float(getattr(bbox, "b", 0)),
+                        )
+                    )
+                except (TypeError, ValueError):
+                    continue
+                if page is None:
+                    page = getattr(prov, "page_no", None)
+        if not boxes:
+            return page, None
+        left = min(b[0] for b in boxes)
+        top = min(b[1] for b in boxes)
+        right = max(b[2] for b in boxes)
+        bottom = max(b[3] for b in boxes)
+        return page, f"{left:.2f},{top:.2f},{right:.2f},{bottom:.2f}"
+
     def _extract_paragraphs(self, doc, paper_id: str) -> List[Dict[str, Any]]:
         """Extract paragraphs using HierarchicalChunker"""
         paragraphs = []
-        
+
         try:
             chunks = list(self.chunker.chunk(doc))
-            
+
             for i, chunk in enumerate(chunks):
                 # Determine section type from headings
                 section_type = self._classify_section(chunk.meta.headings)
                 section_title = chunk.meta.headings[-1] if chunk.meta.headings else ""
-                
+
                 para_id = f"{paper_id}_para_{i+1:04d}"
-                
+                bbox_page, bbox_text = self._prov_bbox(
+                    getattr(chunk.meta, "doc_items", None)
+                )
+                page_no = getattr(chunk.meta, "page_no", None) or bbox_page
+
                 paragraphs.append({
                     "para_id": para_id,
                     "paper_id": paper_id,
                     "section_type": section_type,
                     "section_title": section_title,
+                    "section_path": list(chunk.meta.headings or []),
                     "para_index": i + 1,
-                    "page_number": chunk.meta.page_no if hasattr(chunk.meta, 'page_no') else None,
+                    "page_number": page_no,
+                    "bbox": bbox_text,
                     "text_content": chunk.text,
                     "token_count": len(chunk.text.split()),
                 })
@@ -216,17 +253,20 @@ class DoclingParser:
             # Fallback: just get all text items
             for i, (item, level) in enumerate(doc.iterate_items()):
                 if isinstance(item, TextItem):
+                    bbox_page, bbox_text = self._prov_bbox([item])
                     paragraphs.append({
                         "para_id": f"{paper_id}_para_{i+1:04d}",
                         "paper_id": paper_id,
                         "section_type": "body",
                         "section_title": "",
+                        "section_path": [],
                         "para_index": i + 1,
-                        "page_number": None,
+                        "page_number": bbox_page,
+                        "bbox": bbox_text,
                         "text_content": item.text,
                         "token_count": len(item.text.split()),
                     })
-        
+
         return paragraphs
     
     def _classify_section(self, headings: List[str]) -> str:

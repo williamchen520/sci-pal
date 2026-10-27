@@ -338,6 +338,12 @@ class PdfParsePipeline:
                 enriched.append(item)
             result["citations"] = enriched
 
+        intext = gres.get("intext_citations") or []
+        if intext:
+            for mention in intext:
+                mention["source"] = "grobid"
+            result["intext_citations"] = intext
+
     @staticmethod
     def _generate_paper_id(pdf_path: str) -> str:
         with open(pdf_path, "rb") as handle:
