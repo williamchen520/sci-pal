@@ -19,6 +19,7 @@ class DataRouteTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         root = Path(self.tmp.name)
         os.environ["SCIPAL_DATA_ROOT"] = str(root / "sandbox")
+        os.environ["SCIPAL_AUDIT_DB"] = str(root / "audit.db")
         self.csv = root / "cohort.csv"
         with self.csv.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.writer(handle)
@@ -48,6 +49,19 @@ class DataRouteTests(unittest.TestCase):
             json={"project_id": "p1", "artifact_id": body["sample"]["id"]},
         )
         self.assertTrue(gate.get_json()["allow"])
+        sent = self.client.post(
+            "/api/data/cloud-send",
+            json={
+                "project_id": "p1",
+                "artifact_id": body["sample"]["id"],
+                "provider": "deepseek",
+            },
+        )
+        self.assertTrue(sent.get_json()["allow"])
+        events = self.client.get(
+            "/api/data/audit?project_id=p1"
+        ).get_json()["events"]
+        self.assertTrue(any(e["action"] == "cloud_send" for e in events))
 
     def test_classify(self) -> None:
         body = self.client.get(f"/api/data/classify?path={self.csv}").get_json()
