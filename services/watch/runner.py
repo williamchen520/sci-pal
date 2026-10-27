@@ -104,11 +104,43 @@ def _digest(profile: Dict[str, Any], run: Dict[str, Any], items: List[Dict[str, 
     return "\n".join(lines)
 
 
+def try_fulltext(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: str):
+    """Try Europe PMC OA JATS; on success replace the abstract-only record."""
+    doi = candidate.get("doi")
+    if not doi:
+        return None
+    try:
+        from services.search.europe_pmc import EuropePMCClient
+
+        client = EuropePMCClient(timeout=20)
+        hits = client.search(f'DOI:"{doi}"', page_size=3)
+        pmcid = next((h.get("pmcid") for h in hits if h.get("pmcid")), None)
+        if not pmcid:
+            return None
+        full_id = f"paper_watch_{pmcid.lower()}"
+        conn.execute(
+            "INSERT OR IGNORE INTO papers "
+            "(paper_id, filename, title, doi, parse_status, acquisition) "
+            "VALUES (?, ?, ?, ?, 'pending', 'abstract')",
+            (full_id, f"{pmcid.upper()}.xml", candidate.get("title"), doi),
+        )
+        conn.commit()
+        result = client.download_and_import(pmcid, db_path=db_path)
+        if result.get("status") != "imported":
+            return None
+        conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_paper_id,))
+        conn.commit()
+        return full_id
+    except Exception:  # noqa: BLE001 - OA lookup must never break a watch run
+        return None
+
+
 def run_profile(
     db_path,
     profile_id: int,
     now: Optional[datetime] = None,
     candidate_fn=None,
+    fulltext_fn=None,
 ) -> Dict[str, Any]:
     conn = repo.connect(db_path)
     profile = repo.get_profile(conn, profile_id)
@@ -183,8 +215,14 @@ def run_profile(
             selected.append({"score": score, **candidate})
 
         items = []
+        fulltext_fn = fulltext_fn or try_fulltext
         for candidate in selected:
             paper_id = ingest_abstract(conn, candidate)
+            acquisition = "abstract"
+            full_paper_id = fulltext_fn(db_path, conn, candidate, paper_id)
+            if full_paper_id:
+                paper_id = full_paper_id
+                acquisition = "fulltext"
             key = repo.dedup_key(candidate.get("doi"), candidate.get("title"))
             repo.mark_seen(conn, profile_id, key, paper_id)
             reason = (
@@ -199,12 +237,15 @@ def run_profile(
                 "published": candidate.get("published"),
                 "score": candidate["score"],
                 "reason": reason,
-                "acquisition": "abstract",
+                "acquisition": acquisition,
                 "abstract": candidate.get("abstract") or "",
             }
             repo.add_item(conn, run_id, profile_id, item)
             items.append(item)
-            stats["imported_abstract"] += 1
+            if acquisition == "fulltext":
+                stats["imported_full"] += 1
+            else:
+                stats["imported_abstract"] += 1
         stats["selected"] = len(items)
 
         run = repo.get_run(conn, run_id)

@@ -64,7 +64,7 @@ class WatchRunnerTests(unittest.TestCase):
     def test_select_ingest_and_digest(self) -> None:
         candidates = [_candidate(1, "J1"), _candidate(2, "J2"), _candidate(3, "J3")]
         result = run_profile(
-            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: candidates
+            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: candidates, fulltext_fn=lambda *a: None
         )
         self.assertEqual(result["found"], 3)
         self.assertEqual(result["selected"], 2)
@@ -81,17 +81,42 @@ class WatchRunnerTests(unittest.TestCase):
 
     def test_second_run_deduplicates(self) -> None:
         candidates = [_candidate(1), _candidate(2)]
-        run_profile(self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: candidates)
+        run_profile(self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: candidates, fulltext_fn=lambda *a: None)
         result = run_profile(
-            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: candidates
+            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: candidates, fulltext_fn=lambda *a: None
         )
         self.assertEqual(result["selected"], 0)
         self.assertEqual(result["skipped"], 2)
 
+    def test_fulltext_upgrade(self) -> None:
+        def fake_fulltext(db, conn, candidate, abstract_id):
+            full_id = "paper_watch_pmc1"
+            conn.execute(
+                "INSERT OR IGNORE INTO papers (paper_id, filename, title, doi, "
+                "parse_status, acquisition) VALUES (?, 'PMC1.xml', ?, ?, 'completed', 'fulltext')",
+                (full_id, candidate.get("title"), candidate.get("doi")),
+            )
+            conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_id,))
+            conn.commit()
+            return full_id
+
+        result = run_profile(
+            self.db,
+            self.profile_id,
+            now=self.now,
+            candidate_fn=lambda *a, **k: [_candidate(1)],
+            fulltext_fn=fake_fulltext,
+        )
+        self.assertEqual(result["imported_full"], 1)
+        conn = sqlite3.connect(self.db)
+        rows = conn.execute("SELECT acquisition FROM papers").fetchall()
+        self.assertEqual([row[0] for row in rows], ["fulltext"])
+        conn.close()
+
     def test_same_journal_limit(self) -> None:
         candidates = [_candidate(1, "J1"), _candidate(2, "J1"), _candidate(3, "J2")]
         result = run_profile(
-            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: candidates
+            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: candidates, fulltext_fn=lambda *a: None
         )
         journals = [
             row[0]

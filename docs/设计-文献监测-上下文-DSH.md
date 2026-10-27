@@ -10,9 +10,9 @@
 | 证据包 / get_context / verify_answer | ✅ 已实现 |
 | 正式结论阻断 | ✅ QA 返回 answer_status=formal/draft |
 | Watch P1（profile/期刊发现/运行/摘要入库/简报/已读） | ✅ 已实现 |
-| Watch OA 全文入库（P2） | ⏳ 待做 |
+| Watch OA 全文入库（P2） | ✅ 已实现（Europe PMC OA JATS 优先，失败回退摘要） |
 | DSH headless（MCP base/token、签名 URL、Range） | ✅ 已实现 |
-| 页面裁剪（S3） | ⏳ 待做 |
+| 页面裁剪（S3） | ✅ 已裁剪，仅保留 index/viewer/compare/trace |
 | 多用户 / owner | ⏳ 以后 |
 > 本文合并三块内容：新增「文献监测（Watch）」功能、上下文完整性改造、DSH 前端替代与 headless 部署。
 > 三者相互关联：Watch 依赖上下文证据包与 verify_answer；DSH 是 Watch 与检索的统一前端。
