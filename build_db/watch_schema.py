@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS journal_catalog (
 
 CREATE TABLE IF NOT EXISTS watch_profiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner TEXT DEFAULT 'default',
     name TEXT NOT NULL,
     field_text TEXT,
     keywords TEXT,
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS watch_runs (
 
 CREATE TABLE IF NOT EXISTS watch_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner TEXT DEFAULT 'default',
     run_id INTEGER,
     profile_id INTEGER,
     paper_id TEXT,
@@ -107,6 +109,10 @@ def migrate(db_path: Path | str = DEFAULT_DB) -> Dict[str, int]:
     conn.execute("PRAGMA busy_timeout=60000")
     try:
         conn.executescript(SCHEMA)
+        for table in ("watch_profiles", "watch_items", "watch_runs"):
+            cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+            if "owner" not in cols:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN owner TEXT DEFAULT 'default'")
         run_cols = {row[1] for row in conn.execute("PRAGMA table_info(watch_runs)")}
         if "heartbeat" not in run_cols:
             conn.execute("ALTER TABLE watch_runs ADD COLUMN heartbeat INTEGER DEFAULT 0")

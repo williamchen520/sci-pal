@@ -15,7 +15,7 @@
 | DSH 定时任务示例 | ✅ docs/DSH-定时监测任务.md，已创建每 3 天示例任务 |
 | DSH headless（MCP base/token、签名 URL、Range） | ✅ 已实现 |
 | 页面裁剪（S3） | ✅ 已裁剪，仅保留 index/viewer/compare/trace |
-| 多用户 / owner | ⏳ 以后 |
+| 多用户 / owner | ✅ watch_profiles/runs/items 带 owner；SCIPAL_API_TOKENS 多 token 映射；路由按 owner 隔离 |
 > 本文合并三块内容：新增「文献监测（Watch）」功能、上下文完整性改造、DSH 前端替代与 headless 部署。
 > 三者相互关联：Watch 依赖上下文证据包与 verify_answer；DSH 是 Watch 与检索的统一前端。
 

@@ -9,12 +9,13 @@ Usage:
   python api_server.py
   # then open http://localhost:5000
 """
+import json
 import os
 import sys
 import threading
 from pathlib import Path
 from typing import Optional, Dict
-from flask import Flask, jsonify, request, send_from_directory, Response
+from flask import Flask, g, jsonify, request, send_from_directory, Response
 
 # Ensure project root is on sys.path for services.* imports
 PROJECT_ROOT = Path(__file__).parent
@@ -52,24 +53,36 @@ app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
 
 # Optional bearer-token guard for remote deployment (single-user token today).
 _API_TOKEN = os.environ.get("SCIPAL_API_TOKEN", "")
+_TOKENS = {}
+try:
+    _TOKENS = json.loads(os.environ.get("SCIPAL_API_TOKENS", "{}") or "{}")
+except json.JSONDecodeError:
+    _TOKENS = {}
 _SIGNED_PDF = os.environ.get("SCIPAL_REQUIRE_SIGNED_PDF", "0") == "1"
 
 
 @app.before_request
 def _require_api_token():
-    if not _API_TOKEN:
-        return None
+    g.owner = os.environ.get("SCIPAL_DEFAULT_OWNER", "default")
     path = request.path
     if not path.startswith("/api/"):
         return None
     if path in ("/api/health",):
         return None
-    auth = request.headers.get("Authorization", "")
-    if auth == f"Bearer {_API_TOKEN}":
-        return None
     if path.endswith("/pdf") and request.args.get("token"):
         return None
-    return jsonify({"error": "unauthorized"}), 401
+    auth = request.headers.get("Authorization", "")
+    token = auth[7:] if auth.startswith("Bearer ") else ""
+    if _TOKENS:
+        owner = _TOKENS.get(token)
+        if not owner:
+            return jsonify({"error": "unauthorized"}), 401
+        g.owner = owner
+        return None
+    if _API_TOKEN:
+        if token != _API_TOKEN:
+            return jsonify({"error": "unauthorized"}), 401
+    return None
 
 # Lazy-loaded retrieval components (loaded on first request to keep startup fast)
 _retriever = None

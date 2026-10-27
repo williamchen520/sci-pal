@@ -70,7 +70,20 @@ POST /api/watch/items/<item_id>/read       # 手动标记已读
 POST /api/watch/runs/<run_id>/read-all     # 全部已读
 ```
 
-## 5. 注意
+## 5. 多用户 token
+
+SciPal 支持多 token 映射：
+
+`
+SCIPAL_API_TOKENS={tok_alice:alice,tok_bob:bob}
+`
+
+- 每个 token 对应一个 owner；
+- watch profile/run/item 按 owner 隔离；
+- DSH 的每个 MCP server 配置自己的 SCIPAL_API_TOKEN 即可；
+- 未设置时所有请求归 default。
+
+## 6. 注意
 
 - 同一 profile 同一天重复调用会命中 `watch_seen`，不会重复入库；
 - Europe PMC 503 时 JATS 全文会回退为摘要；
