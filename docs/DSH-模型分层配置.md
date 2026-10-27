@@ -106,7 +106,18 @@ SCIPAL_API_TOKENS={"tok_local":"default","tok_cloud":"alice"}
 → 另开云端会话，只带该聚合表 + 研究问题
 ```
 
-## 6. 串行模型注意事项
+## 6. 审计与云端交接
+
+`
+POST /api/data/cloud-send   # 先 cloud-gate，再写审计
+GET  /api/data/audit?project_id=...
+`
+
+- 审计只记录 owner/project/artifact/provider/bytes/hash/detail；
+- 不记录原始行、文件路径或单元格值；
+- cloud_send 是“产物已交给云端”的唯一可信记录。
+
+## 7. 串行模型注意事项
 
 - DSH 侧不要同时触发多个本地模型任务；使用全局队列；
 - 每次调用结束可执行 `release_ollama(model)`（Ollama `keep_alive=0`）；

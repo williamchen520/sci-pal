@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from flask import Blueprint, g, jsonify, request
 
-from services.data_sandbox import policy, store
+from services.data_sandbox import audit, policy, store
 
 
 def build_data_blueprint(*, db_path, log) -> Blueprint:
@@ -122,6 +122,28 @@ def build_data_blueprint(*, db_path, log) -> Blueprint:
         artifact_id = data.get("artifact_id", "")
         if not project_id or not artifact_id:
             return jsonify({"error": "需要 project_id 与 artifact_id"}), 400
-        return jsonify(store.cloud_gate(_owner(), project_id, artifact_id))
+        return jsonify(
+            store.cloud_gate(
+                _owner(), project_id, artifact_id, data.get("provider", "")
+            )
+        )
+
+    @bp.route("/cloud-send", methods=["POST"])
+    def cloud_send():
+        data = request.get_json(silent=True) or {}
+        project_id = data.get("project_id", "")
+        artifact_id = data.get("artifact_id", "")
+        provider = data.get("provider", "unknown")
+        if not project_id or not artifact_id:
+            return jsonify({"error": "需要 project_id 与 artifact_id"}), 400
+        return jsonify(store.log_cloud_send(_owner(), project_id, artifact_id, provider))
+
+    @bp.route("/audit", methods=["GET"])
+    def audit_log():
+        project_id = request.args.get("project_id") or None
+        limit = int(request.args.get("limit", 100))
+        return jsonify(
+            {"events": audit.list_events(_owner(), project_id, limit=limit)}
+        )
 
     return bp

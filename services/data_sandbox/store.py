@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from services.data_sandbox import policy
+from services.data_sandbox import audit, policy
 
 DEFAULT_ROOT = Path(__file__).resolve().parent.parent.parent / "data_sandbox"
 
@@ -77,6 +77,12 @@ def create_project(
         "artifacts": [],
     }
     _save_manifest(manifest_path, manifest)
+    audit.log_event(
+        owner=owner,
+        project_id=project_id,
+        action="project_created",
+        detail=f"rows={len(df)},columns={len(df.columns)}",
+    )
     return manifest
 
 
@@ -107,6 +113,15 @@ def _append_artifact(
     }
     manifest.setdefault("artifacts", []).append(artifact)
     _save_manifest(project_dir(owner, project_id) / "manifest.json", manifest)
+    audit.log_event(
+        owner=owner,
+        project_id=project_id,
+        action="artifact_created",
+        artifact_id=artifact["id"],
+        kind=kind,
+        path=project_dir(owner, project_id) / filename,
+        detail=f"rows={rows},min_cell_n={min_cell_n}",
+    )
     return artifact
 
 
@@ -185,6 +200,15 @@ def update_artifact(
     }
     manifest.setdefault("artifacts", []).append(new_artifact)
     _save_manifest(project_dir(owner, project_id) / "manifest.json", manifest)
+    audit.log_event(
+        owner=owner,
+        project_id=project_id,
+        action="artifact_updated",
+        artifact_id=new_artifact["id"],
+        kind=new_artifact["kind"],
+        path=target,
+        detail=f"supersedes={artifact_id}",
+    )
     return new_artifact
 
 
@@ -219,20 +243,71 @@ def validate_artifact(owner: str, project_id: str, artifact_id: str) -> Dict[str
     ok = not reasons
     artifact["cloud_eligible"] = ok
     _save_manifest(project_dir(owner, project_id) / "manifest.json", manifest)
+    audit.log_event(
+        owner=owner,
+        project_id=project_id,
+        action="artifact_validated" if ok else "artifact_rejected",
+        artifact_id=artifact_id,
+        kind=artifact.get("kind"),
+        path=path,
+        detail=";".join(reasons),
+    )
     return {"ok": ok, "reasons": reasons, "artifact": artifact}
 
 
-def cloud_gate(owner: str, project_id: str, artifact_id: str) -> Dict[str, Any]:
+def cloud_gate(
+    owner: str, project_id: str, artifact_id: str, provider: str = ""
+) -> Dict[str, Any]:
     """Allow a derived artifact to go to the cloud only if it validates."""
     result = validate_artifact(owner, project_id, artifact_id)
     if not result["ok"]:
+        audit.log_event(
+            owner=owner,
+            project_id=project_id,
+            action="cloud_gate_denied",
+            artifact_id=artifact_id,
+            provider=provider,
+            detail=";".join(result["reasons"]),
+        )
         return {"allow": False, "reasons": result["reasons"]}
     artifact = result["artifact"]
     if not artifact.get("cloud_eligible"):
         return {"allow": False, "reasons": ["cloud_eligible=false"]}
+    path = project_dir(owner, project_id) / artifact["path"]
+    audit.log_event(
+        owner=owner,
+        project_id=project_id,
+        action="cloud_gate_allowed",
+        artifact_id=artifact_id,
+        kind=artifact["kind"],
+        provider=provider,
+        path=path,
+    )
     return {
         "allow": True,
         "artifact_id": artifact_id,
         "kind": artifact["kind"],
         "min_cell_n": artifact.get("min_cell_n"),
     }
+
+
+def log_cloud_send(
+    owner: str, project_id: str, artifact_id: str, provider: str
+) -> Dict[str, Any]:
+    """Record that an allowed artifact was handed to a cloud provider."""
+    gate = cloud_gate(owner, project_id, artifact_id, provider)
+    if not gate.get("allow"):
+        return gate
+    artifact = _find(load_manifest(owner, project_id), artifact_id)
+    path = project_dir(owner, project_id) / artifact["path"] if artifact else None
+    audit.log_event(
+        owner=owner,
+        project_id=project_id,
+        action="cloud_send",
+        artifact_id=artifact_id,
+        kind=artifact.get("kind") if artifact else None,
+        provider=provider,
+        path=path,
+        detail=f"min_cell_n={gate.get('min_cell_n')}",
+    )
+    return gate

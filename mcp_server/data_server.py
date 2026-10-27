@@ -130,6 +130,27 @@ def cloud_gate(artifact_id: str, project_id: str) -> str:
     )
 
 
+@mcp.tool(
+    description=(
+        "记录产物已交给云端（POST /api/data/cloud-send）：先过 cloud-gate，再写审计。"
+    )
+)
+def cloud_send(artifact_id: str, project_id: str, provider: str = "unknown") -> str:
+    return _call(
+        "POST",
+        "/api/data/cloud-send",
+        {"artifact_id": artifact_id, "project_id": project_id, "provider": provider},
+    )
+
+
+@mcp.tool(description="查看产物审计（GET /api/data/audit）：不含原始数据，仅元数据/哈希。")
+def artifact_audit(project_id: str, limit: int = 100) -> str:
+    return _call(
+        "GET",
+        f"/api/data/audit?project_id={_path_segment(project_id)}&limit={int(limit)}",
+    )
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
