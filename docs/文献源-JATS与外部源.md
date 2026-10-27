@@ -126,6 +126,38 @@ Crossref/OpenAlex 回填两轮共 85 篇；全库 2,118 篇中仅 1 篇缺期刊
 XML 图表回退 → 652 篇，+3,620 条 jats-regex 链接
 ```
 
+## 规模化抓取（Europe PMC 游标）
+
+```powershell
+# cursorMark 分页（lite、100/页、1.5s 节流；503 退避后优雅停止）
+python -m services.search.europe_pmc_batch --bulk --query "OPEN_ACCESS:Y AND (diabetes OR metabolism)" --max-items 500
+```
+
+并行版本（`G:\runs\bulk_parallel.py` 的思路）：6 线程下载 XML，顺序 JATS 导入、
+每 20 篇提交一次。本轮三个主题（diabetes / Alzheimer / microbiome）：
+
+```
+下载并导入 1,015 篇，failed=0
+XML 论文：2,032 → 3,214
+jats 章节 58,341 / 句子 800,375 / xref 链接 291,857
+```
+
+后三个主题（cardiology / CRISPR / vaccine）在检索阶段被 EPMC 503 限流，
+自动停止且未导入；稍后可重试。
+
+## 外部引用边
+
+```powershell
+python -m build_db.build_external_edges --limit 200
+```
+
+Crossref 参考文献 + OpenAlex `referenced_works`（批量解析 DOI）→ `paper_links`：
+
+```
+200 篇：crossref_edges 2,164 / openalex_edges 1,607
+去重后 paper_links +2,208（crossref_refs 2,169 / openalex_refs 3,535）
+```
+
 ## 实网验证（2026-10-27）
 
 ```
