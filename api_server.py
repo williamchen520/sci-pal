@@ -28,6 +28,7 @@ from services.review.task_manager import task_manager
 from contracts import InternalError, fail, ok
 from routes.abstracts import build_abstracts_blueprint
 from routes.core import build_core_blueprint
+from routes.data import build_data_blueprint
 from routes.evidence import build_evidence_blueprint
 from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
@@ -251,6 +252,7 @@ app.register_blueprint(
     )
 )
 app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
+app.register_blueprint(build_data_blueprint(db_path=DB_PATH, log=app.logger))
 
 # B3e: RAG 问答 + agentic 检索已移入 routes/qa.py
 app.register_blueprint(

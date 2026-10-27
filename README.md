@@ -132,7 +132,7 @@ sci-pal/
 ├─ mcp_server/               search / generate / guard（MCP 薄转发）
 ├─ frontend/                 viewer / compare / trace（headless 落地页）
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    476 项测试
+├─ tests/                    487 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -156,7 +156,7 @@ sci-pal/
 ## 测试
 
 ```
-476 tests, ~17s
+487 tests, ~18s
 ```
 
 覆盖：检索、路由、guard、结构 v2、JATS 导入、文献源、trace API、解析流水线。
