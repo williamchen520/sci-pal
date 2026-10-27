@@ -1,35 +1,33 @@
 """
-Small-to-big (parent document) retrieval.
-V21.5 - Small-to-big context expansion
+Small-to-big (parent document) retrieval with structural section paths.
 
-Retrieval stays precise at the paragraph (small chunk) level, but the LLM is
-handed the surrounding parent context (the whole section, or a bounded window
-when the section is too large). This fixes "tiny chunk lacks context" without
-blunting retrieval precision.
+Retrieval stays precise at the paragraph level, but the LLM is handed the
+surrounding parent context (the whole section, or a bounded window when the
+section is too large), plus the explicit section path from ``sections``.
 
 Two expansion modes:
-  - "section": group hits by (paper_id, section_level1) and return the whole
-               section in reading order; the matched paragraph(s) are marked.
-               If a section exceeds max_section_paras, fall back to a window
-               centred on the best hit.
+  - "section": group hits by section_id (fallback: legacy section_level1/2),
+               return the whole section in reading order; matched paragraphs
+               (or their best-matching sentences) are marked.
   - "window":  a fixed number of paragraphs before/after each hit.
 
-Overlapping parents are merged; a parent's score is the max score of the hits
-inside it.
+The parent unit carries ``section_path`` (root → leaf titles) so the caller can
+show "Chapter 3 › 3.2 Efficacy" instead of a bare paragraph.
 """
+import re
 import sqlite3
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from services.search.boilerplate_filter import clean_boilerplate
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 
-# Markers wrap the matched paragraph inside the expanded text, so the LLM (and
-# the UI) can see which sentence actually answered vs. surrounding context.
 HIT_START = "►"
 HIT_END = "◄"
+
+_TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fff]")
 
 
 class ContextExpander:
@@ -39,48 +37,72 @@ class ContextExpander:
 
     @staticmethod
     def _row_dict(r) -> Dict:
-        """Convert a DB row to dict, stripping front-matter boilerplate lines."""
         d = dict(r)
         if d.get("text"):
             d["text"] = clean_boilerplate(d["text"])
         return d
 
     def _locate(self, para_id: str) -> Optional[Dict]:
-        """Look up a paragraph's location fields from its id (source of truth)."""
         r = self.conn.execute(
-            """SELECT para_id, paper_id, section_level1, section_level2,
+            """SELECT para_id, paper_id, section_id, section_level1, section_level2,
                       section_level3, text, sequence, page
                FROM paragraphs WHERE para_id = ?""",
             (para_id,),
         ).fetchone()
-        if not r:
-            return None
-        return self._row_dict(r)
+        return self._row_dict(r) if r else None
+
+    def _section_path(self, section_id: Optional[str], paper_id: str) -> List[str]:
+        if not section_id:
+            return []
+        rows = self.conn.execute(
+            """
+            WITH RECURSIVE anc(section_id, parent_id, title, depth) AS (
+                SELECT section_id, parent_id, title, 1
+                FROM sections WHERE section_id = ?
+                UNION ALL
+                SELECT s.section_id, s.parent_id, s.title, anc.depth + 1
+                FROM sections s JOIN anc ON s.section_id = anc.parent_id
+            )
+            SELECT title FROM anc ORDER BY depth DESC
+            """,
+            (section_id,),
+        ).fetchall()
+        return [row[0] for row in rows if row[0]]
 
     def _section_key(self, loc: Dict) -> tuple:
-        """Parent grouping key; fall back through section levels."""
+        if loc.get("section_id"):
+            return (loc["paper_id"], "sec", loc["section_id"])
         if loc.get("section_level1"):
             return (loc["paper_id"], "l1", loc["section_level1"])
         if loc.get("section_level2"):
             return (loc["paper_id"], "l2", loc["section_level2"])
-        # No section info: treat a tight window around the hit as the parent.
         return (loc["paper_id"], "solo", loc["para_id"])
 
-    def _fetch_section(self, paper_id: str, level: str, value: str) -> List[Dict]:
-        col = "section_level1" if level == "l1" else "section_level2"
-        rows = self.conn.execute(
-            f"""SELECT para_id, paper_id, section_level1, section_level2,
-                       section_level3, text, sequence, page
-                FROM paragraphs
-                WHERE paper_id = ? AND {col} = ?
-                ORDER BY sequence""",
-            (paper_id, value),
-        ).fetchall()
+    def _fetch_section(self, paper_id: str, kind: str, value: str) -> List[Dict]:
+        if kind == "sec":
+            rows = self.conn.execute(
+                """SELECT para_id, paper_id, section_id, section_level1, section_level2,
+                          section_level3, text, sequence, page
+                   FROM paragraphs
+                   WHERE paper_id = ? AND section_id = ?
+                   ORDER BY sequence""",
+                (paper_id, value),
+            ).fetchall()
+        else:
+            col = "section_level1" if kind == "l1" else "section_level2"
+            rows = self.conn.execute(
+                f"""SELECT para_id, paper_id, section_id, section_level1, section_level2,
+                           section_level3, text, sequence, page
+                    FROM paragraphs
+                    WHERE paper_id = ? AND {col} = ?
+                    ORDER BY sequence""",
+                (paper_id, value),
+            ).fetchall()
         return [self._row_dict(r) for r in rows]
 
     def _fetch_window(self, loc: Dict, before: int, after: int) -> List[Dict]:
         rows = self.conn.execute(
-            """SELECT para_id, paper_id, section_level1, section_level2,
+            """SELECT para_id, paper_id, section_id, section_level1, section_level2,
                       section_level3, text, sequence, page
                FROM paragraphs
                WHERE paper_id = ? AND sequence BETWEEN ? AND ?
@@ -89,22 +111,42 @@ class ContextExpander:
         ).fetchall()
         return [self._row_dict(r) for r in rows]
 
+    def _fetch_sentences(self, para_id: str) -> List[Dict]:
+        rows = self.conn.execute(
+            """SELECT sentence_id, text, sequence, page, bbox, char_start, char_end
+               FROM sentences WHERE para_id = ? ORDER BY sequence""",
+            (para_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    @staticmethod
+    def _tokens(text: str) -> set:
+        return {t.lower() for t in _TOKEN_RE.findall(text or "") if len(t) > 1}
+
+    def _pick_highlight(
+        self, sentences: List[Dict], query: Optional[str]
+    ) -> Optional[Dict]:
+        """Best lexical-overlap sentence in the paragraph."""
+        if not sentences:
+            return None
+        if not query:
+            return sentences[0]
+        q = self._tokens(query)
+        if not q:
+            return sentences[0]
+        best = None
+        best_score = 0
+        for sentence in sentences:
+            score = len(q & self._tokens(sentence.get("text", "")))
+            if score > best_score:
+                best, best_score = sentence, score
+        return best or sentences[0]
+
     def expand(self, hits: List[Dict], mode: str = "section",
                max_parents: int = 4, max_section_paras: int = 12,
-               window_before: int = 3, window_after: int = 3) -> List[Dict]:
-        """
-        Expand ranked paragraph hits into parent context units.
-
-        Args:
-            hits: list of hit dicts, each must contain 'para_id' and optionally
-                  a 'score' / 'rerank_score' / 'rrf_score'.
-        Returns:
-            list of parent units:
-              {parent_id, paper_id, section, mode, matched_para_ids,
-               matched_sequences, score, paragraphs:[...], text}
-            sorted by best-hit score desc, capped at max_parents.
-        """
-        # 1. Locate every hit and collect into parent groups.
+               window_before: int = 3, window_after: int = 3,
+               query: Optional[str] = None) -> List[Dict]:
+        """Expand ranked paragraph hits into parent context units."""
         groups: Dict[tuple, Dict] = {}
         for rank, hit in enumerate(hits):
             para_id = hit.get("para_id")
@@ -126,7 +168,6 @@ class ContextExpander:
                 g["best_loc"] = loc
                 g["best_rank"] = rank
 
-        # 2. Materialise each parent (whole section or window).
         parents = []
         for key, g in groups.items():
             paper_id, kind, value = key
@@ -136,7 +177,7 @@ class ContextExpander:
             paras: List[Dict] = []
             used_mode = mode
             if mode == "section":
-                if kind in ("l1", "l2"):
+                if kind in ("sec", "l1", "l2"):
                     paras = self._fetch_section(paper_id, kind, value)
                     if len(paras) > max_section_paras:
                         paras = self._fetch_window(best, window_before + 2, window_after + 2)
@@ -151,64 +192,59 @@ class ContextExpander:
             if not paras:
                 continue
 
-            # Build the joined text, marking matched paragraphs.
-            text_parts, matched_seq = [], []
+            text_parts, matched_seq, matched_sentences = [], [], []
             for p in paras:
                 if p["para_id"] in hit_ids:
                     matched_seq.append(p["sequence"])
-                    text_parts.append(f"{HIT_START} {p['text']} {HIT_END}")
+                    sentences = self._fetch_sentences(p["para_id"])
+                    highlight = self._pick_highlight(sentences, query)
+                    if highlight:
+                        matched_sentences.append(highlight)
+                        marked = self._mark_sentence(p["text"], highlight["text"])
+                    else:
+                        marked = f"{HIT_START} {p['text']} {HIT_END}"
+                    text_parts.append(marked)
                 else:
                     text_parts.append(p["text"])
 
-            section = best.get("section_level1") or best.get("section_level2") or ""
+            section_path = self._section_path(best.get("section_id"), paper_id)
+            section = " › ".join(section_path) if section_path else (
+                best.get("section_level1") or best.get("section_level2") or ""
+            )
             parents.append({
-                "parent_id": f"{paper_id}::{key[1]}::{value}",
+                "parent_id": f"{paper_id}::{kind}::{value}",
                 "paper_id": paper_id,
+                "section_id": best.get("section_id"),
                 "section": section,
+                "section_path": section_path,
                 "page": best.get("page"),
                 "mode": used_mode,
                 "matched_para_ids": sorted(hit_ids),
                 "matched_sequences": sorted(matched_seq),
+                "matched_sentences": matched_sentences,
                 "score": g["best_score"],
                 "n_paragraphs": len(paras),
                 "paragraphs": paras,
                 "text": "\n\n".join(text_parts),
             })
 
-        # 3. Rank by best hit, cap. (Tie-break: earlier rank.)
         parents.sort(key=lambda x: -x["score"])
         return parents[:max_parents]
 
+    @staticmethod
+    def _mark_sentence(paragraph: str, sentence: str) -> str:
+        if sentence and sentence in paragraph:
+            return paragraph.replace(
+                sentence, f"{HIT_START}{sentence}{HIT_END}", 1
+            )
+        return f"{HIT_START} {paragraph} {HIT_END}"
+
 
 if __name__ == "__main__":
-    from services.search.hybrid_search import HybridSearch
-    from services.search.reranker import Reranker
-
-    print("=" * 60)
-    print("🔎 Small-to-Big Expansion Test")
-    print("=" * 60)
-
-    searcher = HybridSearch()
-    reranker = Reranker()
     expander = ContextExpander()
-
-    query = "How does STAT1 regulate the interferon response?"
-    print(f"\nQuery: {query}\n")
-
-    # Precise paragraph-level recall + rerank (the "small")
-    vector = searcher.vector_search(query, 20)
-    fts = searcher.fts_search(query, 20)
-    fused = searcher.rrf_fuse(vector, fts, 20)
-    top_hits = reranker.rerank(query, fused, 6)
-
-    print(f"Precise hits: {len(top_hits)} paragraphs")
-    parents = expander.expand(top_hits, mode="section", max_parents=3)
-    print(f"Expanded to {len(parents)} parent sections:\n")
-
-    for i, p in enumerate(parents):
-        marked = len(p["matched_sequences"])
-        print(f"  [Parent {i+1}] score={p['score']:.3f} mode={p['mode']} "
-              f"section='{p['section'][:40]}' paras={p['n_paragraphs']} "
-              f"hits={marked}")
-        preview = p["text"][:220].replace("\n", " ")
-        print(f"      {preview}...\n")
+    rows = expander.conn.execute(
+        "SELECT para_id FROM paragraphs WHERE section_id IS NOT NULL LIMIT 3"
+    ).fetchall()
+    units = expander.expand([{"para_id": r[0], "score": 1.0} for r in rows])
+    for unit in units:
+        print(unit["section_path"], unit["mode"], len(unit["matched_sentences"]))

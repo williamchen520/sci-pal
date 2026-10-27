@@ -1,6 +1,19 @@
 # SciPal 设计：文献监测 + 上下文完整性 + DSH 前端替代
 
-> 状态：方案定稿（未实现）
+> 状态：方案定稿；S1 / Watch P1 / DSH 接入已实现（2026-10-28）
+
+## 实现状态
+
+| 模块 | 状态 |
+|---|---|
+| 结构索引 v3（path/depth、索引、sentences_fts） | ✅ 已实现并迁移（69,097 节） |
+| 证据包 / get_context / verify_answer | ✅ 已实现 |
+| 正式结论阻断 | ✅ QA 返回 answer_status=formal/draft |
+| Watch P1（profile/期刊发现/运行/摘要入库/简报/已读） | ✅ 已实现 |
+| Watch OA 全文入库（P2） | ⏳ 待做 |
+| DSH headless（MCP base/token、签名 URL、Range） | ✅ 已实现 |
+| 页面裁剪（S3） | ⏳ 待做 |
+| 多用户 / owner | ⏳ 以后 |
 > 本文合并三块内容：新增「文献监测（Watch）」功能、上下文完整性改造、DSH 前端替代与 headless 部署。
 > 三者相互关联：Watch 依赖上下文证据包与 verify_answer；DSH 是 Watch 与检索的统一前端。
 

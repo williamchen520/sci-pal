@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import sys
+import urllib.parse
 from pathlib import Path
 
 # 公共薄转发层与本文件同目录；用 __file__ 推导，避免 cwd 变化导致 import 失败
@@ -303,6 +304,85 @@ def download_and_index(pmc_ids: list[str], batch_size: int = 5) -> str:
 def check_ingest_status(task_id: str) -> str:
     """按 task_id 查询下载并向量化任务的进度。"""
     return _call("GET", f"/api/ingest/{_path_segment(task_id)}")
+
+
+@mcp.tool(
+    description=(
+        "结构化证据包（POST /api/evidence/search）：返回段落级上下文、章节路径、"
+        "命中句 page/bbox 与引用/图表链接；不返回裸句子。"
+    )
+)
+def search_evidence(query: str, top_k: int = 8, paper_id: str = "") -> str:
+    """检索并返回 DSH 可直接使用的证据包。"""
+    return _call(
+        "POST",
+        "/api/evidence/search",
+        {"query": query, "top_k": top_k, "paper_id": paper_id},
+    )
+
+
+@mcp.tool(
+    description=(
+        "二次下钻（GET /api/evidence/context）：根据 sentence_id 或 para_id "
+        "取命中句、前后文、章节路径；Agent 觉得上下文不足时调用。"
+    )
+)
+def get_context(
+    sentence_id: str = "",
+    para_id: str = "",
+    paper_id: str = "",
+    before: int = 1,
+    after: int = 1,
+    query: str = "",
+) -> str:
+    """返回句子/段落及其父级上下文。"""
+    params = urllib.parse.urlencode(
+        {
+            "sentence_id": sentence_id,
+            "para_id": para_id,
+            "paper_id": paper_id,
+            "before": before,
+            "after": after,
+            "query": query,
+        }
+    )
+    return _call("GET", f"/api/evidence/context?{params}")
+
+
+@mcp.tool(
+    description=(
+        "强制校验（POST /api/verify）：生成后回传 answer 与 evidence_ids，"
+        "返回 ok/missing_ids/uncited_claims/quote_mismatch；ok=false 时不得作为正式结论。"
+    )
+)
+def verify_answer(answer: str, evidence_ids: list[str]) -> str:
+    """确定性校验答案引用与冲突结构。"""
+    return _call("POST", "/api/verify", {"answer": answer, "evidence_ids": evidence_ids})
+
+
+@mcp.tool(description="列出文献监测 profile（GET /api/watch/profiles）。")
+def watch_profiles() -> str:
+    """返回所有 profile 的配置与上次/下次运行时间。"""
+    return _call("GET", "/api/watch/profiles")
+
+
+@mcp.tool(
+    description=(
+        "触发一次文献监测（POST /api/watch/profiles/<id>/run）："
+        "按窗口检索、去重、排序、摘要级入库并返回简报。"
+    )
+)
+def watch_run(profile_id: int) -> str:
+    """运行一个 profile，返回简报与统计。"""
+    return _call("POST", f"/api/watch/profiles/{profile_id}/run")
+
+
+@mcp.tool(
+    description="最近一期监测简报（GET /api/watch/profiles/<id>/latest），不触发新运行。"
+)
+def watch_latest(profile_id: int) -> str:
+    """返回最近一次运行与入选条目。"""
+    return _call("GET", f"/api/watch/profiles/{profile_id}/latest")
 
 
 def main() -> None:

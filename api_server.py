@@ -27,6 +27,7 @@ from services.review.task_manager import task_manager
 from contracts import InternalError, fail, ok
 from routes.abstracts import build_abstracts_blueprint
 from routes.core import build_core_blueprint
+from routes.evidence import build_evidence_blueprint
 from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
@@ -40,6 +41,7 @@ from routes.search import build_search_blueprint
 from routes.search_downloads import build_search_downloads_blueprint
 from routes.system import build_system_blueprint
 from routes.tasks import build_tasks_blueprint
+from routes.watch import build_watch_blueprint
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -47,6 +49,27 @@ DOCUMENTS_DIR = PROJECT_ROOT / "documents"
 OUTLINE_DIR = PROJECT_ROOT / "data" / "outlines"
 
 app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
+
+# Optional bearer-token guard for remote deployment (single-user token today).
+_API_TOKEN = os.environ.get("SCIPAL_API_TOKEN", "")
+_SIGNED_PDF = os.environ.get("SCIPAL_REQUIRE_SIGNED_PDF", "0") == "1"
+
+
+@app.before_request
+def _require_api_token():
+    if not _API_TOKEN:
+        return None
+    path = request.path
+    if not path.startswith("/api/"):
+        return None
+    if path in ("/api/health",):
+        return None
+    auth = request.headers.get("Authorization", "")
+    if auth == f"Bearer {_API_TOKEN}":
+        return None
+    if path.endswith("/pdf") and request.args.get("token"):
+        return None
+    return jsonify({"error": "unauthorized"}), 401
 
 # Lazy-loaded retrieval components (loaded on first request to keep startup fast)
 _retriever = None
@@ -209,6 +232,12 @@ app.register_blueprint(
 app.register_blueprint(
     build_core_blueprint(db_path=DB_PATH, get_retriever=lambda: get_retriever())
 )
+app.register_blueprint(
+    build_evidence_blueprint(
+        db_path=DB_PATH, get_retriever=lambda: get_retriever(), log=app.logger
+    )
+)
+app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
 
 # B3e: RAG 问答 + agentic 检索已移入 routes/qa.py
 app.register_blueprint(

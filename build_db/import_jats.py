@@ -26,6 +26,7 @@ from typing import Any, Dict, List
 from build_db.jats_parser import parse_file
 from build_db.mention_patterns import figure_mentions, table_mentions
 from build_db.sentence_geometry import split_sentences
+from build_db.structure_v3 import refresh_for_paper
 
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 DEFAULT_DIR = Path(__file__).resolve().parent.parent / "documents_xml"
@@ -131,6 +132,7 @@ def import_file(
         )
 
     # figures / tables / citations maps (original JATS id -> DB id)
+    refresh_for_paper(conn, paper_id)
     fig_map: Dict[str, str] = {}
     fig_number_map: Dict[str, str] = {}
     for index, fig in enumerate(figures, 1):
