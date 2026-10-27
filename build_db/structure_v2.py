@@ -124,6 +124,8 @@ def migrate(db_path: Path | str = DEFAULT_DB) -> dict:
         ):
             if ensure_column(conn, "sentence_links", column, decl):
                 added.append(f"sentence_links.{column}")
+        if ensure_column(conn, "figures", "number_conflict", "INTEGER"):
+            added.append("figures.number_conflict")
 
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_sentences_para_seq "

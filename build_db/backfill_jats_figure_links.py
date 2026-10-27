@@ -12,6 +12,8 @@ import sqlite3
 from pathlib import Path
 from typing import Dict
 
+from build_db.mention_patterns import figure_mentions, table_mentions
+
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 
 FIG_RE = re.compile(r"\bFig(?:ure)?\.?\s*(\d+)")
@@ -32,6 +34,10 @@ def backfill(db_path: Path | str = DEFAULT_DB, limit: int = 0) -> Dict[str, int]
             )
         ]
         for paper_id in papers:
+            conn.execute(
+                "DELETE FROM sentence_links WHERE paper_id = ? AND source = 'jats-regex'",
+                (paper_id,),
+            )
             figures = {
                 re.search(r"(\d+)", row["fig_number"] or "").group(1): row["fig_id"]
                 for row in conn.execute(
@@ -62,7 +68,7 @@ def backfill(db_path: Path | str = DEFAULT_DB, limit: int = 0) -> Dict[str, int]
                 "SELECT sentence_id, para_id, text FROM sentences WHERE paper_id = ?",
                 (paper_id,),
             ):
-                for number in FIG_RE.findall(row["text"] or ""):
+                for number, _ in figure_mentions(row["text"] or ""):
                     target = figures.get(number)
                     key = (row["sentence_id"], "figure", target)
                     if not target or key in existing:
@@ -83,7 +89,7 @@ def backfill(db_path: Path | str = DEFAULT_DB, limit: int = 0) -> Dict[str, int]
                     )
                     existing.add(key)
                     added += 1
-                for number in TABLE_RE.findall(row["text"] or ""):
+                for number, _ in table_mentions(row["text"] or ""):
                     target = tables.get(number)
                     key = (row["sentence_id"], "table", target)
                     if not target or key in existing:

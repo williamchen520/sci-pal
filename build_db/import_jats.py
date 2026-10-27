@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from build_db.jats_parser import parse_file
+from build_db.mention_patterns import figure_mentions, table_mentions
 from build_db.sentence_geometry import split_sentences
 
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
@@ -298,7 +299,7 @@ def import_file(
         # Fallback: sentences that mention "Fig 1"/"Table 2" but have no xref.
         for sindex, sentence in enumerate(sentences, 1):
             sentence_id = f"{para_id}_sent_{sindex:03d}"
-            for number in re.findall(r"\bFig(?:ure)?\.?\s*(\d+)", sentence):
+            for number, _ in figure_mentions(sentence):
                 target_id = fig_number_map.get(number)
                 key = (sentence_id, "figure", target_id)
                 if target_id and key not in linked:
@@ -318,7 +319,7 @@ def import_file(
                     )
                     linked.add(key)
                     stats["links"] += 1
-            for number in re.findall(r"\bTable\s*(\d+)", sentence):
+            for number, _ in table_mentions(sentence):
                 target_id = table_number_map.get(number)
                 key = (sentence_id, "table", target_id)
                 if target_id and key not in linked:

@@ -159,6 +159,17 @@ Crossref 参考文献 + OpenAlex `referenced_works`（批量解析 DOI）→ `pa
 去重后 paper_links 159,948 → 164,430（crossref_refs 3,626 / openalex_refs 6,560）
 ```
 
+## 图表提及解析
+
+- 支持 Fig. 3 / Figure 3 / Figs. 2 and 3 / (Figs. 2, 3) / Figs. 2-4、
+  Table 2 / Tables 1 and 2，以及中文 图 2 / 表 3；
+- 排除 supplementary / extended data / supporting information / appendix 前缀；
+- igures.fig_number 与 caption 冲突时以 caption 为准，标 
+umber_conflict=1（已修正 211 条）。
+
+重建后：图链接 40,487、表链接 7,458；启发式（regex/jats-regex）误连补充材料
+从约 3,200 条降到 63 条。
+
 ## 实网验证（2026-10-27）
 
 ```
