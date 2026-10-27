@@ -93,6 +93,27 @@ def openalex_search(title: str, per_page: int = 1) -> Dict[str, Any]:
     }
 
 
+def openalex_resolve_ids(ids: List[str], per_page: int = 50) -> Dict[str, str]:
+    """Resolve OpenAlex work ids (W123...) to DOIs (batched, max 50)."""
+    clean = [str(i).rsplit("/", 1)[-1] for i in ids if i]
+    if not clean:
+        return {}
+    data = _get(
+        "https://api.openalex.org/works",
+        params={
+            "filter": "openalex_id:" + "|".join(clean[:per_page]),
+            "per-page": min(per_page, 50),
+        },
+    )
+    resolved = {}
+    for item in data.get("results") or []:
+        openalex_id = (item.get("id") or "").rsplit("/", 1)[-1]
+        doi = (item.get("doi") or "").replace("https://doi.org/", "").lower()
+        if openalex_id and doi:
+            resolved[openalex_id] = doi
+    return resolved
+
+
 def openalex_work(doi: str) -> Dict[str, Any]:
     data = _get(f"https://api.openalex.org/works/https://doi.org/{doi}")
     return {
