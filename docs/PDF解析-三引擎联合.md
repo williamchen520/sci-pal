@@ -1,110 +1,153 @@
-﻿# PDF ä¸‰å¼•æ“Žè”åˆè§£æžï¼ˆDocling + GROBID + MinerUï¼‰
+# PDF 三引擎联合解析（Docling + GROBID + MinerU）
 
-> ä»£ç ï¼š`build_db/parsers/pipeline.py`ï¼ˆç¼–æŽ’ï¼‰ã€`mineru_parser.py`ï¼ˆ4.x é€‚é…ï¼‰ã€
-> `parser_orchestrator.py`ï¼ˆå…¼å®¹å£³ï¼Œå§”æ‰˜ pipelineï¼‰
-> çŠ¶æ€ï¼šP1 éª¨æž¶å®Œæˆï¼›MinerU å·²æ‰“é€šï¼›GROBID å¾…éƒ¨ç½²
+> 代码：`build_db/parsers/pipeline.py`（编排）、`mineru_parser.py`（4.x 适配）、
+> `parser_orchestrator.py`（兼容壳，委托 pipeline）
+> 状态：P1 骨架完成；MinerU 已打通；GROBID 待部署
 
-## åˆ†å·¥
+## 分工
 
-| å¼•æ“Ž | èŒè´£ | ä¸åšä»€ä¹ˆ |
+| 引擎 | 职责 | 不做什么 |
 |---|---|---|
-| Docling | æ­£æ–‡ã€ç« èŠ‚å±‚çº§ã€å›¾è¡¨ã€è¡¨æ ¼ï¼ˆæ•°å­—ç‰ˆ PDF ä¸»è§£æžï¼‰ | å…ƒæ•°æ®ã€ç»“æž„åŒ–å¼•ç”¨ |
-| GROBID | é¡µçœ‰å…ƒæ•°æ®ï¼ˆæ ‡é¢˜/ä½œè€…/æœŸåˆŠ/DOI/å¹´/æ‘˜è¦ï¼‰ã€ç»“æž„åŒ–å‚è€ƒæ–‡çŒ® | æ­£æ–‡ã€å›¾è¡¨ |
-| MinerU | OCR/å¤æ‚ç‰ˆå¼ï¼Œè´¨é‡é—¨ä¸é€šè¿‡æ—¶çš„æ­£æ–‡å…œåº• | å¼•ç”¨ã€å…ƒæ•°æ® |
+| Docling | 正文、章节层级、图表、表格（数字版 PDF 主解析） | 元数据、结构化引用 |
+| GROBID | 页眉元数据（标题/作者/期刊/DOI/年/摘要）、结构化参考文献 | 正文、图表 |
+| MinerU | OCR/复杂版式，质量门不通过时的正文兜底 | 引用、元数据 |
 
-XMLï¼ˆPMCï¼‰èµ°ç‹¬ç«‹ç»“æž„åŒ–å¯¼å…¥ï¼Œä¸å‚ä¸Žæ­¤æµæ°´çº¿ã€‚
+XML（PMC）走独立结构化导入，不参与此流水线。
 
-## è´¨é‡é—¨ä¸Ž provenance
+## 质量门与 provenance
 
 ```
-chars/page < 800 æˆ– paragraphs/page < 2 æˆ– sections < 1
-    â†’ è§¦å‘ MinerUï¼ŒæŒ‰ quality_score æ‹©ä¼˜ï¼Œè®°å½• decision
+chars/page < 800 或 paragraphs/page < 2 或 sections < 1
+    → 触发 MinerU，按 quality_score 择优，记录 decision
 ```
 
-æ¯æ¬¡è§£æžå†™ `parse_provenance`ï¼š
+每次解析写 `parse_provenance`：
 
 ```
 text_engine / meta_engine / refs_engine / tables_engine / decision / metrics
 ```
 
-`papers.parse_engine` è®°å½•ç»„åˆï¼ˆå¦‚ `docling+grobid`ï¼‰ã€‚
+`papers.parse_engine` 记录组合（如 `docling+grobid`）。
 
-## A/B å®žæµ‹ï¼ˆ2026-10-27ï¼Œæ•°å­—ç‰ˆ PDFï¼‰
+## A/B 实测（2026-10-27，数字版 PDF）
 
-| PDF | å¼•æ“Ž | é¡µ | æ®µ | å­—ç¬¦ | å­—ç¬¦/é¡µ | æ®µ/é¡µ | å›¾ | è€—æ—¶ |
+| PDF | 引擎 | 页 | 段 | 字符 | 字符/页 | 段/页 | 图 | 耗时 |
 |---|---|---|---|---|---|---|---|---|
 | PMC13612245 | Docling | 2 | 29 | 12,830 | 6,415 | 14.5 | 2 | 16.7s |
 | PMC13612245 | MinerU | 2 | 47 | 13,457 | 6,728 | 23.5 | 1 | 3.5s |
 | PMC13613046 | Docling | 13 | 124 | 59,067 | 4,544 | 9.54 | 17 | 7.6s |
 | PMC13613046 | MinerU | 13 | 223 | 74,126 | 5,702 | 17.15 | 3 | 64s |
 
-è§‚å¯Ÿï¼š
+观察：
 
-- æ•°å­—ç‰ˆ PDF ä¸¤è€…éƒ½è¿‡é—¨ï¼ˆ800 å­—ç¬¦/é¡µï¼‰ï¼ŒMinerU æ–‡æœ¬å¬å›žæ›´é«˜ä½†**å›¾æ›´å°‘ã€é•¿æ–‡æ…¢**ï¼ˆ64s vs 7.6sï¼‰ï¼›
-- ä¸¤è€…å¼•ç”¨å‡ä¸º 0 â†’ å¼•ç”¨å¿…é¡»é  GROBIDï¼›
-- æš‚å®šé˜ˆå€¼ï¼š`char/page 800`ã€`paragraphs/page 2`ã€`sections 1`ï¼›ç­‰æ‰«æä»¶æ ·æœ¬å†æ ¡å‡†ã€‚
+- 数字版 PDF 两者都过门（800 字符/页），MinerU 文本召回更高但**图更少、长文慢**（64s vs 7.6s）；
+- 两者引用均为 0 → 引用必须靠 GROBID；
+- 暂定阈值：`char/page 800`、`paragraphs/page 2`、`sections 1`；等扫描件样本再校准。
 
-## MinerU 4.x æŽ¥å…¥ï¼ˆå·²æ‰“é€šï¼‰
+## MinerU 4.x 接入（已打通）
 
 ```powershell
-# 1) ä¸‹è½½ basic æ¨¡åž‹ï¼ˆä¸€æ¬¡æ€§ï¼Œçº¦ 1 GBï¼‰
+# 1) 下载 basic 模型（一次性，约 1 GB）
 mineru-models-download --tier basic --source modelscope
 
-# 2) å¸¸é©»è§£æžæœåŠ¡
+# 2) 常驻解析服务
 mineru-api --tier basic --port 8000
 
-# 3) CLI æŒ‡å‘æœ¬åœ°æœåŠ¡
+# 3) CLI 指向本地服务
 mineru config set parse_server.local.mode self_hosted
 mineru config set parse_server.local.self_hosted_url http://127.0.0.1:8000
 ```
 
-é€‚é…å™¨ï¼š`MinerUParser` è°ƒ `mineru parse <pdf> --pages all --json`ï¼Œ
-æŠŠè¿”å›žçš„ Markdownï¼ˆå« `<!-- page n of m -->` ä¸Ž `#` æ ‡é¢˜ï¼‰è½¬æˆæ®µè½/å›¾ï¼›
-æœåŠ¡ä¸å¯ç”¨æ—¶è¿”å›ž stubï¼Œè´¨é‡é—¨ä¿è¯ stub ä¸ä¼šé¡¶æŽ‰ Doclingã€‚
+适配器：`MinerUParser` 调 `mineru parse <pdf> --pages all --json`，
+把返回的 Markdown（含 `<!-- page n of m -->` 与 `#` 标题）转成段落/图；
+服务不可用时返回 stub，质量门保证 stub 不会顶掉 Docling。
 
-## GROBIDï¼ˆå·²ç”¨ Docker CRF é•œåƒæ‰“é€šï¼‰
+## GROBID（已用 Docker CRF 镜像打通）
 
 ```powershell
 docker run -d --rm --name grobid -p 8070:8070 lfoppiano/grobid:latest-crf
-# isalive â†’ true åŽï¼Œpipeline è‡ªåŠ¨æŽ¥ç®¡å…ƒæ•°æ®/å¼•ç”¨
+# isalive → true 后，pipeline 自动接管元数据/引用
 ```
 
-é•œåƒä½“ç§¯ï¼ˆé‡è¦ï¼‰ï¼š
+镜像体积（重要）：
 
-| é•œåƒ | ä¸‹è½½/ç£ç›˜ | è¯´æ˜Ž |
+| 镜像 | 下载/磁盘 | 说明 |
 |---|---|---|
-| `lfoppiano/grobid:latest-crf` | ~0.5 GB ä¸‹è½½ / 1.7 GB ç£ç›˜ | æ—¥å¸¸æ‰¹é‡è§£æžï¼ˆå¿«ã€çœå†…å­˜ï¼‰ |
-| `grobid/grobid:0.9.1-full` | 13.8 GB ä¸‹è½½ / **37.4 GB ç£ç›˜** | éš¾ä¾‹è§£æžï¼ˆDeep Learningï¼Œæ…¢çº¦ 1.8xï¼‰ |
+| `lfoppiano/grobid:latest-crf` | ~0.5 GB 下载 / 1.7 GB 磁盘 | 日常批量解析（快、省内存） |
+| `grobid/grobid:0.9.1-full` | 13.8 GB 下载 / **37.4 GB 磁盘** | 难例解析（Deep Learning，慢约 1.8x） |
 
-å®žæµ‹ï¼ˆPMC13613046ï¼Œ13 é¡µï¼‰ï¼šDocling å¼•ç”¨ 0 â†’ GROBID **60 æ¡å¼•ç”¨ + 89 ä¸ªæ­£æ–‡å¼•ç”¨é“¾æŽ¥**ï¼Œ
-å¹¶è¡¥é½æ ‡é¢˜/ä½œè€…/DOIï¼›`provenance = text:docling, meta:grobid, refs:grobid`ã€‚
-åŒä¸€ç¯‡ CRF 72sã€Full 132sï¼Œè¾“å‡ºä¸€è‡´ã€‚
+实测（PMC13613046，13 页）：Docling 引用 0 → GROBID **60 条引用 + 89 个正文引用链接**，
+并补齐标题/作者/DOI；`provenance = text:docling, meta:grobid, refs:grobid`。
+同一篇 CRF 72s、Full 132s，输出一致。
 
-### æŒ‰ä»»åŠ¡åˆ‡æ¢ CRF / Full
+### 按任务切换 CRF / Full
 
-ä¸¤ä¸ªå®¹å™¨å¯ä»¥åŒæ—¶è·‘ï¼Œpipeline æŒ‰ `grobid_mode` é€‰ç«¯ç‚¹ï¼š
+两个容器可以同时跑，pipeline 按 `grobid_mode` 选端点：
 
 ```powershell
-# CRF å¸¸é©» 8070ï¼ˆé»˜è®¤ï¼‰
+# CRF 常驻 8070（默认）
 docker run -d --rm --name grobid-crf -p 8070:8070 lfoppiano/grobid:latest-crf
-# Full å¸¸é©» 8071ï¼ˆå¯é€‰ï¼‰
+# Full 常驻 8071（可选）
 docker run -d --rm --name grobid-full -p 8071:8070 grobid/grobid:0.9.1-full
 ```
 
 ```powershell
 SCIPAL_GROBID_URL=http://127.0.0.1:8070         # auto / crf
-SCIPAL_GROBID_URL_FULL=http://127.0.0.1:8071    # fullï¼ˆæœªè®¾åˆ™å›žé€€ CRFï¼‰
+SCIPAL_GROBID_URL_FULL=http://127.0.0.1:8071    # full（未设则回退 CRF）
 ```
 
-`POST /api/papers/parse` ä¸Ž `/api/papers/parse_async` æ”¯æŒè¯·æ±‚ä½“ï¼š
+`POST /api/papers/parse` 与 `/api/papers/parse_async` 支持请求体：
 
 ```json
 {"filename": "paper.pdf", "grobid": "full"}   // auto | crf | full
 ```
 
-> è§£æžå…¥å£å·²ç»Ÿä¸€åˆ° `build_db/parse_service.py`ï¼ˆ`parse_and_store` / å•æŠŠè§£æžé” /
-> `PARSE_MAX_CONCURRENT`ï¼‰ï¼Œè·¯ç”±å±‚ä¸å†æŒæœ‰è§£æžå®žçŽ°ã€‚
+> 解析入口已统一到 `build_db/parse_service.py`（`parse_and_store` / 单把解析锁 /
+> `PARSE_MAX_CONCURRENT`），路由层不再持有解析实现。
 
-> Docker Desktop æ•°æ®ç›˜åœ¨ `D:\DockerDesktopWSL\disk\docker_data.vhdx`ï¼›
-> vhdx ä¸ä¼šè‡ªåŠ¨æ”¶ç¼©ï¼Œåˆ é•œåƒåŽéœ€ `wsl --shutdown` + `diskpart compact vdisk`ï¼ˆæˆ– Docker Desktop çš„ Clean/Purgeï¼‰ã€‚
+> Docker Desktop 数据盘在 `D:\DockerDesktopWSL\disk\docker_data.vhdx`；
+> vhdx 不会自动收缩，删镜像后需 `wsl --shutdown` + `diskpart compact vdisk`（或 Docker Desktop 的 Clean/Purge）。
 
+## 服务启动与开机自启
+
+四个服务（GROBID CRF 8070、GROBID Full 8071、MinerU API 8000、MinerU server）用脚本统一拉起：
+
+```powershell
+# 检查 + 只补缺失的服务
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\start_parser_services.ps1
+
+# 只看状态，不起服务
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\start_parser_services.ps1 -CheckOnly
+
+# 不起 37 GB 的 Full（省内存）
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\start_parser_services.ps1 -SkipFull
+```
+
+- 脚本幂等：健康检查通过就不动，失败才启动；
+- GROBID 容器带 `--restart unless-stopped`，Docker Desktop 启动后自动恢复；
+- MinerU 需要 **两个进程**：`mineru-api`（8000）+ `mineru server`（文档中心），缺一个 CLI 会回退 stub。
+
+### MinerU 模型固定位置
+
+模型实际落盘在 `MINERU_HOME`（默认 `~/.mineru`）。已固定到：
+
+```powershell
+setx MINERU_HOME D:\mineru_home        # 876 MB：Layout / MFR / OCR / Table
+```
+
+`scripts/start_parser_services.ps1` 会显式设置该变量；Flask 也需带 `MINERU_HOME` 启动，
+否则子进程会回落到 `~/.mineru`。同理，`mineru-models-download` 只在升级模型时执行一次。
+
+### 开机自启
+
+管理员权限不足时无法创建计划任务，改用当前用户的启动项（无需管理员）：
+
+```
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\SciPalParserServices.vbs
+```
+
+VBS 以隐藏窗口调用上面的脚本；若后续拿到管理员权限，可改注册计划任务：
+
+```powershell
+schtasks /create /tn SciPalParserServices /sc onlogon /tr "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"D:\sciPal\scripts\start_parser_services.ps1\""
+```
