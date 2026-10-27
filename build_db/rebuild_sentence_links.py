@@ -16,6 +16,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List
 
+from build_db.mention_patterns import figure_mentions, table_mentions
+
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 
 CITE_RE = re.compile(r"\[(\d{1,3}(?:\s*[,\-–]\s*\d{1,3})*)\]")
@@ -148,16 +150,16 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
                     add_link(sentence, "citation", citation_id, "cites", page, bbox, source, confidence)
                     stats["citations"] += 1
 
-            for marker in FIG_RE.finditer(text):
-                number = marker.group(1).strip()
+            for number, _ in figure_mentions(text):
+                number = number.strip()
                 fig_id = fig_map.get(number) or fig_map.get(number.rstrip("abcdefghijklmnopqrstuvwxyz"))
                 if fig_id:
                     add_link(sentence, "figure", fig_id, "mentions",
                              sentence["page"], sentence["bbox"], "regex", 0.6)
                     stats["figures"] += 1
 
-            for marker in TABLE_RE.finditer(text):
-                number = marker.group(1).strip()
+            for number, _ in table_mentions(text):
+                number = number.strip()
                 table_id = table_map.get(number) or table_map.get(number.rstrip("abcdefghijklmnopqrstuvwxyz"))
                 if table_id:
                     add_link(sentence, "table", table_id, "mentions",
