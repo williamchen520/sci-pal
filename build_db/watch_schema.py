@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS watch_runs (
     imported_abstract INTEGER DEFAULT 0,
     skipped INTEGER DEFAULT 0,
     digest_md TEXT,
+    heartbeat INTEGER DEFAULT 0,
     error TEXT,
     started_at TEXT,
     finished_at TEXT
@@ -106,6 +107,9 @@ def migrate(db_path: Path | str = DEFAULT_DB) -> Dict[str, int]:
     conn.execute("PRAGMA busy_timeout=60000")
     try:
         conn.executescript(SCHEMA)
+        run_cols = {row[1] for row in conn.execute("PRAGMA table_info(watch_runs)")}
+        if "heartbeat" not in run_cols:
+            conn.execute("ALTER TABLE watch_runs ADD COLUMN heartbeat INTEGER DEFAULT 0")
         cols = {row[1] for row in conn.execute("PRAGMA table_info(papers)")}
         if "acquisition" not in cols:
             conn.execute("ALTER TABLE papers ADD COLUMN acquisition TEXT DEFAULT 'fulltext'")

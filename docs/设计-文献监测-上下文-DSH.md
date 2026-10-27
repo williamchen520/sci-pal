@@ -10,7 +10,9 @@
 | 证据包 / get_context / verify_answer | ✅ 已实现 |
 | 正式结论阻断 | ✅ QA 返回 answer_status=formal/draft |
 | Watch P1（profile/期刊发现/运行/摘要入库/简报/已读） | ✅ 已实现 |
-| Watch OA 全文入库（P2） | ✅ 已实现（Europe PMC OA JATS 优先，失败回退摘要） |
+| Watch OA 全文入库（P2） | ✅ Europe PMC JATS 优先；Unpaywall PDF 兜底（需 SCIPAL_UNPAYWALL_EMAIL） |
+| Watch 空跑心跳 | ✅ 30 天无推送时生成“本月无新增” |
+| DSH 定时任务示例 | ✅ docs/DSH-定时监测任务.md，已创建每 3 天示例任务 |
 | DSH headless（MCP base/token、签名 URL、Range） | ✅ 已实现 |
 | 页面裁剪（S3） | ✅ 已裁剪，仅保留 index/viewer/compare/trace |
 | 多用户 / owner | ⏳ 以后 |
