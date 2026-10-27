@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from build_db.watch_schema import migrate
@@ -88,6 +88,32 @@ class WatchRunnerTests(unittest.TestCase):
         self.assertEqual(result["selected"], 0)
         self.assertEqual(result["skipped"], 2)
 
+    def test_empty_run_heartbeat(self) -> None:
+        first = run_profile(
+            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: []
+        )
+        self.assertTrue(first["heartbeat"])
+        self.assertIn("无新增", first["digest"])
+        second = run_profile(
+            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: []
+        )
+        self.assertFalse(second["heartbeat"])
+        self.assertEqual(second["digest"], "")
+
+    def test_heartbeat_after_30_days(self) -> None:
+        conn = sqlite3.connect(self.db)
+        old = (self.now - timedelta(days=31)).isoformat()
+        conn.execute(
+            "UPDATE watch_profiles SET last_push_at = ?, last_heartbeat_at = NULL WHERE id = ?",
+            (old, self.profile_id),
+        )
+        conn.commit()
+        conn.close()
+        result = run_profile(
+            self.db, self.profile_id, now=self.now, candidate_fn=lambda *a, **k: []
+        )
+        self.assertTrue(result["heartbeat"])
+
     def test_fulltext_upgrade(self) -> None:
         def fake_fulltext(db, conn, candidate, abstract_id):
             full_id = "paper_watch_pmc1"
@@ -112,6 +138,28 @@ class WatchRunnerTests(unittest.TestCase):
         rows = conn.execute("SELECT acquisition FROM papers").fetchall()
         self.assertEqual([row[0] for row in rows], ["fulltext"])
         conn.close()
+
+    def test_oa_pdf_fallback(self) -> None:
+        def fake_oa(db, conn, candidate, abstract_id):
+            full_id = "paper_watch_oa1"
+            conn.execute(
+                "INSERT OR IGNORE INTO papers (paper_id, filename, title, doi, "
+                "parse_status, acquisition) VALUES (?, 'oa1.pdf', ?, ?, 'completed', 'fulltext')",
+                (full_id, candidate.get("title"), candidate.get("doi")),
+            )
+            conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_id,))
+            conn.commit()
+            return full_id
+
+        result = run_profile(
+            self.db,
+            self.profile_id,
+            now=self.now,
+            candidate_fn=lambda *a, **k: [_candidate(1)],
+            fulltext_fn=lambda *a: None,
+            oa_pdf_fn=fake_oa,
+        )
+        self.assertEqual(result["imported_full"], 1)
 
     def test_same_journal_limit(self) -> None:
         candidates = [_candidate(1, "J1"), _candidate(2, "J1"), _candidate(3, "J2")]

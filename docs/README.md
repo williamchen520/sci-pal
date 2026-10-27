@@ -15,6 +15,7 @@
 | 阶段性总结 | [阶段性总结-20261027.md](阶段性总结-20261027.md) |
 | 全部函数签名 / 参数 / 返回值 | [接口明细.md](接口明细.md) |
 | 版本倒序变更记录 | [变更日志.md](变更日志.md) |
+| DSH 定时监测任务示例 | [DSH-定时监测任务.md](DSH-定时监测任务.md) |
 | 给 AI 代码助手的项目说明 | [`../AGENTS.md`](../AGENTS.md) · [`../AI_CONTEXT.md`](../AI_CONTEXT.md) |
 | 机器可读架构 | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
 

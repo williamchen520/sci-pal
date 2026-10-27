@@ -135,12 +135,60 @@ def try_fulltext(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: st
         return None
 
 
+def _heartbeat_digest(profile: Dict[str, Any], found: int, journals: int) -> str:
+    return (
+        f"【文献监测】{profile['name']} · 本月无新增\n"
+        f"候选 {found}，期刊 {journals}；"
+        f"下次 {int(profile.get('interval_days') or 3)} 天后继续。"
+    )
+
+
+def try_oa_pdf(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: str):
+    """Unpaywall OA PDF fallback; requires SCIPAL_UNPAYWALL_EMAIL."""
+    import json as _json
+    import os
+    import re as _re
+    import urllib.parse
+    import urllib.request
+
+    doi = candidate.get("doi")
+    email = os.environ.get("SCIPAL_UNPAYWALL_EMAIL")
+    if not doi or not email:
+        return None
+    try:
+        url = (
+            f"https://api.unpaywall.org/v2/{urllib.parse.quote(doi)}?"
+            + urllib.parse.urlencode({"email": email})
+        )
+        with urllib.request.urlopen(url, timeout=25) as response:
+            data = _json.loads(response.read().decode())
+        location = data.get("best_oa_location") or {}
+        pdf_url = location.get("url_for_pdf") or location.get("url")
+        if not pdf_url:
+            return None
+        from services.search.preprint_ingest import ingest_pdf
+
+        filename = _re.sub(r"[^A-Za-z0-9]+", "_", doi)[:80] + ".pdf"
+        result = ingest_pdf(
+            pdf_url, filename, candidate, db_path=db_path, parse=True
+        )
+        paper_id = result.get("paper_id") or (result.get("stats") or {}).get("paper_id")
+        if not paper_id:
+            return None
+        conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_paper_id,))
+        conn.commit()
+        return paper_id
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def run_profile(
     db_path,
     profile_id: int,
     now: Optional[datetime] = None,
     candidate_fn=None,
     fulltext_fn=None,
+    oa_pdf_fn=None,
 ) -> Dict[str, Any]:
     conn = repo.connect(db_path)
     profile = repo.get_profile(conn, profile_id)
@@ -220,6 +268,9 @@ def run_profile(
             paper_id = ingest_abstract(conn, candidate)
             acquisition = "abstract"
             full_paper_id = fulltext_fn(db_path, conn, candidate, paper_id)
+            if not full_paper_id:
+                oa_pdf_fn = oa_pdf_fn or try_oa_pdf
+                full_paper_id = oa_pdf_fn(db_path, conn, candidate, paper_id)
             if full_paper_id:
                 paper_id = full_paper_id
                 acquisition = "fulltext"
@@ -250,8 +301,38 @@ def run_profile(
 
         run = repo.get_run(conn, run_id)
         run = {**run, **stats}
-        digest = _digest(profile, run, items)
-        repo.finish_run(conn, run_id, status="success" if items else "empty", digest_md=digest, **stats)
+        heartbeat = 0
+        pushed = False
+        if items:
+            digest = _digest(profile, run, items)
+            pushed = True
+        else:
+            stamps = [
+                value
+                for value in (profile.get("last_push_at"), profile.get("last_heartbeat_at"))
+                if value
+            ]
+            last_push = max(stamps) if stamps else None
+            due = True
+            if last_push:
+                try:
+                    due = (now - datetime.fromisoformat(last_push)).days >= 30
+                except ValueError:
+                    due = True
+            if due:
+                digest = _heartbeat_digest(profile, stats["found"], len(journals))
+                heartbeat = 1
+                pushed = True
+            else:
+                digest = ""
+        repo.finish_run(
+            conn,
+            run_id,
+            status="success" if items else "empty",
+            digest_md=digest,
+            heartbeat=heartbeat,
+            **stats,
+        )
         conn.execute(
             "UPDATE watch_profiles SET last_run_at = ?, next_run_at = ? WHERE id = ?",
             (
@@ -260,8 +341,25 @@ def run_profile(
                 profile_id,
             ),
         )
+        if pushed:
+            if heartbeat:
+                conn.execute(
+                    "UPDATE watch_profiles SET last_push_at = ?, last_heartbeat_at = ? WHERE id = ?",
+                    (now.isoformat(), now.isoformat(), profile_id),
+                )
+            else:
+                conn.execute(
+                    "UPDATE watch_profiles SET last_push_at = ? WHERE id = ?",
+                    (now.isoformat(), profile_id),
+                )
         conn.commit()
-        return {"run_id": run_id, "profile_id": profile_id, "digest": digest, **stats}
+        return {
+            "run_id": run_id,
+            "profile_id": profile_id,
+            "digest": digest,
+            "heartbeat": bool(heartbeat),
+            **stats,
+        }
     except Exception as exc:  # noqa: BLE001
         repo.finish_run(conn, run_id, status="failed", error=str(exc)[:500], **stats)
         raise

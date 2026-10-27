@@ -149,7 +149,7 @@ def create_run(conn: sqlite3.Connection, profile_id: int, start: str, end: str) 
 
 def finish_run(conn: sqlite3.Connection, run_id: int, **stats) -> None:
     fields = ["status", "found", "selected", "imported_full", "imported_abstract",
-              "skipped", "digest_md", "error"]
+              "skipped", "digest_md", "heartbeat", "error"]
     updates = {k: stats[k] for k in fields if k in stats}
     updates["finished_at"] = now_iso()
     conn.execute(
