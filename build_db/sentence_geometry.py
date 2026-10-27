@@ -62,6 +62,26 @@ def to_topleft(
     return l, t, r, b
 
 
+def _locate_in_doc(doc, text: str, max_pages: int = 30):
+    """Search all pages (used when paragraph page is unknown)."""
+    candidates = [text]
+    if len(text) > 120:
+        candidates.append(text[:120])
+    if len(text) > 60:
+        candidates.append(text[:60])
+    for page_index in range(min(doc.page_count, max_pages)):
+        page = doc[page_index]
+        for candidate in candidates:
+            try:
+                rects = page.search_for(candidate)
+            except Exception:  # noqa: BLE001
+                continue
+            if rects:
+                boxes = [(r.x0, r.y0, r.x1, r.y1) for r in rects]
+                return page_index + 1, bbox_union(boxes)
+    return None, None
+
+
 def _locate_sentence(page, text: str, clip) -> Optional[Tuple[float, float, float, float]]:
     candidates = [text]
     if len(text) > 120:
@@ -125,11 +145,17 @@ def build_sentences_for_paper(
 
                     bbox = None
                     source = "none"
-                    if page is not None and clip is not None:
+                    if page is None:
+                        found_page, found_bbox = _locate_in_doc(doc, sentence)
+                        if found_bbox is not None:
+                            page_no = found_page
+                            bbox = found_bbox
+                            source = "search"
+                    if page is not None:
                         bbox = _locate_sentence(page, sentence, clip)
                         if bbox is not None:
                             source = "search"
-                        else:
+                        elif clip is not None:
                             bbox = tuple(clip)
                             source = "paragraph"
                     if bbox is None and para_bbox and page is not None:

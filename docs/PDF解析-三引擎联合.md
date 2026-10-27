@@ -203,10 +203,13 @@ python -m build_db.sync_paper_links                    # 汇总文章图谱
 
 ```
 章节：43,033 个，覆盖 2,076 篇；段落绑定 145,315 / 147,910（98.2%）
-句子：248,179 条；PDF 的 82 篇重建后 61,739 句，其中 48,188 条带 bbox
+句子：248,179 条；PDF 的 82 篇重建后 61,739 句，其中 58,648 条带 bbox（95%）
 句子链接：引用 3,649 / 图 118 / 表 257
 文章图谱：47,382 条（cites 36,950、similar 6,798）；cites 多为外部 DOI
 ```
+
+MinerU 旧数据的段落没有 page/bbox；`sentence_geometry` 对这类句子按全文逐页
+`search_for` 定位，13,551 句补出 10,460 条 bbox，剩余是无文本层/扫描件。
 
 性能注意：`paragraphs_au` 触发器会在每次 UPDATE 时重建 FTS，且 DELETE 无
 `para_id` 索引（全表扫描）。`build_sections_tree` 在批量更新期间临时 DROP
