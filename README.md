@@ -38,7 +38,7 @@
 DSH 桌面 / 浏览器
    │ MCP / HTTPS
    ▼
-Flask API（routes/* 15 个蓝图，82 条路由）
+Flask API（routes/* 17 个蓝图，98 条路由）
    │
 services/*（检索、问答、综述、guard、源适配）
    │
@@ -151,7 +151,7 @@ sci-pal/
 | 入库/任务 | `/api/ingest/*` `/api/tasks/*` |
 | 其他 | `/api/protocols/*` `/api/references/*` `/api/abstracts/*` `/api/experiments/*` |
 
-完整 82 条路由见 [docs/架构与路由图.md](docs/架构与路由图.md)。
+完整 98 条路由见 [docs/架构与路由图.md](docs/架构与路由图.md)。
 
 ## 测试
 
