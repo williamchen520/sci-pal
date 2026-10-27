@@ -172,7 +172,14 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
 
 def build_all(db_path: Path | str = DEFAULT_DB, limit: int = 0) -> Dict[str, int]:
     conn = sqlite3.connect(str(db_path))
-    papers = [row[0] for row in conn.execute("SELECT DISTINCT paper_id FROM sentences")]
+    papers = [
+        row[0]
+        for row in conn.execute(
+            "SELECT DISTINCT s.paper_id FROM sentences s "
+            "JOIN papers p ON p.paper_id = s.paper_id "
+            "WHERE COALESCE(p.parse_engine, '') != 'xml'"
+        )
+    ]
     conn.close()
     total = {"papers": 0, "sentences": 0, "citations": 0, "figures": 0, "tables": 0}
     for paper_id in papers:
