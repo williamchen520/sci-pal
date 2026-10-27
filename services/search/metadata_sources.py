@@ -114,6 +114,34 @@ def openalex_resolve_ids(ids: List[str], per_page: int = 50) -> Dict[str, str]:
     return resolved
 
 
+def openalex_cited_by(doi: str, per_page: int = 100) -> List[Dict[str, Any]]:
+    """Works that cite the given DOI (OpenAlex ``cites:`` filter)."""
+    work = openalex_work(doi)
+    openalex_id = (work.get("id") or "").rsplit("/", 1)[-1]
+    if not openalex_id:
+        return []
+    data = _get(
+        "https://api.openalex.org/works",
+        params={
+            "filter": f"cites:{openalex_id}",
+            "per-page": min(per_page, 200),
+            "select": "id,doi,title,publication_year",
+        },
+    )
+    out = []
+    for item in data.get("results") or []:
+        out.append(
+            {
+                "id": (item.get("id") or "").rsplit("/", 1)[-1],
+                "doi": (item.get("doi") or "").replace("https://doi.org/", "").lower()
+                or None,
+                "title": item.get("title"),
+                "year": item.get("publication_year"),
+            }
+        )
+    return out
+
+
 def openalex_work(doi: str) -> Dict[str, Any]:
     data = _get(f"https://api.openalex.org/works/https://doi.org/{doi}")
     return {

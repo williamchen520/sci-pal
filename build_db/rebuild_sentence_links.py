@@ -52,6 +52,7 @@ def _mention_bbox_top_left(bbox: str, page_height: float) -> str:
 
 def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
     conn = sqlite3.connect(str(db_path))
+    conn.execute("PRAGMA busy_timeout=60000")
     conn.row_factory = sqlite3.Row
     stats = {"citations": 0, "figures": 0, "tables": 0, "sentences": 0}
     try:
