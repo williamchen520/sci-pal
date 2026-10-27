@@ -130,7 +130,7 @@ sci-pal/
 │  ├─ rebuild_sentence_links.py
 │  └─ audit_structure.py     结构完整性审计
 ├─ mcp_server/               search / generate / guard（MCP 薄转发）
-├─ frontend/                 viewer / compare / trace
+├─ frontend/                 viewer / compare / trace（headless 落地页）
 ├─ docs/                     架构、数据、设计文档
 ├─ tests/                    472 项测试
 ├─ documents/                PDF
