@@ -19,6 +19,7 @@ from services.search.reranker import Reranker
 from services.search.query_router import QueryRouter
 from services.search.summary_search import SummarySearch
 from services.search.summary_vector_search import get_default as get_summary_vector
+from services.search.tree_context import TreeContextBuilder
 from services.search.context_expander import (
     ContextExpander,
     DB_PATH as STRUCT_DB,
@@ -51,6 +52,7 @@ class UnifiedRetriever:
             self.reranker = Reranker()
         if expand:
             self.expander = ContextExpander()
+        self.tree_builder = TreeContextBuilder()
         self.summary_searcher = SummarySearch()
         if graph_expand:
             self.graph = GraphTraverser()
@@ -278,9 +280,19 @@ class UnifiedRetriever:
         parent_contexts = []
         _parents_started = time.time()
         if self.expand and paragraphs:
-            parent_contexts = self.expander.expand(
-                paragraphs, mode="section", max_parents=top_paragraphs, query=query
-            )
+            if os.environ.get("SCIPAL_CONTEXT_MODE") == "tree":
+                parent_contexts = self.tree_builder.build(
+                    paragraphs,
+                    query,
+                    token_budget=int(os.environ.get("SCIPAL_CONTEXT_TOKENS", "1200")),
+                    max_sections=int(os.environ.get("SCIPAL_CONTEXT_SECTIONS", "4")),
+                    max_paragraphs=int(os.environ.get("SCIPAL_CONTEXT_PARAS", "4")),
+                    max_sentences=int(os.environ.get("SCIPAL_CONTEXT_SENTENCES", "2")),
+                )
+            else:
+                parent_contexts = self.expander.expand(
+                    paragraphs, mode="section", max_parents=top_paragraphs, query=query
+                )
         self.diagnostics.mark("parent_contexts", (time.time() - _parents_started) * 1000)
 
         # 1c. Section summaries (RAPTOR-lite)
