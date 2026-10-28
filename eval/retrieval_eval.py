@@ -14,7 +14,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
-DEFAULT_GOLD = Path(__file__).resolve().parent / "gold" / "seed.jsonl"
+DEFAULT_GOLD = Path(__file__).resolve().parent / "gold" / "seed_100.jsonl"
 DEFAULT_OUT = Path(__file__).resolve().parent / "results" / "retrieval.json"
 
 
@@ -23,6 +23,8 @@ def load_gold(path: Path) -> List[Dict[str, Any]]:
 
 
 def _sentences_from_response(payload: Dict[str, Any]) -> List[str]:
+    if payload.get("sufficient") is False:
+        return []
     out: List[str] = []
     for item in payload.get("evidence") or []:
         for highlight in item.get("highlight") or []:

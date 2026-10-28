@@ -16,6 +16,7 @@ from services.search.hybrid_search import HybridSearch
 from services.search.shared import get_shared_hybrid
 from services.search.reranker import Reranker
 from services.search.query_router import QueryRouter
+from services.search.summary_search import SummarySearch
 from services.search.context_expander import (
     ContextExpander,
     DB_PATH as STRUCT_DB,
@@ -25,6 +26,7 @@ from services.search.context_expander import (
 from services.search.graph_traverser import GraphTraverser
 from services.search.retrieval_diagnostics import RetrievalDiagnostics
 from services.search.abstract_search import AbstractSearch  # V30.0: 摘要库检索
+from services.qa.sufficiency import evaluate as evaluate_sufficiency
 from services.trust.injection import find_injections, wrap_untrusted
 from services.trust.retraction import flags_for_papers
 
@@ -46,6 +48,7 @@ class UnifiedRetriever:
             self.reranker = Reranker()
         if expand:
             self.expander = ContextExpander()
+        self.summary_searcher = SummarySearch()
         if graph_expand:
             self.graph = GraphTraverser()
         # V30.0: 摘要库检索
@@ -211,6 +214,13 @@ class UnifiedRetriever:
             )
         self.diagnostics.mark("parent_contexts", (time.time() - _parents_started) * 1000)
 
+        # 1c. Section summaries (RAPTOR-lite)
+        summaries = []
+        if "qa" in channels:
+            summaries = self.summary_searcher.search(
+                query, top_k=3, paper_id=paper_id or ""
+            )
+
         # 2. Figures (caption semantics)
         figures = []
         if "figure" in channels:
@@ -233,7 +243,7 @@ class UnifiedRetriever:
                 seed_ids = [p.get("paper_id") for p in papers if p.get("paper_id")]
                 if seed_ids:
                     graph_neighbors = self.graph.expand(
-                        seed_ids, max_neighbors=max_papers, relation="all"
+                        seed_ids, max_neighbors=top_papers, relation="all"
                     )
 
         # 5. Chunks (800-token context-rich units, V24.1)
@@ -261,6 +271,7 @@ class UnifiedRetriever:
             "route": route,
             "paragraphs": paragraphs,          # precise hits (anchor ids)
             "parent_contexts": parent_contexts,  # expanded section context
+            "summaries": summaries,  # section summaries (RAPTOR-lite)
             "chunks": chunks,                  # 800-token context units (V24.1)
             "figures": figures,
             "tables": tables,
@@ -322,6 +333,12 @@ class UnifiedRetriever:
                 section = p.get("section_l1") or p.get("metadata", {}).get("section_l1", "")
                 tag = f" ({section})" if section else ""
                 lines.append(f"[P{i}]{tag}\n{p['text']}")
+
+        if env.get("summaries"):
+            lines.append("\n## Section summaries (RAPTOR-lite; use for orientation, cite paragraphs)")
+            for i, summary in enumerate(env["summaries"], 1):
+                title = summary.get("title") or ""
+                lines.append(f"[S{i}] ({title})\n{summary.get('text', '')}")
 
         if env.get("chunks"):
             lines.append("\n## Context chunks (800-token units)")
@@ -447,6 +464,7 @@ class UnifiedRetriever:
                         "section_path": pctx.get("section_path") or [],
                         "section": pctx.get("section") or "",
                         "page": pctx.get("page"),
+                        "score": pctx.get("score"),
                         "paragraphs": [p.get("text", "") for p in pctx.get("paragraphs") or []],
                         "text": pctx.get("text", ""),
                         "highlight": highlights,
@@ -456,9 +474,16 @@ class UnifiedRetriever:
                 )
         finally:
             conn.close()
+        sufficiency = evaluate_sufficiency(
+            query,
+            [{"text": item["text"], "score": item.get("score") or 0.0} for item in evidence],
+        )
         return {
             "query": query,
             "evidence": evidence,
+            "sufficient": sufficiency["sufficient"],
+            "sufficiency": sufficiency,
+            "summaries": env.get("summaries") or [],
             "figures": env.get("figures") or [],
             "tables": env.get("tables") or [],
         }

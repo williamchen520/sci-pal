@@ -5,7 +5,7 @@
     "mrr": 0.3331,
     "ndcg@10": 0.3532,
     "refusal_total": 4,
-    "refusal_accuracy": 0.0
+    "refusal_accuracy": 0.75
   },
   "rows": [
     {
@@ -209,12 +209,12 @@
     {
       "id": "q023",
       "refusal": true,
-      "returned": 8
+      "returned": 0
     },
     {
       "id": "q024",
       "refusal": true,
-      "returned": 10
+      "returned": 0
     },
     {
       "id": "q025",
@@ -224,7 +224,7 @@
     {
       "id": "q026",
       "refusal": true,
-      "returned": 9
+      "returned": 0
     },
     {
       "id": "q027",

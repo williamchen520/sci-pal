@@ -1,0 +1,19 @@
+name: eval
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 1"
+
+jobs:
+  eval:
+    # Needs a self-hosted runner with SciPal dependencies and Flask on :5000.
+    runs-on: [self-hosted, Windows]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Retrieval eval (20 questions)
+        run: python eval/retrieval_eval.py --limit 20 --output eval/results/ci.json
+      - name: Regression gate
+        run: python eval/gate.py --baseline eval/results/retrieval_ci_baseline.json --current eval/results/ci.json --tolerance 0.05

@@ -15,7 +15,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List
 
-DEFAULT_GOLD = Path(__file__).resolve().parent / "gold" / "seed.jsonl"
+DEFAULT_GOLD = Path(__file__).resolve().parent / "gold" / "seed_100.jsonl"
 DEFAULT_OUT = Path(__file__).resolve().parent / "results" / "answers.json"
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fff]")
