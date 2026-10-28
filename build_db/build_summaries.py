@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS summaries (
     title TEXT,
     text TEXT,
     token_count INTEGER,
-    created_at TEXT
+    created_at TEXT,
+    summary_source TEXT DEFAULT extractive
 );
 CREATE INDEX IF NOT EXISTS idx_summaries_paper ON summaries(paper_id);
 CREATE VIRTUAL TABLE IF NOT EXISTS summaries_fts USING fts5(
