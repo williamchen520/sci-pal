@@ -418,6 +418,16 @@ def review_evidence_csv(project_id: str) -> str:
     return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/evidence.csv")
 
 
+@mcp.tool(description="自动抽取 PICO（POST /api/review-projects/<id>/pico）。")
+def review_extract_pico(project_id: str) -> str:
+    return _call("POST", f"/api/review-projects/{_path_segment(project_id)}/pico")
+
+
+@mcp.tool(description="双人筛选一致性 Cohen's kappa（GET /api/review-projects/<id>/kappa）。")
+def review_kappa(project_id: str) -> str:
+    return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/kappa")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 

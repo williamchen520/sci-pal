@@ -6,7 +6,8 @@ import sqlite3
 
 from flask import Blueprint, Response, g, jsonify, request
 
-from services.review import systematic
+from services.review import kappa as kappa_mod
+from services.review import pico, systematic
 
 
 def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
@@ -125,6 +126,25 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                     "Content-Disposition": f"attachment; filename={project_id}_evidence.csv"
                 },
             )
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/pico", methods=["POST"])
+    def extract_pico(project_id: str):
+        conn = _conn()
+        try:
+            row = systematic.get_project(conn, project_id)
+            if not row or row.get("owner") != _owner():
+                return jsonify({"error": "project not found"}), 404
+            return jsonify(pico.auto_pico(conn, project_id))
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/kappa", methods=["GET"])
+    def screening_kappa(project_id: str):
+        conn = _conn()
+        try:
+            return jsonify(kappa_mod.kappa(conn, project_id))
         finally:
             conn.close()
 
