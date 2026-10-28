@@ -385,6 +385,39 @@ def watch_latest(profile_id: int) -> str:
     return _call("GET", f"/api/watch/profiles/{profile_id}/latest")
 
 
+@mcp.tool(description="创建系统综述项目（POST /api/review-projects）。")
+def review_project_create(name: str, field_text: str = "", pico: dict | None = None) -> str:
+    return _call(
+        "POST",
+        "/api/review-projects",
+        {"name": name, "field_text": field_text, "pico": pico or {}},
+    )
+
+
+@mcp.tool(description="纳入/排除筛选（POST /api/review-projects/<id>/screen）。")
+def review_screen(project_id: str, paper_id: str, decision: str, reason: str = "") -> str:
+    return _call(
+        "POST",
+        f"/api/review-projects/{_path_segment(project_id)}/screen",
+        {"paper_id": paper_id, "decision": decision, "reason": reason},
+    )
+
+
+@mcp.tool(description="PRISMA 计数（GET /api/review-projects/<id>/prisma）。")
+def review_prisma(project_id: str) -> str:
+    return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/prisma")
+
+
+@mcp.tool(description="提取证据表（POST /api/review-projects/<id>/evidence）。")
+def review_evidence(project_id: str) -> str:
+    return _call("POST", f"/api/review-projects/{_path_segment(project_id)}/evidence")
+
+
+@mcp.tool(description="证据表 CSV（GET /api/review-projects/<id>/evidence.csv）。")
+def review_evidence_csv(project_id: str) -> str:
+    return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/evidence.csv")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
