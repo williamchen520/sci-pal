@@ -9,7 +9,7 @@
 ## 3. 基准测试指标变化
 
 <!--
-必须填写。评测语料：本地论文库（当前 3,297 篇；若用 500 篇子集请注明）。
+必须填写。评测语料：本地论文库全部文章（当前 3,297 篇）。
 评测集：eval/gold/seed_100.jsonl（100 题，30 curated + 70 auto）。
 命令：python eval/retrieval_eval.py --limit 30
 输出：eval/results/xxx.json

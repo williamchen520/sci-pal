@@ -219,7 +219,7 @@ def render(records: List[PrRecord], repo: str = DEFAULT_REPO) -> str:
         "",
         f"> 自动生成，请勿手工编辑；生成时间：{generated}",
         f"> 仓库：`{repo}`；数据来源：已合并 PR 的“基准测试指标变化”章节。",
-        "> 评测语料：本地论文库（当前 3,297 篇；500 篇子集需在 PR 中注明）。",
+        "> 评测语料：本地论文库全部文章（当前 3,297 篇）。",
         "> 重生成：`python scripts/collect_milestones.py`",
         "",
         "## 1. PR 总览",
