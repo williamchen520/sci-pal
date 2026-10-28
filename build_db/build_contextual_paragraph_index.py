@@ -30,7 +30,7 @@ def contextual_text(title: str, section_path: str, text: str) -> str:
     return f"{prefix}. {text}" if prefix else text
 
 
-def build(limit: int = 0, batch_size: int = 256) -> dict:
+def build(limit: int = 0, batch_size: int = 512) -> dict:
     model = SentenceTransformer(MODEL)
     client = chromadb.PersistentClient(path=str(CHROMA))
     collection = client.get_or_create_collection(
@@ -48,6 +48,9 @@ def build(limit: int = 0, batch_size: int = 256) -> dict:
         query += f" LIMIT {int(limit)}"
     rows = conn.execute(query).fetchall()
     conn.close()
+    existing_ids = set(collection.get(include=[]).get("ids") or [])
+    rows = [row for row in rows if row["para_id"] not in existing_ids]
+    print(f"skip existing {len(existing_ids)}, remaining {len(rows)}", flush=True)
 
     total = 0
     for start in range(0, len(rows), batch_size):

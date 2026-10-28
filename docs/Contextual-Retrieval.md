@@ -23,18 +23,44 @@ $env:SCIPAL_PARAGRAPH_COLLECTION = "paragraphs_contextual"
 
 不设置环境变量时仍用原 `paragraphs` collection，默认行为不变。
 
-## 3. 当前状态
+## 3. 全量构建
 
-- 构建脚本已完成；
-- 查询开关已完成；
-- 全量构建 164,654 段，预计约 **2 小时**（RTX 4060）；
-- 当前只完成 5,120 段，未做基准对比，**不宣称提升**。
+```
+164,654 段落（100%）
+```
 
-## 4. 为什么先停
+## 4. 100 题结果（top10）
 
-- 全量构建时间超出单轮；
-- 在完成全量前，不能公平对比 Recall；
-- 已有 paragraph_recall 0.7692、contract-level 0.8462，说明段落召回本身不是主要瓶颈。
+| 指标 | 基线 | contextual |
+|---|---|---|
+| sentence strict Recall@10 | 0.5365 | **0.6719** |
+| paragraph Recall@10 | 0.6146 | **0.7656** |
+| sentence-in-paragraphs | 0.7500 | **0.8229** |
+| refusal | 0.75 | 0.50 |
+
+## 5. 30 题结果（top10）
+
+| 指标 | 基线 | contextual |
+|---|---|---|
+| sentence strict Recall@10 | 0.5192 | 0.5192 |
+| paragraph Recall@10 | 0.7692 | 0.7885 |
+| sentence-in-paragraphs | 0.8462 | 0.8846 |
+| refusal | 0.75 | 0.50 |
+
+## 6. 结论
+
+- Contextual 段落索引在 100 题上显著提升 strict Recall（+25.2%）；
+- paragraph / sentence-in-paragraphs 也提升；
+- 但拒答从 0.75 降到 0.50；
+- 默认仍不启用，按“高召回场景”显式开启：
+
+```powershell
+$env:SCIPAL_PARAGRAPH_COLLECTION = "paragraphs_contextual"
+```
+
+## 7. 为什么不全量默认
+
+拒答代价明显；下一步应把 contextual 与 sufficiency 阈值/拒答策略一起调，而不是直接切换默认。
 
 ## 5. 后续验证
 
