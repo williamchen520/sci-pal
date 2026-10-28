@@ -1,0 +1,266 @@
+{
+  "summary": {
+    "questions": 26,
+    "recall@10": 0.5192,
+    "mrr": 0.3331,
+    "ndcg@10": 0.3532,
+    "refusal_total": 4,
+    "refusal_accuracy": 0.0
+  },
+  "rows": [
+    {
+      "id": "q001",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q002",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q003",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q004",
+      "recall": 1.0,
+      "mrr": 0.25,
+      "ndcg": 0.4307,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 4
+    },
+    {
+      "id": "q005",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q006",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q007",
+      "recall": 1.0,
+      "mrr": 0.2,
+      "ndcg": 0.3869,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 5
+    },
+    {
+      "id": "q008",
+      "recall": 1.0,
+      "mrr": 0.2,
+      "ndcg": 0.3869,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 5
+    },
+    {
+      "id": "q009",
+      "recall": 1.0,
+      "mrr": 0.2,
+      "ndcg": 0.3869,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 5
+    },
+    {
+      "id": "q010",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q011",
+      "recall": 0.5,
+      "mrr": 0.2,
+      "ndcg": 0.2372,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 5
+    },
+    {
+      "id": "q012",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6509,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q013",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q014",
+      "recall": 1.0,
+      "mrr": 0.1667,
+      "ndcg": 0.3562,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 6
+    },
+    {
+      "id": "q015",
+      "recall": 0.5,
+      "mrr": 0.1111,
+      "ndcg": 0.1846,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 9
+    },
+    {
+      "id": "q016",
+      "recall": 0.5,
+      "mrr": 1.0,
+      "ndcg": 0.6131,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q017",
+      "recall": 0.5,
+      "mrr": 1.0,
+      "ndcg": 0.6131,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q018",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q019",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q020",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q021",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q022",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q023",
+      "refusal": true,
+      "returned": 8
+    },
+    {
+      "id": "q024",
+      "refusal": true,
+      "returned": 10
+    },
+    {
+      "id": "q025",
+      "refusal": true,
+      "returned": 6
+    },
+    {
+      "id": "q026",
+      "refusal": true,
+      "returned": 9
+    },
+    {
+      "id": "q027",
+      "recall": 0.5,
+      "mrr": 0.3333,
+      "ndcg": 0.3066,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 3
+    },
+    {
+      "id": "q028",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q029",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 2,
+      "returned": 9,
+      "hit_rank": null
+    },
+    {
+      "id": "q030",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": null
+    }
+  ]
+}
