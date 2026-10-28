@@ -1,0 +1,13 @@
+name: tests
+
+on:
+  pull_request:
+    branches: [dev]
+
+jobs:
+  tests:
+    runs-on: [self-hosted, Windows]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python -m unittest discover -s tests -p "test_*.py"

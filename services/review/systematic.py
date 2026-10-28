@@ -217,3 +217,16 @@ def evidence_csv(conn: sqlite3.Connection, project_id: str) -> str:
     writer.writeheader()
     writer.writerows(rows)
     return buffer.getvalue()
+
+
+def add_from_watch(conn: sqlite3.Connection, project_id: str, run_id: int) -> int:
+    papers = [
+        row[0]
+        for row in conn.execute(
+            "SELECT paper_id FROM watch_items WHERE run_id = ? AND paper_id IS NOT NULL",
+            (run_id,),
+        ).fetchall()
+    ]
+    if papers:
+        add_papers(conn, project_id, papers)
+    return len(papers)
