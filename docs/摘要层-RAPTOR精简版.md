@@ -33,9 +33,19 @@ python -m build_db.build_summaries --limit 2000     # 子集
 - 支持 `paper_id` 限定；
 - 已接入 `UnifiedRetriever`：`qa` 通道时返回 `summaries`，信封中标记 `[S1]`。
 
+## 3.1 LLM 摘要（试点）
+
+```powershell
+python -m build_db.build_llm_summaries --limit 100 --model qwen2.5:3b
+```
+
+- 只改写摘要文本，不重建表；
+- `summary_source='llm'` 区分抽取式；
+- 试点：100 节（其余 61,832 节仍为 extractive）。
+
 ## 4. 当前状态
 
-- 已构建 61,932 个章节摘要（全库）；
+- 已构建 61,932 个章节摘要（全库；100 节为 LLM 生成）；
 - 重建：`python -m build_db.build_summaries`；
 - 测试：`tests/test_summaries.py`。
 
