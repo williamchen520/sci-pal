@@ -1,0 +1,896 @@
+{
+  "summary": {
+    "questions": 96,
+    "recall@10": 0.5365,
+    "mrr": 0.4114,
+    "ndcg@10": 0.4356,
+    "refusal_total": 4,
+    "refusal_accuracy": 0.75
+  },
+  "rows": [
+    {
+      "id": "q001",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q002",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q003",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q004",
+      "recall": 1.0,
+      "mrr": 0.25,
+      "ndcg": 0.4307,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 4
+    },
+    {
+      "id": "q005",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q006",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q007",
+      "recall": 1.0,
+      "mrr": 0.2,
+      "ndcg": 0.3869,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 5
+    },
+    {
+      "id": "q008",
+      "recall": 1.0,
+      "mrr": 0.2,
+      "ndcg": 0.3869,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 5
+    },
+    {
+      "id": "q009",
+      "recall": 1.0,
+      "mrr": 0.2,
+      "ndcg": 0.3869,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 5
+    },
+    {
+      "id": "q010",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q011",
+      "recall": 0.5,
+      "mrr": 0.2,
+      "ndcg": 0.2372,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 5
+    },
+    {
+      "id": "q012",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6509,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q013",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q014",
+      "recall": 1.0,
+      "mrr": 0.1667,
+      "ndcg": 0.3562,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 6
+    },
+    {
+      "id": "q015",
+      "recall": 0.5,
+      "mrr": 0.1111,
+      "ndcg": 0.1846,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 9
+    },
+    {
+      "id": "q016",
+      "recall": 0.5,
+      "mrr": 1.0,
+      "ndcg": 0.6131,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q017",
+      "recall": 0.5,
+      "mrr": 1.0,
+      "ndcg": 0.6131,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q018",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q019",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q020",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q021",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q022",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q023",
+      "refusal": true,
+      "returned": 0
+    },
+    {
+      "id": "q024",
+      "refusal": true,
+      "returned": 0
+    },
+    {
+      "id": "q025",
+      "refusal": true,
+      "returned": 6
+    },
+    {
+      "id": "q026",
+      "refusal": true,
+      "returned": 0
+    },
+    {
+      "id": "q027",
+      "recall": 0.5,
+      "mrr": 0.3333,
+      "ndcg": 0.3066,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": 3
+    },
+    {
+      "id": "q028",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q029",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 2,
+      "returned": 9,
+      "hit_rank": null
+    },
+    {
+      "id": "q030",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 2,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q031",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 0,
+      "hit_rank": null
+    },
+    {
+      "id": "q032",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q033",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q034",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q035",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": null
+    },
+    {
+      "id": "q036",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": 2
+    },
+    {
+      "id": "q037",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": 1
+    },
+    {
+      "id": "q038",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q039",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q040",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q041",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q042",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q043",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q044",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q045",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q046",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q047",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q048",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q049",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q050",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q051",
+      "recall": 1.0,
+      "mrr": 0.25,
+      "ndcg": 0.4307,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 4
+    },
+    {
+      "id": "q052",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q053",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q054",
+      "recall": 1.0,
+      "mrr": 0.3333,
+      "ndcg": 0.5,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 3
+    },
+    {
+      "id": "q055",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q056",
+      "recall": 1.0,
+      "mrr": 0.1667,
+      "ndcg": 0.3562,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 6
+    },
+    {
+      "id": "q057",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": null
+    },
+    {
+      "id": "q058",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q059",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q060",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": null
+    },
+    {
+      "id": "q061",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q062",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q063",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 0,
+      "hit_rank": null
+    },
+    {
+      "id": "q064",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q065",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q066",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": null
+    },
+    {
+      "id": "q067",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q068",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q069",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 0,
+      "hit_rank": null
+    },
+    {
+      "id": "q070",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 2
+    },
+    {
+      "id": "q071",
+      "recall": 1.0,
+      "mrr": 0.3333,
+      "ndcg": 0.5,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 3
+    },
+    {
+      "id": "q072",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q073",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q074",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": null
+    },
+    {
+      "id": "q075",
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 2
+    },
+    {
+      "id": "q076",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q077",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q078",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": null
+    },
+    {
+      "id": "q079",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 7,
+      "hit_rank": null
+    },
+    {
+      "id": "q080",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q081",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": null
+    },
+    {
+      "id": "q082",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q083",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 7,
+      "hit_rank": null
+    },
+    {
+      "id": "q084",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": null
+    },
+    {
+      "id": "q085",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": null
+    },
+    {
+      "id": "q086",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q087",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q088",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 8,
+      "hit_rank": 1
+    },
+    {
+      "id": "q089",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q090",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q091",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q092",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q093",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": null
+    },
+    {
+      "id": "q094",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q095",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q096",
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": null
+    },
+    {
+      "id": "q097",
+      "recall": 1.0,
+      "mrr": 0.25,
+      "ndcg": 0.4307,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 4
+    },
+    {
+      "id": "q098",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 9,
+      "hit_rank": 1
+    },
+    {
+      "id": "q099",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    },
+    {
+      "id": "q100",
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "gold": 1,
+      "returned": 10,
+      "hit_rank": 1
+    }
+  ]
+}

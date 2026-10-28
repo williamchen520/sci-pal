@@ -1,0 +1,1 @@
+{"id": "q100", "question": "Which dimensions does the review cover for ICI rechallenge in HCC?", "paper_ids": ["paper_PMC12707946_2d3bcc67"], "evidence": ["para_paper_PMC12707946_2d3bcc67_0014_sent_001"], "answer_points": ["clinical evidence", "preclinical data", "therapeutic efficacy"], "category": "factual", "difficulty": "medium", "forbidden": []}

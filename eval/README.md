@@ -4,7 +4,7 @@
 
 ```
 eval/
-├─ gold/seed.jsonl           # 30 题金标准
+├─ gold/seed.jsonl           # 100 题金标准（30 curated + 70 auto）
 ├─ results/                  # 运行结果（JSON）
 ├─ retrieval_eval.py         # Recall@k / MRR / nDCG / 拒答
 └─ answer_eval.py            # 要点覆盖 / 禁用断言 / 引用数 / 拒答

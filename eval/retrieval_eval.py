@@ -14,7 +14,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
-DEFAULT_GOLD = Path(__file__).resolve().parent / "gold" / "seed.jsonl"
+DEFAULT_GOLD = Path(__file__).resolve().parent / "gold" / "seed_100.jsonl"
 DEFAULT_OUT = Path(__file__).resolve().parent / "results" / "retrieval.json"
 
 
