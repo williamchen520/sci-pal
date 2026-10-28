@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
 
 from flask import Blueprint, Response, g, jsonify, request
 
 from services.review import brief as brief_mod
+from services.review import export as export_mod
 from services.review import kappa as kappa_mod
 from services.review import pdf_report
 from services.review import prisma_svg
@@ -324,6 +326,35 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             return jsonify({"events": systematic.list_events(conn, project_id)})
+        finally:
+            conn.close()
+
+    @bp.route("/import", methods=["POST"])
+    def import_project():
+        conn = _conn()
+        try:
+            data = request.get_json(silent=True) or {}
+            if not data.get("project"):
+                return jsonify({"error": "project payload required"}), 400
+            result = export_mod.import_project(conn, data, _owner())
+            return jsonify(result), 201
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/export.json", methods=["GET"])
+    def export_project(project_id: str):
+        conn = _conn()
+        try:
+            if not systematic.can_access(conn, project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            data = export_mod.export_project(conn, project_id)
+            return Response(
+                json.dumps(data, ensure_ascii=False, indent=2),
+                mimetype="application/json; charset=utf-8",
+                headers={
+                    "Content-Disposition": f"attachment; filename={project_id}.json"
+                },
+            )
         finally:
             conn.close()
 
