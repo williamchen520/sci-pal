@@ -9,6 +9,7 @@ from flask import Blueprint, Response, g, jsonify, request
 
 from services.review import brief as brief_mod
 from services.review import export as export_mod
+from services.review import importers
 from services.review import kappa as kappa_mod
 from services.review import pdf_report
 from services.review import prisma_svg
@@ -382,6 +383,35 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 "records_imported",
                 "",
                 f"matched={result['matched']} unmatched={result['unmatched']}",
+            )
+            return jsonify(result)
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/import-file", methods=["POST"])
+    def import_file(project_id: str):
+        conn = _conn()
+        try:
+            if not systematic.can_access(conn, project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            upload = request.files.get("file")
+            if not upload:
+                return jsonify({"error": "file required"}), 400
+            raw = upload.read()
+            if len(raw) > 5 * 1024 * 1024:
+                return jsonify({"error": "file too large (max 5MB)"}), 400
+            text = raw.decode("utf-8-sig", errors="ignore")
+            records = importers.parse_file(upload.filename or "", text)
+            if not records:
+                return jsonify({"error": "no records parsed (.bib/.csv)"}), 400
+            result = systematic.import_records(conn, project_id, records)
+            result["parsed"] = len(records)
+            _audit(
+                conn,
+                project_id,
+                "file_imported",
+                upload.filename or "",
+                f"parsed={len(records)} matched={result['matched']}",
             )
             return jsonify(result)
         finally:
