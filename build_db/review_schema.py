@@ -46,7 +46,17 @@ CREATE TABLE IF NOT EXISTS evidence_rows (
     source_sentence TEXT,
     created_at TEXT
 );
+CREATE TABLE IF NOT EXISTS adjudications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT,
+    paper_id TEXT,
+    decision TEXT,
+    reason TEXT,
+    editor TEXT,
+    created_at TEXT
+);
 CREATE INDEX IF NOT EXISTS idx_screening_project ON screening_decisions(project_id, paper_id);
+CREATE INDEX IF NOT EXISTS idx_adjudications_project ON adjudications(project_id, paper_id);
 CREATE TABLE IF NOT EXISTS risk_of_bias (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id TEXT,

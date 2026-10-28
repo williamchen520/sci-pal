@@ -118,19 +118,52 @@ def screen(
     conn.commit()
 
 
+def adjudicate(
+    conn: sqlite3.Connection,
+    project_id: str,
+    paper_id: str,
+    decision: str,
+    reason: str = "",
+    editor: str = "",
+) -> None:
+    conn.execute(
+        "INSERT INTO adjudications "
+        "(project_id, paper_id, decision, reason, editor, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (project_id, paper_id, decision, reason, editor, now()),
+    )
+    conn.commit()
+
+
+def _latest_adjudications(conn: sqlite3.Connection, project_id: str) -> Dict[str, str]:
+    rows = conn.execute(
+        "SELECT paper_id, decision FROM ("
+        "  SELECT paper_id, decision, ROW_NUMBER() OVER ("
+        "    PARTITION BY paper_id ORDER BY id DESC"
+        "  ) AS rn FROM adjudications WHERE project_id = ?"
+        ") WHERE rn = 1",
+        (project_id,),
+    ).fetchall()
+    return {paper_id: decision for paper_id, decision in rows}
+
+
 def prisma(conn: sqlite3.Connection, project_id: str) -> Dict[str, int]:
     identified = conn.execute(
         "SELECT COUNT(*) FROM review_project_papers WHERE project_id = ?", (project_id,)
     ).fetchone()[0]
     rows = conn.execute(
-        "SELECT decision, COUNT(*) FROM ("
+        "SELECT paper_id, decision FROM ("
         "  SELECT paper_id, decision, ROW_NUMBER() OVER ("
         "    PARTITION BY paper_id ORDER BY id DESC"
         "  ) AS rn FROM screening_decisions WHERE project_id = ?"
-        ") WHERE rn = 1 GROUP BY decision",
+        ") WHERE rn = 1",
         (project_id,),
     ).fetchall()
-    counts = {decision: count for decision, count in rows}
+    decisions = {paper_id: decision for paper_id, decision in rows}
+    decisions.update(_latest_adjudications(conn, project_id))
+    counts: Dict[str, int] = {}
+    for decision in decisions.values():
+        counts[decision] = counts.get(decision, 0) + 1
     included = counts.get("include", 0)
     excluded = counts.get("exclude", 0)
     return {
@@ -155,8 +188,14 @@ def conflicts(conn: sqlite3.Connection, project_id: str, stage: str = "title_abs
     by_paper: Dict[str, Dict[str, str]] = {}
     for paper_id, reviewer, decision, reason in rows:
         by_paper.setdefault(paper_id, {})[reviewer] = decision
+    resolved = _latest_adjudications(conn, project_id)
     return [
-        {"paper_id": paper_id, "decisions": decisions}
+        {
+            "paper_id": paper_id,
+            "decisions": decisions,
+            "resolved": paper_id in resolved,
+            "adjudicated": resolved.get(paper_id),
+        }
         for paper_id, decisions in by_paper.items()
         if len(set(decisions.values())) > 1
     ]
