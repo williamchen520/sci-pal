@@ -117,6 +117,26 @@ SCIPAL_CONTEXT_SENTENCES=2
 - 旧 expander 的“按命中段落分组 + 每段 1 句”在 strict Recall 上仍最优；
 - 第一轮 tree builder **不默认启用**，`SCIPAL_CONTEXT_MODE=tree` 仅保留实验。
 
+## 7.1 第二版：anchor-preserving 结果
+
+| 数据集 | 指标 | 旧 expander | tree v2 |
+|---|---|---|---|
+| 30 题 | sentence strict@10 | 0.5192 | 0.5192 |
+| 30 题 | paragraph@10 | 0.7692 | **0.7885** |
+| 30 题 | sentence-in-paragraphs | 0.8462 | 0.8269 |
+| 30 题 | refusal | 0.75 | 0.75 |
+| 100 题 | sentence strict@10 | 0.5885 | 0.5885 |
+| 100 题 | paragraph@10 | 0.6823 | 0.6823 |
+| 100 题 | sentence-in-paragraphs | 0.7604 | 0.7240 |
+| 100 题 | refusal | 0.75 | 0.75 |
+
+结论：
+
+- anchor-preserving 修复了“上下文预算挤掉 anchor”的问题；
+- strict Recall 与旧 expander 完全一致，没有提升；
+- paragraph 在 30 题略好，但 100 题持平，coverage 反而下降；
+- tree v2 仍不默认启用。
+
 ## 8. 下一步修正方向
 
 - 保留 top paragraph hits 作为 anchor，不先按 section 重排；
