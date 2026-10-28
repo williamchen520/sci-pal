@@ -47,7 +47,17 @@ CREATE TABLE IF NOT EXISTS evidence_rows (
     created_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_screening_project ON screening_decisions(project_id, paper_id);
+CREATE TABLE IF NOT EXISTS risk_of_bias (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT,
+    paper_id TEXT,
+    domain TEXT,
+    judgement TEXT,
+    support TEXT,
+    created_at TEXT
+);
 CREATE INDEX IF NOT EXISTS idx_evidence_project ON evidence_rows(project_id);
+CREATE INDEX IF NOT EXISTS idx_rob_project ON risk_of_bias(project_id, paper_id);
 """
 
 

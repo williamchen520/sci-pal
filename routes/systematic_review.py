@@ -8,6 +8,7 @@ from flask import Blueprint, Response, g, jsonify, request
 
 from services.review import kappa as kappa_mod
 from services.review import prisma_svg
+from services.review import risk_of_bias
 from services.review import pico, systematic
 
 
@@ -159,6 +160,36 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             counts = systematic.prisma(conn, project_id)
             svg = prisma_svg.render(row.get("name") or project_id, counts)
             return Response(svg, mimetype="image/svg+xml")
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/risk-of-bias", methods=["GET", "POST"])
+    def rob(project_id: str):
+        conn = _conn()
+        try:
+            if request.method == "POST":
+                papers = conn.execute(
+                    "SELECT p.paper_id, p.title, p.abstract FROM review_project_papers rp "
+                    "JOIN papers p ON p.paper_id = rp.paper_id WHERE rp.project_id = ?",
+                    (project_id,),
+                ).fetchall()
+                for paper in papers:
+                    text = f"{paper[1] or ''}. {paper[2] or ''}"
+                    rows = risk_of_bias.assess(text)
+                    risk_of_bias.save(conn, project_id, paper[0], rows)
+            rows = risk_of_bias.list_rows(conn, project_id)
+            by_paper = {}
+            for row in rows:
+                by_paper.setdefault(row["paper_id"], []).append(row)
+            return jsonify(
+                {
+                    "rows": rows,
+                    "overall": {
+                        paper: risk_of_bias.overall(items)
+                        for paper, items in by_paper.items()
+                    },
+                }
+            )
         finally:
             conn.close()
 
