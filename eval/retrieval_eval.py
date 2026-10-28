@@ -56,6 +56,7 @@ def evaluate(
     search_fn: Callable[[str, int], Dict[str, Any]],
     top_k: int = 10,
     section_of: Callable[[str], Any] | None = None,
+    paragraph_of: Callable[[str], Any] | None = None,
 ) -> Dict[str, Any]:
     rows = []
     recall_sum = 0.0
@@ -63,6 +64,8 @@ def evaluate(
     ndcg_sum = 0.0
     section_sum = 0.0
     summary_section_sum = 0.0
+    paragraph_sum = 0.0
+    paragraph_sentence_sum = 0.0
     counted = 0
     refusal_total = 0
     refusal_ok = 0
@@ -92,6 +95,23 @@ def evaluate(
 
         section_recall = None
         summary_section_recall = None
+        paragraph_recall = None
+        paragraph_sentence_recall = None
+        paragraph_sentences = {
+            sid
+            for item_evidence in payload.get("evidence") or []
+            for detail in item_evidence.get("paragraph_details") or []
+            for sid in detail.get("sentence_ids") or []
+        }
+        if paragraph_sentences and expected:
+            paragraph_sentence_recall = len(expected & paragraph_sentences) / len(expected)
+            paragraph_sentence_sum += paragraph_sentence_recall
+        if paragraph_of:
+            expected_paras = {paragraph_of(sid) for sid in expected if paragraph_of(sid)}
+            returned_paras = {paragraph_of(sid) for sid in found[:top_k] if paragraph_of(sid)}
+            if expected_paras:
+                paragraph_recall = len(expected_paras & returned_paras) / len(expected_paras)
+                paragraph_sum += paragraph_recall
         if section_of:
             expected_sections = {section_of(sid) for sid in expected if section_of(sid)}
             returned_sections = {section_of(sid) for sid in found[:top_k] if section_of(sid)}
@@ -117,6 +137,8 @@ def evaluate(
                 "hit_rank": ranks[0] + 1 if ranks else None,
                 "section_recall": round(section_recall, 4) if section_recall is not None else None,
                 "summary_section_recall": round(summary_section_recall, 4) if summary_section_recall is not None else None,
+                "paragraph_recall": round(paragraph_recall, 4) if paragraph_recall is not None else None,
+                "paragraph_sentence_recall": round(paragraph_sentence_recall, 4) if paragraph_sentence_recall is not None else None,
             }
         )
 
@@ -129,6 +151,8 @@ def evaluate(
         "refusal_accuracy": round(refusal_ok / refusal_total, 4) if refusal_total else 0.0,
         f"section_recall@{top_k}": round(section_sum / counted, 4) if counted else 0.0,
         f"summary_section_recall@{top_k}": round(summary_section_sum / counted, 4) if counted else 0.0,
+        f"paragraph_recall@{top_k}": round(paragraph_sum / counted, 4) if counted else 0.0,
+        f"paragraph_sentence_recall@{top_k}": round(paragraph_sentence_sum / counted, 4) if counted else 0.0,
     }
     return {"summary": summary, "rows": rows}
 
@@ -147,6 +171,7 @@ def main() -> None:
     if args.limit:
         gold = gold[: args.limit]
     section_cache: Dict[str, Any] = {}
+    para_cache: Dict[str, Any] = {}
     section_conn = sqlite3.connect(args.db)
 
     def section_of(sentence_id: str):
@@ -157,11 +182,20 @@ def main() -> None:
             section_cache[sentence_id] = row[0] if row else None
         return section_cache[sentence_id]
 
+    def paragraph_of(sentence_id: str):
+        if sentence_id not in para_cache:
+            row = section_conn.execute(
+                "SELECT para_id FROM sentences WHERE sentence_id = ?", (sentence_id,)
+            ).fetchone()
+            para_cache[sentence_id] = row[0] if row else None
+        return para_cache[sentence_id]
+
     result = evaluate(
         gold,
         lambda q, k: http_search(q, k, args.base_url),
         args.top_k,
         section_of=section_of,
+        paragraph_of=paragraph_of,
     )
     section_conn.close()
     output = Path(args.output)

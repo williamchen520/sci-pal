@@ -70,16 +70,38 @@ python -m build_db.build_summary_vector_index --limit 5000
 | nDCG@10 | 0.3532 | 0.3532 | **0.3729** |
 | refusal | 0.75 | 0.75 | 0.75 |
 | section_recall@10 | 0.7692 | 0.7692 | 0.7692 |
+| paragraph_recall@10 | 0.7692 | 0.7692 | 0.7692 |
+| paragraph_sentence_recall@10 | 0.8462 | 0.8462 | 0.8462 |
 | summary_section_recall@10 | 0.2885（FTS） | 0.3654（向量） | — |
 
 结论：
 
+- **返回段落内的句子覆盖率是 0.8462**，说明 gold 句子大多已经在返回段落里；
+- 但 strict top10 只有 0.5192：每个段落只回 1 个 highlight 句子；
+- **paragraph 与 section 召回都是 0.7692，但 sentence 只有 0.5192**；
+- 差距来自“每个命中段落只回一个 highlight 句子”，不是 section 找错；
+- 全句回填会挤占 top10（paragraph_recall 降到 0.4615），sentence rerank 也无提升；
 - 段落 section 召回 0.7692；向量摘要的 section 命中率 0.3654，比 FTS 摘要 0.2885 高 26.7%；
 - 但 sentence Recall@10 不变：摘要命中 section 中的 gold 句子不一定进前 10；
 - 单纯向量摘要不改变 sentence Recall；
 - 把摘要命中 section 作为段落重排先验（`SCIPAL_SUMMARY_PRIOR`）后，MRR +0.0266、nDCG +0.0197，**Recall 仍不变**；
 - 说明摘要先验改善了排序位置，但没把新的 gold 句子带进前 10；
 - 继续提升需要 query→section 召回本身更好（例如生成式摘要或 section-level embedding）。
+
+## 4.2 预算实验（top10 / top20 / top30）
+
+| 预算 | sentence recall | paragraph_sentence recall | refusal |
+|---|---|---|---|
+| top10 | 0.5192 | 0.8462 | 0.75 |
+| top20 | 0.6538 | 0.9615 | 0.50 |
+| top30 | 0.6538 | 0.9615 | 0.25 |
+
+结论：
+
+- 扩大预算能提升 strict sentence recall（0.5192 → 0.6538）；
+- 但拒答准确率明显下降（0.75 → 0.50 → 0.25）；
+- 因此 QA 默认仍用 top10；证据检索可按需请求 top20；
+- 摘要/contextual 检索不是主要瓶颈。
 
 ## 5. 限制与下一步
 

@@ -7,7 +7,8 @@
     "refusal_total": 4,
     "refusal_accuracy": 0.75,
     "section_recall@10": 0.7692,
-    "summary_section_recall@10": 0.2885
+    "summary_section_recall@10": 0.2885,
+    "paragraph_recall@10": 0.7692
   },
   "rows": [
     {
@@ -19,7 +20,8 @@
       "returned": 10,
       "hit_rank": 2,
       "section_recall": 1.0,
-      "summary_section_recall": 1.0
+      "summary_section_recall": 1.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q002",
@@ -30,7 +32,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q003",
@@ -41,7 +44,8 @@
       "returned": 9,
       "hit_rank": 1,
       "section_recall": 1.0,
-      "summary_section_recall": 1.0
+      "summary_section_recall": 1.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q004",
@@ -52,7 +56,8 @@
       "returned": 10,
       "hit_rank": 4,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q005",
@@ -63,7 +68,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": 1.0,
-      "summary_section_recall": 1.0
+      "summary_section_recall": 1.0,
+      "paragraph_recall": 0.0
     },
     {
       "id": "q006",
@@ -74,7 +80,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": null,
-      "summary_section_recall": null
+      "summary_section_recall": null,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q007",
@@ -85,7 +92,8 @@
       "returned": 10,
       "hit_rank": 5,
       "section_recall": null,
-      "summary_section_recall": null
+      "summary_section_recall": null,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q008",
@@ -96,7 +104,8 @@
       "returned": 10,
       "hit_rank": 5,
       "section_recall": 1.0,
-      "summary_section_recall": 1.0
+      "summary_section_recall": 1.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q009",
@@ -107,7 +116,8 @@
       "returned": 10,
       "hit_rank": 5,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q010",
@@ -118,7 +128,8 @@
       "returned": 9,
       "hit_rank": 1,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q011",
@@ -129,7 +140,8 @@
       "returned": 10,
       "hit_rank": 5,
       "section_recall": 1.0,
-      "summary_section_recall": 0.5
+      "summary_section_recall": 0.5,
+      "paragraph_recall": 0.5
     },
     {
       "id": "q012",
@@ -140,7 +152,8 @@
       "returned": 10,
       "hit_rank": 2,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q013",
@@ -151,7 +164,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": 0.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 0.0
     },
     {
       "id": "q014",
@@ -162,7 +176,8 @@
       "returned": 10,
       "hit_rank": 6,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q015",
@@ -173,7 +188,8 @@
       "returned": 10,
       "hit_rank": 9,
       "section_recall": 1.0,
-      "summary_section_recall": 1.0
+      "summary_section_recall": 1.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q016",
@@ -184,7 +200,8 @@
       "returned": 10,
       "hit_rank": 1,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q017",
@@ -195,7 +212,8 @@
       "returned": 10,
       "hit_rank": 1,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q018",
@@ -206,7 +224,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q019",
@@ -217,7 +236,8 @@
       "returned": 10,
       "hit_rank": 1,
       "section_recall": 1.0,
-      "summary_section_recall": 1.0
+      "summary_section_recall": 1.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q020",
@@ -228,7 +248,8 @@
       "returned": 10,
       "hit_rank": 1,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q021",
@@ -239,7 +260,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": 0.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 0.0
     },
     {
       "id": "q022",
@@ -250,7 +272,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": 0.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 0.0
     },
     {
       "id": "q023",
@@ -281,7 +304,8 @@
       "returned": 10,
       "hit_rank": 3,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 0.5
     },
     {
       "id": "q028",
@@ -292,7 +316,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": 1.0,
-      "summary_section_recall": 1.0
+      "summary_section_recall": 1.0,
+      "paragraph_recall": 1.0
     },
     {
       "id": "q029",
@@ -303,7 +328,8 @@
       "returned": 9,
       "hit_rank": null,
       "section_recall": null,
-      "summary_section_recall": null
+      "summary_section_recall": null,
+      "paragraph_recall": 0.0
     },
     {
       "id": "q030",
@@ -314,7 +340,8 @@
       "returned": 10,
       "hit_rank": null,
       "section_recall": 1.0,
-      "summary_section_recall": 0.0
+      "summary_section_recall": 0.0,
+      "paragraph_recall": 1.0
     }
   ]
 }

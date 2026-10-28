@@ -78,7 +78,9 @@ python eval/answer_eval.py --answers eval/answers/sample.jsonl
 before      : recall@10=0.5192  MRR=0.3331  nDCG=0.3532  refusal=0.75
 after       : recall@10=0.5192  MRR=0.3331  nDCG=0.3532  refusal=0.75
 section-prior: recall@10=0.5192  MRR=0.3597  nDCG=0.3729  refusal=0.75
-section-level: section_recall@10=0.7692
+section-level: section_recall@10=0.7692  paragraph_recall@10=0.7692
+contract-level: paragraph_sentence_recall@10=0.8462
+budget: top10 recall=0.5192 refusal=0.75; top20=0.6538/0.50; top30=0.6538/0.25
 summary-section: FTS 0.2885 -> vector 0.3654
 ```
 

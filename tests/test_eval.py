@@ -38,7 +38,12 @@ class RetrievalEvalTests(unittest.TestCase):
     def test_section_metrics(self) -> None:
         gold = [{"id": "q", "question": "a", "evidence": ["s1", "s2"]}]
         payload = {
-            "evidence": [{"highlight": [{"sentence_id": "s1"}]}],
+            "evidence": [
+                {
+                    "highlight": [{"sentence_id": "s1"}],
+                    "paragraph_details": [{"sentence_ids": ["s1", "s2"]}],
+                }
+            ],
             "summaries": [{"section_id": "sec1"}],
         }
         sections = {"s1": "sec1", "s2": "sec1"}
@@ -47,6 +52,7 @@ class RetrievalEvalTests(unittest.TestCase):
         )["summary"]
         self.assertEqual(result["section_recall@10"], 1.0)
         self.assertEqual(result["summary_section_recall@10"], 1.0)
+        self.assertEqual(result["paragraph_sentence_recall@10"], 1.0)
 
 
 class AnswerEvalTests(unittest.TestCase):
