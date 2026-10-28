@@ -470,6 +470,11 @@ def review_adjudicate(project_id: str, paper_id: str, decision: str, reason: str
     )
 
 
+@mcp.tool(description="综述项目审计事件（GET /api/review-projects/<id>/events）。")
+def review_events(project_id: str) -> str:
+    return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/events")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
