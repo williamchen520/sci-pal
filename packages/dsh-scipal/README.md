@@ -98,7 +98,7 @@ D:\sciPal\packages\dsh-scipal
 
 或走 DSH Desktop 的插件安装 UI（若提供该入口）。
 
-安装成功后重启 DSH，工具列表应出现 **20 个**（哨兵 1 + search 10 + generate 9）：
+安装成功后重启 DSH，工具列表应出现 **35 个**（哨兵 1 + search 10 + generate 9 + guard 3 + data 12）：
 
 ```text
 # 哨兵（1）
@@ -140,7 +140,7 @@ mcp__scipal-generate__generate_review         ← 综述正文（分钟级，立
 | 改 `locale/*.json` / `icon.svg` | ❌ 不需要 | ✅ 重启后界面才更新 |
 
 > 本机构型**没有 HMR**，profile 只在 DSH 启动时应用。改完文件不重启 = 没变。
-> 重启后按上面的 **20 个**工具核对（旧的单进程 `scipal` server 已不再挂载，
+> 重启后按上面的 **35 个**工具核对（旧的单进程 `scipal` server 已不再挂载，
 > `selftest.py` 会额外跑它 5 个工具做回退覆盖，那是自检数不是挂载数）；少了哪个，先看该 server 的 `health` 工具，
 > 再看 `python.exe` 进程数（3 条 server 命令 × 2 层进程 = 6 个）。
 

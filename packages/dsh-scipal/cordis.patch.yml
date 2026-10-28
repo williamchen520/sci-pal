@@ -94,7 +94,23 @@
         toolCallTimeoutMs: 60000
         failOnStartupError: false
 
-# ── 工具出现形式（重启 DSH 后应有 23 个 mcp__ 工具 = 1 + 10 + 9 + 3）──────────
+    # ── 本地数据沙箱（scipal-data：原始数据不出本地）────────────────────
+    - id: mcp-scipal-data
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: scipal-data
+        transport: stdio
+        command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+        args: ['D:/sciPal/mcp_server/data_server.py']
+        cwd: 'D:/sciPal'
+        env:
+          PYTHONUTF8: '1'
+          no_proxy: '127.0.0.1,localhost'
+          NO_PROXY: '127.0.0.1,localhost'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: false
+
+# ── 工具出现形式（重启 DSH 后应有 35 个 mcp__ 工具 = 1 + 10 + 9 + 3 + 12）──────────
 # 哨兵：
 #   mcp__scipalhello__ping
 # scipal-search（10）：
