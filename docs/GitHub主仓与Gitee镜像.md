@@ -3,6 +3,17 @@
 > 目标：GitHub 作为主线（分支保护完整），Gitee 作为国内镜像。
 > 当前本地 remote：`origin` = Gitee，`github` = GitHub。
 
+## 0. 已执行（2026-10-28）
+
+- GitHub 仓库：https://github.com/williamchen520/sci-pal （public）
+- 默认分支：`dev`
+- `dev` / `master` 已开启保护：
+  - Require PR + 1 approval
+  - Do not allow bypassing（enforce_admins=true）
+  - Allow force pushes = false
+  - Allow deletions = false
+- 已推送分支：`dev` / `master` / `DSH-dev`
+
 ## 1. 在 GitHub 创建空仓库
 
 用 GitHub Desktop：
