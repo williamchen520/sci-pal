@@ -175,3 +175,120 @@ class TreeContextBuilder:
             return contexts
         finally:
             conn.close()
+    def build_anchor_preserving(
+        self,
+        hits: List[Dict],
+        query: str,
+        token_budget: int = 1200,
+        max_anchors: int = 10,
+        context_paragraphs: int = 4,
+    ) -> List[Dict]:
+        """Preserve global paragraph-hit order; use the tree only for context.
+
+        Anchors are never dropped by the context budget: every anchor keeps
+        one citation sentence, so strict top-10 recall matches the old
+        expander. Neighbour paragraphs are added afterwards as context only.
+        """
+        if not hits:
+            return []
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        query_tokens = _tokens(query)
+        contexts: List[Dict] = []
+        try:
+            # Phase 1: anchors (never dropped).
+            for hit in hits[:max_anchors]:
+                para_id = hit.get("para_id")
+                if not para_id:
+                    continue
+                row = conn.execute(
+                    "SELECT p.para_id, p.paper_id, p.section_id, p.text, p.sequence, p.page, "
+                    "s.path, s.title FROM paragraphs p "
+                    "LEFT JOIN sections s ON s.section_id = p.section_id "
+                    "WHERE p.para_id = ?",
+                    (para_id,),
+                ).fetchone()
+                if not row:
+                    continue
+                sentences = conn.execute(
+                    "SELECT sentence_id, text, page FROM sentences "
+                    "WHERE para_id = ? ORDER BY sequence",
+                    (para_id,),
+                ).fetchall()
+                if not sentences:
+                    continue
+                anchor = max(
+                    sentences,
+                    key=lambda sentence: len(query_tokens & _tokens(sentence["text"])),
+                )
+                marked = row["text"].replace(
+                    anchor["text"], f"{HIT_START}{anchor['text']}{HIT_END}", 1
+                )
+                path = [part for part in (row["path"] or "").split("›") if part.strip()]
+                contexts.append(
+                    {
+                        "paper_id": row["paper_id"],
+                        "section_id": row["section_id"],
+                        "section": row["title"] or "",
+                        "section_path": path or [row["title"] or ""],
+                        "page": row["page"],
+                        "score": hit.get("rerank_score") or hit.get("score") or 0.0,
+                        "mode": "anchor_tree",
+                        "anchor_para_id": para_id,
+                        "anchor_sequence": row["sequence"] or 0,
+                        "matched_para_ids": [para_id],
+                        "matched_sentences": [
+                            {
+                                "sentence_id": anchor["sentence_id"],
+                                "text": anchor["text"],
+                                "page": anchor["page"],
+                            }
+                        ],
+                        "paragraphs": [
+                            {
+                                "para_id": para_id,
+                                "text": row["text"],
+                                "page": row["page"],
+                                "sequence": row["sequence"],
+                            }
+                        ],
+                        "text": marked,
+                        "tokens": _estimate_tokens(marked),
+                    }
+                )
+
+            # Phase 2: context neighbours, budgeted separately.
+            used_context_tokens = 0
+            for context in contexts:
+                if used_context_tokens >= token_budget:
+                    break
+                section_id = context.get("section_id")
+                if not section_id:
+                    continue
+                extras = conn.execute(
+                    "SELECT para_id, text, sequence, page FROM paragraphs "
+                    "WHERE section_id = ? AND para_id != ? "
+                    "ORDER BY abs(COALESCE(sequence, 0) - ?), sequence LIMIT ?",
+                    (section_id, context["anchor_para_id"], context["anchor_sequence"],
+                     max(context_paragraphs - 1, 0)),
+                ).fetchall()
+                text_parts = [context["text"]]
+                for extra in extras:
+                    tokens = _estimate_tokens(extra["text"])
+                    if used_context_tokens + tokens > token_budget:
+                        break
+                    used_context_tokens += tokens
+                    context["paragraphs"].append(
+                        {
+                            "para_id": extra["para_id"],
+                            "text": extra["text"],
+                            "page": extra["page"],
+                            "sequence": extra["sequence"],
+                        }
+                    )
+                    text_parts.append(extra["text"])
+                context["text"] = "\n\n".join(text_parts)
+                context["tokens"] += used_context_tokens
+            return contexts
+        finally:
+            conn.close()

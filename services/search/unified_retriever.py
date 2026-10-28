@@ -280,7 +280,16 @@ class UnifiedRetriever:
         parent_contexts = []
         _parents_started = time.time()
         if self.expand and paragraphs:
-            if os.environ.get("SCIPAL_CONTEXT_MODE") == "tree":
+            context_mode = os.environ.get("SCIPAL_CONTEXT_MODE", "")
+            if context_mode == "tree":
+                parent_contexts = self.tree_builder.build_anchor_preserving(
+                    paragraphs,
+                    query,
+                    token_budget=int(os.environ.get("SCIPAL_CONTEXT_TOKENS", "1200")),
+                    max_anchors=top_paragraphs,
+                    context_paragraphs=int(os.environ.get("SCIPAL_CONTEXT_PARAS", "4")),
+                )
+            elif context_mode == "tree_v1":
                 parent_contexts = self.tree_builder.build(
                     paragraphs,
                     query,
