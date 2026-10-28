@@ -256,4 +256,12 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         finally:
             conn.close()
 
+    @bp.route("/<project_id>/conflicts", methods=["GET"])
+    def screening_conflicts(project_id: str):
+        conn = _conn()
+        try:
+            return jsonify({"conflicts": systematic.conflicts(conn, project_id)})
+        finally:
+            conn.close()
+
     return bp
