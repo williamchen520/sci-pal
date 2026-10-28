@@ -74,6 +74,15 @@ CREATE TABLE IF NOT EXISTS review_events (
     created_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_review_events_project ON review_events(project_id, id);
+CREATE TABLE IF NOT EXISTS review_webhooks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT,
+    url TEXT,
+    events TEXT DEFAULT '*',
+    secret TEXT,
+    active INTEGER DEFAULT 1,
+    created_at TEXT
+);
 CREATE TABLE IF NOT EXISTS risk_of_bias (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id TEXT,
