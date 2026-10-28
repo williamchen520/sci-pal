@@ -18,7 +18,7 @@ from services.search.shared import get_shared_hybrid
 from services.search.reranker import Reranker
 from services.search.query_router import QueryRouter
 from services.search.summary_search import SummarySearch
-from services.search.summary_vector_search import SummaryVectorSearch
+from services.search.summary_vector_search import get_default as get_summary_vector
 from services.search.context_expander import (
     ContextExpander,
     DB_PATH as STRUCT_DB,
@@ -223,11 +223,14 @@ class UnifiedRetriever:
                 query, top_k=3, paper_id=paper_id or ""
             )
             if os.environ.get("SCIPAL_SUMMARY_VECTOR") == "1":
-                vector_hits = SummaryVectorSearch().search(
+                vector_hits = get_summary_vector().search(
                     query, top_k=3, paper_id=paper_id or ""
                 )
                 if vector_hits:
                     summaries = vector_hits
+                    extra = get_summary_vector().expand(query, vector_hits)
+                    if extra:
+                        parent_contexts = (parent_contexts or []) + extra
 
         # 2. Figures (caption semantics)
         figures = []
