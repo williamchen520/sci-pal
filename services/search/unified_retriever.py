@@ -171,7 +171,15 @@ class UnifiedRetriever:
                 self.diagnostics.mark("entity_boost", (time.time() - _entity_started) * 1000)
 
                 # V27.2: 增加 rerank_k，让 MMR 有更多候选做多样性选择
-                rerank_k = min(top_paragraphs * 4, len(fused)) if fused else top_paragraphs
+                rerank_k = (
+                    min(
+                        top_paragraphs
+                        * int(os.environ.get("SCIPAL_RERANK_K_MULT", "4")),
+                        len(fused),
+                    )
+                    if fused
+                    else top_paragraphs
+                )
 
                 # V27.2: 打印粗召回和精排数量
                 print(f"  📊 Hybrid recall: {len(fused)} candidates -> rerank top {rerank_k}")
@@ -187,6 +195,45 @@ class UnifiedRetriever:
 
                 # V27.2: 打印精排后的数量
                 print(f"  ✅ After rerank: {len(paragraphs)} paragraphs")
+
+                summary_vector_hits = []
+                if os.environ.get("SCIPAL_SUMMARY_VECTOR") == "1" and "qa" in channels:
+                    summary_vector_hits = get_summary_vector().search(
+                        query, top_k=10, paper_id=paper_id or ""
+                    )
+                    if summary_vector_hits and paragraphs:
+                        section_prior = {
+                            hit["section_id"]: float(
+                                os.environ.get("SCIPAL_SUMMARY_PRIOR", "0.15")
+                            )
+                            * (1 - (hit.get("distance") or 0.0))
+                            for hit in summary_vector_hits
+                            if hit.get("section_id")
+                        }
+                        para_ids = [p.get("para_id") for p in paragraphs if p.get("para_id")]
+                        if para_ids and section_prior:
+                            marks = ",".join("?" * len(para_ids))
+                            map_conn = sqlite3.connect(str(STRUCT_DB))
+                            try:
+                                section_map = dict(
+                                    map_conn.execute(
+                                        f"SELECT para_id, section_id FROM paragraphs "
+                                        f"WHERE para_id IN ({marks})",
+                                        para_ids,
+                                    ).fetchall()
+                                )
+                            finally:
+                                map_conn.close()
+                            for paragraph in paragraphs:
+                                prior = section_prior.get(section_map.get(paragraph.get("para_id")))
+                                if prior:
+                                    paragraph["rerank_score"] = (
+                                        float(paragraph.get("rerank_score") or 0.0) + prior
+                                    )
+                            paragraphs.sort(
+                                key=lambda item: float(item.get("rerank_score") or 0.0),
+                                reverse=True,
+                            )
 
                 # V25.19: MMR diversification with diagnostics
                 # V25.21: 条件改为 > top_paragraphs（现在有更多候选，MMR 从中选 top_paragraphs）
@@ -207,6 +254,8 @@ class UnifiedRetriever:
                                             filters=filters)
                 paragraphs = res["results"]
 
+        summary_vector_hits = []
+
         # 1b. Small-to-big: expand precise hits to parent section context
         parent_contexts = []
         _parents_started = time.time()
@@ -223,14 +272,14 @@ class UnifiedRetriever:
                 query, top_k=3, paper_id=paper_id or ""
             )
             if os.environ.get("SCIPAL_SUMMARY_VECTOR") == "1":
-                vector_hits = get_summary_vector().search(
-                    query, top_k=3, paper_id=paper_id or ""
-                )
-                if vector_hits:
-                    summaries = vector_hits
-                    extra = get_summary_vector().expand(query, vector_hits)
-                    if extra:
-                        parent_contexts = (parent_contexts or []) + extra
+                if summary_vector_hits:
+                    summaries = summary_vector_hits[:3]
+                else:
+                    vector_hits = get_summary_vector().search(
+                        query, top_k=3, paper_id=paper_id or ""
+                    )
+                    if vector_hits:
+                        summaries = vector_hits
 
         # 2. Figures (caption semantics)
         figures = []
