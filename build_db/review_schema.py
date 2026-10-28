@@ -64,6 +64,16 @@ CREATE TABLE IF NOT EXISTS adjudications (
 );
 CREATE INDEX IF NOT EXISTS idx_screening_project ON screening_decisions(project_id, paper_id);
 CREATE INDEX IF NOT EXISTS idx_adjudications_project ON adjudications(project_id, paper_id);
+CREATE TABLE IF NOT EXISTS review_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id TEXT,
+    actor TEXT,
+    action TEXT,
+    target TEXT,
+    detail TEXT,
+    created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_review_events_project ON review_events(project_id, id);
 CREATE TABLE IF NOT EXISTS risk_of_bias (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id TEXT,

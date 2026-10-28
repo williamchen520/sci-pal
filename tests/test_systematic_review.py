@@ -120,6 +120,14 @@ class SystematicReviewTests(unittest.TestCase):
         names = {p["project_id"] for p in systematic.list_projects(self.conn, "bob")}
         self.assertIn(project, names)
 
+    def test_audit_events(self) -> None:
+        systematic.log_event(self.conn, self.project, "alice", "screen", "p1", "include")
+        systematic.log_event(self.conn, self.project, "bob", "adjudicate", "p1", "exclude")
+        events = systematic.list_events(self.conn, self.project)
+        self.assertEqual(len(events), 2)
+        self.assertEqual(events[0]["action"], "adjudicate")
+        self.assertEqual(events[0]["actor"], "bob")
+
 
 if __name__ == "__main__":
     unittest.main()

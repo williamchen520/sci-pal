@@ -21,6 +21,9 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def _owner() -> str:
         return getattr(g, "owner", "default")
 
+    def _audit(conn, project_id, action, target="", detail=""):
+        systematic.log_event(conn, project_id, _owner(), action, target, detail)
+
     def _conn():
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
@@ -40,6 +43,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 conn, name, data.get("field_text", ""), data.get("pico") or {},
                 owner=_owner(),
             )
+            _audit(conn, project_id, "project_created", project_id, name)
             return jsonify({"project_id": project_id}), 201
         finally:
             conn.close()
@@ -65,6 +69,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             data = request.get_json(silent=True) or {}
             paper_ids = data.get("paper_ids") or []
             systematic.add_papers(conn, project_id, paper_ids)
+            _audit(conn, project_id, "papers_added", "", str(len(paper_ids)))
             return jsonify({"added": len(paper_ids)})
         finally:
             conn.close()
@@ -85,6 +90,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 data.get("reviewer", ""),
                 data.get("stage", "title_abstract"),
             )
+            _audit(conn, project_id, "screened", data["paper_id"], data["decision"])
             return jsonify(systematic.prisma(conn, project_id))
         finally:
             conn.close()
@@ -116,6 +122,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 row = systematic.extract_evidence(dict(paper), project_row.get("pico"))
                 systematic.add_evidence(conn, project_id, paper["paper_id"], row)
                 added += 1
+            _audit(conn, project_id, "evidence_extracted", "", str(added))
             return jsonify({"added": added, "rows": systematic.list_evidence(conn, project_id)})
         finally:
             conn.close()
@@ -307,6 +314,16 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 return jsonify({"error": "member required"}), 400
             systematic.add_member(conn, project_id, member, data.get("role", "reviewer"))
             return jsonify({"members": systematic.members(conn, project_id)})
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/events", methods=["GET"])
+    def review_events(project_id: str):
+        conn = _conn()
+        try:
+            if not systematic.can_access(conn, project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            return jsonify({"events": systematic.list_events(conn, project_id)})
         finally:
             conn.close()
 

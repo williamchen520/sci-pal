@@ -328,3 +328,37 @@ def add_from_watch(conn: sqlite3.Connection, project_id: str, run_id: int) -> in
     if papers:
         add_papers(conn, project_id, papers)
     return len(papers)
+
+
+def log_event(
+    conn: sqlite3.Connection,
+    project_id: str,
+    actor: str,
+    action: str,
+    target: str = "",
+    detail: str = "",
+) -> None:
+    conn.execute(
+        "INSERT INTO review_events (project_id, actor, action, target, detail, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (project_id, actor, action, target, detail, now()),
+    )
+    conn.commit()
+
+
+def list_events(conn: sqlite3.Connection, project_id: str, limit: int = 100) -> List[Dict]:
+    rows = conn.execute(
+        "SELECT actor, action, target, detail, created_at FROM review_events "
+        "WHERE project_id = ? ORDER BY id DESC LIMIT ?",
+        (project_id, limit),
+    ).fetchall()
+    return [
+        {
+            "actor": row[0],
+            "action": row[1],
+            "target": row[2],
+            "detail": row[3],
+            "created_at": row[4],
+        }
+        for row in rows
+    ]
