@@ -423,7 +423,7 @@ class UnifiedRetriever:
                     return []
                 marks = ",".join("?" * len(ids))
                 rows = conn.execute(
-                    "SELECT target_type, target_id, relation, source, confidence "
+                    "SELECT target_type, target_id, relation, source, confidence, intent "
                     f"FROM sentence_links WHERE sentence_id IN ({marks})",
                     ids,
                 ).fetchall()
