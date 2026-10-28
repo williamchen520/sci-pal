@@ -74,9 +74,11 @@ def get_project(conn: sqlite3.Connection, project_id: str) -> Optional[Dict]:
 
 def list_projects(conn: sqlite3.Connection, owner: str = "default") -> List[Dict]:
     rows = conn.execute(
-        "SELECT project_id, name, field_text, pico_json FROM review_projects "
-        "WHERE owner = ? ORDER BY created_at DESC",
-        (owner,),
+        "SELECT DISTINCT p.project_id, p.name, p.field_text, p.pico_json "
+        "FROM review_projects p LEFT JOIN review_project_members m "
+        "ON m.project_id = p.project_id "
+        "WHERE p.owner = ? OR m.member = ? ORDER BY p.created_at DESC",
+        (owner, owner),
     ).fetchall()
     return [
         {
@@ -87,6 +89,40 @@ def list_projects(conn: sqlite3.Connection, owner: str = "default") -> List[Dict
         }
         for row in rows
     ]
+
+
+def can_access(conn: sqlite3.Connection, project_id: str, user: str) -> bool:
+    if conn.execute(
+        "SELECT 1 FROM review_projects WHERE project_id = ? AND owner = ?",
+        (project_id, user),
+    ).fetchone():
+        return True
+    return bool(
+        conn.execute(
+            "SELECT 1 FROM review_project_members WHERE project_id = ? AND member = ?",
+            (project_id, user),
+        ).fetchone()
+    )
+
+
+def add_member(
+    conn: sqlite3.Connection, project_id: str, member: str, role: str = "reviewer"
+) -> None:
+    conn.execute(
+        "INSERT OR REPLACE INTO review_project_members (project_id, member, role, added_at) "
+        "VALUES (?, ?, ?, ?)",
+        (project_id, member, role, now()),
+    )
+    conn.commit()
+
+
+def members(conn: sqlite3.Connection, project_id: str) -> List[Dict]:
+    rows = conn.execute(
+        "SELECT member, role FROM review_project_members "
+        "WHERE project_id = ? ORDER BY member",
+        (project_id,),
+    ).fetchall()
+    return [{"member": row[0], "role": row[1]} for row in rows]
 
 
 def add_papers(conn: sqlite3.Connection, project_id: str, paper_ids: List[str]) -> int:

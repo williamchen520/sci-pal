@@ -17,6 +17,13 @@ CREATE TABLE IF NOT EXISTS review_projects (
     pico_json TEXT,
     created_at TEXT
 );
+CREATE TABLE IF NOT EXISTS review_project_members (
+    project_id TEXT,
+    member TEXT,
+    role TEXT DEFAULT 'reviewer',
+    added_at TEXT,
+    PRIMARY KEY (project_id, member)
+);
 CREATE TABLE IF NOT EXISTS review_project_papers (
     project_id TEXT,
     paper_id TEXT,
