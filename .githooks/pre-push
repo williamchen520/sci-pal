@@ -1,0 +1,32 @@
+#!/bin/sh
+# 保护 dev / master：阻止强制推送与删除。
+# 安装：git config core.hooksPath .githooks
+# 这只是防手滑，不是安全边界：git push --no-verify 可绕过。
+
+protected=" refs/heads/dev refs/heads/master "
+zero="0000000000000000000000000000000000000000"
+failed=0
+
+while read local_ref local_sha remote_ref remote_sha; do
+    remote_sha=$(printf '%s' "$remote_sha" | tr -d '\r')
+    case "$protected" in
+        *" $remote_ref "*) ;;
+        *) continue ;;
+    esac
+
+    if [ "$local_sha" = "$zero" ]; then
+        echo "pre-push: 禁止删除保护分支 $remote_ref" >&2
+        failed=1
+        continue
+    fi
+
+    if [ "$remote_sha" != "$zero" ]; then
+        if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+            echo "pre-push: 禁止强制推送（non-fast-forward）到 $remote_ref" >&2
+            echo "pre-push: 请走 DSH-dev -> PR -> dev" >&2
+            failed=1
+        fi
+    fi
+done
+
+exit $failed
