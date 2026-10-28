@@ -123,8 +123,11 @@ def prisma(conn: sqlite3.Connection, project_id: str) -> Dict[str, int]:
         "SELECT COUNT(*) FROM review_project_papers WHERE project_id = ?", (project_id,)
     ).fetchone()[0]
     rows = conn.execute(
-        "SELECT decision, COUNT(DISTINCT paper_id) FROM screening_decisions "
-        "WHERE project_id = ? GROUP BY decision",
+        "SELECT decision, COUNT(*) FROM ("
+        "  SELECT paper_id, decision, ROW_NUMBER() OVER ("
+        "    PARTITION BY paper_id ORDER BY id DESC"
+        "  ) AS rn FROM screening_decisions WHERE project_id = ?"
+        ") WHERE rn = 1 GROUP BY decision",
         (project_id,),
     ).fetchall()
     counts = {decision: count for decision, count in rows}
@@ -137,6 +140,26 @@ def prisma(conn: sqlite3.Connection, project_id: str) -> Dict[str, int]:
         "excluded": excluded,
         "pending": max(identified - included - excluded, 0),
     }
+
+
+def conflicts(conn: sqlite3.Connection, project_id: str, stage: str = "title_abstract") -> List[Dict]:
+    rows = conn.execute(
+        "SELECT paper_id, reviewer, decision, reason FROM ("
+        "  SELECT paper_id, reviewer, decision, reason, ROW_NUMBER() OVER ("
+        "    PARTITION BY paper_id, reviewer ORDER BY id DESC"
+        "  ) AS rn FROM screening_decisions "
+        "  WHERE project_id = ? AND stage = ? AND reviewer != ''"
+        ") WHERE rn = 1 ORDER BY paper_id",
+        (project_id, stage),
+    ).fetchall()
+    by_paper: Dict[str, Dict[str, str]] = {}
+    for paper_id, reviewer, decision, reason in rows:
+        by_paper.setdefault(paper_id, {})[reviewer] = decision
+    return [
+        {"paper_id": paper_id, "decisions": decisions}
+        for paper_id, decisions in by_paper.items()
+        if len(set(decisions.values())) > 1
+    ]
 
 
 def extract_evidence(paper: Dict[str, Any], pico: Optional[Dict[str, str]] = None) -> Dict[str, str]:

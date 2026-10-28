@@ -76,6 +76,26 @@ class SystematicReviewTests(unittest.TestCase):
         self.assertIn("design", rows[0])
         self.assertIn("paper_id", systematic.evidence_csv(self.conn, self.project))
 
+    def test_prisma_uses_latest_decision(self) -> None:
+        systematic.add_papers(self.conn, self.project, ["p1"])
+        systematic.screen(self.conn, self.project, "p1", "include")
+        systematic.screen(self.conn, self.project, "p1", "exclude", "second look")
+        counts = systematic.prisma(self.conn, self.project)
+        self.assertEqual(counts["included"], 0)
+        self.assertEqual(counts["excluded"], 1)
+        self.assertEqual(counts["screened"], 1)
+
+    def test_conflicts(self) -> None:
+        systematic.add_papers(self.conn, self.project, ["p1", "p2"])
+        systematic.screen(self.conn, self.project, "p1", "include", reviewer="alice")
+        systematic.screen(self.conn, self.project, "p1", "exclude", reviewer="bob")
+        systematic.screen(self.conn, self.project, "p2", "include", reviewer="alice")
+        systematic.screen(self.conn, self.project, "p2", "include", reviewer="bob")
+        result = systematic.conflicts(self.conn, self.project)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["paper_id"], "p1")
+        self.assertEqual(set(result[0]["decisions"]), {"alice", "bob"})
+
 
 if __name__ == "__main__":
     unittest.main()

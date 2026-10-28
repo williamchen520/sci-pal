@@ -456,6 +456,11 @@ def review_report_html(project_id: str) -> str:
     return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/report.html")
 
 
+@mcp.tool(description="筛选冲突（GET /api/review-projects/<id>/conflicts）。")
+def review_conflicts(project_id: str) -> str:
+    return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/conflicts")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
