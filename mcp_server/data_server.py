@@ -29,6 +29,16 @@ mcp = MCPServer(
 )
 
 
+@mcp.tool(
+    description=(
+        "建立数据会话（POST /api/data/session）：raw/public/mixed，返回允许的模型与工具；"
+        "raw 会话不要挂载云端工具。"
+    )
+)
+def open_session(data_class: str = "raw") -> str:
+    return _call("POST", "/api/data/session", {"data_class": data_class})
+
+
 @mcp.tool(description="数据分级（GET /api/data/classify）：raw / public，并返回会话策略。")
 def data_classify(path: str) -> str:
     return _call("GET", f"/api/data/classify?path={_path_segment(path)}")

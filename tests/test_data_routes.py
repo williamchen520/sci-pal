@@ -63,6 +63,15 @@ class DataRouteTests(unittest.TestCase):
         ).get_json()["events"]
         self.assertTrue(any(e["action"] == "cloud_send" for e in events))
 
+    def test_session_endpoint(self) -> None:
+        raw = self.client.post("/api/data/session", json={"data_class": "raw"}).get_json()
+        self.assertFalse(raw["cloud"])
+        self.assertIn("data_profile", raw["tools"])
+        public = self.client.post(
+            "/api/data/session", json={"data_class": "public"}
+        ).get_json()
+        self.assertTrue(public["cloud"])
+
     def test_classify(self) -> None:
         body = self.client.get(f"/api/data/classify?path={self.csv}").get_json()
         self.assertEqual(body["data_class"], "raw")

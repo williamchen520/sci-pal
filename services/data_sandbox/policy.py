@@ -18,6 +18,11 @@ SENSITIVE = re.compile(
     r"dob|birth|生日|出生|patient|病人|ssn|passport|护照)",
     re.IGNORECASE,
 )
+CLOUD_PROVIDERS = [
+    item.strip().lower()
+    for item in os.environ.get("SCIPAL_CLOUD_PROVIDERS", "deepseek,openai").split(",")
+    if item.strip()
+]
 RAW_SUFFIXES = {".xlsx", ".xlsm", ".xls", ".csv", ".tsv", ".docx", ".doc"}
 PUBLIC_SUFFIXES = {".pdf", ".xml", ".json", ".md", ".txt"}
 
@@ -49,6 +54,10 @@ def session_policy(data_class: str) -> Dict[str, Any]:
         "tools": ["artifact_list", "artifact_read", "artifact_validate"],
         "cloud": False,
     }
+
+
+def provider_allowed(provider: str) -> bool:
+    return str(provider or "").strip().lower() in CLOUD_PROVIDERS
 
 
 def is_sensitive_column(name: str) -> bool:
