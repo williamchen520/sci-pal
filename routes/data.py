@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from flask import Blueprint, g, jsonify, request
 
-from services.data_sandbox import audit, policy, store
+from services.data_sandbox import audit, policy, session, store
 
 
 def build_data_blueprint(*, db_path, log) -> Blueprint:
@@ -12,6 +12,12 @@ def build_data_blueprint(*, db_path, log) -> Blueprint:
 
     def _owner() -> str:
         return getattr(g, "owner", "default")
+
+    @bp.route("/session", methods=["POST"])
+    def open_session():
+        data = request.get_json(silent=True) or {}
+        data_class = data.get("data_class") or "raw"
+        return jsonify(session.open_session(data_class))
 
     @bp.route("/classify", methods=["GET"])
     def classify():

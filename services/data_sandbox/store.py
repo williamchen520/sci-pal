@@ -273,6 +273,16 @@ def cloud_gate(
     artifact = result["artifact"]
     if not artifact.get("cloud_eligible"):
         return {"allow": False, "reasons": ["cloud_eligible=false"]}
+    if provider and not policy.provider_allowed(provider):
+        audit.log_event(
+            owner=owner,
+            project_id=project_id,
+            action="cloud_gate_denied",
+            artifact_id=artifact_id,
+            provider=provider,
+            detail="provider not allowed",
+        )
+        return {"allow": False, "reasons": ["provider not allowed"]}
     path = project_dir(owner, project_id) / artifact["path"]
     audit.log_event(
         owner=owner,

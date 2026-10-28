@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from services.data_sandbox import policy, store
+from services.data_sandbox import policy, session, store
 
 
 def _make_csv(path: Path, rows: list[dict]) -> Path:
@@ -74,6 +74,23 @@ class DataSandboxTests(unittest.TestCase):
         result = store.validate_artifact("alice", "proj2", artifact["id"])
         self.assertFalse(result["ok"])
         self.assertTrue(any("below n" in reason for reason in result["reasons"]))
+
+    def test_provider_allowlist(self) -> None:
+        self.assertTrue(policy.provider_allowed("deepseek"))
+        self.assertFalse(policy.provider_allowed("evil-cloud"))
+        store.create_project("alice", "prov", str(self.csv), self.frame)
+        artifact = store.write_aggregate("alice", "prov", self.frame, ["sex"])
+        result = store.cloud_gate("alice", "prov", artifact["id"], "evil-cloud")
+        self.assertFalse(result["allow"])
+        self.assertIn("provider not allowed", result["reasons"])
+
+    def test_session_templates(self) -> None:
+        raw = session.open_session("raw")
+        self.assertFalse(raw["cloud"])
+        self.assertIn("data_profile", raw["tools"])
+        public = session.open_session("public")
+        self.assertTrue(public["cloud"])
+        self.assertIn("search_evidence", public["tools"])
 
     def test_update_creates_new_version(self) -> None:
         store.create_project("alice", "proj3", str(self.csv), self.frame)

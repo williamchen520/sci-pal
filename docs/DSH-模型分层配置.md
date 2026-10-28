@@ -79,6 +79,15 @@ MCP：scipal-search + scipal-data（不需要时可不挂）
 阶段 B（云端）：只带 derived 产物 + 公开文献证据
 ```
 
+## 3.1 会话模板文件
+
+config/dsh_sessions.json 提供 raw / public / mixed 三套模板；也可通过接口获取：
+
+`
+POST /api/data/session  {data_class:raw}
+→ {models:[local],tools:[...],cloud:false,...}
+`
+
 ## 4. 环境变量
 
 ```
@@ -116,6 +125,15 @@ GET  /api/data/audit?project_id=...
 - 审计只记录 owner/project/artifact/provider/bytes/hash/detail；
 - 不记录原始行、文件路径或单元格值；
 - cloud_send 是“产物已交给云端”的唯一可信记录。
+
+## 6.1 小模型稳定性实测
+
+`
+python scripts/probe_tool_calls.py --model qwen2.5:3b --runs 10
+→ single_step 9/10，multi_step true，15.6s
+`
+
+失败样例返回空对象，说明需要 schema 校验 + 规则重试。
 
 ## 7. 串行模型注意事项
 

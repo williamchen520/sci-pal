@@ -1,0 +1,44 @@
+{
+  "raw": {
+    "description": "本地原始数据（xlsx/csv/tsv/docx）：只允许本地模型与 data_* 工具",
+    "model": "qwen2.5:3b",
+    "mcp": ["scipal-data"],
+    "tools": [
+      "data_classify",
+      "data_profile",
+      "data_aggregate",
+      "data_sample",
+      "artifact_validate",
+      "cloud_gate"
+    ],
+    "cloud": false,
+    "serial_loading": true
+  },
+  "public": {
+    "description": "公开文献与摘要：允许云端模型",
+    "model": "cloud-large",
+    "mcp": ["scipal-search"],
+    "tools": ["search_evidence", "get_context", "verify_answer"],
+    "cloud": true,
+    "serial_loading": false
+  },
+  "mixed": {
+    "description": "先本地准备 derived 产物，再云端综合",
+    "phases": [
+      {
+        "phase": "prepare",
+        "model": "qwen2.5:3b",
+        "mcp": ["scipal-data"],
+        "tools": ["data_profile", "data_aggregate", "artifact_validate", "cloud_gate"],
+        "cloud": false
+      },
+      {
+        "phase": "synthesize",
+        "model": "cloud-large",
+        "mcp": ["scipal-search"],
+        "tools": ["search_evidence", "verify_answer"],
+        "cloud": true
+      }
+    ]
+  }
+}
