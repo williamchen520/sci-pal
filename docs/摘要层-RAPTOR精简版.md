@@ -88,6 +88,21 @@ python -m build_db.build_summary_vector_index --limit 5000
 - 说明摘要先验改善了排序位置，但没把新的 gold 句子带进前 10；
 - 继续提升需要 query→section 召回本身更好（例如生成式摘要或 section-level embedding）。
 
+## 4.2 预算实验（top10 / top20 / top30）
+
+| 预算 | sentence recall | paragraph_sentence recall | refusal |
+|---|---|---|---|
+| top10 | 0.5192 | 0.8462 | 0.75 |
+| top20 | 0.6538 | 0.9615 | 0.50 |
+| top30 | 0.6538 | 0.9615 | 0.25 |
+
+结论：
+
+- 扩大预算能提升 strict sentence recall（0.5192 → 0.6538）；
+- 但拒答准确率明显下降（0.75 → 0.50 → 0.25）；
+- 因此 QA 默认仍用 top10；证据检索可按需请求 top20；
+- 摘要/contextual 检索不是主要瓶颈。
+
 ## 5. 限制与下一步
 
 - 抽取式摘要可能漏掉关键结论 → 后续用本地 3B 生成；
