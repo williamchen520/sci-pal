@@ -10,6 +10,7 @@ parent section (small-to-big). Paper hits are expanded via CITES/SIMILAR
 graph edges to find related papers vector search might miss.
 """
 from typing import Dict, List, Optional
+import os
 import sqlite3
 import time
 from services.search.hybrid_search import HybridSearch
@@ -17,6 +18,7 @@ from services.search.shared import get_shared_hybrid
 from services.search.reranker import Reranker
 from services.search.query_router import QueryRouter
 from services.search.summary_search import SummarySearch
+from services.search.summary_vector_search import SummaryVectorSearch
 from services.search.context_expander import (
     ContextExpander,
     DB_PATH as STRUCT_DB,
@@ -220,6 +222,12 @@ class UnifiedRetriever:
             summaries = self.summary_searcher.search(
                 query, top_k=3, paper_id=paper_id or ""
             )
+            if os.environ.get("SCIPAL_SUMMARY_VECTOR") == "1":
+                vector_hits = SummaryVectorSearch().search(
+                    query, top_k=3, paper_id=paper_id or ""
+                )
+                if vector_hits:
+                    summaries = vector_hits
 
         # 2. Figures (caption semantics)
         figures = []
