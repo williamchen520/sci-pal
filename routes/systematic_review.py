@@ -11,6 +11,7 @@ from flask import Blueprint, Response, g, jsonify, request
 from services.review import brief as brief_mod
 from services.review import export as export_mod
 from services.review import importers
+from services.review import docx_report
 from services.review import notifications
 from services.review import kappa as kappa_mod
 from services.review import pdf_report
@@ -463,6 +464,23 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 return jsonify({"error": "project not found"}), 404
             notifications.delete_webhook(conn, project_id, webhook_id)
             return jsonify({"deleted": webhook_id})
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/report.docx", methods=["GET"])
+    def review_report_docx(project_id: str):
+        conn = _conn()
+        try:
+            if not systematic.can_access(conn, project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            payload = docx_report.render_docx(conn, project_id)
+            return Response(
+                payload,
+                mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                headers={
+                    "Content-Disposition": f"attachment; filename={project_id}.docx"
+                },
+            )
         finally:
             conn.close()
 

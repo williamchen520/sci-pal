@@ -17,6 +17,7 @@ from services.search.unified_retriever import UnifiedRetriever
 from services.review.llm_client import LLMClient, LLMError
 from services.ai.rag_validator import RAGValidator
 from services.qa.verify import verify_answer
+from services.qa.budget import choose_top_k
 
 
 # ============================================================
@@ -191,12 +192,17 @@ class QAService:
         question = question.strip()
         print(f"🤖 RAG Q&A: {question}")
 
-        # Step 1: 检索
-        print("🔍 Step 1: Retrieving relevant passages...")
+        # Step 1: 检索（按问题复杂度自适应预算）
+        top_paragraphs = choose_top_k(
+            question,
+            simple_k=max(self.top_paragraphs, 10),
+            complex_k=max(self.top_paragraphs, 20),
+        )
+        print(f"🔍 Step 1: Retrieving relevant passages (top_paragraphs={top_paragraphs})...")
         retrieval_result = self.retriever.retrieve(
             question,
             paper_id=paper_id,
-            top_paragraphs=self.top_paragraphs,
+            top_paragraphs=top_paragraphs,
             top_figures=self.top_figures,
         )
 
@@ -221,7 +227,7 @@ class QAService:
         envelope = self.retriever.to_envelope(
             question,
             paper_id=paper_id,
-            top_paragraphs=self.top_paragraphs,
+            top_paragraphs=top_paragraphs,
             top_figures=self.top_figures,
         )
 

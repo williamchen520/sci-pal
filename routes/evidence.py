@@ -47,7 +47,8 @@ def build_evidence_blueprint(
         if not query:
             return jsonify({"error": "缺少 query"}), 400
         paper_id = (data.get("paper_id") or "").strip() or None
-        top_k = int(data.get("top_k") or data.get("top_paragraphs") or 8)
+        top_k = int(data.get("top_k") or data.get("top_paragraphs") or 10)
+        top_k = min(max(top_k, 1), 50)
         try:
             retriever = get_retriever()
             bundle = retriever.to_evidence_json(

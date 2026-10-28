@@ -312,8 +312,8 @@ def check_ingest_status(task_id: str) -> str:
         "命中句 page/bbox 与引用/图表链接；不返回裸句子。"
     )
 )
-def search_evidence(query: str, top_k: int = 8, paper_id: str = "") -> str:
-    """检索并返回 DSH 可直接使用的证据包。"""
+def search_evidence(query: str, top_k: int = 10, paper_id: str = "") -> str:
+    """检索并返回 DSH 可直接使用的证据包；top_k 可传 20 获取更大预算。"""
     return _call(
         "POST",
         "/api/evidence/search",
