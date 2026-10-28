@@ -362,3 +362,37 @@ def list_events(conn: sqlite3.Connection, project_id: str, limit: int = 100) -> 
         }
         for row in rows
     ]
+
+
+def import_records(
+    conn: sqlite3.Connection, project_id: str, records: List[Dict]
+) -> Dict:
+    matched: List[Dict] = []
+    unmatched: List[Dict] = []
+    paper_ids = set()
+    for record in records or []:
+        doi = (record.get("doi") or "").strip().lower()
+        title = (record.get("title") or "").strip()
+        row = None
+        if doi:
+            row = conn.execute(
+                "SELECT paper_id FROM papers WHERE lower(doi) = ? LIMIT 1", (doi,)
+            ).fetchone()
+        if not row and title:
+            row = conn.execute(
+                "SELECT paper_id FROM papers WHERE lower(title) = ? LIMIT 1",
+                (title.lower(),),
+            ).fetchone()
+        if row:
+            paper_ids.add(row[0])
+            matched.append({"paper_id": row[0], "title": title, "doi": doi})
+        else:
+            unmatched.append(record)
+    if paper_ids:
+        add_papers(conn, project_id, sorted(paper_ids))
+    return {
+        "matched": len(matched),
+        "unmatched": len(unmatched),
+        "paper_ids": sorted(paper_ids),
+        "unmatched_records": unmatched,
+    }
