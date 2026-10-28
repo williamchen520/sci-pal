@@ -79,6 +79,16 @@ MCP：scipal-search + scipal-data（不需要时可不挂）
 阶段 B（云端）：只带 derived 产物 + 公开文献证据
 ```
 
+## 3.0 已落地的 DSH 配置
+
+- packages/dsh-scipal/cordis.patch.yml 已加入 scipal-data MCP server（12 个工具）；
+- 三套 workspace 模板：
+  - D:/sciPal/dsh_workspaces/raw/AGENTS.md
+  - D:/sciPal/dsh_workspaces/public/AGENTS.md
+  - D:/sciPal/dsh_workspaces/mixed/AGENTS.md
+- 在 DSH 中新开 workspace 指向对应目录即可加载模板；
+- 改了 bundle 后必须**完全退出 DSH 再启动**才生效。
+
 ## 3.1 会话模板文件
 
 config/dsh_sessions.json 提供 raw / public / mixed 三套模板；也可通过接口获取：
