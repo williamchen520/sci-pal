@@ -437,6 +437,15 @@ def review_risk_of_bias(project_id: str, assess: bool = True) -> str:
     )
 
 
+@mcp.tool(description="把一次 Watch 运行结果导入综述项目（POST /api/review-projects/<id>/from-watch）。")
+def review_import_watch(project_id: str, run_id: int) -> str:
+    return _call(
+        "POST",
+        f"/api/review-projects/{_path_segment(project_id)}/from-watch",
+        {"run_id": int(run_id)},
+    )
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 

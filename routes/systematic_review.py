@@ -193,4 +193,20 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         finally:
             conn.close()
 
+    @bp.route("/<project_id>/from-watch", methods=["POST"])
+    def from_watch(project_id: str):
+        conn = _conn()
+        try:
+            row = systematic.get_project(conn, project_id)
+            if not row or row.get("owner") != _owner():
+                return jsonify({"error": "project not found"}), 404
+            data = request.get_json(silent=True) or {}
+            run_id = int(data.get("run_id") or 0)
+            if not run_id:
+                return jsonify({"error": "run_id required"}), 400
+            added = systematic.add_from_watch(conn, project_id, run_id)
+            return jsonify({"added": added})
+        finally:
+            conn.close()
+
     return bp
