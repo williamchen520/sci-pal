@@ -47,10 +47,13 @@ $env:SCIPAL_PARAGRAPH_COLLECTION = "paragraphs_contextual"
 | sentence-in-paragraphs | 0.8462 | 0.8846 |
 | refusal | 0.75 | 0.50 |
 
-## 6. 自适应模式（推荐）
+## 6. 自适应模式（默认）
+
+无需设置环境变量；默认即 adaptive。  
+关闭：
 
 ```powershell
-$env:SCIPAL_CONTEXTUAL_MODE = "adaptive"
+$env:SCIPAL_CONTEXTUAL_MODE = "off"
 ```
 
 - 简单问题：原 `paragraphs`；
@@ -90,6 +93,22 @@ $env:SCIPAL_CONTEXTUAL_MODE = "adaptive"
 - adaptive：strict +9.7%（100 题），拒答保持 0.75；
 - 全量 contextual：strict +25.2%，拒答降到 0.50；
 - 默认仍关闭；高召回场景可用全量，日常问答建议 adaptive。
+
+## 7.1 复杂问题 top10 vs top20 延迟
+
+12 个复杂问题，同一 adaptive 配置：
+
+| 预算 | mean | median | p95 |
+|---|---|---|---|
+| top10 | 1075.5 ms | 1064.2 ms | 1212.9 ms |
+| top20 | 1692.1 ms | 1685.7 ms | 1858.2 ms |
+
+top20 慢约 **57%**，但 strict Recall 不再提升（0.7717 → 0.7717），coverage 仅 +2.2pp。  
+因此复杂问题默认 **top10**；需要更高 coverage 时可设：
+
+```powershell
+$env:SCIPAL_QA_COMPLEX_TOPK = "20"
+```
 
 ## 8. 为什么不全量默认
 

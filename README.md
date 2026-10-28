@@ -20,7 +20,7 @@
 | 引用与图表位置 | 句子 ↔ 引用/图/表（`sentence_links`，含来源与置信度） |
 | 句子溯源 | `/api/papers/<id>/trace` + 高亮裁剪图 + `frontend/trace.html` |
 | RAG 问答 | 证据信封 + 引用；可切到 DSH 生成 + `verify_answer` 校验 |
-| QA 预算自适应 | 简单问题 top10、复杂/综述 top20；证据接口 `top_k` 支持 1–50 |
+| QA 预算自适应 | 简单/复杂均默认 top10；`SCIPAL_QA_COMPLEX_TOPK=20` 可提高复杂问题覆盖 |
 | 综述生成 | 大纲 → 按章节检索分配 → 分章生成 → 证据-声明矩阵 → 迭代评分 |
 | 在线检索与下载 | PubMed / PMC 在线检索，异步下载、增量入库、队列/历史/重试 |
 | 文献源 | Europe PMC 批量、arXiv/bioRxiv/medRxiv、Crossref/OpenAlex/Unpaywall |

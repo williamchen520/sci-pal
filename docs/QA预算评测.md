@@ -43,10 +43,14 @@
 
 ```
 简单问题：top10（保拒答）
-复杂问题：top20（提召回）
+复杂问题：top10（contextual 已提供召回，top20 延迟 +57% 但 strict 不再涨）
 ```
 
-即当前 `SCIPAL_QA_ADAPTIVE_TOPK` 默认行为。
+如果需要更高 coverage：
+
+```powershell
+$env:SCIPAL_QA_COMPLEX_TOPK = "20"
+```
 
 如果某类复杂问题开始出现误答，可以再把复杂层降到 15 或按题型细分。
 
