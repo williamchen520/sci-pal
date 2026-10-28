@@ -197,7 +197,10 @@ class QAService:
         top_paragraphs = choose_top_k(
             question,
             simple_k=max(self.top_paragraphs, 10),
-            complex_k=max(self.top_paragraphs, 20),
+            complex_k=max(
+                self.top_paragraphs,
+                int(os.environ.get("SCIPAL_QA_COMPLEX_TOPK", "10")),
+            ),
         )
         print(f"🔍 Step 1: Retrieving relevant passages (top_paragraphs={top_paragraphs})...")
         retrieval_result = self.retriever.retrieve(

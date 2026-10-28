@@ -106,8 +106,11 @@ class UnifiedRetriever:
                 candidate_k = max(top_paragraphs * 5, 50)
 
                 paragraph_collection = None
+                contextual_mode = os.environ.get(
+                    "SCIPAL_CONTEXTUAL_MODE", "adaptive"
+                ).lower()
                 if (
-                    os.environ.get("SCIPAL_CONTEXTUAL_MODE") == "adaptive"
+                    contextual_mode not in ("off", "baseline", "0")
                     and getattr(self.searcher, "contextual_collection", None) is not None
                     and is_complex(query)
                 ):
