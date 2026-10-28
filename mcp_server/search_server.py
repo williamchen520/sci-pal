@@ -475,6 +475,11 @@ def review_events(project_id: str) -> str:
     return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/events")
 
 
+@mcp.tool(description="导出综述项目 JSON（GET /api/review-projects/<id>/export.json）。")
+def review_export(project_id: str) -> str:
+    return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/export.json")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
