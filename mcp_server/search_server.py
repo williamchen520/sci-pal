@@ -451,6 +451,11 @@ def review_brief(project_id: str) -> str:
     return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/brief")
 
 
+@mcp.tool(description="综述项目 HTML 报告（GET /api/review-projects/<id>/report.html）。")
+def review_report_html(project_id: str) -> str:
+    return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/report.html")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 

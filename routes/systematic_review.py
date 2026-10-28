@@ -9,6 +9,7 @@ from flask import Blueprint, Response, g, jsonify, request
 from services.review import brief as brief_mod
 from services.review import kappa as kappa_mod
 from services.review import prisma_svg
+from services.review import report as report_mod
 from services.review import risk_of_bias
 from services.review import pico, systematic
 
@@ -219,6 +220,20 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 return jsonify({"error": "project not found"}), 404
             text = brief_mod.build_brief(conn, project_id)
             return Response(text, mimetype="text/markdown; charset=utf-8")
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/report.html", methods=["GET"])
+    def review_report(project_id: str):
+        conn = _conn()
+        try:
+            row = systematic.get_project(conn, project_id)
+            if not row or row.get("owner") != _owner():
+                return jsonify({"error": "project not found"}), 404
+            return Response(
+                report_mod.render_html(conn, project_id),
+                mimetype="text/html; charset=utf-8",
+            )
         finally:
             conn.close()
 
