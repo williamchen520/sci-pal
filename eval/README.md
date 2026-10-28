@@ -75,8 +75,11 @@ python eval/answer_eval.py --answers eval/answers/sample.jsonl
 ## E1 30 题基线（向量前后）
 
 ```
-before: recall@10=0.5192  MRR=0.3331  nDCG=0.3532  refusal=0.75
-after : recall@10=0.5192  MRR=0.3331  nDCG=0.3532  refusal=0.75
+before      : recall@10=0.5192  MRR=0.3331  nDCG=0.3532  refusal=0.75
+after       : recall@10=0.5192  MRR=0.3331  nDCG=0.3532  refusal=0.75
+section-prior: recall@10=0.5192  MRR=0.3597  nDCG=0.3729  refusal=0.75
+section-level: section_recall@10=0.7692
+summary-section: FTS 0.2885 -> vector 0.3654
 ```
 
 摘要向量命中率（section 级）：`10/26 = 38.5%`。

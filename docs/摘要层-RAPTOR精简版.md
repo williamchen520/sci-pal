@@ -63,16 +63,23 @@ python -m build_db.build_summary_vector_index --limit 5000
 
 ## 4.1 基准（E1 30 题）
 
-| 指标 | 向量前 | 向量后 |
-|---|---|---|
-| recall@10 | 0.5192 | 0.5192 |
-| MRR | 0.3331 | 0.3331 |
-| nDCG@10 | 0.3532 | 0.3532 |
-| refusal | 0.75 | 0.75 |
+| 指标 | 向量前 | 向量后（无 prior） | section prior 0.15 |
+|---|---|---|---|
+| recall@10 | 0.5192 | 0.5192 | 0.5192 |
+| MRR | 0.3331 | 0.3331 | **0.3597** |
+| nDCG@10 | 0.3532 | 0.3532 | **0.3729** |
+| refusal | 0.75 | 0.75 | 0.75 |
+| section_recall@10 | 0.7692 | 0.7692 | 0.7692 |
+| summary_section_recall@10 | 0.2885（FTS） | 0.3654（向量） | — |
 
-结论：摘要向量通道**没有改变段落证据的 Recall@10**。  
-原因：top-3 摘要命中的 section 多数已被段落检索覆盖，新增证据为 0；  
-摘要命中率 `summary_hit@3 = 10/26 = 38.5%`，说明摘要检索本身可用，但尚未融合进段落排序。
+结论：
+
+- 段落 section 召回 0.7692；向量摘要的 section 命中率 0.3654，比 FTS 摘要 0.2885 高 26.7%；
+- 但 sentence Recall@10 不变：摘要命中 section 中的 gold 句子不一定进前 10；
+- 单纯向量摘要不改变 sentence Recall；
+- 把摘要命中 section 作为段落重排先验（`SCIPAL_SUMMARY_PRIOR`）后，MRR +0.0266、nDCG +0.0197，**Recall 仍不变**；
+- 说明摘要先验改善了排序位置，但没把新的 gold 句子带进前 10；
+- 继续提升需要 query→section 召回本身更好（例如生成式摘要或 section-level embedding）。
 
 ## 5. 限制与下一步
 

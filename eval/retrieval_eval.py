@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
 import math
 import urllib.request
 from pathlib import Path
@@ -54,11 +55,14 @@ def evaluate(
     gold: List[Dict[str, Any]],
     search_fn: Callable[[str, int], Dict[str, Any]],
     top_k: int = 10,
+    section_of: Callable[[str], Any] | None = None,
 ) -> Dict[str, Any]:
     rows = []
     recall_sum = 0.0
     mrr_sum = 0.0
     ndcg_sum = 0.0
+    section_sum = 0.0
+    summary_section_sum = 0.0
     counted = 0
     refusal_total = 0
     refusal_ok = 0
@@ -85,6 +89,23 @@ def evaluate(
         recall_sum += recall
         mrr_sum += mrr
         ndcg_sum += ndcg
+
+        section_recall = None
+        summary_section_recall = None
+        if section_of:
+            expected_sections = {section_of(sid) for sid in expected if section_of(sid)}
+            returned_sections = {section_of(sid) for sid in found[:top_k] if section_of(sid)}
+            summary_sections = {
+                item_summary.get("section_id")
+                for item_summary in payload.get("summaries") or []
+                if item_summary.get("section_id")
+            }
+            if expected_sections:
+                section_recall = len(expected_sections & returned_sections) / len(expected_sections)
+                summary_section_recall = len(expected_sections & summary_sections) / len(expected_sections)
+                section_sum += section_recall
+                summary_section_sum += summary_section_recall
+
         rows.append(
             {
                 "id": item["id"],
@@ -94,6 +115,8 @@ def evaluate(
                 "gold": len(expected),
                 "returned": len(found),
                 "hit_rank": ranks[0] + 1 if ranks else None,
+                "section_recall": round(section_recall, 4) if section_recall is not None else None,
+                "summary_section_recall": round(summary_section_recall, 4) if summary_section_recall is not None else None,
             }
         )
 
@@ -104,6 +127,8 @@ def evaluate(
         f"ndcg@{top_k}": round(ndcg_sum / counted, 4) if counted else 0.0,
         "refusal_total": refusal_total,
         "refusal_accuracy": round(refusal_ok / refusal_total, 4) if refusal_total else 0.0,
+        f"section_recall@{top_k}": round(section_sum / counted, 4) if counted else 0.0,
+        f"summary_section_recall@{top_k}": round(summary_section_sum / counted, 4) if counted else 0.0,
     }
     return {"summary": summary, "rows": rows}
 
@@ -115,12 +140,30 @@ def main() -> None:
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--output", default=str(DEFAULT_OUT))
+    parser.add_argument("--db", default=str(Path(__file__).resolve().parent.parent / "data" / "research.db"))
     args = parser.parse_args()
 
     gold = load_gold(Path(args.gold))
     if args.limit:
         gold = gold[: args.limit]
-    result = evaluate(gold, lambda q, k: http_search(q, k, args.base_url), args.top_k)
+    section_cache: Dict[str, Any] = {}
+    section_conn = sqlite3.connect(args.db)
+
+    def section_of(sentence_id: str):
+        if sentence_id not in section_cache:
+            row = section_conn.execute(
+                "SELECT section_id FROM sentences WHERE sentence_id = ?", (sentence_id,)
+            ).fetchone()
+            section_cache[sentence_id] = row[0] if row else None
+        return section_cache[sentence_id]
+
+    result = evaluate(
+        gold,
+        lambda q, k: http_search(q, k, args.base_url),
+        args.top_k,
+        section_of=section_of,
+    )
+    section_conn.close()
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")

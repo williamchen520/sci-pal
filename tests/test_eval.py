@@ -35,6 +35,19 @@ class RetrievalEvalTests(unittest.TestCase):
         self.assertEqual(summary["recall@10"], 1.0)
         self.assertEqual(summary["mrr"], 1.0)
 
+    def test_section_metrics(self) -> None:
+        gold = [{"id": "q", "question": "a", "evidence": ["s1", "s2"]}]
+        payload = {
+            "evidence": [{"highlight": [{"sentence_id": "s1"}]}],
+            "summaries": [{"section_id": "sec1"}],
+        }
+        sections = {"s1": "sec1", "s2": "sec1"}
+        result = eval_retrieval(
+            gold, lambda q, k: payload, top_k=10, section_of=lambda sid: sections.get(sid)
+        )["summary"]
+        self.assertEqual(result["section_recall@10"], 1.0)
+        self.assertEqual(result["summary_section_recall@10"], 1.0)
+
 
 class AnswerEvalTests(unittest.TestCase):
     def test_point_covered(self) -> None:
