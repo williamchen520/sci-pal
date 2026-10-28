@@ -1,0 +1,38 @@
+{
+  "simple": {
+    "10": {
+      "questions": 50,
+      "recall@k": 0.42,
+      "paragraph_sentence_recall": 0.66,
+      "sufficient_rate": 0.94,
+      "refusal_questions": 4,
+      "refusal_accuracy": 0.75
+    },
+    "20": {
+      "questions": 50,
+      "recall@k": 0.53,
+      "paragraph_sentence_recall": 0.74,
+      "sufficient_rate": 0.96,
+      "refusal_questions": 4,
+      "refusal_accuracy": 0.5
+    }
+  },
+  "complex": {
+    "10": {
+      "questions": 46,
+      "recall@k": 0.7717,
+      "paragraph_sentence_recall": 0.8696,
+      "sufficient_rate": 0.9565,
+      "refusal_questions": 0,
+      "refusal_accuracy": null
+    },
+    "20": {
+      "questions": 46,
+      "recall@k": 0.7717,
+      "paragraph_sentence_recall": 0.8913,
+      "sufficient_rate": 0.9565,
+      "refusal_questions": 0,
+      "refusal_accuracy": null
+    }
+  }
+}

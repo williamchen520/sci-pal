@@ -74,6 +74,17 @@ $env:SCIPAL_CONTEXTUAL_MODE = "adaptive"
 | sentence-in-paragraphs | 0.8462 | 0.8462 |
 | refusal | 0.75 | 0.75 |
 
+## 6.1 adaptive + QA 预算（100 题）
+
+| 分层 | 预算 | Recall | paragraph_sentence | refusal |
+|---|---|---|---|---|
+| simple | 10 | 0.4200 | 0.6600 | 0.75 |
+| simple | 20 | 0.5300 | 0.7400 | 0.50 |
+| complex | 10 | **0.7717** | 0.8696 | — |
+| complex | 20 | **0.7717** | 0.8913 | — |
+
+结论：complex 层用 contextual 后 Recall 从 0.663 提到 0.7717；top20 不再提升 strict，但 coverage 略升。
+
 ## 7. 结论
 
 - adaptive：strict +9.7%（100 题），拒答保持 0.75；
