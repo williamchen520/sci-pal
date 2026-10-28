@@ -8,7 +8,7 @@
 - GitHub 仓库：https://github.com/williamchen520/sci-pal （public）
 - 默认分支：`dev`
 - `dev` / `master` 已开启保护：
-  - Require PR + 1 approval
+  - Require PR（单账号 approvals=0，多人时改为 1）
   - Do not allow bypassing（enforce_admins=true）
   - Allow force pushes = false
   - Allow deletions = false
@@ -54,7 +54,7 @@ Settings → Branches → Add branch protection rule
 |---|---|
 | Branch name pattern | `dev` |
 | Require a pull request before merging | 开 |
-| Required approvals | 1 |
+| Required approvals | 0（单账号）；多人时 1 |
 | Dismiss stale approvals | 开（可选） |
 | Require status checks | 有 CI 就开 |
 | Require conversation resolution | 开（可选） |
