@@ -171,6 +171,17 @@ sci-pal/
 - [可选项与用户配置](docs/可选项与用户配置.md)
 - [变更日志](docs/变更日志.md)
 
+## 许可证
+
+本项目采用 **GNU Affero General Public License v3.0 only**（AGPL-3.0-only）。
+
+- 许可证全文：[LICENSE](LICENSE)
+- 版权：Copyright (C) 2026 williams / SciPal contributors
+- 说明与义务：[docs/许可证说明.md](docs/许可证说明.md)
+
+> 若你修改后通过计算机网络提供服务，AGPL §13 要求向用户提供对应源码；
+> 闭源商用需另行取得 PyMuPDF、MinerU 等依赖的商业授权。
+
 ## 已知限制
 
 1. XML 论文无 bbox（格式本身无坐标）；MinerU 兜底路径也无 bbox；

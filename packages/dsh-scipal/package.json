@@ -1,6 +1,7 @@
 {
   "name": "@local/dsh-scipal",
   "version": "1.0.0",
+  "license": "AGPL-3.0-only",
   "private": true,
   "type": "module",
   "exports": { "./locale/*.json": "./locale/*.json", "./icon": "./icon.svg" },
