@@ -68,6 +68,7 @@ class HybridSearch:
         self.client = chromadb.PersistentClient(path=str(CHROMA_PATH))
         collection_name = os.environ.get("SCIPAL_PARAGRAPH_COLLECTION", "paragraphs")
         self.para_collection = self.client.get_collection(collection_name)
+        self.contextual_collection = self._get_collection("paragraphs_contextual")
         self.paper_collection = self._get_collection("papers")
         self.fig_collection = self._get_collection("figures")
         self.table_collection = self._get_collection("tables")
@@ -133,7 +134,8 @@ class HybridSearch:
 
     def vector_search(self, query: str, top_k: int = VECTOR_TOP_K,
                       paper_id: str = None,
-                      filters: Optional[Dict] = None) -> List[Dict]:
+                      filters: Optional[Dict] = None,
+                      collection=None) -> List[Dict]:
         """Semantic search via vector embeddings.
 
         V24.2: filters dict supports section_l1, year_min, year_max, journal.
@@ -160,7 +162,8 @@ class HybridSearch:
         # Over-fetch so filtering bibliography + section doesn't shrink recall.
         section_filter = (filters or {}).get("section_l1")
         fetch_k = min(top_k * 4, 200) if (EXCLUDE_REFERENCE_ENTRIES or section_filter) else top_k
-        results = self.para_collection.query(
+        target_collection = collection or self.para_collection
+        results = target_collection.query(
             query_embeddings=query_emb,
             n_results=fetch_k,
             where=where
