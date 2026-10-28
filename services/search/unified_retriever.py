@@ -193,9 +193,13 @@ class UnifiedRetriever:
                     print(f"  📊 Entity boost: no new paragraphs found")
                 self.diagnostics.mark("entity_boost", (time.time() - _entity_started) * 1000)
 
-                if os.environ.get("SCIPAL_SENTENCE_SEEDS") == "1":
+                seed_mode = os.environ.get("SCIPAL_SENTENCE_SEEDS", "0").lower()
+                seed_enabled = seed_mode in ("1", "all", "on") or (
+                    seed_mode in ("adaptive", "") and is_complex(query)
+                )
+                if seed_enabled:
                     seeds = self.sentence_seeds.search(
-                        query, int(os.environ.get("SCIPAL_SENTENCE_SEED_TOPK", "10"))
+                        query, int(os.environ.get("SCIPAL_SENTENCE_SEED_TOPK", "5"))
                     )
                     existing_ids = {
                         item.get("para_id")
@@ -203,37 +207,40 @@ class UnifiedRetriever:
                         or item.get("id")
                         for item in fused
                     }
-                    seed_conn = sqlite3.connect(str(STRUCT_DB))
-                    seed_conn.row_factory = sqlite3.Row
-                    try:
-                        for seed in seeds:
-                            pid = seed["para_id"]
-                            if pid in existing_ids:
-                                continue
-                            row = seed_conn.execute(
+                    max_add = int(os.environ.get("SCIPAL_SENTENCE_SEED_MAX_ADD", "5"))
+                    missing = [
+                        seed["para_id"]
+                        for seed in seeds
+                        if seed["para_id"] and seed["para_id"] not in existing_ids
+                    ][:max_add]
+                    if missing:
+                        seed_conn = sqlite3.connect(str(STRUCT_DB))
+                        seed_conn.row_factory = sqlite3.Row
+                        try:
+                            marks = ",".join("?" * len(missing))
+                            rows = seed_conn.execute(
                                 "SELECT para_id, paper_id, section_id, text, "
                                 "section_level1, section_level2 FROM paragraphs "
-                                "WHERE para_id = ?",
-                                (pid,),
-                            ).fetchone()
-                            if not row:
-                                continue
-                            fused.append(
-                                {
-                                    "para_id": row["para_id"],
-                                    "paper_id": row["paper_id"],
-                                    "section_id": row["section_id"],
-                                    "text": row["text"],
-                                    "section_l1": row["section_level1"],
-                                    "section_l2": row["section_level2"],
-                                    "score": seed["score"],
-                                    "rrf_score": 0.0,
-                                    "source": "sentence_seed",
-                                }
-                            )
-                            existing_ids.add(pid)
-                    finally:
-                        seed_conn.close()
+                                f"WHERE para_id IN ({marks})",
+                                missing,
+                            ).fetchall()
+                            scores = {seed["para_id"]: seed["score"] for seed in seeds}
+                            for row in rows:
+                                fused.append(
+                                    {
+                                        "para_id": row["para_id"],
+                                        "paper_id": row["paper_id"],
+                                        "section_id": row["section_id"],
+                                        "text": row["text"],
+                                        "section_l1": row["section_level1"],
+                                        "section_l2": row["section_level2"],
+                                        "score": scores.get(row["para_id"], 0.5),
+                                        "rrf_score": 0.0,
+                                        "source": "sentence_seed",
+                                    }
+                                )
+                        finally:
+                            seed_conn.close()
 
                 # V27.2: 增加 rerank_k，让 MMR 有更多候选做多样性选择
                 rerank_k = (
