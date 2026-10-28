@@ -23,6 +23,8 @@ def load_gold(path: Path) -> List[Dict[str, Any]]:
 
 
 def _sentences_from_response(payload: Dict[str, Any]) -> List[str]:
+    if payload.get("sufficient") is False:
+        return []
     out: List[str] = []
     for item in payload.get("evidence") or []:
         for highlight in item.get("highlight") or []:

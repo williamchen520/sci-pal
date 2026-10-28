@@ -25,6 +25,7 @@ from services.search.context_expander import (
 from services.search.graph_traverser import GraphTraverser
 from services.search.retrieval_diagnostics import RetrievalDiagnostics
 from services.search.abstract_search import AbstractSearch  # V30.0: 摘要库检索
+from services.qa.sufficiency import evaluate as evaluate_sufficiency
 from services.trust.injection import find_injections, wrap_untrusted
 from services.trust.retraction import flags_for_papers
 
@@ -447,6 +448,7 @@ class UnifiedRetriever:
                         "section_path": pctx.get("section_path") or [],
                         "section": pctx.get("section") or "",
                         "page": pctx.get("page"),
+                        "score": pctx.get("score"),
                         "paragraphs": [p.get("text", "") for p in pctx.get("paragraphs") or []],
                         "text": pctx.get("text", ""),
                         "highlight": highlights,
@@ -456,9 +458,15 @@ class UnifiedRetriever:
                 )
         finally:
             conn.close()
+        sufficiency = evaluate_sufficiency(
+            query,
+            [{"text": item["text"], "score": item.get("score") or 0.0} for item in evidence],
+        )
         return {
             "query": query,
             "evidence": evidence,
+            "sufficient": sufficiency["sufficient"],
+            "sufficiency": sufficiency,
             "figures": env.get("figures") or [],
             "tables": env.get("tables") or [],
         }
