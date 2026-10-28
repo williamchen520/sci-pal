@@ -20,6 +20,8 @@ from services.search.query_router import QueryRouter
 from services.search.summary_search import SummarySearch
 from services.search.summary_vector_search import get_default as get_summary_vector
 from services.search.tree_context import TreeContextBuilder
+from services.search.sentence_seeds import SentenceSeedSearch
+from services.search.section_types import classify_section, query_intent, section_prior as section_type_prior
 from services.search.context_expander import (
     ContextExpander,
     DB_PATH as STRUCT_DB,
@@ -53,6 +55,7 @@ class UnifiedRetriever:
         if expand:
             self.expander = ContextExpander()
         self.tree_builder = TreeContextBuilder()
+        self.sentence_seeds = SentenceSeedSearch()
         self.summary_searcher = SummarySearch()
         if graph_expand:
             self.graph = GraphTraverser()
@@ -190,6 +193,48 @@ class UnifiedRetriever:
                     print(f"  📊 Entity boost: no new paragraphs found")
                 self.diagnostics.mark("entity_boost", (time.time() - _entity_started) * 1000)
 
+                if os.environ.get("SCIPAL_SENTENCE_SEEDS") == "1":
+                    seeds = self.sentence_seeds.search(
+                        query, int(os.environ.get("SCIPAL_SENTENCE_SEED_TOPK", "10"))
+                    )
+                    existing_ids = {
+                        item.get("para_id")
+                        or item.get("paragraph_id")
+                        or item.get("id")
+                        for item in fused
+                    }
+                    seed_conn = sqlite3.connect(str(STRUCT_DB))
+                    seed_conn.row_factory = sqlite3.Row
+                    try:
+                        for seed in seeds:
+                            pid = seed["para_id"]
+                            if pid in existing_ids:
+                                continue
+                            row = seed_conn.execute(
+                                "SELECT para_id, paper_id, section_id, text, "
+                                "section_level1, section_level2 FROM paragraphs "
+                                "WHERE para_id = ?",
+                                (pid,),
+                            ).fetchone()
+                            if not row:
+                                continue
+                            fused.append(
+                                {
+                                    "para_id": row["para_id"],
+                                    "paper_id": row["paper_id"],
+                                    "section_id": row["section_id"],
+                                    "text": row["text"],
+                                    "section_l1": row["section_level1"],
+                                    "section_l2": row["section_level2"],
+                                    "score": seed["score"],
+                                    "rrf_score": 0.0,
+                                    "source": "sentence_seed",
+                                }
+                            )
+                            existing_ids.add(pid)
+                    finally:
+                        seed_conn.close()
+
                 # V27.2: 增加 rerank_k，让 MMR 有更多候选做多样性选择
                 rerank_k = (
                     min(
@@ -254,6 +299,31 @@ class UnifiedRetriever:
                                 key=lambda item: float(item.get("rerank_score") or 0.0),
                                 reverse=True,
                             )
+
+                if os.environ.get("SCIPAL_SECTION_ROUTING") == "1" and paragraphs:
+                    intent = query_intent(query)
+                    routed = []
+                    for paragraph in paragraphs:
+                        section_name = (
+                            paragraph.get("section_l1")
+                            or paragraph.get("section_l2")
+                            or ""
+                        )
+                        stype = classify_section(section_name)
+                        if stype == "references":
+                            continue
+                        prior = section_type_prior(intent, stype)
+                        if prior:
+                            paragraph["rerank_score"] = (
+                                float(paragraph.get("rerank_score") or 0.0) + prior
+                            )
+                        routed.append(paragraph)
+                    if routed:
+                        paragraphs = sorted(
+                            routed,
+                            key=lambda item: float(item.get("rerank_score") or 0.0),
+                            reverse=True,
+                        )
 
                 # V25.19: MMR diversification with diagnostics
                 # V25.21: 条件改为 > top_paragraphs（现在有更多候选，MMR 从中选 top_paragraphs）
