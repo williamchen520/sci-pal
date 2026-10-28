@@ -264,4 +264,28 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         finally:
             conn.close()
 
+    @bp.route("/<project_id>/adjudicate", methods=["POST"])
+    def adjudicate(project_id: str):
+        conn = _conn()
+        try:
+            data = request.get_json(silent=True) or {}
+            if not data.get("paper_id") or not data.get("decision"):
+                return jsonify({"error": "paper_id and decision required"}), 400
+            systematic.adjudicate(
+                conn,
+                project_id,
+                data["paper_id"],
+                data["decision"],
+                data.get("reason", ""),
+                data.get("editor", ""),
+            )
+            return jsonify(
+                {
+                    "prisma": systematic.prisma(conn, project_id),
+                    "conflicts": systematic.conflicts(conn, project_id),
+                }
+            )
+        finally:
+            conn.close()
+
     return bp

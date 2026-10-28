@@ -96,6 +96,18 @@ class SystematicReviewTests(unittest.TestCase):
         self.assertEqual(result[0]["paper_id"], "p1")
         self.assertEqual(set(result[0]["decisions"]), {"alice", "bob"})
 
+    def test_adjudication_overrides_screening(self) -> None:
+        systematic.add_papers(self.conn, self.project, ["p1"])
+        systematic.screen(self.conn, self.project, "p1", "include", reviewer="alice")
+        systematic.screen(self.conn, self.project, "p1", "exclude", reviewer="bob")
+        systematic.adjudicate(self.conn, self.project, "p1", "include", "resolved")
+        counts = systematic.prisma(self.conn, self.project)
+        conflicts = systematic.conflicts(self.conn, self.project)
+        self.assertEqual(counts["included"], 1)
+        self.assertEqual(counts["excluded"], 0)
+        self.assertTrue(conflicts[0]["resolved"])
+        self.assertEqual(conflicts[0]["adjudicated"], "include")
+
 
 if __name__ == "__main__":
     unittest.main()

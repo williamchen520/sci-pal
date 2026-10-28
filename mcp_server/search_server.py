@@ -461,6 +461,15 @@ def review_conflicts(project_id: str) -> str:
     return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/conflicts")
 
 
+@mcp.tool(description="冲突裁决（POST /api/review-projects/<id>/adjudicate）。")
+def review_adjudicate(project_id: str, paper_id: str, decision: str, reason: str = "") -> str:
+    return _call(
+        "POST",
+        f"/api/review-projects/{_path_segment(project_id)}/adjudicate",
+        {"paper_id": paper_id, "decision": decision, "reason": reason},
+    )
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
