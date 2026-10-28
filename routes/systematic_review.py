@@ -7,6 +7,7 @@ import sqlite3
 from flask import Blueprint, Response, g, jsonify, request
 
 from services.review import kappa as kappa_mod
+from services.review import prisma_svg
 from services.review import pico, systematic
 
 
@@ -145,6 +146,19 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             return jsonify(kappa_mod.kappa(conn, project_id))
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/prisma.svg", methods=["GET"])
+    def prisma_diagram(project_id: str):
+        conn = _conn()
+        try:
+            row = systematic.get_project(conn, project_id)
+            if not row:
+                return jsonify({"error": "project not found"}), 404
+            counts = systematic.prisma(conn, project_id)
+            svg = prisma_svg.render(row.get("name") or project_id, counts)
+            return Response(svg, mimetype="image/svg+xml")
         finally:
             conn.close()
 
