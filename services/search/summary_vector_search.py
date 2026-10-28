@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import os
+import re
+import sqlite3
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import chromadb
 
 DEFAULT_CHROMA = Path(__file__).resolve().parent.parent.parent / "data" / "chroma"
+DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
 MODEL = os.environ.get(
     "SCIPAL_EMBEDDING_MODEL", r"D:\models\models\BAAI--bge-base-en-v1.5"
 )
@@ -68,3 +71,79 @@ class SummaryVectorSearch:
                 }
             )
         return out
+
+    def expand(
+        self,
+        query: str,
+        hits: List[Dict],
+        top_sentences: int = 2,
+        max_distance: float = 0.35,
+    ) -> List[Dict]:
+        """Map vector summary hits back to their best-matching sentences."""
+        query_tokens = {
+            token.lower()
+            for token in re.findall(r"[A-Za-z0-9]+", query)
+            if len(token) > 2
+        }
+        if not query_tokens:
+            return []
+        conn = sqlite3.connect(str(DEFAULT_DB))
+        conn.row_factory = sqlite3.Row
+        contexts: List[Dict] = []
+        try:
+            for hit in hits:
+                if (hit.get("distance") or 1.0) > max_distance:
+                    continue
+                rows = conn.execute(
+                    "SELECT sentence_id, text, page FROM sentences "
+                    "WHERE section_id = ? AND length(text) BETWEEN 40 AND 400 "
+                    "ORDER BY sequence LIMIT 60",
+                    (hit.get("section_id"),),
+                ).fetchall()
+                scored = []
+                for row in rows:
+                    tokens = {
+                        token.lower()
+                        for token in re.findall(r"[A-Za-z0-9]+", row["text"])
+                        if len(token) > 2
+                    }
+                    score = len(query_tokens & tokens) / len(query_tokens)
+                    if score > 0:
+                        scored.append((score, row))
+                if not scored:
+                    continue
+                scored.sort(key=lambda item: item[0], reverse=True)
+                picked = scored[:top_sentences]
+                contexts.append(
+                    {
+                        "paper_id": hit.get("paper_id"),
+                        "section_id": hit.get("section_id"),
+                        "section": hit.get("title") or "",
+                        "section_path": [hit.get("title") or ""],
+                        "page": picked[0][1]["page"],
+                        "score": round(1 - (hit.get("distance") or 1.0), 4),
+                        "text": " ".join(item[1]["text"] for item in picked),
+                        "paragraphs": [{"text": item[1]["text"]} for item in picked],
+                        "matched_sentences": [
+                            {
+                                "sentence_id": item[1]["sentence_id"],
+                                "text": item[1]["text"],
+                                "page": item[1]["page"],
+                            }
+                            for item in picked
+                        ],
+                    }
+                )
+        finally:
+            conn.close()
+        return contexts
+
+
+_DEFAULT = None
+
+
+def get_default() -> "SummaryVectorSearch":
+    global _DEFAULT
+    if _DEFAULT is None:
+        _DEFAULT = SummaryVectorSearch()
+    return _DEFAULT

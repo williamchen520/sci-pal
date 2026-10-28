@@ -72,6 +72,15 @@ python eval/answer_eval.py --answers eval/answers/sample.jsonl
 {"questions": 5, "recall@10": 0.6, "mrr": 0.35, "ndcg@10": 0.4123}
 ```
 
+## E1 30 题基线（向量前后）
+
+```
+before: recall@10=0.5192  MRR=0.3331  nDCG=0.3532  refusal=0.75
+after : recall@10=0.5192  MRR=0.3331  nDCG=0.3532  refusal=0.75
+```
+
+摘要向量命中率（section 级）：`10/26 = 38.5%`。
+
 ## 回归门禁（待接 CI）
 
 - PR 跑 20 题子集；
