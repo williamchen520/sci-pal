@@ -70,10 +70,14 @@ python -m build_db.build_summary_vector_index --limit 5000
 | nDCG@10 | 0.3532 | 0.3532 | **0.3729** |
 | refusal | 0.75 | 0.75 | 0.75 |
 | section_recall@10 | 0.7692 | 0.7692 | 0.7692 |
+| paragraph_recall@10 | 0.7692 | 0.7692 | 0.7692 |
 | summary_section_recall@10 | 0.2885（FTS） | 0.3654（向量） | — |
 
 结论：
 
+- **paragraph 与 section 召回都是 0.7692，但 sentence 只有 0.5192**；
+- 差距来自“每个命中段落只回一个 highlight 句子”，不是 section 找错；
+- 全句回填会挤占 top10（paragraph_recall 降到 0.4615），sentence rerank 也无提升；
 - 段落 section 召回 0.7692；向量摘要的 section 命中率 0.3654，比 FTS 摘要 0.2885 高 26.7%；
 - 但 sentence Recall@10 不变：摘要命中 section 中的 gold 句子不一定进前 10；
 - 单纯向量摘要不改变 sentence Recall；
