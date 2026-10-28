@@ -446,6 +446,11 @@ def review_import_watch(project_id: str, run_id: int) -> str:
     )
 
 
+@mcp.tool(description="综述项目一页纸简报（GET /api/review-projects/<id>/brief，Markdown）。")
+def review_brief(project_id: str) -> str:
+    return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/brief")
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
