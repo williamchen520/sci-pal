@@ -49,7 +49,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             row = systematic.get_project(conn, project_id)
-            if not row or row.get("owner") != _owner():
+            if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             return jsonify(row)
         finally:
@@ -60,7 +60,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             project_row = systematic.get_project(conn, project_id)
-            if not project_row or project_row.get("owner") != _owner():
+            if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             data = request.get_json(silent=True) or {}
             paper_ids = data.get("paper_ids") or []
@@ -104,7 +104,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             if request.method == "GET":
                 return jsonify({"rows": systematic.list_evidence(conn, project_id)})
             project_row = systematic.get_project(conn, project_id)
-            if not project_row:
+            if not project_row or not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             papers = conn.execute(
                 "SELECT p.paper_id, p.title, p.abstract FROM review_project_papers rp "
@@ -139,7 +139,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             row = systematic.get_project(conn, project_id)
-            if not row or row.get("owner") != _owner():
+            if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             return jsonify(pico.auto_pico(conn, project_id))
         finally:
@@ -201,7 +201,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             row = systematic.get_project(conn, project_id)
-            if not row or row.get("owner") != _owner():
+            if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             data = request.get_json(silent=True) or {}
             run_id = int(data.get("run_id") or 0)
@@ -217,7 +217,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             row = systematic.get_project(conn, project_id)
-            if not row or row.get("owner") != _owner():
+            if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             text = brief_mod.build_brief(conn, project_id)
             return Response(text, mimetype="text/markdown; charset=utf-8")
@@ -229,7 +229,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             row = systematic.get_project(conn, project_id)
-            if not row or row.get("owner") != _owner():
+            if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             return Response(
                 report_mod.render_html(conn, project_id),
@@ -243,7 +243,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             row = systematic.get_project(conn, project_id)
-            if not row or row.get("owner") != _owner():
+            if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             pdf = pdf_report.render_pdf(conn, project_id)
             return Response(
@@ -285,6 +285,28 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                     "conflicts": systematic.conflicts(conn, project_id),
                 }
             )
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/members", methods=["GET", "POST"])
+    def project_members(project_id: str):
+        conn = _conn()
+        try:
+            row = systematic.get_project(conn, project_id)
+            if not row:
+                return jsonify({"error": "project not found"}), 404
+            if request.method == "GET":
+                if not systematic.can_access(conn, project_id, _owner()):
+                    return jsonify({"error": "forbidden"}), 403
+                return jsonify({"members": systematic.members(conn, project_id)})
+            if row.get("owner") != _owner():
+                return jsonify({"error": "only owner can add members"}), 403
+            data = request.get_json(silent=True) or {}
+            member = (data.get("member") or "").strip()
+            if not member:
+                return jsonify({"error": "member required"}), 400
+            systematic.add_member(conn, project_id, member, data.get("role", "reviewer"))
+            return jsonify({"members": systematic.members(conn, project_id)})
         finally:
             conn.close()
 

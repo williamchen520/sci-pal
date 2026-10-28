@@ -108,6 +108,18 @@ class SystematicReviewTests(unittest.TestCase):
         self.assertTrue(conflicts[0]["resolved"])
         self.assertEqual(conflicts[0]["adjudicated"], "include")
 
+    def test_members_and_access(self) -> None:
+        project = systematic.create_project(
+            self.conn, "Shared", owner="alice"
+        )
+        self.assertTrue(systematic.can_access(self.conn, project, "alice"))
+        self.assertFalse(systematic.can_access(self.conn, project, "bob"))
+        systematic.add_member(self.conn, project, "bob", "reviewer")
+        self.assertTrue(systematic.can_access(self.conn, project, "bob"))
+        self.assertEqual(systematic.members(self.conn, project)[0]["member"], "bob")
+        names = {p["project_id"] for p in systematic.list_projects(self.conn, "bob")}
+        self.assertIn(project, names)
+
 
 if __name__ == "__main__":
     unittest.main()
