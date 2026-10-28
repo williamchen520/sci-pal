@@ -42,6 +42,7 @@ from routes.reviews import build_reviews_blueprint
 from routes.search import build_search_blueprint
 from routes.search_downloads import build_search_downloads_blueprint
 from routes.system import build_system_blueprint
+from routes.systematic_review import build_systematic_review_blueprint
 from routes.tasks import build_tasks_blueprint
 from routes.watch import build_watch_blueprint
 
@@ -253,6 +254,7 @@ app.register_blueprint(
 )
 app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_data_blueprint(db_path=DB_PATH, log=app.logger))
+app.register_blueprint(build_systematic_review_blueprint(db_path=DB_PATH, log=app.logger))
 
 # B3e: RAG 问答 + agentic 检索已移入 routes/qa.py
 app.register_blueprint(
