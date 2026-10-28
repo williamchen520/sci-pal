@@ -43,9 +43,21 @@ python -m build_db.build_llm_summaries --limit 100 --model qwen2.5:3b
 - `summary_source='llm'` 区分抽取式；
 - 试点：100 节（其余 61,832 节仍为 extractive）。
 
+## 3.2 向量通道
+
+```powershell
+python -m build_db.build_summary_vector_index            # 全库
+python -m build_db.build_summary_vector_index --limit 5000
+```
+
+- Chroma collection：`section_summaries`；
+- embedding：`bge-base-en-v1.5`（`SCIPAL_EMBEDDING_MODEL` 可覆盖）；
+- 默认不启用，设置 `SCIPAL_SUMMARY_VECTOR=1` 后 `UnifiedRetriever` 优先用向量摘要命中。
+
 ## 4. 当前状态
 
 - 已构建 61,932 个章节摘要（全库；100 节为 LLM 生成）；
+- 已构建 2,000 节摘要向量（试点；全库需约 36 分钟）；
 - 重建：`python -m build_db.build_summaries`；
 - 测试：`tests/test_summaries.py`。
 
