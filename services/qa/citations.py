@@ -26,3 +26,12 @@ def paragraph_citation(
         "paragraph_id": para_id,
         "sentence_ids": [row[0] for row in rows],
     }
+
+
+def fallback_citations(paragraph_count: int, limit: int = 3) -> List[Dict[str, object]]:
+    """Deterministic citation IDs when the model omitted them."""
+    count = min(max(paragraph_count, 0), limit)
+    return [
+        {"type": "P", "num": index, "raw": f"[P{index}]", "fallback": True}
+        for index in range(1, count + 1)
+    ]

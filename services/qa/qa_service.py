@@ -18,7 +18,7 @@ from services.review.llm_client import LLMClient, LLMError
 from services.ai.rag_validator import RAGValidator
 from services.qa.verify import verify_answer
 from services.qa.budget import choose_top_k
-from services.qa.citations import paragraph_citation
+from services.qa.citations import fallback_citations, paragraph_citation
 
 
 # ============================================================
@@ -323,6 +323,12 @@ class QAService:
         # Step 4: 解析引用
         print("📝 Step 4: Parsing citations...")
         citations = parse_citations(answer)
+        citation_fallback = False
+        if not citations:
+            paragraphs = retrieval_result.get("paragraphs") or []
+            if paragraphs:
+                citations = fallback_citations(len(paragraphs))
+                citation_fallback = True
 
         # Step 5: 构建来源详情
         sources = self._build_sources(retrieval_result, citations)
@@ -341,6 +347,7 @@ class QAService:
         result = {
             "answer": answer,
             "citations": citations,
+            "citation_fallback": citation_fallback,
             "sources": sources,
             "llm_provider": self.llm.provider,
             "llm_model": self.llm.model,

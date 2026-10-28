@@ -48,3 +48,12 @@ class CitationTests(unittest.TestCase):
             sources = service._build_sources(retrieval, citations)
         self.assertEqual(sources["paragraphs"][0]["paragraph_id"], "p1")
         self.assertEqual(sources["paragraphs"][0]["sentence_ids"], ["s1", "s2"])
+
+    def test_fallback_citations(self) -> None:
+        from services.qa.citations import fallback_citations
+
+        citations = fallback_citations(5, limit=3)
+        self.assertEqual(len(citations), 3)
+        self.assertEqual(citations[0]["raw"], "[P1]")
+        self.assertTrue(citations[0]["fallback"])
+        self.assertEqual(fallback_citations(0), [])
