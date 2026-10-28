@@ -150,7 +150,9 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             row = systematic.get_project(conn, project_id)
             if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
-            return jsonify(pico.auto_pico(conn, project_id))
+            result = pico.auto_pico(conn, project_id)
+            _audit(conn, project_id, "pico_extracted")
+            return jsonify(result)
         finally:
             conn.close()
 
@@ -189,6 +191,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                     text = f"{paper[1] or ''}. {paper[2] or ''}"
                     rows = risk_of_bias.assess(text)
                     risk_of_bias.save(conn, project_id, paper[0], rows)
+                _audit(conn, project_id, "risk_of_bias", "", str(len(papers)))
             rows = risk_of_bias.list_rows(conn, project_id)
             by_paper = {}
             for row in rows:
@@ -217,6 +220,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             if not run_id:
                 return jsonify({"error": "run_id required"}), 400
             added = systematic.add_from_watch(conn, project_id, run_id)
+            _audit(conn, project_id, "watch_imported", str(run_id), str(added))
             return jsonify({"added": added})
         finally:
             conn.close()
@@ -288,6 +292,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 data.get("reason", ""),
                 data.get("editor", ""),
             )
+            _audit(conn, project_id, "adjudicated", data["paper_id"], data["decision"])
             return jsonify(
                 {
                     "prisma": systematic.prisma(conn, project_id),
@@ -315,6 +320,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             if not member:
                 return jsonify({"error": "member required"}), 400
             systematic.add_member(conn, project_id, member, data.get("role", "reviewer"))
+            _audit(conn, project_id, "member_added", member, data.get("role", "reviewer"))
             return jsonify({"members": systematic.members(conn, project_id)})
         finally:
             conn.close()
@@ -337,6 +343,9 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             if not data.get("project"):
                 return jsonify({"error": "project payload required"}), 400
             result = export_mod.import_project(conn, data, _owner())
+            systematic.log_event(
+                conn, result["project_id"], _owner(), "project_imported", "", ""
+            )
             return jsonify(result), 201
         finally:
             conn.close()
