@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from build_db.mention_patterns import figure_mentions, table_mentions
+from services.search.citation_intent import classify
 
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 
@@ -112,13 +113,14 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
         conn.execute("DELETE FROM sentence_links WHERE paper_id = ?", (paper_id,))
 
         def add_link(sentence, target_type: str, target_id: str, relation: str,
-                     page, bbox, source: str, confidence: float) -> None:
+                     page, bbox, source: str, confidence: float,
+                     intent: str = "") -> None:
             link_id = f"link_{sentence['sentence_id']}_{target_type}_{target_id}"
             conn.execute(
                 "INSERT OR REPLACE INTO sentence_links "
                 "(link_id, sentence_id, para_id, paper_id, source_type, target_type, "
-                " target_id, relation, page, bbox, source, confidence) "
-                "VALUES (?, ?, ?, ?, 'sentence', ?, ?, ?, ?, ?, ?, ?)",
+                " target_id, relation, page, bbox, source, confidence, intent) "
+                "VALUES (?, ?, ?, ?, 'sentence', ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     link_id,
                     sentence["sentence_id"],
@@ -131,6 +133,7 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
                     bbox,
                     source,
                     confidence,
+                    intent,
                 ),
             )
 
@@ -148,7 +151,10 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
                     if source == "grobid" and bbox and page in page_heights:
                         bbox = _mention_bbox_top_left(bbox, page_heights[page])
                     confidence = 0.9 if source == "grobid" else 0.6
-                    add_link(sentence, "citation", citation_id, "cites", page, bbox, source, confidence)
+                    add_link(
+                        sentence, "citation", citation_id, "cites", page, bbox,
+                        source, confidence, intent=classify(text),
+                    )
                     stats["citations"] += 1
 
             for number, _ in figure_mentions(text):

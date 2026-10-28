@@ -39,7 +39,8 @@ def make_db(path: Path) -> sqlite3.Connection:
         );
         CREATE TABLE sentence_links (
             link_id TEXT PRIMARY KEY, sentence_id TEXT, para_id TEXT, paper_id TEXT,
-            source_type TEXT, target_type TEXT, target_id TEXT, relation TEXT
+            source_type TEXT, target_type TEXT, target_id TEXT, relation TEXT,
+            intent TEXT
         );
         CREATE TABLE citation_mentions (
             mention_id TEXT PRIMARY KEY, paper_id TEXT, ref_number TEXT,
