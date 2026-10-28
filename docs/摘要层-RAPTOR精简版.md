@@ -71,10 +71,13 @@ python -m build_db.build_summary_vector_index --limit 5000
 | refusal | 0.75 | 0.75 | 0.75 |
 | section_recall@10 | 0.7692 | 0.7692 | 0.7692 |
 | paragraph_recall@10 | 0.7692 | 0.7692 | 0.7692 |
+| paragraph_sentence_recall@10 | 0.8462 | 0.8462 | 0.8462 |
 | summary_section_recall@10 | 0.2885（FTS） | 0.3654（向量） | — |
 
 结论：
 
+- **返回段落内的句子覆盖率是 0.8462**，说明 gold 句子大多已经在返回段落里；
+- 但 strict top10 只有 0.5192：每个段落只回 1 个 highlight 句子；
 - **paragraph 与 section 召回都是 0.7692，但 sentence 只有 0.5192**；
 - 差距来自“每个命中段落只回一个 highlight 句子”，不是 section 找错；
 - 全句回填会挤占 top10（paragraph_recall 降到 0.4615），sentence rerank 也无提升；

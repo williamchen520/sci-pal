@@ -511,6 +511,26 @@ class UnifiedRetriever:
                     out.append(item)
                 return out
 
+            def paragraph_details(paragraphs: List[Dict]) -> List[Dict]:
+                para_ids = [p.get("para_id") for p in paragraphs if p.get("para_id")]
+                sent_map: Dict[str, List[str]] = {}
+                if para_ids:
+                    marks = ",".join("?" * len(para_ids))
+                    for row in conn.execute(
+                        "SELECT para_id, sentence_id FROM sentences "
+                        f"WHERE para_id IN ({marks}) ORDER BY sequence",
+                        para_ids,
+                    ):
+                        sent_map.setdefault(row[0], []).append(row[1])
+                return [
+                    {
+                        "para_id": p.get("para_id"),
+                        "sentence_ids": sent_map.get(p.get("para_id"), []),
+                        "text": p.get("text", ""),
+                    }
+                    for p in paragraphs
+                ]
+
             pids = [p.get("paper_id") for p in env.get("parent_contexts") or []]
             flags_map = flags_for_papers(conn, [pid for pid in pids if pid])
             evidence = []
@@ -526,6 +546,9 @@ class UnifiedRetriever:
                         "page": pctx.get("page"),
                         "score": pctx.get("score"),
                         "paragraphs": [p.get("text", "") for p in pctx.get("paragraphs") or []],
+                        "paragraph_details": paragraph_details(
+                            pctx.get("paragraphs") or []
+                        ),
                         "text": pctx.get("text", ""),
                         "highlight": highlights,
                         "links": link_details([h.get("sentence_id") for h in highlights]),

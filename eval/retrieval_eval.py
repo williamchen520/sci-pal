@@ -65,6 +65,7 @@ def evaluate(
     section_sum = 0.0
     summary_section_sum = 0.0
     paragraph_sum = 0.0
+    paragraph_sentence_sum = 0.0
     counted = 0
     refusal_total = 0
     refusal_ok = 0
@@ -95,6 +96,16 @@ def evaluate(
         section_recall = None
         summary_section_recall = None
         paragraph_recall = None
+        paragraph_sentence_recall = None
+        paragraph_sentences = {
+            sid
+            for item_evidence in payload.get("evidence") or []
+            for detail in item_evidence.get("paragraph_details") or []
+            for sid in detail.get("sentence_ids") or []
+        }
+        if paragraph_sentences and expected:
+            paragraph_sentence_recall = len(expected & paragraph_sentences) / len(expected)
+            paragraph_sentence_sum += paragraph_sentence_recall
         if paragraph_of:
             expected_paras = {paragraph_of(sid) for sid in expected if paragraph_of(sid)}
             returned_paras = {paragraph_of(sid) for sid in found[:top_k] if paragraph_of(sid)}
@@ -127,6 +138,7 @@ def evaluate(
                 "section_recall": round(section_recall, 4) if section_recall is not None else None,
                 "summary_section_recall": round(summary_section_recall, 4) if summary_section_recall is not None else None,
                 "paragraph_recall": round(paragraph_recall, 4) if paragraph_recall is not None else None,
+                "paragraph_sentence_recall": round(paragraph_sentence_recall, 4) if paragraph_sentence_recall is not None else None,
             }
         )
 
@@ -140,6 +152,7 @@ def evaluate(
         f"section_recall@{top_k}": round(section_sum / counted, 4) if counted else 0.0,
         f"summary_section_recall@{top_k}": round(summary_section_sum / counted, 4) if counted else 0.0,
         f"paragraph_recall@{top_k}": round(paragraph_sum / counted, 4) if counted else 0.0,
+        f"paragraph_sentence_recall@{top_k}": round(paragraph_sentence_sum / counted, 4) if counted else 0.0,
     }
     return {"summary": summary, "rows": rows}
 
