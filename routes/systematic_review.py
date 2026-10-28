@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 
 from flask import Blueprint, Response, g, jsonify, request
 
 from services.review import brief as brief_mod
 from services.review import export as export_mod
 from services.review import importers
+from services.review import notifications
 from services.review import kappa as kappa_mod
 from services.review import pdf_report
 from services.review import prisma_svg
@@ -26,6 +28,19 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
 
     def _audit(conn, project_id, action, target="", detail=""):
         systematic.log_event(conn, project_id, _owner(), action, target, detail)
+        try:
+            threading.Thread(
+                target=notifications.notify,
+                args=(
+                    db_path,
+                    project_id,
+                    action,
+                    {"actor": _owner(), "target": target, "detail": detail},
+                ),
+                daemon=True,
+            ).start()
+        except Exception:
+            pass
 
     def _conn():
         conn = sqlite3.connect(str(db_path))
@@ -414,6 +429,40 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 f"parsed={len(records)} matched={result['matched']}",
             )
             return jsonify(result)
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/webhooks", methods=["GET", "POST"])
+    def webhooks(project_id: str):
+        conn = _conn()
+        try:
+            if not systematic.can_access(conn, project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            if request.method == "GET":
+                return jsonify({"webhooks": notifications.list_webhooks(conn, project_id)})
+            data = request.get_json(silent=True) or {}
+            url = (data.get("url") or "").strip()
+            if not url.startswith(("http://", "https://")):
+                return jsonify({"error": "http(s) url required"}), 400
+            webhook_id = notifications.add_webhook(
+                conn,
+                project_id,
+                url,
+                data.get("events", "*"),
+                data.get("secret", ""),
+            )
+            return jsonify({"id": webhook_id}), 201
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/webhooks/<int:webhook_id>", methods=["DELETE"])
+    def delete_webhook(project_id: str, webhook_id: int):
+        conn = _conn()
+        try:
+            if not systematic.can_access(conn, project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            notifications.delete_webhook(conn, project_id, webhook_id)
+            return jsonify({"deleted": webhook_id})
         finally:
             conn.close()
 
