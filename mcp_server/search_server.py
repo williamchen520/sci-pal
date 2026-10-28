@@ -428,6 +428,15 @@ def review_kappa(project_id: str) -> str:
     return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/kappa")
 
 
+@mcp.tool(description="风险偏倚评估（GET/POST /api/review-projects/<id>/risk-of-bias）。")
+def review_risk_of_bias(project_id: str, assess: bool = True) -> str:
+    return _call(
+        "POST" if assess else "GET",
+        f"/api/review-projects/{_path_segment(project_id)}/risk-of-bias",
+        {} if assess else None,
+    )
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
