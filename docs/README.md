@@ -25,6 +25,7 @@
 | 撤稿标记与 Prompt Injection | [可信度-撤稿与注入.md](可信度-撤稿与注入.md) |
 | 摘要层（RAPTOR 精简版） | [摘要层-RAPTOR精简版.md](摘要层-RAPTOR精简版.md) |
 | 引用意图 | [引用意图.md](引用意图.md) |
+| Claim–Evidence 图（试点） | [claim-evidence.md](claim-evidence.md) |
 | 计划书：模型分层与数据隔离 | [计划-模型分层与数据隔离.md](计划-模型分层与数据隔离.md) |
 | 给 AI 代码助手的项目说明 | [`../AGENTS.md`](../AGENTS.md) · [`../AI_CONTEXT.md`](../AI_CONTEXT.md) |
 | 机器可读架构 | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
