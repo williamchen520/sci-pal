@@ -29,6 +29,7 @@ from services.search.graph_traverser import GraphTraverser
 from services.search.retrieval_diagnostics import RetrievalDiagnostics
 from services.search.abstract_search import AbstractSearch  # V30.0: 摘要库检索
 from services.qa.sufficiency import evaluate as evaluate_sufficiency
+from services.qa.budget import is_complex
 from services.trust.injection import find_injections, wrap_untrusted
 from services.trust.retraction import flags_for_papers
 
@@ -104,13 +105,27 @@ class UnifiedRetriever:
                 # V27.2: 增加粗召回数量，给 reranker 更多候选
                 candidate_k = max(top_paragraphs * 5, 50)
 
+                paragraph_collection = None
+                if (
+                    os.environ.get("SCIPAL_CONTEXTUAL_MODE") == "adaptive"
+                    and getattr(self.searcher, "contextual_collection", None) is not None
+                    and is_complex(query)
+                ):
+                    paragraph_collection = self.searcher.contextual_collection
+
                 # V25.19: vector search with diagnostics
                 if self.diagnostics.enabled:
                     with self.diagnostics.stage("vector_search"):
-                        vector = self.searcher.vector_search(query, candidate_k, paper_id, filters)
+                        vector = self.searcher.vector_search(
+                            query, candidate_k, paper_id, filters,
+                            collection=paragraph_collection,
+                        )
                     self.diagnostics.set_result("vector_search", vector)
                 else:
-                    vector = self.searcher.vector_search(query, candidate_k, paper_id, filters)
+                    vector = self.searcher.vector_search(
+                        query, candidate_k, paper_id, filters,
+                        collection=paragraph_collection,
+                    )
 
                 # V25.19: FTS search with diagnostics (capture enhanced query)
                 if self.diagnostics.enabled:

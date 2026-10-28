@@ -47,20 +47,42 @@ $env:SCIPAL_PARAGRAPH_COLLECTION = "paragraphs_contextual"
 | sentence-in-paragraphs | 0.8462 | 0.8846 |
 | refusal | 0.75 | 0.50 |
 
-## 6. 结论
-
-- Contextual 段落索引在 100 题上显著提升 strict Recall（+25.2%）；
-- paragraph / sentence-in-paragraphs 也提升；
-- 但拒答从 0.75 降到 0.50；
-- 默认仍不启用，按“高召回场景”显式开启：
+## 6. 自适应模式（推荐）
 
 ```powershell
-$env:SCIPAL_PARAGRAPH_COLLECTION = "paragraphs_contextual"
+$env:SCIPAL_CONTEXTUAL_MODE = "adaptive"
 ```
 
-## 7. 为什么不全量默认
+- 简单问题：原 `paragraphs`；
+- 复杂问题：`paragraphs_contextual`。
 
-拒答代价明显；下一步应把 contextual 与 sufficiency 阈值/拒答策略一起调，而不是直接切换默认。
+### 100 题（top10）
+
+| 指标 | 基线 | adaptive | 全量 contextual |
+|---|---|---|---|
+| sentence strict Recall | 0.5365 | **0.5885** | 0.6719 |
+| paragraph Recall | 0.6146 | **0.6823** | 0.7656 |
+| sentence-in-paragraphs | 0.7500 | 0.7604 | 0.8229 |
+| refusal | 0.75 | **0.75** | 0.50 |
+
+### 30 题（top10）
+
+| 指标 | 基线 | adaptive |
+|---|---|---|
+| sentence strict | 0.5192 | 0.5192 |
+| paragraph | 0.7692 | 0.7885 |
+| sentence-in-paragraphs | 0.8462 | 0.8462 |
+| refusal | 0.75 | 0.75 |
+
+## 7. 结论
+
+- adaptive：strict +9.7%（100 题），拒答保持 0.75；
+- 全量 contextual：strict +25.2%，拒答降到 0.50；
+- 默认仍关闭；高召回场景可用全量，日常问答建议 adaptive。
+
+## 8. 为什么不全量默认
+
+全量 contextual 的拒答代价明显；adaptive 是当前召回/拒答最平衡的模式。
 
 ## 5. 后续验证
 
