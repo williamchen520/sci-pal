@@ -69,10 +69,14 @@ python -m build_db.build_summary_vector_index --limit 5000
 | MRR | 0.3331 | 0.3331 | **0.3597** |
 | nDCG@10 | 0.3532 | 0.3532 | **0.3729** |
 | refusal | 0.75 | 0.75 | 0.75 |
+| section_recall@10 | 0.7692 | 0.7692 | 0.7692 |
+| summary_section_recall@10 | 0.2885（FTS） | 0.3654（向量） | — |
 
 结论：
 
-- 单纯向量摘要不改变 Recall；
+- 段落 section 召回 0.7692；向量摘要的 section 命中率 0.3654，比 FTS 摘要 0.2885 高 26.7%；
+- 但 sentence Recall@10 不变：摘要命中 section 中的 gold 句子不一定进前 10；
+- 单纯向量摘要不改变 sentence Recall；
 - 把摘要命中 section 作为段落重排先验（`SCIPAL_SUMMARY_PRIOR`）后，MRR +0.0266、nDCG +0.0197，**Recall 仍不变**；
 - 说明摘要先验改善了排序位置，但没把新的 gold 句子带进前 10；
 - 继续提升需要 query→section 召回本身更好（例如生成式摘要或 section-level embedding）。
