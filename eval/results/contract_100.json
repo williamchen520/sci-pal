@@ -1,0 +1,18 @@
+{
+  "10": {
+    "top_k": 10,
+    "questions": 96,
+    "strict_sentence_recall": 0.5365,
+    "paragraph_recall": 0.6146,
+    "sentence_in_returned_paragraphs": 0.75,
+    "refusal_accuracy": 0.75
+  },
+  "20": {
+    "top_k": 20,
+    "questions": 96,
+    "strict_sentence_recall": 0.625,
+    "paragraph_recall": 0.724,
+    "sentence_in_returned_paragraphs": 0.8021,
+    "refusal_accuracy": 0.5
+  }
+}
