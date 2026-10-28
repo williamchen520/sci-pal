@@ -1,0 +1,32 @@
+name: pr-template
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || "";
+            const required = [
+              "## 1. 背景描述",
+              "## 2. 核心改动",
+              "## 3. 基准测试指标变化",
+            ];
+            const missing = required.filter((heading) => !body.includes(heading));
+            if (missing.length) {
+              core.setFailed(
+                "PR 正文缺少必需章节：\n" +
+                  missing.join("\n") +
+                  "\n请使用 .github/pull_request_template.md 并填写基准测试表。"
+              );
+            }
+            if (!/\|\s*指标\s*\|/.test(body) || !/Recall@10|MRR|nDCG/.test(body)) {
+              core.setFailed(
+                "第 3 节必须包含基准测试 Markdown 表（指标 / 基线 / 变更后 / 变化）。"
+              );
+            }

@@ -27,6 +27,8 @@
 | 引用意图 | [引用意图.md](引用意图.md) |
 | Claim–Evidence 图（试点） | [claim-evidence.md](claim-evidence.md) |
 | 系统综述工作流 | [系统综述工作流.md](系统综述工作流.md) |
+| 项目里程碑数据表 | [项目里程碑数据表.md](项目里程碑数据表.md) |
+| 贡献指南（铁律） | [../CONTRIBUTING.md](../CONTRIBUTING.md) |
 | 计划书：模型分层与数据隔离 | [计划-模型分层与数据隔离.md](计划-模型分层与数据隔离.md) |
 | 给 AI 代码助手的项目说明 | [`../AGENTS.md`](../AGENTS.md) · [`../AI_CONTEXT.md`](../AI_CONTEXT.md) |
 | 机器可读架构 | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
