@@ -18,6 +18,7 @@ from services.review.llm_client import LLMClient, LLMError
 from services.ai.rag_validator import RAGValidator
 from services.qa.verify import verify_answer
 from services.qa.budget import choose_top_k
+from services.qa.citations import paragraph_citation
 
 
 # ============================================================
@@ -410,6 +411,8 @@ class QAService:
                     "section": item.get("section_l1", item.get("section", "")),
                     "page": item.get("page", ""),
                 }
+                if cite["type"] == "P" and item.get("para_id"):
+                    source_info.update(paragraph_citation(item["para_id"]))
                 # 图表特有字段
                 if cite["type"] == "F":
                     source_info["fig_number"] = item.get("fig_number", "")
