@@ -480,6 +480,15 @@ def review_export(project_id: str) -> str:
     return _call("GET", f"/api/review-projects/{_path_segment(project_id)}/export.json")
 
 
+@mcp.tool(description="按 DOI/标题导入外部检索记录（POST /api/review-projects/<id>/import-records）。")
+def review_import_records(project_id: str, records: list) -> str:
+    return _call(
+        "POST",
+        f"/api/review-projects/{_path_segment(project_id)}/import-records",
+        {"records": records},
+    )
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 

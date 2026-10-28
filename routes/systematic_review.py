@@ -367,4 +367,24 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         finally:
             conn.close()
 
+    @bp.route("/<project_id>/import-records", methods=["POST"])
+    def import_records(project_id: str):
+        conn = _conn()
+        try:
+            if not systematic.can_access(conn, project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            data = request.get_json(silent=True) or {}
+            records = data.get("records") or []
+            result = systematic.import_records(conn, project_id, records)
+            _audit(
+                conn,
+                project_id,
+                "records_imported",
+                "",
+                f"matched={result['matched']} unmatched={result['unmatched']}",
+            )
+            return jsonify(result)
+        finally:
+            conn.close()
+
     return bp
