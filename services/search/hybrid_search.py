@@ -4,6 +4,7 @@ V21.0 - Retrieval layer
 V22.1 - Multi-query expansion + optional HyDE
 V25.19 - Enhanced FTS query + dynamic RRF weights + MMR diversification + diagnostics
 """
+import os
 import sqlite3
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Callable
@@ -65,7 +66,8 @@ class HybridSearch:
         self.conn.row_factory = sqlite3.Row
 
         self.client = chromadb.PersistentClient(path=str(CHROMA_PATH))
-        self.para_collection = self.client.get_collection("paragraphs")
+        collection_name = os.environ.get("SCIPAL_PARAGRAPH_COLLECTION", "paragraphs")
+        self.para_collection = self.client.get_collection(collection_name)
         self.paper_collection = self._get_collection("papers")
         self.fig_collection = self._get_collection("figures")
         self.table_collection = self._get_collection("tables")
