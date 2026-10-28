@@ -6,6 +6,7 @@ import sqlite3
 
 from flask import Blueprint, Response, g, jsonify, request
 
+from services.review import brief as brief_mod
 from services.review import kappa as kappa_mod
 from services.review import prisma_svg
 from services.review import risk_of_bias
@@ -206,6 +207,18 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 return jsonify({"error": "run_id required"}), 400
             added = systematic.add_from_watch(conn, project_id, run_id)
             return jsonify({"added": added})
+        finally:
+            conn.close()
+
+    @bp.route("/<project_id>/brief", methods=["GET"])
+    def review_brief(project_id: str):
+        conn = _conn()
+        try:
+            row = systematic.get_project(conn, project_id)
+            if not row or row.get("owner") != _owner():
+                return jsonify({"error": "project not found"}), 404
+            text = brief_mod.build_brief(conn, project_id)
+            return Response(text, mimetype="text/markdown; charset=utf-8")
         finally:
             conn.close()
 
