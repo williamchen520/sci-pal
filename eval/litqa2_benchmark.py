@@ -35,6 +35,39 @@ def split_sentences(text: str) -> List[str]:
     return [part.strip() for part in SENT_RE.split(text or "") if part.strip()]
 
 
+def normalize_text(text: str) -> str:
+    text = (text or "").lower()
+    text = text.replace("‐", "-").replace("–", "-").replace("—", "-")
+    text = re.sub(r"\([0-9,\-\s]+\)", " ", text)
+    return re.sub(r"[^a-z0-9]+", " ", text).strip()
+
+
+def match_key_passage(key_passage: str, sentences: List[Dict]) -> Dict:
+    key = normalize_text(key_passage)
+    if not key:
+        return {}
+    key_tokens = set(key.split())
+    raw_key = (key_passage or "").lower().strip()
+    for sentence in sentences:
+        if raw_key and raw_key in (sentence["text"] or "").lower():
+            return {**sentence, "method": "raw", "score": 1.0}
+    for sentence in sentences:
+        if key and key in normalize_text(sentence["text"]):
+            return {**sentence, "method": "exact", "score": 1.0}
+    best = None
+    best_score = 0.0
+    for sentence in sentences:
+        tokens = set(normalize_text(sentence["text"]).split())
+        if not tokens:
+            continue
+        score = len(key_tokens & tokens) / len(key_tokens)
+        if score > best_score:
+            best_score, best = score, sentence
+    if best is not None and best_score >= 0.6:
+        return {**best, "method": "overlap", "score": round(best_score, 4)}
+    return {}
+
+
 def fetch_xml(doi: str) -> str | None:
     query = urllib.parse.quote(f'DOI:"{doi}"')
     try:
@@ -114,6 +147,8 @@ def build(data: Path, limit: int, db_path: Path, chroma_path: Path) -> Dict:
         key_passage = (item.get("key-passage") or "").strip()
         gold_para = None
         gold_sentences = []
+        all_sentences = []
+        all_paragraphs = []
         for index, paragraph in enumerate(parsed.get("paragraphs") or []):
             para_id = f"{paper_id}_p{index}"
             text = paragraph.get("text") or ""
@@ -128,18 +163,39 @@ def build(data: Path, limit: int, db_path: Path, chroma_path: Path) -> Dict:
                 "INSERT INTO paragraphs_fts VALUES (?, ?, ?, '', ?)",
                 (para_id, paper_id, paragraph.get("section_title") or "", text),
             )
+            all_paragraphs.append({"para_id": para_id, "text": text})
             for seq, sentence in enumerate(split_sentences(text)):
                 sentence_id = f"{para_id}_s{seq}"
                 conn.execute("INSERT INTO sentences VALUES (?, ?, ?, ?)", (sentence_id, para_id, sentence, seq))
-                if key_passage and key_passage.lower() in sentence.lower() and gold_para is None:
-                    gold_para = para_id
-                    gold_sentences.append(sentence_id)
-            if key_passage and key_passage.lower() in text.lower() and gold_para is None:
-                gold_para = para_id
-                gold_sentences = [
-                    row[0]
-                    for row in conn.execute("SELECT sentence_id FROM sentences WHERE para_id = ?", (para_id,))
-                ]
+                all_sentences.append(
+                    {"sentence_id": sentence_id, "para_id": para_id, "text": sentence}
+                )
+        matched = match_key_passage(key_passage, all_sentences) if key_passage else {}
+        if matched:
+            gold_para = matched["para_id"]
+            gold_sentences = [matched["sentence_id"]]
+        else:
+            raw_key = (key_passage or "").lower()
+            for paragraph in all_paragraphs:
+                if raw_key and raw_key in (paragraph["text"] or "").lower():
+                    gold_para = paragraph["para_id"]
+                    gold_sentences = [
+                        sentence["sentence_id"]
+                        for sentence in all_sentences
+                        if sentence["para_id"] == gold_para
+                    ]
+                    break
+            if gold_para is None:
+                norm_key = normalize_text(key_passage)
+                for paragraph in all_paragraphs:
+                    if norm_key and norm_key in normalize_text(paragraph["text"]):
+                        gold_para = paragraph["para_id"]
+                        gold_sentences = [
+                            sentence["sentence_id"]
+                            for sentence in all_sentences
+                            if sentence["para_id"] == gold_para
+                        ]
+                        break
         if gold_para is None:
             print("unmapped key-passage", item["id"])
         conn.execute(
