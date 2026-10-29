@@ -1,0 +1,2131 @@
+{
+  "summary": {
+    "claims": 100,
+    "doc_recall@10": 0.97,
+    "sentence_recall@10": 0.96,
+    "mrr": 0.8277
+  },
+  "rows": [
+    {
+      "claim_id": "1000",
+      "claim": "Pyridostatin stabilizes the G - quadruplex in the telomeric region.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10486817",
+        "scifact_1226452",
+        "scifact_12922760",
+        "scifact_16472469",
+        "scifact_25787749",
+        "scifact_26118532",
+        "scifact_26607366",
+        "scifact_2758012",
+        "scifact_4319844",
+        "scifact_6386930"
+      ],
+      "gold_docs": [
+        "scifact_16472469"
+      ]
+    },
+    {
+      "claim_id": "1003",
+      "claim": "RAD52 is involved in break-induced DNA replication (BIR).",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12086599",
+        "scifact_14332945",
+        "scifact_15659108",
+        "scifact_15913433",
+        "scifact_4319844",
+        "scifact_4899981",
+        "scifact_52944377",
+        "scifact_5389523",
+        "scifact_7151961",
+        "scifact_8577229"
+      ],
+      "gold_docs": [
+        "scifact_14332945",
+        "scifact_4319844",
+        "scifact_4899981"
+      ]
+    },
+    {
+      "claim_id": "1004",
+      "claim": "RANK-RANKL pathway signalling has no known association with development of Aire-expressing medullary thymic epithelial cells.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13989491",
+        "scifact_18488986",
+        "scifact_20155713",
+        "scifact_24828165",
+        "scifact_2734421",
+        "scifact_301838",
+        "scifact_33030946",
+        "scifact_39128592",
+        "scifact_3952288",
+        "scifact_39559521"
+      ],
+      "gold_docs": [
+        "scifact_2734421",
+        "scifact_301838",
+        "scifact_3952288"
+      ]
+    },
+    {
+      "claim_id": "1005",
+      "claim": "RANK-RANKL pathway signalling is linked to development of Aire-expressing medullary thymic epithelial cells.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13989491",
+        "scifact_18488986",
+        "scifact_20155713",
+        "scifact_24828165",
+        "scifact_2734421",
+        "scifact_301838",
+        "scifact_33030946",
+        "scifact_39128592",
+        "scifact_3952288",
+        "scifact_39559521"
+      ],
+      "gold_docs": [
+        "scifact_2734421",
+        "scifact_301838",
+        "scifact_3952288"
+      ]
+    },
+    {
+      "claim_id": "1006",
+      "claim": "RTEL1 interacts with TRF2 through a C4C4 motif",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_15121114",
+        "scifact_1546650",
+        "scifact_30507607",
+        "scifact_36816310",
+        "scifact_41024260",
+        "scifact_4363526",
+        "scifact_4926049",
+        "scifact_5436081",
+        "scifact_7848113",
+        "scifact_7878807"
+      ],
+      "gold_docs": [
+        "scifact_4926049"
+      ]
+    },
+    {
+      "claim_id": "1009",
+      "claim": "RUNX1 is downregulated or mutated in TLX1 T-ALL.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1243475",
+        "scifact_13048272",
+        "scifact_1982286",
+        "scifact_2061878",
+        "scifact_3113630",
+        "scifact_33076846",
+        "scifact_3493623",
+        "scifact_6421792",
+        "scifact_9076196",
+        "scifact_9095394"
+      ],
+      "gold_docs": [
+        "scifact_1982286"
+      ]
+    },
+    {
+      "claim_id": "1011",
+      "claim": "Radioiodine treatment of non-toxic multinodular goitre increases thyroid volume.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_21551568",
+        "scifact_25452937",
+        "scifact_26026009",
+        "scifact_26409363",
+        "scifact_3619931",
+        "scifact_37912677",
+        "scifact_43122426",
+        "scifact_6334188",
+        "scifact_6751418",
+        "scifact_9745001"
+      ],
+      "gold_docs": [
+        "scifact_9745001"
+      ]
+    },
+    {
+      "claim_id": "1015",
+      "claim": "Rapamycin delays aging in fruit flies.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1084345",
+        "scifact_11414664",
+        "scifact_14496749",
+        "scifact_16233471",
+        "scifact_2266471",
+        "scifact_24632480",
+        "scifact_4434951",
+        "scifact_4658268",
+        "scifact_6277638",
+        "scifact_7185591"
+      ],
+      "gold_docs": [
+        "scifact_6277638"
+      ]
+    },
+    {
+      "claim_id": "1018",
+      "claim": "Rapid phosphotransfer rates are correlated with histidine kinase regulator specificity.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11603066",
+        "scifact_1225513",
+        "scifact_12685434",
+        "scifact_13036442",
+        "scifact_196664003",
+        "scifact_20620012",
+        "scifact_28651643",
+        "scifact_39859981",
+        "scifact_457630",
+        "scifact_7821634"
+      ],
+      "gold_docs": [
+        "scifact_11603066"
+      ]
+    },
+    {
+      "claim_id": "1023",
+      "claim": "Recognition of start codons depends on the translation initiation factor IF3.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_16927286",
+        "scifact_18987782",
+        "scifact_22482024",
+        "scifact_23342686",
+        "scifact_2479538",
+        "scifact_26378103",
+        "scifact_30261663",
+        "scifact_30437264",
+        "scifact_39729277",
+        "scifact_9505448"
+      ],
+      "gold_docs": [
+        "scifact_16927286"
+      ]
+    },
+    {
+      "claim_id": "1028",
+      "claim": "Reduced responsiveness to interleukin-2 in regulatory T cells is associated with autoimmune diseases such as Type 1 Diabetes.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11899391",
+        "scifact_13923140",
+        "scifact_13940200",
+        "scifact_22852120",
+        "scifact_23342845",
+        "scifact_24101431",
+        "scifact_266641",
+        "scifact_36642096",
+        "scifact_7115651",
+        "scifact_9655347"
+      ],
+      "gold_docs": [
+        "scifact_11899391",
+        "scifact_13923140"
+      ]
+    },
+    {
+      "claim_id": "1030",
+      "claim": "Reducing H3k4me3 methylation induces mouse epiblast stem cells to naive pluripotency efficiently.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12100854",
+        "scifact_13955536",
+        "scifact_14923462",
+        "scifact_1630949",
+        "scifact_23418635",
+        "scifact_24713020",
+        "scifact_3882374",
+        "scifact_4462419",
+        "scifact_6441369",
+        "scifact_7581911"
+      ],
+      "gold_docs": [
+        "scifact_6441369"
+      ]
+    },
+    {
+      "claim_id": "1031",
+      "claim": "Reduction of Rpl38 alters the composition of the Hox gene mRNAs translation in mice without lowering overall protein synthesis.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11578459",
+        "scifact_12486491",
+        "scifact_15590539",
+        "scifact_18987782",
+        "scifact_22358449",
+        "scifact_24737389",
+        "scifact_24863571",
+        "scifact_2988714",
+        "scifact_9315213",
+        "scifact_935538"
+      ],
+      "gold_docs": [
+        "scifact_12486491"
+      ]
+    },
+    {
+      "claim_id": "1034",
+      "claim": "Removal of H3K9me3 by ectopic expression of other H3K9 demethylases decreases reprogramming efficiency in SCNT experiments.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12100854",
+        "scifact_14225271",
+        "scifact_14555750",
+        "scifact_15803282",
+        "scifact_18998807",
+        "scifact_21271817",
+        "scifact_21380232",
+        "scifact_4547102",
+        "scifact_7426741",
+        "scifact_8185080"
+      ],
+      "gold_docs": [
+        "scifact_4547102"
+      ]
+    },
+    {
+      "claim_id": "1035",
+      "claim": "Removal of H3K9me3 by ectopic expression of other H3K9 demethylases improves reprogramming efficiency in SCNT experiments.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12100854",
+        "scifact_14225271",
+        "scifact_14555750",
+        "scifact_15803282",
+        "scifact_18998807",
+        "scifact_21271817",
+        "scifact_4547102",
+        "scifact_6826100",
+        "scifact_7426741",
+        "scifact_8185080"
+      ],
+      "gold_docs": [
+        "scifact_4547102"
+      ]
+    },
+    {
+      "claim_id": "1036",
+      "claim": "Removal of H3K9me3 improves reprogramming efficiency in human somatic cell nuclear transfer experiments.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12100854",
+        "scifact_14555750",
+        "scifact_15803282",
+        "scifact_18998807",
+        "scifact_22490293",
+        "scifact_4457834",
+        "scifact_4547102",
+        "scifact_6477740",
+        "scifact_8185080",
+        "scifact_86129154"
+      ],
+      "gold_docs": [
+        "scifact_4547102"
+      ]
+    },
+    {
+      "claim_id": "104",
+      "claim": "Allogeneic mechanical circulatory support is not as effective as autologous mechanical circulatory support for treating acute myocardial infarction.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_17897801",
+        "scifact_20526907",
+        "scifact_22530842",
+        "scifact_29526125",
+        "scifact_3056682",
+        "scifact_32159283",
+        "scifact_40164383",
+        "scifact_44384384",
+        "scifact_5884524",
+        "scifact_5993745"
+      ],
+      "gold_docs": [
+        "scifact_40164383"
+      ]
+    },
+    {
+      "claim_id": "1040",
+      "claim": "Replacement of histone H2A with H2A.Z accelerates gene activation in yeasts by destabilizing +1 nucleosomes.",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "returned_docs": [
+        "scifact_11844791",
+        "scifact_15778034",
+        "scifact_16626264",
+        "scifact_17518195",
+        "scifact_18694784",
+        "scifact_24311787",
+        "scifact_406733",
+        "scifact_5966635",
+        "scifact_9451052",
+        "scifact_9881829"
+      ],
+      "gold_docs": [
+        "scifact_16626264",
+        "scifact_25254425"
+      ]
+    },
+    {
+      "claim_id": "1042",
+      "claim": "Repressing IL-18 has negative effects on atherosclerotic lesion composition and progression.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13108582",
+        "scifact_13923069",
+        "scifact_15727984",
+        "scifact_15879931",
+        "scifact_17421851",
+        "scifact_19332616",
+        "scifact_24384587",
+        "scifact_25050364",
+        "scifact_5979056",
+        "scifact_7373453"
+      ],
+      "gold_docs": [
+        "scifact_17421851"
+      ]
+    },
+    {
+      "claim_id": "1043",
+      "claim": "Retinoic acid receptor-related orphan receptor gamma (RORγ) is a therapeutic target for castration-resistant prostate cancer (CRPC)",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11774598",
+        "scifact_14116046",
+        "scifact_14131683",
+        "scifact_17671145",
+        "scifact_22180793",
+        "scifact_23938319",
+        "scifact_25513319",
+        "scifact_27167110",
+        "scifact_37256966",
+        "scifact_5860364"
+      ],
+      "gold_docs": [
+        "scifact_17671145"
+      ]
+    },
+    {
+      "claim_id": "1044",
+      "claim": "Rhythmic expression of Cry1 translates directly into a circadian regulation of cAMP signaling in gluconeogenesis.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11565780",
+        "scifact_11968641",
+        "scifact_14471161",
+        "scifact_21645205",
+        "scifact_22500262",
+        "scifact_26099680",
+        "scifact_27247460",
+        "scifact_33634749",
+        "scifact_4587978",
+        "scifact_8816869"
+      ],
+      "gold_docs": [
+        "scifact_22500262"
+      ]
+    },
+    {
+      "claim_id": "1045",
+      "claim": "Rhythmic expression of Cry1 translates directly into a circadian regulation of cAMP signaling in hepatic glucose metabolism.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11565780",
+        "scifact_13277039",
+        "scifact_14471161",
+        "scifact_20052986",
+        "scifact_21645205",
+        "scifact_22500262",
+        "scifact_23830488",
+        "scifact_27247460",
+        "scifact_4587978",
+        "scifact_8816869"
+      ],
+      "gold_docs": [
+        "scifact_22500262"
+      ]
+    },
+    {
+      "claim_id": "1048",
+      "claim": "Ribosomopathies have a high degree of cell and tissue specific pathology.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12486491",
+        "scifact_14019636",
+        "scifact_24737389",
+        "scifact_24790460",
+        "scifact_24863571",
+        "scifact_26112624",
+        "scifact_6670101",
+        "scifact_7487927",
+        "scifact_8925851",
+        "scifact_952111"
+      ],
+      "gold_docs": [
+        "scifact_12486491"
+      ]
+    },
+    {
+      "claim_id": "105",
+      "claim": "Alteration of origin firing causes changes in termination zones of Okazaki fragments.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_15836115",
+        "scifact_164189",
+        "scifact_2576811",
+        "scifact_25787749",
+        "scifact_32194449",
+        "scifact_35004872",
+        "scifact_35520219",
+        "scifact_36606083",
+        "scifact_5223817",
+        "scifact_935034"
+      ],
+      "gold_docs": [
+        "scifact_36606083"
+      ]
+    },
+    {
+      "claim_id": "1050",
+      "claim": "Risedronate increases risk of vertebral and non-vertebral fractures.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11246427",
+        "scifact_16812091",
+        "scifact_17482507",
+        "scifact_18691097",
+        "scifact_19205326",
+        "scifact_19878070",
+        "scifact_26000593",
+        "scifact_3613041",
+        "scifact_4687948",
+        "scifact_9555784"
+      ],
+      "gold_docs": [
+        "scifact_19878070"
+      ]
+    },
+    {
+      "claim_id": "1054",
+      "claim": "Risk of cardiovascular events can be cut by a third by using antihypertensive drug therapy among hemodialysis patients.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10072941",
+        "scifact_10984005",
+        "scifact_16760369",
+        "scifact_202259",
+        "scifact_2522977",
+        "scifact_25451374",
+        "scifact_30981192",
+        "scifact_40790033",
+        "scifact_54490092",
+        "scifact_5698494"
+      ],
+      "gold_docs": [
+        "scifact_10072941"
+      ]
+    },
+    {
+      "claim_id": "1055",
+      "claim": "Risk-adjusted mortality rates are similar in teaching and non-teaching hospitals.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13906581",
+        "scifact_17914395",
+        "scifact_21323587",
+        "scifact_24088502",
+        "scifact_26611094",
+        "scifact_36003142",
+        "scifact_3776162",
+        "scifact_3898784",
+        "scifact_39059143",
+        "scifact_4824840"
+      ],
+      "gold_docs": [
+        "scifact_13906581"
+      ]
+    },
+    {
+      "claim_id": "1056",
+      "claim": "Rotator cuff exercises are more effective than general exercise therapy in reducing pain and improving function of the shoulder.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11933721",
+        "scifact_19182166",
+        "scifact_21053753",
+        "scifact_38493521",
+        "scifact_41976370",
+        "scifact_4200695",
+        "scifact_42950029",
+        "scifact_44048701",
+        "scifact_44586415",
+        "scifact_6191684"
+      ],
+      "gold_docs": [
+        "scifact_4200695"
+      ]
+    },
+    {
+      "claim_id": "106",
+      "claim": "Ambulatory blood pressure monitoring is inaccurate at diagnosing hypertension.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12206390",
+        "scifact_22730024",
+        "scifact_25515907",
+        "scifact_31889025",
+        "scifact_44030361",
+        "scifact_44660616",
+        "scifact_45447613",
+        "scifact_5151024",
+        "scifact_54490092",
+        "scifact_8318922"
+      ],
+      "gold_docs": [
+        "scifact_25515907",
+        "scifact_5151024"
+      ]
+    },
+    {
+      "claim_id": "1065",
+      "claim": "Satellite cell dysfunction is a key factor in sarcopenia development.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13944805",
+        "scifact_16630060",
+        "scifact_16660256",
+        "scifact_20186814",
+        "scifact_20418809",
+        "scifact_25419778",
+        "scifact_25827024",
+        "scifact_4326318",
+        "scifact_4653837",
+        "scifact_9559146"
+      ],
+      "gold_docs": [
+        "scifact_20418809"
+      ]
+    },
+    {
+      "claim_id": "1069",
+      "claim": "Scapular stabilizer exercises are more effective than general exercise therapy in reducing pain and improving function of the shoulder.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11933721",
+        "scifact_19182166",
+        "scifact_21053753",
+        "scifact_38493521",
+        "scifact_41976370",
+        "scifact_4200695",
+        "scifact_44048701",
+        "scifact_53779698",
+        "scifact_6191684",
+        "scifact_6625693"
+      ],
+      "gold_docs": [
+        "scifact_4200695"
+      ]
+    },
+    {
+      "claim_id": "1072",
+      "claim": "Sepsis related mortality has remained stable between 2009-2014.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11459139",
+        "scifact_17023584",
+        "scifact_195317463",
+        "scifact_22153455",
+        "scifact_26314743",
+        "scifact_3776162",
+        "scifact_4791384",
+        "scifact_4824840",
+        "scifact_5185871",
+        "scifact_5596332"
+      ],
+      "gold_docs": [
+        "scifact_4824840"
+      ]
+    },
+    {
+      "claim_id": "1073",
+      "claim": "Sepsis related mortality has risen from 2009 to 2014.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11459139",
+        "scifact_17023584",
+        "scifact_22153455",
+        "scifact_26314743",
+        "scifact_3776162",
+        "scifact_3878434",
+        "scifact_4791384",
+        "scifact_4824840",
+        "scifact_5185871",
+        "scifact_5596332"
+      ],
+      "gold_docs": [
+        "scifact_4824840"
+      ]
+    },
+    {
+      "claim_id": "108",
+      "claim": "Amitriptyline is an effective treatment for chronic tension-type headaches.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_14606752",
+        "scifact_1495563",
+        "scifact_22995579",
+        "scifact_23865182",
+        "scifact_24510595",
+        "scifact_24865781",
+        "scifact_30813140",
+        "scifact_39985001",
+        "scifact_44830890",
+        "scifact_6191684"
+      ],
+      "gold_docs": [
+        "scifact_22995579",
+        "scifact_23865182",
+        "scifact_6191684"
+      ]
+    },
+    {
+      "claim_id": "1081",
+      "claim": "Side effects associated with antidepressants do not represent a mortality risk to postmenopausal women.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13831842",
+        "scifact_1428840",
+        "scifact_14606752",
+        "scifact_25973484",
+        "scifact_3230557",
+        "scifact_4506702",
+        "scifact_5691302",
+        "scifact_583260",
+        "scifact_6309659",
+        "scifact_881332"
+      ],
+      "gold_docs": [
+        "scifact_5691302"
+      ]
+    },
+    {
+      "claim_id": "1084",
+      "claim": "Side effects associated with antidepressants increases risk of stroke.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10984005",
+        "scifact_12039953",
+        "scifact_14606752",
+        "scifact_15984735",
+        "scifact_23627419",
+        "scifact_23785605",
+        "scifact_37619697",
+        "scifact_39281140",
+        "scifact_5691302",
+        "scifact_583260"
+      ],
+      "gold_docs": [
+        "scifact_5691302"
+      ]
+    },
+    {
+      "claim_id": "1087",
+      "claim": "Sildenafil worsens erectile function in men who experience sexual dysfunction as a result of the use of SSRI antidepressants.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12039953",
+        "scifact_26199970",
+        "scifact_27466734",
+        "scifact_3413083",
+        "scifact_39281140",
+        "scifact_3981244",
+        "scifact_4506702",
+        "scifact_5691302",
+        "scifact_5850219",
+        "scifact_6112053"
+      ],
+      "gold_docs": [
+        "scifact_39281140"
+      ]
+    },
+    {
+      "claim_id": "109",
+      "claim": "An M2-like phenotype in brown adipose tissue macrophages is quickly induced by cold exposure.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13000926",
+        "scifact_14865329",
+        "scifact_20532591",
+        "scifact_29381091",
+        "scifact_34016987",
+        "scifact_36838958",
+        "scifact_4319174",
+        "scifact_43192375",
+        "scifact_8477699",
+        "scifact_970012"
+      ],
+      "gold_docs": [
+        "scifact_4319174"
+      ]
+    },
+    {
+      "claim_id": "1090",
+      "claim": "Smc5/6 engagment halts the activation of SUMO E3 ligase Mms21 by ATP-dependent remolding.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11903247",
+        "scifact_1684489",
+        "scifact_17628888",
+        "scifact_21948782",
+        "scifact_23403754",
+        "scifact_35543846",
+        "scifact_4418582",
+        "scifact_7915836",
+        "scifact_86231298",
+        "scifact_9732010"
+      ],
+      "gold_docs": [
+        "scifact_17628888"
+      ]
+    },
+    {
+      "claim_id": "1097",
+      "claim": "Splenomegaly is observed in knockin mouse lacking the SHP-2 MAPK pathway.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11289247",
+        "scifact_11428884",
+        "scifact_17717391",
+        "scifact_18038250",
+        "scifact_18489989",
+        "scifact_26851674",
+        "scifact_4422868",
+        "scifact_5531479",
+        "scifact_6374918",
+        "scifact_9154703"
+      ],
+      "gold_docs": [
+        "scifact_26851674"
+      ]
+    },
+    {
+      "claim_id": "1101",
+      "claim": "Stiff substrates encourage mesodermal differentiation by degrading beta-catenin in an integrin-dependent manner.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1065627",
+        "scifact_13779605",
+        "scifact_1782201",
+        "scifact_20313748",
+        "scifact_21564598",
+        "scifact_2682997",
+        "scifact_29689140",
+        "scifact_31311495",
+        "scifact_3874000",
+        "scifact_43661837"
+      ],
+      "gold_docs": [
+        "scifact_3874000"
+      ]
+    },
+    {
+      "claim_id": "1102",
+      "claim": "Stiff substrates inhibit mesodermal differentiation by degrading beta-catenin in an integrin-dependent manner.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1065627",
+        "scifact_13779605",
+        "scifact_14149065",
+        "scifact_1782201",
+        "scifact_20313748",
+        "scifact_29689140",
+        "scifact_31311495",
+        "scifact_3874000",
+        "scifact_43661837",
+        "scifact_5633876"
+      ],
+      "gold_docs": [
+        "scifact_3874000"
+      ]
+    },
+    {
+      "claim_id": "1103",
+      "claim": "Stroke patients with prior use of direct oral anticoagulants have a higher risk of in-hospital mortality than stroke patients with prior use of warfarin.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10984005",
+        "scifact_11718220",
+        "scifact_15984735",
+        "scifact_16760369",
+        "scifact_23785605",
+        "scifact_32328114",
+        "scifact_3898784",
+        "scifact_4910408",
+        "scifact_5884524",
+        "scifact_9813098"
+      ],
+      "gold_docs": [
+        "scifact_3898784"
+      ]
+    },
+    {
+      "claim_id": "1105",
+      "claim": "Students who perform poorly in the early years of medical school are at increased risk for professional misconduct later in their careers.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11624482",
+        "scifact_13906581",
+        "scifact_14500725",
+        "scifact_17374970",
+        "scifact_21902910",
+        "scifact_24077493",
+        "scifact_28017005",
+        "scifact_38664102",
+        "scifact_4647303",
+        "scifact_6710713"
+      ],
+      "gold_docs": [
+        "scifact_6710713"
+      ]
+    },
+    {
+      "claim_id": "1106",
+      "claim": "Students who perform poorly in the early years of medical school are less likely to commit professional misconduct later in their careers.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11624482",
+        "scifact_12205576",
+        "scifact_12789595",
+        "scifact_13906581",
+        "scifact_14500725",
+        "scifact_16855829",
+        "scifact_17374970",
+        "scifact_28017005",
+        "scifact_38664102",
+        "scifact_6710713"
+      ],
+      "gold_docs": [
+        "scifact_6710713"
+      ]
+    },
+    {
+      "claim_id": "1109",
+      "claim": "Suboptimal nutrition is a leading cause of premature death",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "returned_docs": [
+        "scifact_11630388",
+        "scifact_11748341",
+        "scifact_12709184",
+        "scifact_1456068",
+        "scifact_17415081",
+        "scifact_21495419",
+        "scifact_2613775",
+        "scifact_33740844",
+        "scifact_4810810",
+        "scifact_8529693"
+      ],
+      "gold_docs": [
+        "scifact_13770184",
+        "scifact_8582337"
+      ]
+    },
+    {
+      "claim_id": "111",
+      "claim": "Androgenetic haploid mouse embryonic stem cells (ESCs) can be derived and genetically manipulated in vitro.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13513790",
+        "scifact_2086909",
+        "scifact_2682251",
+        "scifact_3360421",
+        "scifact_36651210",
+        "scifact_40087494",
+        "scifact_4256553",
+        "scifact_4462419",
+        "scifact_7581911",
+        "scifact_9988425"
+      ],
+      "gold_docs": [
+        "scifact_13513790"
+      ]
+    },
+    {
+      "claim_id": "1114",
+      "claim": "Surfactin producing cells and exopolymer producing cells cooperate to generate \"Van Gogh\" bundles that have sliding abilities on specialized media.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10846815",
+        "scifact_11041152",
+        "scifact_11360430",
+        "scifact_12824568",
+        "scifact_1709625",
+        "scifact_2140513",
+        "scifact_24555417",
+        "scifact_34735369",
+        "scifact_4321295",
+        "scifact_4423559"
+      ],
+      "gold_docs": [
+        "scifact_12824568"
+      ]
+    },
+    {
+      "claim_id": "1115",
+      "claim": "Surgical treatment is not superior to non-surgical in treating adults with displaced fractures of the proximal humerus.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_19182166",
+        "scifact_19532163",
+        "scifact_23704559",
+        "scifact_24724242",
+        "scifact_26000593",
+        "scifact_26026009",
+        "scifact_38493521",
+        "scifact_40343416",
+        "scifact_44048701",
+        "scifact_9967265"
+      ],
+      "gold_docs": [
+        "scifact_44048701"
+      ]
+    },
+    {
+      "claim_id": "1119",
+      "claim": "Sympathetic nerve activity is elevated throughout normal pregnancy.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13907928",
+        "scifact_18997216",
+        "scifact_26710772",
+        "scifact_37480103",
+        "scifact_3912660",
+        "scifact_4409524",
+        "scifact_5107861",
+        "scifact_5323845",
+        "scifact_58006489",
+        "scifact_8596837"
+      ],
+      "gold_docs": [
+        "scifact_13907928",
+        "scifact_18997216",
+        "scifact_5323845"
+      ]
+    },
+    {
+      "claim_id": "112",
+      "claim": "Angiotensin converting enzyme inhibitors are associated with decreased risk for functional renal insufficiency.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_140098548",
+        "scifact_14121786",
+        "scifact_1759213",
+        "scifact_25816994",
+        "scifact_26199970",
+        "scifact_27428509",
+        "scifact_32463364",
+        "scifact_43417006",
+        "scifact_5573975",
+        "scifact_6157837"
+      ],
+      "gold_docs": [
+        "scifact_6157837"
+      ]
+    },
+    {
+      "claim_id": "1120",
+      "claim": "Sympathetic nerve activity is reduced throughout normal pregnancy.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11360768",
+        "scifact_13907928",
+        "scifact_18997216",
+        "scifact_25687558",
+        "scifact_26710772",
+        "scifact_27129115",
+        "scifact_5107861",
+        "scifact_5323845",
+        "scifact_58006489",
+        "scifact_8596837"
+      ],
+      "gold_docs": [
+        "scifact_13907928",
+        "scifact_18997216",
+        "scifact_5323845"
+      ]
+    },
+    {
+      "claim_id": "1125",
+      "claim": "Systemic immunosuppressive (IS) therapy does not enhance the chance of cancer mortality in patients with inflammatory eye disease (IED)",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11335781",
+        "scifact_11481946",
+        "scifact_19994006",
+        "scifact_2030623",
+        "scifact_21009874",
+        "scifact_22635278",
+        "scifact_24735908",
+        "scifact_27240667",
+        "scifact_36480032",
+        "scifact_9056874"
+      ],
+      "gold_docs": [
+        "scifact_21009874"
+      ]
+    },
+    {
+      "claim_id": "1126",
+      "claim": "Systemic immunosuppressive (IS) therapy increases the chance of cancer mortality in patients with inflammatory eye disease (IED)",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11335781",
+        "scifact_11481946",
+        "scifact_13952658",
+        "scifact_21009874",
+        "scifact_22635278",
+        "scifact_27240667",
+        "scifact_36480032",
+        "scifact_3878434",
+        "scifact_6334188",
+        "scifact_9056874"
+      ],
+      "gold_docs": [
+        "scifact_21009874"
+      ]
+    },
+    {
+      "claim_id": "1127",
+      "claim": "Systemic lupus erythematosus is a risk factor for cardiovascular disease.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12670680",
+        "scifact_14938990",
+        "scifact_15984735",
+        "scifact_2138767",
+        "scifact_23785605",
+        "scifact_25300664",
+        "scifact_25451374",
+        "scifact_27466734",
+        "scifact_28015516",
+        "scifact_28149602"
+      ],
+      "gold_docs": [
+        "scifact_27466734"
+      ]
+    },
+    {
+      "claim_id": "1128",
+      "claim": "T cell receptor /CD3 microdomains are required to induce the immunologic synapse.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_15972906",
+        "scifact_18042803",
+        "scifact_18834078",
+        "scifact_2714623",
+        "scifact_2825380",
+        "scifact_33499189",
+        "scifact_41982985",
+        "scifact_4422734",
+        "scifact_5914739",
+        "scifact_6936141"
+      ],
+      "gold_docs": [
+        "scifact_33499189",
+        "scifact_9283422"
+      ]
+    },
+    {
+      "claim_id": "1133",
+      "claim": "TMEM27 is a marker for beta cells.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_14171859",
+        "scifact_16058322",
+        "scifact_16389141",
+        "scifact_17695748",
+        "scifact_20675284",
+        "scifact_24142891",
+        "scifact_26731863",
+        "scifact_27588420",
+        "scifact_4311206",
+        "scifact_8790729"
+      ],
+      "gold_docs": [
+        "scifact_24142891"
+      ]
+    },
+    {
+      "claim_id": "1134",
+      "claim": "TNFAIP3 is a glioblastoma tumor enhancer.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11578459",
+        "scifact_33370",
+        "scifact_37686718",
+        "scifact_41293601",
+        "scifact_41340212",
+        "scifact_4979184",
+        "scifact_51706771",
+        "scifact_7028976",
+        "scifact_7898952",
+        "scifact_9669099"
+      ],
+      "gold_docs": [
+        "scifact_33370"
+      ]
+    },
+    {
+      "claim_id": "1135",
+      "claim": "TNFAIP3 is a glioblastoma tumor suppressor.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1241113",
+        "scifact_18600579",
+        "scifact_19541444",
+        "scifact_23934390",
+        "scifact_29366489",
+        "scifact_33370",
+        "scifact_470625",
+        "scifact_4979184",
+        "scifact_6923961",
+        "scifact_7898952"
+      ],
+      "gold_docs": [
+        "scifact_33370"
+      ]
+    },
+    {
+      "claim_id": "1136",
+      "claim": "TNFAIP3 is a tumor enhancer in glioblastoma.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_16364639",
+        "scifact_33370",
+        "scifact_41293601",
+        "scifact_41340212",
+        "scifact_4979184",
+        "scifact_5123516",
+        "scifact_51706771",
+        "scifact_6363093",
+        "scifact_7028976",
+        "scifact_9669099"
+      ],
+      "gold_docs": [
+        "scifact_33370"
+      ]
+    },
+    {
+      "claim_id": "1138",
+      "claim": "TRAP+ osteoclasts regulate mature osteoblast maintenance.",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "returned_docs": [
+        "scifact_12130067",
+        "scifact_21564598",
+        "scifact_24356383",
+        "scifact_25419778",
+        "scifact_3118719",
+        "scifact_33030946",
+        "scifact_3531388",
+        "scifact_38899659",
+        "scifact_39776978",
+        "scifact_43619625"
+      ],
+      "gold_docs": [
+        "scifact_6796297"
+      ]
+    },
+    {
+      "claim_id": "1139",
+      "claim": "Taking 400mg of α-tocopheryl acetate does not prevent prostate cancer.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10699587",
+        "scifact_12009265",
+        "scifact_22180793",
+        "scifact_24581365",
+        "scifact_25915873",
+        "scifact_308862",
+        "scifact_32766786",
+        "scifact_3355397",
+        "scifact_4500832",
+        "scifact_6790197"
+      ],
+      "gold_docs": [
+        "scifact_12009265"
+      ]
+    },
+    {
+      "claim_id": "114",
+      "claim": "Anthrax spores are very difficult to dispose once they are dispersed.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1234098",
+        "scifact_12489688",
+        "scifact_18855191",
+        "scifact_19756935",
+        "scifact_2140513",
+        "scifact_23244529",
+        "scifact_33872649",
+        "scifact_7447120",
+        "scifact_7681810",
+        "scifact_8398627"
+      ],
+      "gold_docs": [
+        "scifact_33872649"
+      ]
+    },
+    {
+      "claim_id": "1141",
+      "claim": "Taking 400mg of α-tocopheryl acetate in combination with vitamin C reduces the risk of prostate cancer.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10699587",
+        "scifact_12009265",
+        "scifact_24581365",
+        "scifact_24873253",
+        "scifact_308862",
+        "scifact_3355397",
+        "scifact_4500832",
+        "scifact_46617075",
+        "scifact_8512633",
+        "scifact_8659426"
+      ],
+      "gold_docs": [
+        "scifact_12009265"
+      ]
+    },
+    {
+      "claim_id": "1142",
+      "claim": "Taking anti-depresents is associated with a decrease in the Aβ level in the brain of experimental animals.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10795063",
+        "scifact_20128547",
+        "scifact_24989194",
+        "scifact_26244918",
+        "scifact_27022864",
+        "scifact_37583120",
+        "scifact_4407385",
+        "scifact_5260382",
+        "scifact_57574395",
+        "scifact_9194077"
+      ],
+      "gold_docs": [
+        "scifact_5260382"
+      ]
+    },
+    {
+      "claim_id": "1145",
+      "claim": "Taxation of sugar-sweetened beverages reduced the incidence rate of type II diabetes in India.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10071552",
+        "scifact_11201004",
+        "scifact_12224536",
+        "scifact_1974176",
+        "scifact_24704139",
+        "scifact_27166444",
+        "scifact_30805636",
+        "scifact_3770750",
+        "scifact_8708082",
+        "scifact_9822397"
+      ],
+      "gold_docs": [
+        "scifact_10071552"
+      ]
+    },
+    {
+      "claim_id": "1148",
+      "claim": "Ten percent (10%) of kidney cancers in the UK are attributable to excess weight.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_14700857",
+        "scifact_17124832",
+        "scifact_195689316",
+        "scifact_25837950",
+        "scifact_31942055",
+        "scifact_3355397",
+        "scifact_3514540",
+        "scifact_40949706",
+        "scifact_4828631",
+        "scifact_7451018"
+      ],
+      "gold_docs": [
+        "scifact_4828631"
+      ]
+    },
+    {
+      "claim_id": "1153",
+      "claim": "The C-type lectin receptor (CLEC-2) rearranges the actin cytoskeleton in dendritic cells to promote efficient motility along stromal surfaces.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11020556",
+        "scifact_15176526",
+        "scifact_15491404",
+        "scifact_24315156",
+        "scifact_2603304",
+        "scifact_4417558",
+        "scifact_5700349",
+        "scifact_7370282",
+        "scifact_7489663",
+        "scifact_8997410"
+      ],
+      "gold_docs": [
+        "scifact_7370282"
+      ]
+    },
+    {
+      "claim_id": "1156",
+      "claim": "The DESMOND program caused substantial weight loss in most participants.",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "returned_docs": [
+        "scifact_12672066",
+        "scifact_22922353",
+        "scifact_23369842",
+        "scifact_24917562",
+        "scifact_35495268",
+        "scifact_40949706",
+        "scifact_43220289",
+        "scifact_5824985",
+        "scifact_6841927",
+        "scifact_8428935"
+      ],
+      "gold_docs": [
+        "scifact_12584053"
+      ]
+    },
+    {
+      "claim_id": "1157",
+      "claim": "The DESMOND program demonstrates no significant impact on biochemical outcomes.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12584053",
+        "scifact_13083189",
+        "scifact_13625993",
+        "scifact_13899137",
+        "scifact_1805641",
+        "scifact_24088502",
+        "scifact_24634621",
+        "scifact_409280",
+        "scifact_5698494",
+        "scifact_6129301"
+      ],
+      "gold_docs": [
+        "scifact_12584053"
+      ]
+    },
+    {
+      "claim_id": "1158",
+      "claim": "The DESMOND program demonstrates no significant impact on lifestyles outcomes.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12584053",
+        "scifact_1287809",
+        "scifact_13083189",
+        "scifact_1456068",
+        "scifact_16422880",
+        "scifact_24088502",
+        "scifact_35495268",
+        "scifact_409280",
+        "scifact_456304",
+        "scifact_6129301"
+      ],
+      "gold_docs": [
+        "scifact_12584053"
+      ]
+    },
+    {
+      "claim_id": "1159",
+      "claim": "The DESMOND program demonstrates no significant impact on weight loss.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12584053",
+        "scifact_12672066",
+        "scifact_12770738",
+        "scifact_22922353",
+        "scifact_23369842",
+        "scifact_35495268",
+        "scifact_409280",
+        "scifact_40949706",
+        "scifact_43220289",
+        "scifact_6841927"
+      ],
+      "gold_docs": [
+        "scifact_12584053"
+      ]
+    },
+    {
+      "claim_id": "116",
+      "claim": "Anthrax spores remain deadly until affected areas are decontaminated.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10993232",
+        "scifact_12209494",
+        "scifact_14337960",
+        "scifact_2140513",
+        "scifact_30844602",
+        "scifact_33872649",
+        "scifact_37205685",
+        "scifact_695938",
+        "scifact_7447120",
+        "scifact_8398627"
+      ],
+      "gold_docs": [
+        "scifact_33872649"
+      ]
+    },
+    {
+      "claim_id": "1162",
+      "claim": "The DdrB protein from Deinococcus radiodurans functions as a pentamer.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11844826",
+        "scifact_1225513",
+        "scifact_15305881",
+        "scifact_2479538",
+        "scifact_26993601",
+        "scifact_2851611",
+        "scifact_29877890",
+        "scifact_3506723",
+        "scifact_38712515",
+        "scifact_799586"
+      ],
+      "gold_docs": [
+        "scifact_15305881"
+      ]
+    },
+    {
+      "claim_id": "1169",
+      "claim": "The M2-phenotype in brown adipose tissue macrophages increases brown adipose tissue thermogenic activity.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_14865329",
+        "scifact_1568684",
+        "scifact_17973161",
+        "scifact_29381091",
+        "scifact_29691654",
+        "scifact_34582256",
+        "scifact_38023457",
+        "scifact_40232172",
+        "scifact_4319174",
+        "scifact_52865789"
+      ],
+      "gold_docs": [
+        "scifact_4319174"
+      ]
+    },
+    {
+      "claim_id": "1170",
+      "claim": "The NF-κB essential modulator gene induces intestinal inflammation by promoting receptor-interacting protein (RIP) kinase 1 kinase activity-mediated epithelial cell death.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12658073",
+        "scifact_1499964",
+        "scifact_15563864",
+        "scifact_18956141",
+        "scifact_23078022",
+        "scifact_26702468",
+        "scifact_27403802",
+        "scifact_31001322",
+        "scifact_7735859",
+        "scifact_9614443"
+      ],
+      "gold_docs": [
+        "scifact_18956141"
+      ]
+    },
+    {
+      "claim_id": "1171",
+      "claim": "The NF-κB essential modulator gene prevents intestinal inflammation by inhibiting receptor-interacting protein (RIP) kinase 1 kinase activity-mediated epithelial cell death.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12658073",
+        "scifact_15563864",
+        "scifact_18956141",
+        "scifact_23078022",
+        "scifact_27403802",
+        "scifact_31001322",
+        "scifact_4422723",
+        "scifact_4427060",
+        "scifact_7735859",
+        "scifact_9614443"
+      ],
+      "gold_docs": [
+        "scifact_18956141"
+      ]
+    },
+    {
+      "claim_id": "1173",
+      "claim": "The PDPN gene deactivates the C-type lectin receptor (CLEC-2).",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12885341",
+        "scifact_16389141",
+        "scifact_24335068",
+        "scifact_2603304",
+        "scifact_4427060",
+        "scifact_6767271",
+        "scifact_7221410",
+        "scifact_7370282",
+        "scifact_8563659",
+        "scifact_8596357"
+      ],
+      "gold_docs": [
+        "scifact_7370282"
+      ]
+    },
+    {
+      "claim_id": "1176",
+      "claim": "The PRDM1 gene is a key determinant of primordial germ cells.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13242763",
+        "scifact_13910150",
+        "scifact_13955536",
+        "scifact_1649738",
+        "scifact_17685207",
+        "scifact_22428640",
+        "scifact_2541699",
+        "scifact_4335599",
+        "scifact_4423327",
+        "scifact_9875570"
+      ],
+      "gold_docs": [
+        "scifact_13910150"
+      ]
+    },
+    {
+      "claim_id": "1177",
+      "claim": "The PRDM1 gene, when combined with the PRDM14 gene, plays an important role during primordial germ cell specification.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13242763",
+        "scifact_13910150",
+        "scifact_13955536",
+        "scifact_1649738",
+        "scifact_17685207",
+        "scifact_22428640",
+        "scifact_2541699",
+        "scifact_26374799",
+        "scifact_27569370",
+        "scifact_4423327"
+      ],
+      "gold_docs": [
+        "scifact_13910150"
+      ]
+    },
+    {
+      "claim_id": "1181",
+      "claim": "The RANK-RANK-Ligand (RANKL) pathway is involved in the development of Aire-expressing medullary thymic epithelial cells (mTECs).",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10162553",
+        "scifact_13989491",
+        "scifact_18488986",
+        "scifact_20155713",
+        "scifact_24828165",
+        "scifact_2734421",
+        "scifact_301838",
+        "scifact_32906513",
+        "scifact_39128592",
+        "scifact_3952288"
+      ],
+      "gold_docs": [
+        "scifact_2734421",
+        "scifact_301838",
+        "scifact_39128592",
+        "scifact_3952288"
+      ]
+    },
+    {
+      "claim_id": "1182",
+      "claim": "The Snf1 complex regulates carbon and energy metabolism in baker's yeast (Saccharomyces cerevisiae).",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13613916",
+        "scifact_14446279",
+        "scifact_14541844",
+        "scifact_1631583",
+        "scifact_17240457",
+        "scifact_4414481",
+        "scifact_615047",
+        "scifact_7548577",
+        "scifact_8909176",
+        "scifact_9199796"
+      ],
+      "gold_docs": [
+        "scifact_14541844"
+      ]
+    },
+    {
+      "claim_id": "1184",
+      "claim": "The US health care system can save up to $5 billion if 7% of patients waiting for kidney transplants participate in the optimized national kidney paired donation program.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10582939",
+        "scifact_13625993",
+        "scifact_16737210",
+        "scifact_21203899",
+        "scifact_21859699",
+        "scifact_31942055",
+        "scifact_41774099",
+        "scifact_44265107",
+        "scifact_7034001",
+        "scifact_8582337"
+      ],
+      "gold_docs": [
+        "scifact_16737210"
+      ]
+    },
+    {
+      "claim_id": "119",
+      "claim": "Antidepressants increase the severity of migraines.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12039953",
+        "scifact_13883546",
+        "scifact_14606752",
+        "scifact_22995579",
+        "scifact_24148722",
+        "scifact_24865781",
+        "scifact_39985001",
+        "scifact_44830890",
+        "scifact_5691302",
+        "scifact_6191684"
+      ],
+      "gold_docs": [
+        "scifact_14606752"
+      ]
+    },
+    {
+      "claim_id": "12",
+      "claim": "40mg/day dosage of folic acid and 2mg/day dosage of vitamin B12 does not affect chronic kidney disease (CKD) progression.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11705328",
+        "scifact_18557974",
+        "scifact_19278208",
+        "scifact_21636085",
+        "scifact_26025820",
+        "scifact_33409100",
+        "scifact_37424881",
+        "scifact_40790033",
+        "scifact_43557480",
+        "scifact_4550036"
+      ],
+      "gold_docs": [
+        "scifact_33409100"
+      ]
+    },
+    {
+      "claim_id": "120",
+      "claim": "Antidepressants reduce the severity of migraines.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12039953",
+        "scifact_13883546",
+        "scifact_14606752",
+        "scifact_22995579",
+        "scifact_23865182",
+        "scifact_24865781",
+        "scifact_28419824",
+        "scifact_39985001",
+        "scifact_5691302",
+        "scifact_6191684"
+      ],
+      "gold_docs": [
+        "scifact_14606752"
+      ]
+    },
+    {
+      "claim_id": "1205",
+      "claim": "The combination of physical examinations with C-reactive protein values do not improve the accuracy of radiographic verified pneumonia predictions.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_12471115",
+        "scifact_13625993",
+        "scifact_20887554",
+        "scifact_21048969",
+        "scifact_26107000",
+        "scifact_27054878",
+        "scifact_29564505",
+        "scifact_3552753",
+        "scifact_40935722",
+        "scifact_5558754"
+      ],
+      "gold_docs": [
+        "scifact_5558754"
+      ]
+    },
+    {
+      "claim_id": "1209",
+      "claim": "The deamination of cytidine to uridine on the minus strand of viral DNA can inactivate the viral genome by inducing G-to-A mutations.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_14376683",
+        "scifact_1569031",
+        "scifact_16172576",
+        "scifact_2638387",
+        "scifact_30122260",
+        "scifact_38131471",
+        "scifact_41314611",
+        "scifact_4347374",
+        "scifact_44366096",
+        "scifact_544971"
+      ],
+      "gold_docs": [
+        "scifact_4347374"
+      ]
+    },
+    {
+      "claim_id": "121",
+      "claim": "Antimicrobial agents are less effective due to the pressure of antimicrobial usage.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1234098",
+        "scifact_12801438",
+        "scifact_13732033",
+        "scifact_24157077",
+        "scifact_31460499",
+        "scifact_3272084",
+        "scifact_36497180",
+        "scifact_43165768",
+        "scifact_4695107",
+        "scifact_90756514"
+      ],
+      "gold_docs": [
+        "scifact_31460499"
+      ]
+    },
+    {
+      "claim_id": "1210",
+      "claim": "The density of cytokine receptor bearing cells affects the distance over which cytokines act.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13636631",
+        "scifact_20722510",
+        "scifact_25315295",
+        "scifact_30774694",
+        "scifact_32665136",
+        "scifact_35764259",
+        "scifact_44935041",
+        "scifact_45096063",
+        "scifact_4928282",
+        "scifact_5304891"
+      ],
+      "gold_docs": [
+        "scifact_4928282"
+      ]
+    },
+    {
+      "claim_id": "1211",
+      "claim": "The density of cytokine receptor bearing cells has no effect on the distance over which cytokines act.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13636631",
+        "scifact_1550937",
+        "scifact_20722510",
+        "scifact_25315295",
+        "scifact_35764259",
+        "scifact_36242796",
+        "scifact_44935041",
+        "scifact_45096063",
+        "scifact_4928282",
+        "scifact_5304891"
+      ],
+      "gold_docs": [
+        "scifact_4928282"
+      ]
+    },
+    {
+      "claim_id": "122",
+      "claim": "Antimicrobial agents are more effective due to the pressure of antimicrobial usage.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1234098",
+        "scifact_12801438",
+        "scifact_13732033",
+        "scifact_24157077",
+        "scifact_31460499",
+        "scifact_3272084",
+        "scifact_36497180",
+        "scifact_43165768",
+        "scifact_4695107",
+        "scifact_90756514"
+      ],
+      "gold_docs": [
+        "scifact_31460499"
+      ]
+    },
+    {
+      "claim_id": "1220",
+      "claim": "The generation of reactive oxygen species by activated oncogenes contributes to the increased genomic instability of leukaemia cells.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13023410",
+        "scifact_1941721",
+        "scifact_21793890",
+        "scifact_25488034",
+        "scifact_26121646",
+        "scifact_5572127",
+        "scifact_5765455",
+        "scifact_6000423",
+        "scifact_6308416",
+        "scifact_6609935"
+      ],
+      "gold_docs": [
+        "scifact_13023410"
+      ]
+    },
+    {
+      "claim_id": "1223",
+      "claim": "The innate immune response struggles to remove small numbers of parasites.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_15889329",
+        "scifact_21439293",
+        "scifact_24157077",
+        "scifact_2506153",
+        "scifact_3001685",
+        "scifact_3330111",
+        "scifact_40323148",
+        "scifact_5289038",
+        "scifact_6144337",
+        "scifact_7968532"
+      ],
+      "gold_docs": [
+        "scifact_5289038"
+      ]
+    },
+    {
+      "claim_id": "1224",
+      "claim": "The latent infection of myeloid cells with human cytomegalovirus induces a number of changes in gene expression.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_10450300",
+        "scifact_21932050",
+        "scifact_23305884",
+        "scifact_25141908",
+        "scifact_26133404",
+        "scifact_26873988",
+        "scifact_27555165",
+        "scifact_30933307",
+        "scifact_5372773",
+        "scifact_5838067"
+      ],
+      "gold_docs": [
+        "scifact_21932050",
+        "scifact_34016987"
+      ]
+    },
+    {
+      "claim_id": "1227",
+      "claim": "The mean suicide rate in women is higher after miscarriage than live birth.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1102268",
+        "scifact_13097856",
+        "scifact_13900610",
+        "scifact_17626822",
+        "scifact_25641414",
+        "scifact_25806385",
+        "scifact_33533307",
+        "scifact_7662395",
+        "scifact_7751726",
+        "scifact_881332"
+      ],
+      "gold_docs": [
+        "scifact_25641414"
+      ]
+    },
+    {
+      "claim_id": "1228",
+      "claim": "The mean suicide rate in women is lower after miscarriage than live birth.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_1102268",
+        "scifact_13097856",
+        "scifact_17626822",
+        "scifact_25641414",
+        "scifact_25806385",
+        "scifact_33533307",
+        "scifact_7662395",
+        "scifact_7751726",
+        "scifact_881332",
+        "scifact_9976969"
+      ],
+      "gold_docs": [
+        "scifact_25641414"
+      ]
+    },
+    {
+      "claim_id": "1229",
+      "claim": "The microtubule-dependent delivery and secretion of matrix metalloproteases (MMPs) is partially responsible for the disassembly of adhesion sites.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_11983390",
+        "scifact_1371440",
+        "scifact_1676568",
+        "scifact_1684489",
+        "scifact_22505710",
+        "scifact_28468276",
+        "scifact_38127792",
+        "scifact_6969753",
+        "scifact_7549811",
+        "scifact_8087082"
+      ],
+      "gold_docs": [
+        "scifact_1676568"
+      ]
+    },
+    {
+      "claim_id": "123",
+      "claim": "Antiretroviral therapy increases rates of tuberculosis across a broad range of CD4 strata.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_13071728",
+        "scifact_13899137",
+        "scifact_14319754",
+        "scifact_17077004",
+        "scifact_1986482",
+        "scifact_21479231",
+        "scifact_31363207",
+        "scifact_4883040",
+        "scifact_601033",
+        "scifact_7111021"
+      ],
+      "gold_docs": [
+        "scifact_4883040"
+      ]
+    },
+    {
+      "claim_id": "1230",
+      "claim": "The minor G allele of FOXO3 downregulates pro-inflammatory cytokines.",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "returned_docs": [
+        "scifact_120626",
+        "scifact_13905670",
+        "scifact_16728949",
+        "scifact_2647374",
+        "scifact_28937856",
+        "scifact_343052",
+        "scifact_36242796",
+        "scifact_3748310",
+        "scifact_4418070",
+        "scifact_6144969"
+      ],
+      "gold_docs": [
+        "scifact_13905670"
+      ]
+    }
+  ]
+}

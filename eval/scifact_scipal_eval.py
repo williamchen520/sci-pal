@@ -155,12 +155,14 @@ def rrf_fuse(*rankings, k: int = 60) -> List[Dict]:
     return [{**lookup[para_id], "rrf_score": score} for para_id, score in ordered]
 
 
-def run(db_path: Path, chroma_path: Path, limit: int, output: Path) -> Dict:
+def run(db_path: Path, chroma_path: Path, limit: int, output: Path, rerank: bool = False) -> Dict:
     import services.search.hybrid_search as hs
+    from services.search.reranker import Reranker
 
     hs.DB_PATH = db_path
     hs.CHROMA_PATH = chroma_path
     searcher = hs.HybridSearch()
+    reranker = Reranker() if rerank else None
     conn = sqlite3.connect(str(db_path))
     claims = conn.execute(
         "SELECT claim_id, claim, cited_doc_ids, evidence FROM claims ORDER BY claim_id LIMIT ?",
@@ -183,7 +185,11 @@ def run(db_path: Path, chroma_path: Path, limit: int, output: Path) -> Dict:
             fts = searcher.fts_search(claim, 20)
         except Exception:
             fts = []
-        fused = rrf_fuse(vector, fts)[:10]
+        fused = rrf_fuse(vector, fts)[:20]
+        if reranker is not None:
+            fused = reranker.rerank(claim, fused, 10)
+        else:
+            fused = fused[:10]
         returned_docs = {item.get("paper_id") for item in fused if item.get("paper_id")}
         doc_hit = bool(returned_docs & gold_docs)
         doc_hits += int(doc_hit)
@@ -234,13 +240,14 @@ def main() -> None:
     parser.add_argument("--build-db", action="store_true")
     parser.add_argument("--build-index", action="store_true")
     parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--rerank", action="store_true")
     parser.add_argument("--output", default=str(ROOT / "eval" / "results" / "scifact_scipal_20.json"))
     args = parser.parse_args()
     if args.build_db:
         print(build_db(Path(args.data_dir), Path(args.db)))
     if args.build_index:
         print(run_scipal_index(Path(args.db), Path(args.chroma)))
-    print(run(Path(args.db), Path(args.chroma), args.limit, Path(args.output)))
+    print(run(Path(args.db), Path(args.chroma), args.limit, Path(args.output), args.rerank))
 
 
 def run_scipal_index(db_path: Path, chroma_path: Path) -> int:
