@@ -399,6 +399,7 @@ class QAService:
                 "refused": True,
                 "grounding": grounding,
             "semantic_grounding": semantic,
+            "llm_grounding": llm_grounding,
                 "llm_provider": self.llm.provider,
                 "llm_model": self.llm.model,
             }
@@ -431,6 +432,35 @@ class QAService:
                     "answer_status": "insufficient",
                     "refused": True,
                     "semantic_grounding": semantic,
+                    "llm_provider": self.llm.provider,
+                    "llm_model": self.llm.model,
+                }
+
+        llm_grounding = None
+        if os.environ.get("SCIPAL_LLM_GROUNDING") == "1":
+            from services.qa.llm_grounding import check as llm_grounding_check
+
+            llm_grounding = llm_grounding_check(
+                answer,
+                [
+                    ctx.get("text", "")
+                    for ctx in retrieval_result.get("parent_contexts") or []
+                ],
+                self.llm,
+                min_ratio=float(os.environ.get("SCIPAL_LLM_GROUNDING_RATIO", "0.6")),
+            )
+            if not llm_grounding["grounded"]:
+                print(f"Ungrounded LLM answer: {llm_grounding}")
+                return {
+                    "answer": (
+                        "The retrieved evidence does not support the generated answer. "
+                        "Please refine the question or add relevant papers to the library."
+                    ),
+                    "citations": [],
+                    "sources": self._build_sources(retrieval_result, []),
+                    "answer_status": "insufficient",
+                    "refused": True,
+                    "llm_grounding": llm_grounding,
                     "llm_provider": self.llm.provider,
                     "llm_model": self.llm.model,
                 }
