@@ -145,7 +145,8 @@ claim → 向量+FTS 检索 top5 → 云端 LLM 判定 SUPPORT / CONTRADICT
 
 | 证据 | accuracy | SUPPORT 正确率 | CONTRADICT 正确率 |
 |---|---|---|---|
-| 检索 top3 | **0.73** | **0.603** | **1.00** |
+| 检索 top3（RRF） | 0.73 | 0.603 | 1.00 |
+| **检索 top3 + rerank** | **0.78** | **0.676** | **1.00** |
 | 检索 top5 | 0.67 | 0.515 | 1.00 |
 | 检索 top10 | 0.60 | — | — |
 | **gold evidence** | **0.84** | **0.779** | **0.969** |
@@ -153,9 +154,9 @@ claim → 向量+FTS 检索 top5 → 云端 LLM 判定 SUPPORT / CONTRADICT
 结论：
 
 - 证据越少越好：top3 > top5 > top10；
-- top3 比 top5 提升 6pp，说明上下文噪声是主要问题；
-- 与 gold evidence 的 0.84 仍差 11pp；
-- 默认改为 top3；下一步应做 evidence selection，而不是加 top-k。
+- rerank 把 top3 从 0.73 提到 0.78；
+- 与 gold evidence 的 0.84 只差 6pp；
+- 当前最佳配置：`--rerank --top-k 3`。
 
 ## 5. 解释
 

@@ -47,6 +47,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=50)
     parser.add_argument("--oracle", action="store_true")
     parser.add_argument("--top-k", type=int, default=3)
+    parser.add_argument("--rerank", action="store_true")
     parser.add_argument("--output", default=str(DEFAULT_OUT))
     args = parser.parse_args()
     import services.search.hybrid_search as hs
@@ -54,6 +55,11 @@ def main() -> None:
     hs.DB_PATH = DEFAULT_DB
     hs.CHROMA_PATH = DEFAULT_CHROMA
     searcher = hs.HybridSearch()
+    reranker = None
+    if args.rerank:
+        from services.search.reranker import Reranker
+
+        reranker = Reranker()
     conn = sqlite3.connect(str(DEFAULT_DB))
     claims = conn.execute(
         "SELECT claim_id, claim, evidence FROM claims ORDER BY claim_id LIMIT ?",
@@ -87,7 +93,12 @@ def main() -> None:
                 fts = searcher.fts_search(claim, 10)
             except Exception:
                 fts = []
-            evidence = "\n\n".join(item.get("text", "") for item in fuse(vector, fts, args.top_k))
+            if reranker is not None:
+                fused = fuse(vector, fts, 20)
+                fused = reranker.rerank(claim, fused, args.top_k)
+            else:
+                fused = fuse(vector, fts, args.top_k)
+            evidence = "\n\n".join(item.get("text", "") for item in fused)
         prompt = (
             "You are verifying a scientific claim against evidence.\n"
             "Answer with exactly one word: SUPPORT or CONTRADICT.\n"
