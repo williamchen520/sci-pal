@@ -1,6 +1,6 @@
 # Sci-Pal 架构总览
 
-> **最后更新**：V26.2 (2026-09-25)
+> **最后更新**：V33.96 (2026-10-29)
 > **维护规则**：每次版本迭代后必须同步更新此文档，确保架构信息不丢失。
 
 ---
@@ -19,10 +19,87 @@ Sci-Pal 是一个**本地学术文献管理与智能阅读系统**，核心目�
 6. **PDF 阅读**：浏览器原生 iframe 渲染，三栏布局（大纲/论文/段落）
 
 ### 当前版本
-**V33.17** — 综述证据检索支持摘要回退（无全文时用摘要做证据）
+**V33.96** — 云端推理 + 自适应检索 + 答案级评测收口
 
-> 与 `VERSION` 文件、`CODEBUDDY.md` 的「当前版本」保持一致（三处都写 V33.17）。
-> 之前这里是 V26.2，落后 7 个版本；以 git 提交信息里的 `V33.x` 为准。
+> 与 `VERSION` 文件保持一致；以 git 提交信息里的 `V33.x` 为准。
+
+### V33.96 当前架构快照（2026-10-29）
+
+#### 运行分层
+
+```
+本地小模型（Ollama）  → 意图 / 路由 / 调度 / 兜底
+云端模型（DeepSeek 等）→ 答案生成 / 综述 / claim 校验 / 拒答
+DSH（可选）           → 外部推理层；插件化仍在方案阶段
+```
+
+#### 检索
+
+- **Adaptive Contextual 默认开启**：
+  - 简单问题 → `paragraphs`；
+  - 复杂问题 → `paragraphs_contextual`；
+  - 索引缺失时自动回退。
+- **Sentence seeds**：`sentences_fts` → 段落候选；`SCIPAL_SENTENCE_SEEDS=1`，默认关闭，延迟约 3.6×。
+- **TreeRouter / AutoMerging / Section routing / Anchor roles**：实验开关，默认关闭；30/100 题无 strict 增益。
+- **证据契约**：`paragraph_details` 带 `para_id` + `sentence_ids`；QA sources 带 `paragraph_id` / `sentence_ids`。
+- **上下文扩展**：保留旧 ContextExpander；TreeContext v2 只重排不补候选。
+
+#### 生成与拒答
+
+- QA 默认 top10（复杂问题 `SCIPAL_QA_COMPLEX_TOPK` 可调）。
+- 异步 QA：`/api/qa/ask_async` + `/api/review/task/<id>` 轮询。
+- 云端答案级（100 题）：
+
+| 指标 | 值 |
+|---|---|
+| coverage | 0.7733 |
+| avg citations | 27.11 |
+| refusal_accuracy | 1.00 |
+
+- 拒答实验开关：
+  - `SCIPAL_DOMAIN_REFUSAL`；
+  - `SCIPAL_GROUNDED_ANSWER`；
+  - `SCIPAL_SEMANTIC_GROUNDING`；
+  - `SCIPAL_LLM_GROUNDING`；
+  - 全部默认关闭。
+
+#### 领域自适应
+
+- 表：`domain_profiles` / `paper_domains`；
+- 3,308 篇论文领域弱标签；
+- 6 个领域：hcc_io / oncology_other / microbiology / endocrinology / alzheimers / general；
+- `SCIPAL_DOMAIN_ROUTING=1` 软路由，默认关闭；
+- 后续文献监控简报复用此层。
+
+#### 评测体系
+
+| 层级 | 指标 |
+|---|---|
+| 检索 | sentence strict Recall@10、paragraph Recall@10、sentence-in-paragraphs、refusal |
+| 答案 | coverage、avg citations、refusal_accuracy |
+| 实验 | 30 / 100 题；30 题仅作 smoke test |
+
+#### 主要新增模块
+
+- `services/search/domain_taxonomy.py`
+- `services/search/domain_router.py`
+- `services/search/tree_router.py`
+- `services/search/auto_merger.py`
+- `services/search/sentence_seeds.py`
+- `services/search/sentence_roles.py`
+- `services/qa/grounding.py`
+- `services/qa/semantic_grounding.py`
+- `services/qa/llm_grounding.py`
+- `eval/qa_answer_async_eval.py`
+- `build_db/build_domain_profiles.py`
+- `build_db/validate_section_tree.py`
+
+#### 当前判断
+
+- 数据结构不是主要瓶颈；
+- auto 题（69/100）coverage 0.686 是主要拖累；
+- 云端推理解决了拒答问题；
+- 下一步优先做 auto 题失败归因与 100 题引用/拒答分析。
 
 ---
 
