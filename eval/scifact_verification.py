@@ -48,6 +48,7 @@ def main() -> None:
     parser.add_argument("--oracle", action="store_true")
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--rerank", action="store_true")
+    parser.add_argument("--prompt-mode", choices=["strict", "lenient"], default="lenient")
     parser.add_argument("--output", default=str(DEFAULT_OUT))
     args = parser.parse_args()
     import services.search.hybrid_search as hs
@@ -99,12 +100,23 @@ def main() -> None:
             else:
                 fused = fuse(vector, fts, args.top_k)
             evidence = "\n\n".join(item.get("text", "") for item in fused)
-        prompt = (
-            "You are verifying a scientific claim against evidence.\n"
-            "Answer with exactly one word: SUPPORT or CONTRADICT.\n"
-            "Use only the evidence; if the evidence is insufficient, answer CONTRADICT.\n\n"
-            f"Claim: {claim}\n\nEvidence:\n{evidence}"
-        )
+        if args.prompt_mode == "lenient":
+            prompt = (
+                "You are verifying a scientific claim against evidence.\n"
+                "Answer with exactly one word: SUPPORT or CONTRADICT.\n"
+                "SUPPORT if the evidence contains information consistent with the claim, "
+                "even if paraphrased or partial.\n"
+                "CONTRADICT only if the evidence explicitly contradicts the claim or is clearly off-topic.\n"
+                "Do not answer CONTRADICT merely because the evidence is incomplete.\n\n"
+                f"Claim: {claim}\n\nEvidence:\n{evidence}"
+            )
+        else:
+            prompt = (
+                "You are verifying a scientific claim against evidence.\n"
+                "Answer with exactly one word: SUPPORT or CONTRADICT.\n"
+                "Use only the evidence; if the evidence is insufficient, answer CONTRADICT.\n\n"
+                f"Claim: {claim}\n\nEvidence:\n{evidence}"
+            )
         try:
             answer = llm.chat(
                 system_prompt="You verify scientific claims. Output one word only.",

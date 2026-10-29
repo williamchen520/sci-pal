@@ -153,15 +153,33 @@ claim → 向量+FTS 检索 top5 → 云端 LLM 判定 SUPPORT / CONTRADICT
 | 检索 top10 | 100 | 0.60 | — | — |
 | **gold evidence** | 100 | **0.84** | **0.779** | **0.969** |
 
-> 200 题结果稳定在 0.795，全量 505 题为 0.7941；  
-> 说明 100/200 题结果不是偶然，SUPPORT 仍是主要错误来源。
+### Prompt 校准（lenient）
+
+| prompt | 题数 | accuracy | SUPPORT 正确率 | CONTRADICT 正确率 |
+|---|---|---|---|---|
+| strict | 100 | 0.78 | 0.676 | 1.00 |
+| strict | 505 | 0.7941 | 0.696 | 0.983 |
+| **lenient** | **100** | **0.92** | **0.956** | **0.844** |
+| **lenient** | **200** | **0.915** | **0.919** | **0.908** |
+| **lenient** | **505** | **0.903** | **0.916** | **0.879** |
+
+结论：
+
+- 之前 SUPPORT 误判主要来自 prompt 的“证据不足就 CONTRADICT”；
+- lenient 明确“一致即可 SUPPORT，只有明确矛盾才 CONTRADICT”；
+- accuracy 从 0.7941 提到 **0.903**；
+- SUPPORT 0.696 → **0.916**，CONTRADICT 0.983 → 0.879；
+- 默认改为 lenient。
+
+> 200 题结果稳定在 0.795（strict）；lenient 全量 505 为 0.903。  
+> SUPPORT 误判主要来自 prompt 保守，不是模型能力。
 
 结论：
 
 - 证据越少越好：top3 > top5 > top10；
 - rerank 把 top3 从 0.73 提到 0.78；
 - 与 gold evidence 的 0.84 只差 6pp；
-- 当前最佳配置：`--rerank --top-k 3`。
+- 当前最佳配置：`--rerank --top-k 3 --prompt-mode lenient`；
 
 ## 5. 解释
 
