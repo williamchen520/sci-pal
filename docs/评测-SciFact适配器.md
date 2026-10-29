@@ -104,6 +104,28 @@ python -m eval.scifact_scipal_eval --build-db --build-index --limit 100
 - 1.2 / 0.8 的 MRR 最好，但 recall 不变；
 - 收益太小，不修改生产默认权重。
 
+## 4.3 Claim 验证（检索 + LLM）
+
+新增 `eval/scifact_verification.py`：
+
+```
+claim → 向量+FTS 检索 top5 → 云端 LLM 判定 SUPPORT / CONTRADICT
+```
+
+50 claims：
+
+| 指标 | 值 |
+|---|---|
+| accuracy | **0.74** |
+| SUPPORT | 34 |
+| CONTRADICT | 16 |
+
+说明：
+
+- 这是“检索 + 单次判定”，不是完整 SciPal QA；
+- 证据不足时要求模型输出 CONTRADICT；
+- 只跑 50 题，尚未扩到全量。
+
 ## 5. 解释
 
 - 100 claims 更可信；
