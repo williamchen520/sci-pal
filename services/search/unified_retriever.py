@@ -23,6 +23,7 @@ from services.search.tree_context import TreeContextBuilder
 from services.search.sentence_seeds import SentenceSeedSearch
 from services.search.section_types import classify_section, query_intent, section_prior as section_type_prior
 from services.search.tree_router import TreeRouter
+from services.search.auto_merger import AutoMerger
 from services.search.context_expander import (
     ContextExpander,
     DB_PATH as STRUCT_DB,
@@ -58,6 +59,7 @@ class UnifiedRetriever:
         self.tree_builder = TreeContextBuilder()
         self.sentence_seeds = SentenceSeedSearch()
         self.tree_router = None
+        self.auto_merger = None
         self.summary_searcher = SummarySearch()
         if graph_expand:
             self.graph = GraphTraverser()
@@ -426,6 +428,14 @@ class UnifiedRetriever:
             else:
                 parent_contexts = self.expander.expand(
                     paragraphs, mode="section", max_parents=top_paragraphs, query=query
+                )
+            if os.environ.get("SCIPAL_AUTO_MERGE") == "1" and parent_contexts:
+                if self.auto_merger is None:
+                    self.auto_merger = AutoMerger()
+                parent_contexts = self.auto_merger.merge(
+                    parent_contexts,
+                    min_hits=int(os.environ.get("SCIPAL_AUTO_MERGE_MIN_HITS", "2")),
+                    token_budget=int(os.environ.get("SCIPAL_AUTO_MERGE_TOKENS", "1200")),
                 )
         self.diagnostics.mark("parent_contexts", (time.time() - _parents_started) * 1000)
 
