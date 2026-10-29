@@ -25,6 +25,7 @@
 | 证据与评测契约 | [证据与评测契约.md](证据与评测契约.md) |
 | Contextual Retrieval | [Contextual-Retrieval.md](Contextual-Retrieval.md) |
 | 句子种子与章节路由计划 | [工作计划-句子种子与章节路由.md](工作计划-句子种子与章节路由.md) |
+| 领域自适应对齐计划 | [工作计划-领域自适应对齐.md](工作计划-领域自适应对齐.md) |
 | QA 预算评测 | [QA预算评测.md](QA预算评测.md) |
 | 撤稿标记与 Prompt Injection | [可信度-撤稿与注入.md](可信度-撤稿与注入.md) |
 | 摘要层（RAPTOR 精简版） | [摘要层-RAPTOR精简版.md](摘要层-RAPTOR精简版.md) |
