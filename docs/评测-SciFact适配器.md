@@ -145,16 +145,17 @@ claim → 向量+FTS 检索 top5 → 云端 LLM 判定 SUPPORT / CONTRADICT
 
 | 证据 | accuracy | SUPPORT 正确率 | CONTRADICT 正确率 |
 |---|---|---|---|
+| 检索 top3 | **0.73** | **0.603** | **1.00** |
 | 检索 top5 | 0.67 | 0.515 | 1.00 |
 | 检索 top10 | 0.60 | — | — |
 | **gold evidence** | **0.84** | **0.779** | **0.969** |
 
 结论：
 
-- 用 gold evidence 时 accuracy 从 0.67 提升到 0.84；
-- 主要损失在 **证据选择**，不是模型推理；
-- top10 反而降到 0.60，更多上下文带来噪声；
-- 下一步应改 evidence selection / rerank，而不是加 top-k。
+- 证据越少越好：top3 > top5 > top10；
+- top3 比 top5 提升 6pp，说明上下文噪声是主要问题；
+- 与 gold evidence 的 0.84 仍差 11pp；
+- 默认改为 top3；下一步应做 evidence selection，而不是加 top-k。
 
 ## 5. 解释
 

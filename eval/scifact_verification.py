@@ -46,7 +46,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=50)
     parser.add_argument("--oracle", action="store_true")
-    parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--output", default=str(DEFAULT_OUT))
     args = parser.parse_args()
     import services.search.hybrid_search as hs
