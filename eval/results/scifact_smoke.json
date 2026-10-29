@@ -1,0 +1,458 @@
+{
+  "summary": {
+    "claims": 20,
+    "doc_recall@10": 1.0,
+    "sentence_recall@10": 0.85,
+    "mrr": 0.6454
+  },
+  "rows": [
+    {
+      "claim_id": "1000",
+      "claim": "Pyridostatin stabilizes the G - quadruplex in the telomeric region.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "16472469"
+      ],
+      "returned_docs": [
+        "26118532",
+        "26607366",
+        "15960670",
+        "25842866",
+        "2758012",
+        "16472469",
+        "10486817",
+        "6386930",
+        "45364685",
+        "23208167"
+      ]
+    },
+    {
+      "claim_id": "1003",
+      "claim": "RAD52 is involved in break-induced DNA replication (BIR).",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "14332945",
+        "4319844",
+        "4899981"
+      ],
+      "returned_docs": [
+        "14332945",
+        "4899981",
+        "8577229",
+        "15913433",
+        "4401289",
+        "20280410",
+        "12086599",
+        "12909503",
+        "4319844",
+        "15659108"
+      ]
+    },
+    {
+      "claim_id": "1004",
+      "claim": "RANK-RANKL pathway signalling has no known association with development of Aire-expressing medullary thymic epithelial cells.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "2734421",
+        "301838",
+        "3952288"
+      ],
+      "returned_docs": [
+        "3952288",
+        "39128592",
+        "5487448",
+        "301838",
+        "18199839",
+        "2734421",
+        "1871230",
+        "226488",
+        "39559521",
+        "4561402"
+      ]
+    },
+    {
+      "claim_id": "1005",
+      "claim": "RANK-RANKL pathway signalling is linked to development of Aire-expressing medullary thymic epithelial cells.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "2734421",
+        "301838",
+        "3952288"
+      ],
+      "returned_docs": [
+        "3952288",
+        "2734421",
+        "39128592",
+        "10162553",
+        "301838",
+        "13989491",
+        "39559521",
+        "11603066",
+        "5864770",
+        "226488"
+      ]
+    },
+    {
+      "claim_id": "1006",
+      "claim": "RTEL1 interacts with TRF2 through a C4C4 motif",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4926049"
+      ],
+      "returned_docs": [
+        "4926049",
+        "1546650",
+        "11922370",
+        "43711341",
+        "7915836",
+        "2617858",
+        "4306711",
+        "14119470",
+        "18576103",
+        "2582169"
+      ]
+    },
+    {
+      "claim_id": "1009",
+      "claim": "RUNX1 is downregulated or mutated in TLX1 T-ALL.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "1982286"
+      ],
+      "returned_docs": [
+        "1982286",
+        "2359152",
+        "5468807",
+        "11887584",
+        "8385277",
+        "14471161",
+        "9095394",
+        "23934390",
+        "27949347",
+        "21307488"
+      ]
+    },
+    {
+      "claim_id": "1011",
+      "claim": "Radioiodine treatment of non-toxic multinodular goitre increases thyroid volume.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "9745001"
+      ],
+      "returned_docs": [
+        "9745001",
+        "26026009",
+        "6751418",
+        "43122426",
+        "18414462",
+        "13108582",
+        "10743131",
+        "54482327",
+        "41340212",
+        "4246523"
+      ]
+    },
+    {
+      "claim_id": "1015",
+      "claim": "Rapamycin delays aging in fruit flies.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "6277638"
+      ],
+      "returned_docs": [
+        "14496749",
+        "6277638",
+        "34760396",
+        "44562904",
+        "18557974",
+        "8646760",
+        "9539248",
+        "735130",
+        "86602746",
+        "9822397"
+      ]
+    },
+    {
+      "claim_id": "1018",
+      "claim": "Rapid phosphotransfer rates are correlated with histidine kinase regulator specificity.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "11603066"
+      ],
+      "returned_docs": [
+        "1225513",
+        "11603066",
+        "28651643",
+        "39859981",
+        "19004126",
+        "196664003",
+        "7821634",
+        "9899292",
+        "12207167",
+        "45875990"
+      ]
+    },
+    {
+      "claim_id": "1023",
+      "claim": "Recognition of start codons depends on the translation initiation factor IF3.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "16927286"
+      ],
+      "returned_docs": [
+        "26378103",
+        "23342686",
+        "16927286",
+        "22482024",
+        "39729277",
+        "30261663",
+        "25175223",
+        "24521894",
+        "5760247",
+        "6209599"
+      ]
+    },
+    {
+      "claim_id": "1028",
+      "claim": "Reduced responsiveness to interleukin-2 in regulatory T cells is associated with autoimmune diseases such as Type 1 Diabetes.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "11899391",
+        "13923140"
+      ],
+      "returned_docs": [
+        "29347970",
+        "7115651",
+        "1855679",
+        "33535222",
+        "11899391",
+        "37182501",
+        "23017040",
+        "26230669",
+        "25726838",
+        "51952430"
+      ]
+    },
+    {
+      "claim_id": "1030",
+      "claim": "Reducing H3k4me3 methylation induces mouse epiblast stem cells to naive pluripotency efficiently.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "6441369"
+      ],
+      "returned_docs": [
+        "6441369",
+        "23418635",
+        "4462419",
+        "14923462",
+        "4784069",
+        "7581911",
+        "3882374",
+        "41548287",
+        "5633876",
+        "9993008"
+      ]
+    },
+    {
+      "claim_id": "1031",
+      "claim": "Reduction of Rpl38 alters the composition of the Hox gene mRNAs translation in mice without lowering overall protein synthesis.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "12486491"
+      ],
+      "returned_docs": [
+        "12486491",
+        "13763195",
+        "10443642",
+        "23727313",
+        "15590539",
+        "22358449",
+        "13384318",
+        "21330280",
+        "23634484",
+        "9486930"
+      ]
+    },
+    {
+      "claim_id": "1034",
+      "claim": "Removal of H3K9me3 by ectopic expression of other H3K9 demethylases decreases reprogramming efficiency in SCNT experiments.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "4547102"
+      ],
+      "returned_docs": [
+        "15803282",
+        "8185080",
+        "14225271",
+        "4343437",
+        "12100854",
+        "7426741",
+        "31882215",
+        "4547102",
+        "14555750",
+        "7688110"
+      ]
+    },
+    {
+      "claim_id": "1035",
+      "claim": "Removal of H3K9me3 by ectopic expression of other H3K9 demethylases improves reprogramming efficiency in SCNT experiments.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "4547102"
+      ],
+      "returned_docs": [
+        "15803282",
+        "8185080",
+        "14225271",
+        "4343437",
+        "12100854",
+        "7426741",
+        "31882215",
+        "4547102",
+        "14555750",
+        "7688110"
+      ]
+    },
+    {
+      "claim_id": "1036",
+      "claim": "Removal of H3K9me3 improves reprogramming efficiency in human somatic cell nuclear transfer experiments.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "4547102"
+      ],
+      "returned_docs": [
+        "15803282",
+        "14225271",
+        "4547102",
+        "86129154",
+        "4405194",
+        "37822406",
+        "29641682",
+        "10546779",
+        "4410181",
+        "8185080"
+      ]
+    },
+    {
+      "claim_id": "104",
+      "claim": "Allogeneic mechanical circulatory support is not as effective as autologous mechanical circulatory support for treating acute myocardial infarction.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "40164383"
+      ],
+      "returned_docs": [
+        "40164383",
+        "30041895",
+        "10991183",
+        "24097933",
+        "12800122",
+        "5596332",
+        "9306247",
+        "14823313",
+        "83667891",
+        "26047921"
+      ]
+    },
+    {
+      "claim_id": "1040",
+      "claim": "Replacement of histone H2A with H2A.Z accelerates gene activation in yeasts by destabilizing +1 nucleosomes.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "16626264",
+        "25254425"
+      ],
+      "returned_docs": [
+        "9451052",
+        "11844791",
+        "5966635",
+        "18038955",
+        "15778034",
+        "9889151",
+        "2817000",
+        "25254425",
+        "27274441",
+        "17518195"
+      ]
+    },
+    {
+      "claim_id": "1042",
+      "claim": "Repressing IL-18 has negative effects on atherosclerotic lesion composition and progression.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "17421851"
+      ],
+      "returned_docs": [
+        "25050364",
+        "17421851",
+        "15727984",
+        "22080671",
+        "25453683",
+        "24928817",
+        "7711685",
+        "9334631",
+        "8144920",
+        "42421723"
+      ]
+    },
+    {
+      "claim_id": "1043",
+      "claim": "Retinoic acid receptor-related orphan receptor gamma (RORγ) is a therapeutic target for castration-resistant prostate cancer (CRPC)",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "17671145"
+      ],
+      "returned_docs": [
+        "17671145",
+        "3590806",
+        "3203590",
+        "25830701",
+        "37256966",
+        "36889513",
+        "5860364",
+        "18546584",
+        "14116046",
+        "15928989"
+      ]
+    }
+  ]
+}
