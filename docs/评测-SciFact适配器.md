@@ -48,6 +48,35 @@ claims     = 505（有 evidence 的 train claims）
 | sentence_recall@10 | **0.74** |
 | MRR | **0.615** |
 
+## 4.1 接入 SciPal 检索核心
+
+新增 `eval/scifact_scipal_eval.py`：
+
+- 摘要摘要文档建 `papers/sections/paragraphs/sentences`；
+- 建独立 `paragraphs` Chroma；
+- 复用 `HybridSearch.vector_search` + `fts_search`；
+- RRF 融合后取 top10；
+- 不启用 ContextExpander / contextual / tree（避免生产依赖）。
+
+100 claims：
+
+| 检索方式 | doc_recall@10 | sentence_recall@10 | MRR |
+|---|---|---|---|
+| FTS-only | 0.84 | 0.74 | 0.615 |
+| **向量 + FTS + RRF + rerank** | **0.97** | **0.97** | **0.828** |
+
+结论：
+
+- 摘要级外部数据上，完整检索核心明显优于 FTS-only；
+- 说明向量 + 融合 + rerank 的价值不依赖内部 HCC 语料；
+- 仍未接入 context expansion / adaptive contextual。
+
+构建命令：
+
+```powershell
+python -m eval.scifact_scipal_eval --build-db --build-index --limit 100
+```
+
 ## 5. 解释
 
 - 100 claims 更可信；
