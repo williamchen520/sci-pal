@@ -1,0 +1,810 @@
+{
+  "summary": {
+    "claims": 100,
+    "accuracy": 0.67,
+    "support": 68,
+    "refute": 32
+  },
+  "rows": [
+    {
+      "id": "1000",
+      "claim": "Pyridostatin stabilizes the G - quadruplex in the telomeric region.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1003",
+      "claim": "RAD52 is involved in break-induced DNA replication (BIR).",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1004",
+      "claim": "RANK-RANKL pathway signalling has no known association with development of Aire-expressing medullary thymic epithelial cells.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1005",
+      "claim": "RANK-RANKL pathway signalling is linked to development of Aire-expressing medullary thymic epithelial cells.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1006",
+      "claim": "RTEL1 interacts with TRF2 through a C4C4 motif",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1009",
+      "claim": "RUNX1 is downregulated or mutated in TLX1 T-ALL.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1011",
+      "claim": "Radioiodine treatment of non-toxic multinodular goitre increases thyroid volume.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1015",
+      "claim": "Rapamycin delays aging in fruit flies.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1018",
+      "claim": "Rapid phosphotransfer rates are correlated with histidine kinase regulator specificity.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1023",
+      "claim": "Recognition of start codons depends on the translation initiation factor IF3.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1028",
+      "claim": "Reduced responsiveness to interleukin-2 in regulatory T cells is associated with autoimmune diseases such as Type 1 Diabetes.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1030",
+      "claim": "Reducing H3k4me3 methylation induces mouse epiblast stem cells to naive pluripotency efficiently.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1031",
+      "claim": "Reduction of Rpl38 alters the composition of the Hox gene mRNAs translation in mice without lowering overall protein synthesis.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1034",
+      "claim": "Removal of H3K9me3 by ectopic expression of other H3K9 demethylases decreases reprogramming efficiency in SCNT experiments.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1035",
+      "claim": "Removal of H3K9me3 by ectopic expression of other H3K9 demethylases improves reprogramming efficiency in SCNT experiments.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1036",
+      "claim": "Removal of H3K9me3 improves reprogramming efficiency in human somatic cell nuclear transfer experiments.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "104",
+      "claim": "Allogeneic mechanical circulatory support is not as effective as autologous mechanical circulatory support for treating acute myocardial infarction.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1040",
+      "claim": "Replacement of histone H2A with H2A.Z accelerates gene activation in yeasts by destabilizing +1 nucleosomes.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1042",
+      "claim": "Repressing IL-18 has negative effects on atherosclerotic lesion composition and progression.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1043",
+      "claim": "Retinoic acid receptor-related orphan receptor gamma (RORγ) is a therapeutic target for castration-resistant prostate cancer (CRPC)",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1044",
+      "claim": "Rhythmic expression of Cry1 translates directly into a circadian regulation of cAMP signaling in gluconeogenesis.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1045",
+      "claim": "Rhythmic expression of Cry1 translates directly into a circadian regulation of cAMP signaling in hepatic glucose metabolism.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1048",
+      "claim": "Ribosomopathies have a high degree of cell and tissue specific pathology.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "105",
+      "claim": "Alteration of origin firing causes changes in termination zones of Okazaki fragments.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1050",
+      "claim": "Risedronate increases risk of vertebral and non-vertebral fractures.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1054",
+      "claim": "Risk of cardiovascular events can be cut by a third by using antihypertensive drug therapy among hemodialysis patients.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1055",
+      "claim": "Risk-adjusted mortality rates are similar in teaching and non-teaching hospitals.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1056",
+      "claim": "Rotator cuff exercises are more effective than general exercise therapy in reducing pain and improving function of the shoulder.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "106",
+      "claim": "Ambulatory blood pressure monitoring is inaccurate at diagnosing hypertension.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1065",
+      "claim": "Satellite cell dysfunction is a key factor in sarcopenia development.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1069",
+      "claim": "Scapular stabilizer exercises are more effective than general exercise therapy in reducing pain and improving function of the shoulder.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1072",
+      "claim": "Sepsis related mortality has remained stable between 2009-2014.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1073",
+      "claim": "Sepsis related mortality has risen from 2009 to 2014.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "108",
+      "claim": "Amitriptyline is an effective treatment for chronic tension-type headaches.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1081",
+      "claim": "Side effects associated with antidepressants do not represent a mortality risk to postmenopausal women.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1084",
+      "claim": "Side effects associated with antidepressants increases risk of stroke.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1087",
+      "claim": "Sildenafil worsens erectile function in men who experience sexual dysfunction as a result of the use of SSRI antidepressants.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "109",
+      "claim": "An M2-like phenotype in brown adipose tissue macrophages is quickly induced by cold exposure.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1090",
+      "claim": "Smc5/6 engagment halts the activation of SUMO E3 ligase Mms21 by ATP-dependent remolding.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1097",
+      "claim": "Splenomegaly is observed in knockin mouse lacking the SHP-2 MAPK pathway.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1101",
+      "claim": "Stiff substrates encourage mesodermal differentiation by degrading beta-catenin in an integrin-dependent manner.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1102",
+      "claim": "Stiff substrates inhibit mesodermal differentiation by degrading beta-catenin in an integrin-dependent manner.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1103",
+      "claim": "Stroke patients with prior use of direct oral anticoagulants have a higher risk of in-hospital mortality than stroke patients with prior use of warfarin.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1105",
+      "claim": "Students who perform poorly in the early years of medical school are at increased risk for professional misconduct later in their careers.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1106",
+      "claim": "Students who perform poorly in the early years of medical school are less likely to commit professional misconduct later in their careers.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1109",
+      "claim": "Suboptimal nutrition is a leading cause of premature death",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "111",
+      "claim": "Androgenetic haploid mouse embryonic stem cells (ESCs) can be derived and genetically manipulated in vitro.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1114",
+      "claim": "Surfactin producing cells and exopolymer producing cells cooperate to generate \"Van Gogh\" bundles that have sliding abilities on specialized media.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1115",
+      "claim": "Surgical treatment is not superior to non-surgical in treating adults with displaced fractures of the proximal humerus.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1119",
+      "claim": "Sympathetic nerve activity is elevated throughout normal pregnancy.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "112",
+      "claim": "Angiotensin converting enzyme inhibitors are associated with decreased risk for functional renal insufficiency.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1120",
+      "claim": "Sympathetic nerve activity is reduced throughout normal pregnancy.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1125",
+      "claim": "Systemic immunosuppressive (IS) therapy does not enhance the chance of cancer mortality in patients with inflammatory eye disease (IED)",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1126",
+      "claim": "Systemic immunosuppressive (IS) therapy increases the chance of cancer mortality in patients with inflammatory eye disease (IED)",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1127",
+      "claim": "Systemic lupus erythematosus is a risk factor for cardiovascular disease.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1128",
+      "claim": "T cell receptor /CD3 microdomains are required to induce the immunologic synapse.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1133",
+      "claim": "TMEM27 is a marker for beta cells.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1134",
+      "claim": "TNFAIP3 is a glioblastoma tumor enhancer.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1135",
+      "claim": "TNFAIP3 is a glioblastoma tumor suppressor.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1136",
+      "claim": "TNFAIP3 is a tumor enhancer in glioblastoma.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1138",
+      "claim": "TRAP+ osteoclasts regulate mature osteoblast maintenance.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1139",
+      "claim": "Taking 400mg of α-tocopheryl acetate does not prevent prostate cancer.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "114",
+      "claim": "Anthrax spores are very difficult to dispose once they are dispersed.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1141",
+      "claim": "Taking 400mg of α-tocopheryl acetate in combination with vitamin C reduces the risk of prostate cancer.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1142",
+      "claim": "Taking anti-depresents is associated with a decrease in the Aβ level in the brain of experimental animals.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1145",
+      "claim": "Taxation of sugar-sweetened beverages reduced the incidence rate of type II diabetes in India.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1148",
+      "claim": "Ten percent (10%) of kidney cancers in the UK are attributable to excess weight.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1153",
+      "claim": "The C-type lectin receptor (CLEC-2) rearranges the actin cytoskeleton in dendritic cells to promote efficient motility along stromal surfaces.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1156",
+      "claim": "The DESMOND program caused substantial weight loss in most participants.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1157",
+      "claim": "The DESMOND program demonstrates no significant impact on biochemical outcomes.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1158",
+      "claim": "The DESMOND program demonstrates no significant impact on lifestyles outcomes.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1159",
+      "claim": "The DESMOND program demonstrates no significant impact on weight loss.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "116",
+      "claim": "Anthrax spores remain deadly until affected areas are decontaminated.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1162",
+      "claim": "The DdrB protein from Deinococcus radiodurans functions as a pentamer.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1169",
+      "claim": "The M2-phenotype in brown adipose tissue macrophages increases brown adipose tissue thermogenic activity.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1170",
+      "claim": "The NF-κB essential modulator gene induces intestinal inflammation by promoting receptor-interacting protein (RIP) kinase 1 kinase activity-mediated epithelial cell death.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1171",
+      "claim": "The NF-κB essential modulator gene prevents intestinal inflammation by inhibiting receptor-interacting protein (RIP) kinase 1 kinase activity-mediated epithelial cell death.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1173",
+      "claim": "The PDPN gene deactivates the C-type lectin receptor (CLEC-2).",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1176",
+      "claim": "The PRDM1 gene is a key determinant of primordial germ cells.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1177",
+      "claim": "The PRDM1 gene, when combined with the PRDM14 gene, plays an important role during primordial germ cell specification.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1181",
+      "claim": "The RANK-RANK-Ligand (RANKL) pathway is involved in the development of Aire-expressing medullary thymic epithelial cells (mTECs).",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1182",
+      "claim": "The Snf1 complex regulates carbon and energy metabolism in baker's yeast (Saccharomyces cerevisiae).",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1184",
+      "claim": "The US health care system can save up to $5 billion if 7% of patients waiting for kidney transplants participate in the optimized national kidney paired donation program.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "119",
+      "claim": "Antidepressants increase the severity of migraines.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "12",
+      "claim": "40mg/day dosage of folic acid and 2mg/day dosage of vitamin B12 does not affect chronic kidney disease (CKD) progression.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "120",
+      "claim": "Antidepressants reduce the severity of migraines.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1205",
+      "claim": "The combination of physical examinations with C-reactive protein values do not improve the accuracy of radiographic verified pneumonia predictions.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1209",
+      "claim": "The deamination of cytidine to uridine on the minus strand of viral DNA can inactivate the viral genome by inducing G-to-A mutations.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "121",
+      "claim": "Antimicrobial agents are less effective due to the pressure of antimicrobial usage.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1210",
+      "claim": "The density of cytokine receptor bearing cells affects the distance over which cytokines act.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1211",
+      "claim": "The density of cytokine receptor bearing cells has no effect on the distance over which cytokines act.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "122",
+      "claim": "Antimicrobial agents are more effective due to the pressure of antimicrobial usage.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1220",
+      "claim": "The generation of reactive oxygen species by activated oncogenes contributes to the increased genomic instability of leukaemia cells.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1223",
+      "claim": "The innate immune response struggles to remove small numbers of parasites.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1224",
+      "claim": "The latent infection of myeloid cells with human cytomegalovirus induces a number of changes in gene expression.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    },
+    {
+      "id": "1227",
+      "claim": "The mean suicide rate in women is higher after miscarriage than live birth.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "1228",
+      "claim": "The mean suicide rate in women is lower after miscarriage than live birth.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1229",
+      "claim": "The microtubule-dependent delivery and secretion of matrix metalloproteases (MMPs) is partially responsible for the disassembly of adhesion sites.",
+      "gold": "SUPPORT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": false
+    },
+    {
+      "id": "123",
+      "claim": "Antiretroviral therapy increases rates of tuberculosis across a broad range of CD4 strata.",
+      "gold": "CONTRADICT",
+      "prediction": "CONTRADICT",
+      "raw": "CONTRADICT",
+      "ok": true
+    },
+    {
+      "id": "1230",
+      "claim": "The minor G allele of FOXO3 downregulates pro-inflammatory cytokines.",
+      "gold": "SUPPORT",
+      "prediction": "SUPPORT",
+      "raw": "SUPPORT",
+      "ok": true
+    }
+  ]
+}

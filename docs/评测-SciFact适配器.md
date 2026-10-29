@@ -104,6 +104,60 @@ python -m eval.scifact_scipal_eval --build-db --build-index --limit 100
 - 1.2 / 0.8 的 MRR 最好，但 recall 不变；
 - 收益太小，不修改生产默认权重。
 
+## 4.3 Claim 验证（检索 + LLM）
+
+新增 `eval/scifact_verification.py`：
+
+```
+claim → 向量+FTS 检索 top5 → 云端 LLM 判定 SUPPORT / CONTRADICT
+```
+
+50 claims：
+
+| 指标 | 值 |
+|---|---|
+| accuracy | **0.74** |
+| SUPPORT | 34 |
+| CONTRADICT | 16 |
+
+### 50 / 100 对比
+
+| claims | accuracy | SUPPORT 正确率 | CONTRADICT 正确率 |
+|---|---|---|---|
+| 50 | 0.74 | — | — |
+| 100 | **0.67** | **0.515** | **1.00** |
+
+100 题混淆矩阵：
+
+| gold \ pred | SUPPORT | CONTRADICT |
+|---|---|---|
+| SUPPORT | 35 | 33 |
+| CONTRADICT | 0 | 32 |
+
+说明：
+
+- 模型几乎不会误判 CONTRADICT；
+- 但 SUPPORT 有一半被保守判成 CONTRADICT；
+- 结果偏向“证据不足就否定”，需要校准；
+- 这不是完整 SciPal QA，且只到 100 题。
+
+### Oracle 与 top-k 对比
+
+| 证据 | accuracy | SUPPORT 正确率 | CONTRADICT 正确率 |
+|---|---|---|---|
+| 检索 top3（RRF） | 0.73 | 0.603 | 1.00 |
+| **检索 top3 + rerank** | **0.78** | **0.676** | **1.00** |
+| 检索 top5 | 0.67 | 0.515 | 1.00 |
+| 检索 top10 | 0.60 | — | — |
+| **gold evidence** | **0.84** | **0.779** | **0.969** |
+
+结论：
+
+- 证据越少越好：top3 > top5 > top10；
+- rerank 把 top3 从 0.73 提到 0.78；
+- 与 gold evidence 的 0.84 只差 6pp；
+- 当前最佳配置：`--rerank --top-k 3`。
+
 ## 5. 解释
 
 - 100 claims 更可信；
