@@ -51,7 +51,70 @@ q006 8, q007 11, q008 10, q009 1, q010 3
 - coverage 0.50，说明“答得多”不等于“答到 gold 点”；
 - 当前 10 题没有拒答样本，refusal_accuracy 不具意义。
 
-## 5. 下一步
+## 5. 配置对比（同 10 题）
+
+| 配置 | coverage | avg citations | 单题耗时 |
+|---|---|---|---|
+| baseline | 0.4667 | 9.2 | 30–51s |
+| adaptive contextual | **0.5000** | 10.1 | 20–51s |
+| +sentence seeds | 0.3833 | 12.0 | 30–60s |
+
+逐题 coverage：
+
+| id | baseline | adaptive | seeds |
+|---|---|---|---|
+| q001 | 1.0 | 1.0 | 1.0 |
+| q002 | 1.0 | 1.0 | 1.0 |
+| q003 | 0.0 | 0.0 | 0.0 |
+| q004 | 0.0 | 0.0 | 0.0 |
+| q005 | 0.0 | 0.6667 | 0.0 |
+| q006 | 0.5 | 0.5 | 0.5 |
+| q007 | 0.0 | 0.5 | 0.0 |
+| q008 | 1.0 | 1.0 | 1.0 |
+| q009 | 0.6667 | 0.3333 | 0.3333 |
+| q010 | 0.5 | 0.0 | 0.0 |
+
+结论：
+
+- adaptive contextual 的 answer coverage 最好；
+- sentence seeds 虽然提高检索 Recall，但 answer coverage 反而下降；
+- “检索到更多证据”不等于“回答覆盖更多 gold 点”，额外证据可能带来干扰；
+- 10 题样本太小，且没有拒答样本，结论只作方向判断。
+
+## 6. 30 题对比
+
+| 配置 | coverage | avg citations | refusal_accuracy |
+|---|---|---|---|
+| baseline | 0.5444 | 10.77 | **0.00（0/4）** |
+| adaptive contextual | **0.5722** | 14.17 | **0.00（0/4）** |
+
+结论：
+
+- adaptive 的 coverage 仍更高：+2.78pp；
+- 引用数从 10.77 升到 14.17；
+- 两个配置的 **answer-level refusal 都是 0**。
+
+## 7. 关键发现：回答层不会拒答
+
+检索层的 refusal：
+
+```
+0.75
+```
+
+回答层：
+
+```
+0/4
+```
+
+说明：
+
+- 检索层能判断“证据不足”；
+- 但 QA prompt / 模型仍然强行作答；
+- 这会直接伤害可信度，比 Recall 的小幅提升更重要。
+
+## 8. 下一步
 
 1. 用同一批题比较 baseline / contextual / seeds 的 answer coverage；
 2. 统计“检索到了 gold 但回答没覆盖”的比例；
