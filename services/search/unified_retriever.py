@@ -24,6 +24,7 @@ from services.search.sentence_seeds import SentenceSeedSearch
 from services.search.section_types import classify_section, query_intent, section_prior as section_type_prior
 from services.search.tree_router import TreeRouter
 from services.search.auto_merger import AutoMerger
+from services.search.domain_router import DomainRouter
 from services.search.context_expander import (
     ContextExpander,
     DB_PATH as STRUCT_DB,
@@ -60,6 +61,7 @@ class UnifiedRetriever:
         self.sentence_seeds = SentenceSeedSearch()
         self.tree_router = None
         self.auto_merger = None
+        self.domain_router = None
         self.summary_searcher = SummarySearch()
         if graph_expand:
             self.graph = GraphTraverser()
@@ -271,6 +273,23 @@ class UnifiedRetriever:
 
                 # V27.2: 打印精排后的数量
                 print(f"  ✅ After rerank: {len(paragraphs)} paragraphs")
+
+                if os.environ.get("SCIPAL_DOMAIN_ROUTING") == "1" and paragraphs:
+                    if self.domain_router is None:
+                        self.domain_router = DomainRouter()
+                    weight = float(os.environ.get("SCIPAL_DOMAIN_PRIOR", "0.1"))
+                    for paragraph in paragraphs:
+                        bonus = self.domain_router.prior(
+                            query, paragraph.get("paper_id") or "", weight
+                        )
+                        if bonus:
+                            paragraph["rerank_score"] = (
+                                float(paragraph.get("rerank_score") or 0.0) + bonus
+                            )
+                    paragraphs.sort(
+                        key=lambda item: float(item.get("rerank_score") or 0.0),
+                        reverse=True,
+                    )
 
                 summary_vector_hits = []
                 if os.environ.get("SCIPAL_SUMMARY_VECTOR") == "1" and "qa" in channels:
