@@ -376,6 +376,32 @@ class QAService:
                 citations = fallback_citations(len(paragraphs))
                 citation_fallback = True
 
+        from services.qa.grounding import check_grounding
+
+        grounding = check_grounding(
+            answer,
+            str(envelope),
+            min_support=float(os.environ.get("SCIPAL_GROUNDING_MIN_SUPPORT", "0.5")),
+            min_supported_ratio=float(
+                os.environ.get("SCIPAL_GROUNDING_MIN_RATIO", "0.5")
+            ),
+        )
+        if os.environ.get("SCIPAL_GROUNDED_ANSWER") == "1" and not grounding["grounded"]:
+            print(f"Ungrounded answer: {grounding}")
+            return {
+                "answer": (
+                    "The retrieved evidence does not support the generated answer. "
+                    "Please refine the question or add relevant papers to the library."
+                ),
+                "citations": [],
+                "sources": self._build_sources(retrieval_result, []),
+                "answer_status": "insufficient",
+                "refused": True,
+                "grounding": grounding,
+                "llm_provider": self.llm.provider,
+                "llm_model": self.llm.model,
+            }
+
         # Step 5: 构建来源详情
         sources = self._build_sources(retrieval_result, citations)
 
@@ -395,6 +421,7 @@ class QAService:
             "citations": citations,
             "citation_fallback": citation_fallback,
             "sources": sources,
+            "grounding": grounding,
             "llm_provider": self.llm.provider,
             "llm_model": self.llm.model,
             "retrieval_stats": {
