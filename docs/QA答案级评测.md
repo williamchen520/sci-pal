@@ -133,6 +133,30 @@ SCIPAL_LLM_MODEL=deepseek-chat
 - auto 生成题拉低整体（0.686）；
 - 30 题（0.9667）明显偏乐观，100 题更可信。
 
+## 6.1 把 lenient 思路迁移到主 QA
+
+尝试把 SciFact 的 lenient 判定迁移到 QA 拒答 prompt：
+
+```
+证据只覆盖部分问题时回答已支持部分；
+只有完全没有证据才拒答。
+```
+
+30 题结果：
+
+| 指标 | strict prompt | lenient prompt |
+|---|---|---|
+| coverage | 0.9667 | 0.9556 |
+| avg citations | 25.13 | 24.00 |
+| refusal_accuracy | **1.00** | **0.50** |
+
+结论：
+
+- coverage 略降；
+- 拒答从 1.00 掉到 0.50；
+- lenient 不适合 QA 拒答，已回退 strict；
+- SciFact 的 lenient 只适用于 claim 判定，不适用于“证据不足要拒答”的 QA。
+
 ## 7. 30 题对比（旧）
 
 | 配置 | coverage | avg citations | refusal_accuracy |
