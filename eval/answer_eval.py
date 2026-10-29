@@ -20,7 +20,12 @@ DEFAULT_OUT = Path(__file__).resolve().parent / "results" / "answers.json"
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fff]")
 CITE_RE = re.compile(r"\[[PFTARG]\d+\]")
-REFUSAL_MARKERS = ("no relevant", "not found", "insufficient", "无法", "未找到", "没有相关", "证据不足")
+REFUSAL_MARKERS = (
+    "no relevant", "not found", "insufficient", "does not contain",
+    "does not provide", "does not address", "no information", "cannot answer",
+    "unable to answer", "not possible", "无法", "未找到", "没有相关",
+    "证据不足", "未提及", "没有提供",
+)
 
 
 def load_jsonl(path: Path) -> List[Dict[str, Any]]:
@@ -68,8 +73,7 @@ def evaluate(gold: List[Dict[str, Any]], answers: List[Dict[str, Any]]) -> Dict[
         if not points:
             refusal_total += 1
             lowered = answer.lower()
-            no_cite = citations == 0
-            if no_cite and any(marker in lowered for marker in REFUSAL_MARKERS):
+            if any(marker in lowered for marker in REFUSAL_MARKERS):
                 refusal_ok += 1
         rows.append(
             {
