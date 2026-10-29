@@ -63,7 +63,16 @@ claims     = 505（有 evidence 的 train claims）
 | 检索方式 | doc_recall@10 | sentence_recall@10 | MRR |
 |---|---|---|---|
 | FTS-only | 0.84 | 0.74 | 0.615 |
-| **向量 + FTS + RRF + rerank** | **0.97** | **0.97** | **0.828** |
+| **向量 + FTS + RRF** | **0.97** | **0.97** | **0.828** |
+| 再加 cross-encoder rerank | 0.97 | 0.96 | 0.828 |
+
+结论：
+
+- rerank 在摘要级 claim 上没有增益，甚至 sentence recall 略降；
+- 默认保留“向量 + FTS + RRF”，`--rerank` 可选。
+
+> ContextExpander 需要段落/章节窗口，SciFact 是“一篇摘要一个段落”的扁平结构；
+> 直接接入返回空上下文，因此本适配器不启用 context expansion。
 
 结论：
 
