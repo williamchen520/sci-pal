@@ -120,11 +120,26 @@ claim → 向量+FTS 检索 top5 → 云端 LLM 判定 SUPPORT / CONTRADICT
 | SUPPORT | 34 |
 | CONTRADICT | 16 |
 
+### 50 / 100 对比
+
+| claims | accuracy | SUPPORT 正确率 | CONTRADICT 正确率 |
+|---|---|---|---|
+| 50 | 0.74 | — | — |
+| 100 | **0.67** | **0.515** | **1.00** |
+
+100 题混淆矩阵：
+
+| gold \ pred | SUPPORT | CONTRADICT |
+|---|---|---|
+| SUPPORT | 35 | 33 |
+| CONTRADICT | 0 | 32 |
+
 说明：
 
-- 这是“检索 + 单次判定”，不是完整 SciPal QA；
-- 证据不足时要求模型输出 CONTRADICT；
-- 只跑 50 题，尚未扩到全量。
+- 模型几乎不会误判 CONTRADICT；
+- 但 SUPPORT 有一半被保守判成 CONTRADICT；
+- 结果偏向“证据不足就否定”，需要校准；
+- 这不是完整 SciPal QA，且只到 100 题。
 
 ## 5. 解释
 
