@@ -226,6 +226,49 @@ class QAService:
                 "no_results": True,
             }
 
+        if os.environ.get("SCIPAL_DOMAIN_REFUSAL") == "1":
+            from services.search.domain_router import DomainRouter
+
+            router = DomainRouter()
+            distribution = router.query_distribution(question)
+            top_domain = max(distribution, key=distribution.get)
+            threshold = router.refusal_threshold(top_domain)
+            sufficiency = retrieval_result.get("sufficiency") or {}
+            if not sufficiency:
+                from services.qa.sufficiency import evaluate as evaluate_sufficiency
+
+                evidence_items = [
+                    {
+                        "text": item.get("text", ""),
+                        "score": item.get("rerank_score") or item.get("score") or 0.0,
+                    }
+                    for item in (
+                        retrieval_result.get("evidence")
+                        or retrieval_result.get("paragraphs")
+                        or []
+                    )
+                ]
+                sufficiency = evaluate_sufficiency(question, evidence_items)
+            if (
+                not sufficiency.get("sufficient", False)
+                or float(sufficiency.get("query_coverage", 1.0)) < threshold
+            ):
+                print(f"Domain refusal: domain={top_domain}, sufficiency={sufficiency}")
+                return {
+                    "answer": (
+                        "The retrieved evidence is insufficient to answer this question. "
+                        "Please refine the question or add relevant papers to the library."
+                    ),
+                    "citations": [],
+                    "sources": self._build_sources(retrieval_result, []),
+                    "answer_status": "insufficient",
+                    "refused": True,
+                    "domain": top_domain,
+                    "sufficiency": sufficiency,
+                    "llm_provider": self.llm.provider,
+                    "llm_model": self.llm.model,
+                }
+
         # Step 2: 构建上下文信封（to_envelope 内部会调用 retrieve）
         print("📦 Step 2: Building evidence envelope...")
         envelope = self.retriever.to_envelope(
