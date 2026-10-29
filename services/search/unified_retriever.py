@@ -22,6 +22,7 @@ from services.search.summary_vector_search import get_default as get_summary_vec
 from services.search.tree_context import TreeContextBuilder
 from services.search.sentence_seeds import SentenceSeedSearch
 from services.search.section_types import classify_section, query_intent, section_prior as section_type_prior
+from services.search.tree_router import TreeRouter
 from services.search.context_expander import (
     ContextExpander,
     DB_PATH as STRUCT_DB,
@@ -56,6 +57,7 @@ class UnifiedRetriever:
             self.expander = ContextExpander()
         self.tree_builder = TreeContextBuilder()
         self.sentence_seeds = SentenceSeedSearch()
+        self.tree_router = None
         self.summary_searcher = SummarySearch()
         if graph_expand:
             self.graph = GraphTraverser()
@@ -241,6 +243,64 @@ class UnifiedRetriever:
                                 )
                         finally:
                             seed_conn.close()
+
+                if os.environ.get("SCIPAL_TREE_ROUTER") == "1" and fused:
+                    if self.tree_router is None:
+                        from services.search.summary_vector_search import SummaryVectorSearch
+
+                        self.tree_router = TreeRouter(
+                            summary_search=SummaryVectorSearch().search
+                        )
+                    paper_ids = [
+                        item.get("paper_id")
+                        for item in fused[:20]
+                        if item.get("paper_id")
+                    ]
+                    routed = self.tree_router.search(
+                        query,
+                        paper_ids,
+                        beam=int(os.environ.get("SCIPAL_TREE_BEAM", "4")),
+                        depth=int(os.environ.get("SCIPAL_TREE_DEPTH", "3")),
+                        max_sections=int(os.environ.get("SCIPAL_TREE_SECTIONS", "8")),
+                    )
+                    existing_ids = {
+                        item.get("para_id")
+                        or item.get("paragraph_id")
+                        or item.get("id")
+                        for item in fused
+                    }
+                    section_ids = [
+                        item["section_id"] for item in routed if item.get("section_id")
+                    ]
+                    if section_ids:
+                        marks = ",".join("?" * len(section_ids))
+                        tree_conn = sqlite3.connect(str(STRUCT_DB))
+                        tree_conn.row_factory = sqlite3.Row
+                        try:
+                            rows = tree_conn.execute(
+                                "SELECT para_id, paper_id, section_id, text, "
+                                "section_level1, section_level2 FROM paragraphs "
+                                f"WHERE section_id IN ({marks}) LIMIT 30",
+                                section_ids,
+                            ).fetchall()
+                            for row in rows:
+                                if row["para_id"] in existing_ids:
+                                    continue
+                                fused.append(
+                                    {
+                                        "para_id": row["para_id"],
+                                        "paper_id": row["paper_id"],
+                                        "section_id": row["section_id"],
+                                        "text": row["text"],
+                                        "section_l1": row["section_level1"],
+                                        "section_l2": row["section_level2"],
+                                        "score": 0.3,
+                                        "rrf_score": 0.0,
+                                        "source": "tree_router",
+                                    }
+                                )
+                        finally:
+                            tree_conn.close()
 
                 # V27.2: 增加 rerank_k，让 MMR 有更多候选做多样性选择
                 rerank_k = (
