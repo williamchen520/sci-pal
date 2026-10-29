@@ -1,0 +1,282 @@
+[
+  {
+    "id": "q046",
+    "question": "How does constitutive AtRD29A expression reveal divergent BpCBF3 regulatory mechanisms in birch within forest ecosystems?",
+    "coverage": 0.0,
+    "retrieval_hit": true,
+    "answer_points": [
+      "forests",
+      "constitute",
+      "vital"
+    ],
+    "gold_papers": [
+      "paper_PMC13615328_ccdd40ee_xml"
+    ]
+  },
+  {
+    "id": "q079",
+    "question": "How does magnesium supplementation affect insulin secretion and action in individuals with diabetes?",
+    "coverage": 0.0,
+    "retrieval_hit": false,
+    "answer_points": [
+      "condition",
+      "hyperglycemia",
+      "caused"
+    ],
+    "gold_papers": [
+      "paper_PMC13566442_c21e4c98_xml"
+    ]
+  },
+  {
+    "id": "q083",
+    "question": "How do gold and silver nanoparticles leverage their unique physicochemical properties for safe and effective biomedical applications?",
+    "coverage": 0.0,
+    "retrieval_hit": true,
+    "answer_points": [
+      "nanomaterials",
+      "known",
+      "possess"
+    ],
+    "gold_papers": [
+      "paper_PMC13601432_fca91059_xml"
+    ]
+  },
+  {
+    "id": "q085",
+    "question": "What is the relationship between dietary vitamin C intake and the risk of islet autoimmunity and type 1 diabetes in children and adolescents?",
+    "coverage": 0.0,
+    "retrieval_hit": true,
+    "answer_points": [
+      "mramba",
+      "niinist",
+      "erlund"
+    ],
+    "gold_papers": [
+      "paper_PMC13612646_02e95398_mineru"
+    ]
+  },
+  {
+    "id": "q093",
+    "question": "What computational role does the subiculum potentially play according to the existing literature?",
+    "coverage": 0.0,
+    "retrieval_hit": true,
+    "answer_points": [
+      "certain",
+      "extent",
+      "relative"
+    ],
+    "gold_papers": [
+      "paper_PMC13627671_4f01b63c_xml"
+    ]
+  },
+  {
+    "id": "q096",
+    "question": "How does LINC00312 modulate PAX5-mediated transcription of LPLUNC1 to increase gemcitabine sensitivity in nasopharyngeal carcinoma?",
+    "coverage": 0.0,
+    "retrieval_hit": true,
+    "answer_points": [
+      "noncoding",
+      "lncrnas",
+      "critical"
+    ],
+    "gold_papers": [
+      "paper_PMC13631224_a1eda79b_xml"
+    ]
+  },
+  {
+    "id": "q031",
+    "question": "What role does absence play according to the paper?",
+    "coverage": 0.3333,
+    "retrieval_hit": false,
+    "answer_points": [
+      "absence",
+      "estrogen",
+      "receptor"
+    ],
+    "gold_papers": [
+      "paper_PMC13604167_414f1449_xml"
+    ]
+  },
+  {
+    "id": "q033",
+    "question": "What mechanisms enable treatment adaptation in triple-negative breast cancer through reversible epigenetic states?",
+    "coverage": 0.3333,
+    "retrieval_hit": true,
+    "answer_points": [
+      "critical",
+      "examines",
+      "reversible"
+    ],
+    "gold_papers": [
+      "paper_PMC13604167_414f1449_xml"
+    ]
+  },
+  {
+    "id": "q038",
+    "question": "How does MELK regulate mitotic progression and transcriptional programs during the G2/M phase of the cell cycle?",
+    "coverage": 0.3333,
+    "retrieval_hit": true,
+    "answer_points": [
+      "functionally",
+      "implicated",
+      "regulating"
+    ],
+    "gold_papers": [
+      "paper_PMC13631736_cd7b324a_xml"
+    ]
+  },
+  {
+    "id": "q047",
+    "question": "How does constitutive expression of AtRD29A affect BpCBF3 regulatory mechanisms in birch plants under various stress conditions?",
+    "coverage": 0.3333,
+    "retrieval_hit": true,
+    "answer_points": [
+      "plant",
+      "growth",
+      "development"
+    ],
+    "gold_papers": [
+      "paper_PMC13615328_ccdd40ee_xml"
+    ]
+  },
+  {
+    "id": "q052",
+    "question": "How does the reduction in veterinary antibiotic use in poultry farming in China affect cytokine levels in chicken serum?",
+    "coverage": 0.3333,
+    "retrieval_hit": true,
+    "answer_points": [
+      "recent",
+      "years",
+      "china"
+    ],
+    "gold_papers": [
+      "paper_PMC13629335_de6194c2_xml"
+    ]
+  },
+  {
+    "id": "q060",
+    "question": "How do immunomodulatory properties of umbilical cord mesenchymal stromal cells manifest in immune disorders?",
+    "coverage": 0.3333,
+    "retrieval_hit": true,
+    "answer_points": [
+      "mesenchymal",
+      "stromal",
+      "cells"
+    ],
+    "gold_papers": [
+      "paper_PMC13620463_0c693385_xml"
+    ]
+  },
+  {
+    "id": "q069",
+    "question": "What role does herein play according to the paper?",
+    "coverage": 0.3333,
+    "retrieval_hit": false,
+    "answer_points": [
+      "herein",
+      "report",
+      "microfluidic-enhanced"
+    ],
+    "gold_papers": [
+      "paper_PMC13631297_663ddd9b_xml"
+    ]
+  },
+  {
+    "id": "q071",
+    "question": "What evidence is provided about forage in this paper?",
+    "coverage": 0.3333,
+    "retrieval_hit": false,
+    "answer_points": [
+      "forage",
+      "pisum",
+      "sativum"
+    ],
+    "gold_papers": [
+      "paper_PMC13632335_d9890647_xml"
+    ]
+  },
+  {
+    "id": "q074",
+    "question": "What role does surgical play according to the paper?",
+    "coverage": 0.3333,
+    "retrieval_hit": false,
+    "answer_points": [
+      "surgical",
+      "resection",
+      "continues"
+    ],
+    "gold_papers": [
+      "paper_PMC13615846_cb3ff6e9_xml"
+    ]
+  },
+  {
+    "id": "q078",
+    "question": "How do Tregs integrate immune regulation with tissue regeneration?",
+    "coverage": 0.3333,
+    "retrieval_hit": true,
+    "answer_points": [
+      "findings",
+      "raise",
+      "conceptual"
+    ],
+    "gold_papers": [
+      "paper_PMC13628649_d09b44da_xml"
+    ]
+  },
+  {
+    "id": "q080",
+    "question": "How does magnesium supplementation affect the prevalence of type 1 diabetes in different age groups, particularly in India?",
+    "coverage": 0.3333,
+    "retrieval_hit": true,
+    "answer_points": [
+      "according",
+      "international",
+      "diabetes"
+    ],
+    "gold_papers": [
+      "paper_PMC13566442_c21e4c98_xml"
+    ]
+  },
+  {
+    "id": "q081",
+    "question": "What role does according play according to the paper?",
+    "coverage": 0.3333,
+    "retrieval_hit": false,
+    "answer_points": [
+      "according",
+      "wielkopolska",
+      "incidence"
+    ],
+    "gold_papers": [
+      "paper_PMC13566442_c21e4c98_xml"
+    ]
+  },
+  {
+    "id": "q086",
+    "question": "What specific associations exist between dietary vitamin C intake and the risk of islet autoimmunity and type 1 diabetes in genetically at-risk children?",
+    "coverage": 0.3333,
+    "retrieval_hit": true,
+    "answer_points": [
+      "purpose",
+      "explored",
+      "associations"
+    ],
+    "gold_papers": [
+      "paper_PMC13612646_02e95398_mineru"
+    ]
+  },
+  {
+    "id": "q089",
+    "question": "How do metal implants influence the metal-driven regulatory networks in the immune microenvironment of human tissues?",
+    "coverage": 0.3333,
+    "retrieval_hit": false,
+    "answer_points": [
+      "recent",
+      "years",
+      "metal"
+    ],
+    "gold_papers": [
+      "paper_PMC13626021_7bc43e34_xml"
+    ]
+  }
+]
