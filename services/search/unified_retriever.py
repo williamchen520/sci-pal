@@ -256,12 +256,20 @@ class UnifiedRetriever:
                         for item in fused[:20]
                         if item.get("paper_id")
                     ]
+                    para_scores: dict = {}
+                    for item in fused:
+                        sid = item.get("section_id")
+                        if not sid:
+                            continue
+                        score = float(item.get("rrf_score") or item.get("score") or 0.0)
+                        para_scores[sid] = max(para_scores.get(sid, 0.0), score)
                     routed = self.tree_router.search(
                         query,
                         paper_ids,
                         beam=int(os.environ.get("SCIPAL_TREE_BEAM", "4")),
                         depth=int(os.environ.get("SCIPAL_TREE_DEPTH", "3")),
                         max_sections=int(os.environ.get("SCIPAL_TREE_SECTIONS", "8")),
+                        paragraph_scores=para_scores,
                     )
                     existing_ids = {
                         item.get("para_id")

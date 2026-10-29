@@ -40,6 +40,7 @@ class TreeRouter:
         beam: int = 4,
         depth: int = 3,
         max_sections: int = 8,
+        paragraph_scores: Optional[Dict[str, float]] = None,
     ) -> List[Dict]:
         paper_ids = list(dict.fromkeys(pid for pid in paper_ids if pid))
         if not paper_ids:
@@ -47,6 +48,8 @@ class TreeRouter:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         intent = query_intent(query)
+        paragraph_scores = paragraph_scores or {}
+        max_para = max(paragraph_scores.values(), default=1.0) or 1.0
         collected: Dict[str, Dict] = {}
         try:
             for paper_id in paper_ids[:5]:
@@ -65,8 +68,13 @@ class TreeRouter:
                 frontier = []
                 for row in roots:
                     title = row["title"] or ""
-                    score = scores.get(row["section_id"], 0.0)
-                    score += section_prior(intent, classify_section(title))
+                    para_score = paragraph_scores.get(row["section_id"], 0.0) / max_para
+                    prior = section_prior(intent, classify_section(title))
+                    score = (
+                        0.5 * para_score
+                        + 0.3 * scores.get(row["section_id"], 0.0)
+                        + 0.2 * (prior / 0.15 if prior > 0 else 0.0)
+                    )
                     frontier.append(
                         {
                             "section_id": row["section_id"],
@@ -93,10 +101,15 @@ class TreeRouter:
                     for row in children:
                         title = row["title"] or ""
                         parent_score = frontier_scores.get(row["parent_id"], 0.0)
+                        para_score = (
+                            paragraph_scores.get(row["section_id"], 0.0) / max_para
+                        )
+                        prior = section_prior(intent, classify_section(title))
                         score = (
                             0.5 * parent_score
-                            + 0.4 * scores.get(row["section_id"], 0.0)
-                            + 0.1 * section_prior(intent, classify_section(title))
+                            + 0.2 * para_score
+                            + 0.2 * scores.get(row["section_id"], 0.0)
+                            + 0.1 * (prior / 0.15 if prior > 0 else 0.0)
                         )
                         next_frontier.append(
                             {
