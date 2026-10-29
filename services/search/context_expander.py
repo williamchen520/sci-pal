@@ -14,10 +14,13 @@ Two expansion modes:
 The parent unit carries ``section_path`` (root → leaf titles) so the caller can
 show "Chapter 3 › 3.2 Efficacy" instead of a bare paragraph.
 """
+import os
 import re
 import sqlite3
 from pathlib import Path
 from typing import Dict, List, Optional
+
+from services.search.sentence_roles import pick_anchor
 
 from services.search.boilerplate_filter import clean_boilerplate
 
@@ -131,6 +134,8 @@ class ContextExpander:
             return None
         if not query:
             return sentences[0]
+        if os.environ.get("SCIPAL_ANCHOR_ROLES") == "1":
+            return pick_anchor(sentences, query) or sentences[0]
         q = self._tokens(query)
         if not q:
             return sentences[0]
