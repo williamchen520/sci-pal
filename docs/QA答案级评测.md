@@ -106,6 +106,33 @@ SCIPAL_LLM_MODEL=deepseek-chat
 
 > 指标修正：拒答现在允许“带引用的拒答陈述”（如 "does not contain"），不再要求引用数为 0。
 
+### 100 题云端结果
+
+| 指标 | 值 |
+|---|---|
+| answered | 100 |
+| coverage | 0.7733 |
+| avg citations | 27.11 |
+| refusal_accuracy | 1.00 |
+
+分题型 coverage：
+
+| 类型 | coverage | n |
+|---|---|---|
+| factual | 1.0000 | 11 |
+| methods | 1.0000 | 4 |
+| comparison | 1.0000 | 5 |
+| refusal | 1.0000 | 4 |
+| multi_hop | 0.9167 | 4 |
+| qualifier | 0.7778 | 3 |
+| auto | **0.6860** | 69 |
+
+结论：
+
+- 人工 factual/methods/comparison 基本满分；
+- auto 生成题拉低整体（0.686）；
+- 30 题（0.9667）明显偏乐观，100 题更可信。
+
 ## 7. 30 题对比（旧）
 
 | 配置 | coverage | avg citations | refusal_accuracy |
