@@ -1,0 +1,2231 @@
+{
+  "summary": {
+    "claims": 100,
+    "doc_recall@10": 0.84,
+    "sentence_recall@10": 0.74,
+    "mrr": 0.6145
+  },
+  "rows": [
+    {
+      "claim_id": "1000",
+      "claim": "Pyridostatin stabilizes the G - quadruplex in the telomeric region.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "16472469"
+      ],
+      "returned_docs": [
+        "26118532",
+        "26607366",
+        "15960670",
+        "25842866",
+        "2758012",
+        "16472469",
+        "10486817",
+        "6386930",
+        "45364685",
+        "23208167"
+      ]
+    },
+    {
+      "claim_id": "1003",
+      "claim": "RAD52 is involved in break-induced DNA replication (BIR).",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "14332945",
+        "4319844",
+        "4899981"
+      ],
+      "returned_docs": [
+        "14332945",
+        "4899981",
+        "8577229",
+        "15913433",
+        "4401289",
+        "20280410",
+        "12086599",
+        "12909503",
+        "4319844",
+        "15659108"
+      ]
+    },
+    {
+      "claim_id": "1004",
+      "claim": "RANK-RANKL pathway signalling has no known association with development of Aire-expressing medullary thymic epithelial cells.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "2734421",
+        "301838",
+        "3952288"
+      ],
+      "returned_docs": [
+        "3952288",
+        "39128592",
+        "5487448",
+        "301838",
+        "18199839",
+        "2734421",
+        "1871230",
+        "226488",
+        "39559521",
+        "4561402"
+      ]
+    },
+    {
+      "claim_id": "1005",
+      "claim": "RANK-RANKL pathway signalling is linked to development of Aire-expressing medullary thymic epithelial cells.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "2734421",
+        "301838",
+        "3952288"
+      ],
+      "returned_docs": [
+        "3952288",
+        "2734421",
+        "39128592",
+        "10162553",
+        "301838",
+        "13989491",
+        "39559521",
+        "11603066",
+        "5864770",
+        "226488"
+      ]
+    },
+    {
+      "claim_id": "1006",
+      "claim": "RTEL1 interacts with TRF2 through a C4C4 motif",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4926049"
+      ],
+      "returned_docs": [
+        "4926049",
+        "1546650",
+        "11922370",
+        "43711341",
+        "7915836",
+        "2617858",
+        "4306711",
+        "14119470",
+        "18576103",
+        "2582169"
+      ]
+    },
+    {
+      "claim_id": "1009",
+      "claim": "RUNX1 is downregulated or mutated in TLX1 T-ALL.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "1982286"
+      ],
+      "returned_docs": [
+        "1982286",
+        "2359152",
+        "5468807",
+        "11887584",
+        "8385277",
+        "14471161",
+        "9095394",
+        "23934390",
+        "27949347",
+        "21307488"
+      ]
+    },
+    {
+      "claim_id": "1011",
+      "claim": "Radioiodine treatment of non-toxic multinodular goitre increases thyroid volume.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "9745001"
+      ],
+      "returned_docs": [
+        "9745001",
+        "26026009",
+        "6751418",
+        "43122426",
+        "18414462",
+        "13108582",
+        "10743131",
+        "54482327",
+        "41340212",
+        "4246523"
+      ]
+    },
+    {
+      "claim_id": "1015",
+      "claim": "Rapamycin delays aging in fruit flies.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "6277638"
+      ],
+      "returned_docs": [
+        "14496749",
+        "6277638",
+        "34760396",
+        "44562904",
+        "18557974",
+        "8646760",
+        "9539248",
+        "735130",
+        "86602746",
+        "9822397"
+      ]
+    },
+    {
+      "claim_id": "1018",
+      "claim": "Rapid phosphotransfer rates are correlated with histidine kinase regulator specificity.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "11603066"
+      ],
+      "returned_docs": [
+        "1225513",
+        "11603066",
+        "28651643",
+        "39859981",
+        "19004126",
+        "196664003",
+        "7821634",
+        "9899292",
+        "12207167",
+        "45875990"
+      ]
+    },
+    {
+      "claim_id": "1023",
+      "claim": "Recognition of start codons depends on the translation initiation factor IF3.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "16927286"
+      ],
+      "returned_docs": [
+        "26378103",
+        "23342686",
+        "16927286",
+        "22482024",
+        "39729277",
+        "30261663",
+        "25175223",
+        "24521894",
+        "5760247",
+        "6209599"
+      ]
+    },
+    {
+      "claim_id": "1028",
+      "claim": "Reduced responsiveness to interleukin-2 in regulatory T cells is associated with autoimmune diseases such as Type 1 Diabetes.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "11899391",
+        "13923140"
+      ],
+      "returned_docs": [
+        "29347970",
+        "7115651",
+        "1855679",
+        "33535222",
+        "11899391",
+        "37182501",
+        "23017040",
+        "26230669",
+        "25726838",
+        "51952430"
+      ]
+    },
+    {
+      "claim_id": "1030",
+      "claim": "Reducing H3k4me3 methylation induces mouse epiblast stem cells to naive pluripotency efficiently.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "6441369"
+      ],
+      "returned_docs": [
+        "6441369",
+        "23418635",
+        "4462419",
+        "14923462",
+        "4784069",
+        "7581911",
+        "3882374",
+        "41548287",
+        "5633876",
+        "9993008"
+      ]
+    },
+    {
+      "claim_id": "1031",
+      "claim": "Reduction of Rpl38 alters the composition of the Hox gene mRNAs translation in mice without lowering overall protein synthesis.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "12486491"
+      ],
+      "returned_docs": [
+        "12486491",
+        "13763195",
+        "10443642",
+        "23727313",
+        "15590539",
+        "22358449",
+        "13384318",
+        "21330280",
+        "23634484",
+        "9486930"
+      ]
+    },
+    {
+      "claim_id": "1034",
+      "claim": "Removal of H3K9me3 by ectopic expression of other H3K9 demethylases decreases reprogramming efficiency in SCNT experiments.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "4547102"
+      ],
+      "returned_docs": [
+        "15803282",
+        "8185080",
+        "14225271",
+        "4343437",
+        "12100854",
+        "7426741",
+        "31882215",
+        "4547102",
+        "14555750",
+        "7688110"
+      ]
+    },
+    {
+      "claim_id": "1035",
+      "claim": "Removal of H3K9me3 by ectopic expression of other H3K9 demethylases improves reprogramming efficiency in SCNT experiments.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "4547102"
+      ],
+      "returned_docs": [
+        "15803282",
+        "8185080",
+        "14225271",
+        "4343437",
+        "12100854",
+        "7426741",
+        "31882215",
+        "4547102",
+        "14555750",
+        "7688110"
+      ]
+    },
+    {
+      "claim_id": "1036",
+      "claim": "Removal of H3K9me3 improves reprogramming efficiency in human somatic cell nuclear transfer experiments.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "4547102"
+      ],
+      "returned_docs": [
+        "15803282",
+        "14225271",
+        "4547102",
+        "86129154",
+        "4405194",
+        "37822406",
+        "29641682",
+        "10546779",
+        "4410181",
+        "8185080"
+      ]
+    },
+    {
+      "claim_id": "104",
+      "claim": "Allogeneic mechanical circulatory support is not as effective as autologous mechanical circulatory support for treating acute myocardial infarction.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "40164383"
+      ],
+      "returned_docs": [
+        "40164383",
+        "30041895",
+        "10991183",
+        "24097933",
+        "12800122",
+        "5596332",
+        "9306247",
+        "14823313",
+        "83667891",
+        "26047921"
+      ]
+    },
+    {
+      "claim_id": "1040",
+      "claim": "Replacement of histone H2A with H2A.Z accelerates gene activation in yeasts by destabilizing +1 nucleosomes.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "16626264",
+        "25254425"
+      ],
+      "returned_docs": [
+        "9451052",
+        "11844791",
+        "5966635",
+        "18038955",
+        "15778034",
+        "9889151",
+        "2817000",
+        "25254425",
+        "27274441",
+        "17518195"
+      ]
+    },
+    {
+      "claim_id": "1042",
+      "claim": "Repressing IL-18 has negative effects on atherosclerotic lesion composition and progression.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "17421851"
+      ],
+      "returned_docs": [
+        "25050364",
+        "17421851",
+        "15727984",
+        "22080671",
+        "25453683",
+        "24928817",
+        "7711685",
+        "9334631",
+        "8144920",
+        "42421723"
+      ]
+    },
+    {
+      "claim_id": "1043",
+      "claim": "Retinoic acid receptor-related orphan receptor gamma (RORγ) is a therapeutic target for castration-resistant prostate cancer (CRPC)",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "17671145"
+      ],
+      "returned_docs": [
+        "17671145",
+        "3590806",
+        "3203590",
+        "25830701",
+        "37256966",
+        "36889513",
+        "5860364",
+        "18546584",
+        "14116046",
+        "15928989"
+      ]
+    },
+    {
+      "claim_id": "1044",
+      "claim": "Rhythmic expression of Cry1 translates directly into a circadian regulation of cAMP signaling in gluconeogenesis.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "22500262"
+      ],
+      "returned_docs": [
+        "14471161",
+        "4999633",
+        "22500262",
+        "4587978",
+        "21199527",
+        "6123521",
+        "11565780",
+        "23830488",
+        "36838958",
+        "10624000"
+      ]
+    },
+    {
+      "claim_id": "1045",
+      "claim": "Rhythmic expression of Cry1 translates directly into a circadian regulation of cAMP signaling in hepatic glucose metabolism.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "22500262"
+      ],
+      "returned_docs": [
+        "14471161",
+        "4999633",
+        "22500262",
+        "4587978",
+        "21199527",
+        "6123521",
+        "11565780",
+        "23830488",
+        "36838958",
+        "10624000"
+      ]
+    },
+    {
+      "claim_id": "1048",
+      "claim": "Ribosomopathies have a high degree of cell and tissue specific pathology.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "12486491"
+      ],
+      "returned_docs": [
+        "8925851",
+        "4459491",
+        "4928282",
+        "23586085",
+        "952111",
+        "24737389",
+        "18333304",
+        "13790144",
+        "52868579",
+        "11250124"
+      ]
+    },
+    {
+      "claim_id": "105",
+      "claim": "Alteration of origin firing causes changes in termination zones of Okazaki fragments.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "36606083"
+      ],
+      "returned_docs": [
+        "36606083",
+        "164189",
+        "39225849",
+        "39758684",
+        "25787749",
+        "11569583",
+        "13552682",
+        "25175997",
+        "44640124",
+        "22682497"
+      ]
+    },
+    {
+      "claim_id": "1050",
+      "claim": "Risedronate increases risk of vertebral and non-vertebral fractures.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "19878070"
+      ],
+      "returned_docs": [
+        "26000593",
+        "11246427",
+        "19878070",
+        "16812091",
+        "46565968",
+        "17482507",
+        "275294",
+        "24724242",
+        "11716783",
+        "5864770"
+      ]
+    },
+    {
+      "claim_id": "1054",
+      "claim": "Risk of cardiovascular events can be cut by a third by using antihypertensive drug therapy among hemodialysis patients.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "10072941"
+      ],
+      "returned_docs": [
+        "16760369",
+        "11939159",
+        "54490092",
+        "752423",
+        "5698494",
+        "40790033",
+        "10072941",
+        "8780599",
+        "6793674",
+        "8596837"
+      ]
+    },
+    {
+      "claim_id": "1055",
+      "claim": "Risk-adjusted mortality rates are similar in teaching and non-teaching hospitals.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "13906581"
+      ],
+      "returned_docs": [
+        "16495649",
+        "20746604",
+        "13906581",
+        "28738741",
+        "3776162",
+        "21323587",
+        "7011850",
+        "12258338",
+        "36033696",
+        "7419612"
+      ]
+    },
+    {
+      "claim_id": "1056",
+      "claim": "Rotator cuff exercises are more effective than general exercise therapy in reducing pain and improving function of the shoulder.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "4200695"
+      ],
+      "returned_docs": [
+        "4200695",
+        "38493521",
+        "44586415",
+        "42950029",
+        "21636085",
+        "14606752",
+        "11933721",
+        "40631095",
+        "53779698",
+        "1805641"
+      ]
+    },
+    {
+      "claim_id": "106",
+      "claim": "Ambulatory blood pressure monitoring is inaccurate at diagnosing hypertension.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "25515907",
+        "5151024"
+      ],
+      "returned_docs": [
+        "5151024",
+        "25515907",
+        "54490092",
+        "25974070",
+        "31889025",
+        "45447613",
+        "663464",
+        "11071351",
+        "30639847",
+        "44030361"
+      ]
+    },
+    {
+      "claim_id": "1065",
+      "claim": "Satellite cell dysfunction is a key factor in sarcopenia development.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "20418809"
+      ],
+      "returned_docs": [
+        "20418809",
+        "16660256",
+        "42106119",
+        "32587939",
+        "4795303",
+        "12824568",
+        "25827024",
+        "18882947",
+        "17188921",
+        "11428884"
+      ]
+    },
+    {
+      "claim_id": "1069",
+      "claim": "Scapular stabilizer exercises are more effective than general exercise therapy in reducing pain and improving function of the shoulder.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4200695"
+      ],
+      "returned_docs": [
+        "4200695",
+        "21636085",
+        "14606752",
+        "40631095",
+        "53779698",
+        "1805641",
+        "6748318",
+        "22467585",
+        "3493623",
+        "2264455"
+      ]
+    },
+    {
+      "claim_id": "1072",
+      "claim": "Sepsis related mortality has remained stable between 2009-2014.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4824840"
+      ],
+      "returned_docs": [
+        "4824840",
+        "3776162",
+        "26314743",
+        "36355784",
+        "32850528",
+        "3899896",
+        "21323758",
+        "12709184",
+        "9967265",
+        "24917562"
+      ]
+    },
+    {
+      "claim_id": "1073",
+      "claim": "Sepsis related mortality has risen from 2009 to 2014.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4824840"
+      ],
+      "returned_docs": [
+        "4824840",
+        "3899896",
+        "3776162",
+        "26314743",
+        "5185871",
+        "22153455",
+        "7647224",
+        "12709184",
+        "28647122",
+        "5596332"
+      ]
+    },
+    {
+      "claim_id": "108",
+      "claim": "Amitriptyline is an effective treatment for chronic tension-type headaches.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "22995579",
+        "23865182",
+        "6191684"
+      ],
+      "returned_docs": [
+        "22995579",
+        "23865182",
+        "6191684",
+        "14606752",
+        "24510595",
+        "30813140",
+        "44830890",
+        "39985001",
+        "24865781",
+        "3654468"
+      ]
+    },
+    {
+      "claim_id": "1081",
+      "claim": "Side effects associated with antidepressants do not represent a mortality risk to postmenopausal women.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "5691302"
+      ],
+      "returned_docs": [
+        "5691302",
+        "11246427",
+        "18340282",
+        "24323695",
+        "39851630",
+        "25973484",
+        "16701509",
+        "13883546",
+        "1428840",
+        "21009874"
+      ]
+    },
+    {
+      "claim_id": "1084",
+      "claim": "Side effects associated with antidepressants increases risk of stroke.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "5691302"
+      ],
+      "returned_docs": [
+        "5691302",
+        "37424881",
+        "36642096",
+        "8595678",
+        "4828631",
+        "23627419",
+        "15984735",
+        "15512462",
+        "583260",
+        "5839365"
+      ]
+    },
+    {
+      "claim_id": "1087",
+      "claim": "Sildenafil worsens erectile function in men who experience sexual dysfunction as a result of the use of SSRI antidepressants.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "39281140"
+      ],
+      "returned_docs": [
+        "39281140",
+        "27466734",
+        "3981244",
+        "2496002",
+        "7602348",
+        "6421734",
+        "4460880",
+        "3308636",
+        "24082820",
+        "308862"
+      ]
+    },
+    {
+      "claim_id": "109",
+      "claim": "An M2-like phenotype in brown adipose tissue macrophages is quickly induced by cold exposure.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4319174"
+      ],
+      "returned_docs": [
+        "4319174",
+        "29381091",
+        "17973161",
+        "43192375",
+        "20363389",
+        "8477699",
+        "29691654",
+        "970012",
+        "34582256",
+        "36838958"
+      ]
+    },
+    {
+      "claim_id": "1090",
+      "claim": "Smc5/6 engagment halts the activation of SUMO E3 ligase Mms21 by ATP-dependent remolding.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "17628888"
+      ],
+      "returned_docs": [
+        "17628888",
+        "7915836",
+        "23577014",
+        "143251",
+        "7645565",
+        "9505448",
+        "23513818",
+        "393001",
+        "1635872",
+        "24725136"
+      ]
+    },
+    {
+      "claim_id": "1097",
+      "claim": "Splenomegaly is observed in knockin mouse lacking the SHP-2 MAPK pathway.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "26851674"
+      ],
+      "returned_docs": [
+        "18038250",
+        "29288582",
+        "4422868",
+        "4729644",
+        "17717391",
+        "26851674",
+        "4362729",
+        "3173489",
+        "6374918",
+        "5531479"
+      ]
+    },
+    {
+      "claim_id": "1101",
+      "claim": "Stiff substrates encourage mesodermal differentiation by degrading beta-catenin in an integrin-dependent manner.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "3874000"
+      ],
+      "returned_docs": [
+        "3874000",
+        "13779605",
+        "30884033",
+        "31311495",
+        "1782201",
+        "20943272",
+        "18909530",
+        "21414718",
+        "8446259",
+        "2682997"
+      ]
+    },
+    {
+      "claim_id": "1102",
+      "claim": "Stiff substrates inhibit mesodermal differentiation by degrading beta-catenin in an integrin-dependent manner.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "3874000"
+      ],
+      "returned_docs": [
+        "3874000",
+        "13779605",
+        "30884033",
+        "31311495",
+        "1782201",
+        "20943272",
+        "18909530",
+        "21414718",
+        "8446259",
+        "2682997"
+      ]
+    },
+    {
+      "claim_id": "1103",
+      "claim": "Stroke patients with prior use of direct oral anticoagulants have a higher risk of in-hospital mortality than stroke patients with prior use of warfarin.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "3898784"
+      ],
+      "returned_docs": [
+        "3898784",
+        "4910408",
+        "9813098",
+        "11718220",
+        "20554003",
+        "15984735",
+        "1711571",
+        "32328114",
+        "37619697",
+        "14566771"
+      ]
+    },
+    {
+      "claim_id": "1105",
+      "claim": "Students who perform poorly in the early years of medical school are at increased risk for professional misconduct later in their careers.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "6710713"
+      ],
+      "returned_docs": [
+        "24159217",
+        "14021596",
+        "6710713",
+        "17374970",
+        "28017005",
+        "11624482",
+        "12789595",
+        "34369306",
+        "27711043",
+        "2659805"
+      ]
+    },
+    {
+      "claim_id": "1106",
+      "claim": "Students who perform poorly in the early years of medical school are less likely to commit professional misconduct later in their careers.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "6710713"
+      ],
+      "returned_docs": [
+        "24159217",
+        "14021596",
+        "6710713",
+        "17374970",
+        "28017005",
+        "11624482",
+        "12789595",
+        "34369306",
+        "27711043",
+        "2659805"
+      ]
+    },
+    {
+      "claim_id": "1109",
+      "claim": "Suboptimal nutrition is a leading cause of premature death",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "13770184",
+        "8582337"
+      ],
+      "returned_docs": [
+        "5114940",
+        "21387297",
+        "15155862",
+        "21150010",
+        "32328114",
+        "29190724",
+        "21383026",
+        "26067999",
+        "26848994",
+        "9063688"
+      ]
+    },
+    {
+      "claim_id": "111",
+      "claim": "Androgenetic haploid mouse embryonic stem cells (ESCs) can be derived and genetically manipulated in vitro.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "13513790"
+      ],
+      "returned_docs": [
+        "7581911",
+        "13513790",
+        "42565477",
+        "23418635",
+        "30507607",
+        "39801095",
+        "1744097",
+        "4784069",
+        "13777706",
+        "4416964"
+      ]
+    },
+    {
+      "claim_id": "1114",
+      "claim": "Surfactin producing cells and exopolymer producing cells cooperate to generate \"Van Gogh\" bundles that have sliding abilities on specialized media.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "12824568"
+      ],
+      "returned_docs": [
+        "12824568",
+        "7492420",
+        "11360430",
+        "39164524",
+        "17601006",
+        "29347970",
+        "20388894",
+        "27588420",
+        "16119973",
+        "5398179"
+      ]
+    },
+    {
+      "claim_id": "1115",
+      "claim": "Surgical treatment is not superior to non-surgical in treating adults with displaced fractures of the proximal humerus.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "44048701"
+      ],
+      "returned_docs": [
+        "44048701",
+        "40343416",
+        "9967265",
+        "13223957",
+        "26067999",
+        "41298619",
+        "11117498",
+        "26026009",
+        "9754530",
+        "19532163"
+      ]
+    },
+    {
+      "claim_id": "1119",
+      "claim": "Sympathetic nerve activity is elevated throughout normal pregnancy.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "13907928",
+        "18997216",
+        "5323845"
+      ],
+      "returned_docs": [
+        "18997216",
+        "5323845",
+        "26710772",
+        "20544428",
+        "13448422",
+        "13907928",
+        "58006489",
+        "8596837",
+        "26083387",
+        "5107861"
+      ]
+    },
+    {
+      "claim_id": "112",
+      "claim": "Angiotensin converting enzyme inhibitors are associated with decreased risk for functional renal insufficiency.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "6157837"
+      ],
+      "returned_docs": [
+        "1759213",
+        "25816994",
+        "6157837",
+        "5573975",
+        "35724562",
+        "26199970",
+        "14584755",
+        "14121786",
+        "32463364",
+        "43417006"
+      ]
+    },
+    {
+      "claim_id": "1120",
+      "claim": "Sympathetic nerve activity is reduced throughout normal pregnancy.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "13907928",
+        "18997216",
+        "5323845"
+      ],
+      "returned_docs": [
+        "18997216",
+        "5323845",
+        "26710772",
+        "13907928",
+        "13448422",
+        "58006489",
+        "8596837",
+        "26083387",
+        "5107861",
+        "25687558"
+      ]
+    },
+    {
+      "claim_id": "1125",
+      "claim": "Systemic immunosuppressive (IS) therapy does not enhance the chance of cancer mortality in patients with inflammatory eye disease (IED)",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "21009874"
+      ],
+      "returned_docs": [
+        "21009874",
+        "9056874",
+        "24581365",
+        "10749308",
+        "19994006",
+        "30919024",
+        "40005757",
+        "25732836",
+        "3524352",
+        "6650933"
+      ]
+    },
+    {
+      "claim_id": "1126",
+      "claim": "Systemic immunosuppressive (IS) therapy increases the chance of cancer mortality in patients with inflammatory eye disease (IED)",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "21009874"
+      ],
+      "returned_docs": [
+        "21009874",
+        "9056874",
+        "25732836",
+        "3524352",
+        "4465735",
+        "14834714",
+        "29981186",
+        "13380980",
+        "27240667",
+        "10958594"
+      ]
+    },
+    {
+      "claim_id": "1127",
+      "claim": "Systemic lupus erythematosus is a risk factor for cardiovascular disease.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": true,
+      "gold_docs": [
+        "27466734"
+      ],
+      "returned_docs": [
+        "14938990",
+        "28015516",
+        "5448119",
+        "12670680",
+        "1049501",
+        "7115651",
+        "28149602",
+        "14853989",
+        "16233471",
+        "13106686"
+      ]
+    },
+    {
+      "claim_id": "1128",
+      "claim": "T cell receptor /CD3 microdomains are required to induce the immunologic synapse.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "33499189",
+        "9283422"
+      ],
+      "returned_docs": [
+        "33499189",
+        "2714623",
+        "16398827",
+        "24069089",
+        "6936141",
+        "29362104",
+        "18758057",
+        "7869794",
+        "36642096",
+        "34905328"
+      ]
+    },
+    {
+      "claim_id": "1133",
+      "claim": "TMEM27 is a marker for beta cells.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "24142891"
+      ],
+      "returned_docs": [
+        "24142891",
+        "30915421",
+        "10669939",
+        "4311206",
+        "19756935",
+        "16058322",
+        "25858295",
+        "41650417",
+        "17695748",
+        "3858268"
+      ]
+    },
+    {
+      "claim_id": "1134",
+      "claim": "TNFAIP3 is a glioblastoma tumor enhancer.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "33370"
+      ],
+      "returned_docs": [
+        "33370",
+        "41340212",
+        "15215393",
+        "41293601",
+        "4979184",
+        "13244602",
+        "6948886",
+        "11578459",
+        "195689757",
+        "4312169"
+      ]
+    },
+    {
+      "claim_id": "1135",
+      "claim": "TNFAIP3 is a glioblastoma tumor suppressor.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "33370"
+      ],
+      "returned_docs": [
+        "33370",
+        "1241113",
+        "41340212",
+        "15215393",
+        "41293601",
+        "26735905",
+        "37204802",
+        "15955172",
+        "25682129",
+        "4979184"
+      ]
+    },
+    {
+      "claim_id": "1136",
+      "claim": "TNFAIP3 is a tumor enhancer in glioblastoma.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "33370"
+      ],
+      "returned_docs": [
+        "33370",
+        "41340212",
+        "15215393",
+        "41293601",
+        "4979184",
+        "13244602",
+        "6948886",
+        "11578459",
+        "195689757",
+        "4312169"
+      ]
+    },
+    {
+      "claim_id": "1138",
+      "claim": "TRAP+ osteoclasts regulate mature osteoblast maintenance.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "6796297"
+      ],
+      "returned_docs": [
+        "13964633",
+        "42662816",
+        "344240",
+        "22852120",
+        "43711341",
+        "21564598",
+        "13162391",
+        "43619625",
+        "3118719",
+        "3531388"
+      ]
+    },
+    {
+      "claim_id": "1139",
+      "claim": "Taking 400mg of α-tocopheryl acetate does not prevent prostate cancer.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "12009265"
+      ],
+      "returned_docs": [
+        "24581365",
+        "35768199",
+        "1171121",
+        "30919024",
+        "12009265",
+        "38477436",
+        "8512633",
+        "4828631",
+        "36003142",
+        "10279084"
+      ]
+    },
+    {
+      "claim_id": "114",
+      "claim": "Anthrax spores are very difficult to dispose once they are dispersed.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "33872649"
+      ],
+      "returned_docs": [
+        "10931595",
+        "7711685",
+        "2526777",
+        "7912",
+        "4899981",
+        "16963081",
+        "123859",
+        "5956380",
+        "20761364",
+        "6191684"
+      ]
+    },
+    {
+      "claim_id": "1141",
+      "claim": "Taking 400mg of α-tocopheryl acetate in combination with vitamin C reduces the risk of prostate cancer.",
+      "label": "CONTRADICT",
+      "doc_hit": false,
+      "sentence_hit": true,
+      "gold_docs": [
+        "12009265"
+      ],
+      "returned_docs": [
+        "10617916",
+        "38551172",
+        "25816994",
+        "34544514",
+        "31229233",
+        "5864770",
+        "1287809",
+        "12810152",
+        "8037453",
+        "26067999"
+      ]
+    },
+    {
+      "claim_id": "1142",
+      "claim": "Taking anti-depresents is associated with a decrease in the Aβ level in the brain of experimental animals.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "5260382"
+      ],
+      "returned_docs": [
+        "4828631",
+        "21958900",
+        "24163770",
+        "43334921",
+        "7736860",
+        "1889358",
+        "18872233",
+        "28562710",
+        "13123189",
+        "5260382"
+      ]
+    },
+    {
+      "claim_id": "1145",
+      "claim": "Taxation of sugar-sweetened beverages reduced the incidence rate of type II diabetes in India.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "10071552"
+      ],
+      "returned_docs": [
+        "10071552",
+        "3770750",
+        "9822397",
+        "12224536",
+        "13072112",
+        "24512064",
+        "20610390",
+        "23136735",
+        "20321154",
+        "10284593"
+      ]
+    },
+    {
+      "claim_id": "1148",
+      "claim": "Ten percent (10%) of kidney cancers in the UK are attributable to excess weight.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4828631"
+      ],
+      "returned_docs": [
+        "4828631",
+        "19205326",
+        "21616324",
+        "7451018",
+        "25523969",
+        "41340212",
+        "27545868",
+        "140098548",
+        "13831558",
+        "829646"
+      ]
+    },
+    {
+      "claim_id": "1153",
+      "claim": "The C-type lectin receptor (CLEC-2) rearranges the actin cytoskeleton in dendritic cells to promote efficient motility along stromal surfaces.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "7370282"
+      ],
+      "returned_docs": [
+        "7370282",
+        "8563659",
+        "8997410",
+        "3506723",
+        "6767271",
+        "2139357",
+        "5700349",
+        "1539159",
+        "15176526",
+        "29073751"
+      ]
+    },
+    {
+      "claim_id": "1156",
+      "claim": "The DESMOND program caused substantial weight loss in most participants.",
+      "label": "CONTRADICT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "12584053"
+      ],
+      "returned_docs": [
+        "40949706",
+        "24917562",
+        "38752049",
+        "7098463",
+        "10463997",
+        "29947146",
+        "43220289",
+        "5824985",
+        "37562370",
+        "22922353"
+      ]
+    },
+    {
+      "claim_id": "1157",
+      "claim": "The DESMOND program demonstrates no significant impact on biochemical outcomes.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "12584053"
+      ],
+      "returned_docs": [
+        "24634621",
+        "6129301",
+        "8756719",
+        "20544428",
+        "2787558",
+        "13771184",
+        "25789730",
+        "11360768",
+        "22545779",
+        "45461275"
+      ]
+    },
+    {
+      "claim_id": "1158",
+      "claim": "The DESMOND program demonstrates no significant impact on lifestyles outcomes.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "12584053"
+      ],
+      "returned_docs": [
+        "24634621",
+        "6129301",
+        "20544428",
+        "2787558",
+        "13771184",
+        "25789730",
+        "11360768",
+        "22545779",
+        "45461275",
+        "38799797"
+      ]
+    },
+    {
+      "claim_id": "1159",
+      "claim": "The DESMOND program demonstrates no significant impact on weight loss.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "12584053"
+      ],
+      "returned_docs": [
+        "24634621",
+        "6129301",
+        "23573229",
+        "4515975",
+        "10463997",
+        "38752049",
+        "29691654",
+        "409280",
+        "40949706",
+        "39264456"
+      ]
+    },
+    {
+      "claim_id": "116",
+      "claim": "Anthrax spores remain deadly until affected areas are decontaminated.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "33872649"
+      ],
+      "returned_docs": [
+        "11992632",
+        "3580005",
+        "33370",
+        "15833835",
+        "3078080",
+        "3831884",
+        "1727042",
+        "12324049",
+        "33872649",
+        "1905095"
+      ]
+    },
+    {
+      "claim_id": "1162",
+      "claim": "The DdrB protein from Deinococcus radiodurans functions as a pentamer.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "15305881"
+      ],
+      "returned_docs": [
+        "15305881",
+        "1127562",
+        "2479538",
+        "1383826",
+        "11742219",
+        "12030318",
+        "11844826",
+        "464511",
+        "1754001",
+        "30835854"
+      ]
+    },
+    {
+      "claim_id": "1169",
+      "claim": "The M2-phenotype in brown adipose tissue macrophages increases brown adipose tissue thermogenic activity.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4319174"
+      ],
+      "returned_docs": [
+        "4319174",
+        "29381091",
+        "17973161",
+        "20363389",
+        "29691654",
+        "43192375",
+        "2605032",
+        "36838958",
+        "11428884",
+        "1568684"
+      ]
+    },
+    {
+      "claim_id": "1170",
+      "claim": "The NF-κB essential modulator gene induces intestinal inflammation by promoting receptor-interacting protein (RIP) kinase 1 kinase activity-mediated epithelial cell death.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "18956141"
+      ],
+      "returned_docs": [
+        "27403802",
+        "18956141",
+        "1550937",
+        "18231257",
+        "8774475",
+        "9614443",
+        "5922085",
+        "23078022",
+        "5572127",
+        "9197786"
+      ]
+    },
+    {
+      "claim_id": "1171",
+      "claim": "The NF-κB essential modulator gene prevents intestinal inflammation by inhibiting receptor-interacting protein (RIP) kinase 1 kinase activity-mediated epithelial cell death.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "18956141"
+      ],
+      "returned_docs": [
+        "18956141",
+        "27403802",
+        "56486733",
+        "5800138",
+        "9614443",
+        "5572127",
+        "13172737",
+        "4452659",
+        "39291138",
+        "14145440"
+      ]
+    },
+    {
+      "claim_id": "1173",
+      "claim": "The PDPN gene deactivates the C-type lectin receptor (CLEC-2).",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "7370282"
+      ],
+      "returned_docs": [
+        "7370282",
+        "6767271",
+        "8563659",
+        "2603304",
+        "12885341",
+        "1332250",
+        "3285322",
+        "40383969",
+        "2436602",
+        "40760684"
+      ]
+    },
+    {
+      "claim_id": "1176",
+      "claim": "The PRDM1 gene is a key determinant of primordial germ cells.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "13910150"
+      ],
+      "returned_docs": [
+        "13910150",
+        "4423327",
+        "13955536",
+        "20418809",
+        "9875570",
+        "1649738",
+        "2541699",
+        "8702697",
+        "17829012",
+        "26612216"
+      ]
+    },
+    {
+      "claim_id": "1177",
+      "claim": "The PRDM1 gene, when combined with the PRDM14 gene, plays an important role during primordial germ cell specification.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "13910150"
+      ],
+      "returned_docs": [
+        "13910150",
+        "24731248",
+        "13439128",
+        "1649738",
+        "12130690",
+        "13980338",
+        "13283919",
+        "41294031",
+        "14767844",
+        "18670"
+      ]
+    },
+    {
+      "claim_id": "1181",
+      "claim": "The RANK-RANK-Ligand (RANKL) pathway is involved in the development of Aire-expressing medullary thymic epithelial cells (mTECs).",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "2734421",
+        "301838",
+        "39128592",
+        "3952288"
+      ],
+      "returned_docs": [
+        "39128592",
+        "3952288",
+        "2734421",
+        "22123421",
+        "195680777",
+        "39776978",
+        "39652608",
+        "301838",
+        "26652147",
+        "14664424"
+      ]
+    },
+    {
+      "claim_id": "1182",
+      "claim": "The Snf1 complex regulates carbon and energy metabolism in baker's yeast (Saccharomyces cerevisiae).",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "14541844"
+      ],
+      "returned_docs": [
+        "8909176",
+        "14541844",
+        "13613916",
+        "32712381",
+        "9696379",
+        "9199796",
+        "14446279",
+        "27134931",
+        "4414481",
+        "6106004"
+      ]
+    },
+    {
+      "claim_id": "1184",
+      "claim": "The US health care system can save up to $5 billion if 7% of patients waiting for kidney transplants participate in the optimized national kidney paired donation program.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "16737210"
+      ],
+      "returned_docs": [
+        "16737210",
+        "18268012",
+        "21914176",
+        "13071728",
+        "11230569",
+        "38799797",
+        "3752408",
+        "56391045",
+        "10374686",
+        "73473433"
+      ]
+    },
+    {
+      "claim_id": "119",
+      "claim": "Antidepressants increase the severity of migraines.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "14606752"
+      ],
+      "returned_docs": [
+        "5691302",
+        "39970500",
+        "4506702",
+        "26902591",
+        "6083952",
+        "39281140",
+        "34630025",
+        "14606752",
+        "40905302",
+        "57762078"
+      ]
+    },
+    {
+      "claim_id": "12",
+      "claim": "40mg/day dosage of folic acid and 2mg/day dosage of vitamin B12 does not affect chronic kidney disease (CKD) progression.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "33409100"
+      ],
+      "returned_docs": [
+        "11705328",
+        "8570690",
+        "23581096",
+        "6549091",
+        "21636085",
+        "24865781",
+        "12009265",
+        "37336085",
+        "4462079",
+        "33409100"
+      ]
+    },
+    {
+      "claim_id": "120",
+      "claim": "Antidepressants reduce the severity of migraines.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": true,
+      "gold_docs": [
+        "14606752"
+      ],
+      "returned_docs": [
+        "26902591",
+        "20761364",
+        "5691302",
+        "24269361",
+        "39970500",
+        "4506702",
+        "6083952",
+        "39281140",
+        "10617916",
+        "34630025"
+      ]
+    },
+    {
+      "claim_id": "1205",
+      "claim": "The combination of physical examinations with C-reactive protein values do not improve the accuracy of radiographic verified pneumonia predictions.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "5558754"
+      ],
+      "returned_docs": [
+        "13625993",
+        "4391121",
+        "26107000",
+        "16390264",
+        "1032372",
+        "20754359",
+        "5558754",
+        "15476777",
+        "4396105",
+        "22922353"
+      ]
+    },
+    {
+      "claim_id": "1209",
+      "claim": "The deamination of cytidine to uridine on the minus strand of viral DNA can inactivate the viral genome by inducing G-to-A mutations.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "4347374"
+      ],
+      "returned_docs": [
+        "544971",
+        "2638387",
+        "22703082",
+        "22623275",
+        "25263810",
+        "15360986",
+        "4389252",
+        "44737533",
+        "41314611",
+        "41403996"
+      ]
+    },
+    {
+      "claim_id": "121",
+      "claim": "Antimicrobial agents are less effective due to the pressure of antimicrobial usage.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": true,
+      "gold_docs": [
+        "31460499"
+      ],
+      "returned_docs": [
+        "36497180",
+        "12801438",
+        "22191759",
+        "1234098",
+        "3272084",
+        "43165768",
+        "350542",
+        "20132778",
+        "21535641",
+        "43054703"
+      ]
+    },
+    {
+      "claim_id": "1210",
+      "claim": "The density of cytokine receptor bearing cells affects the distance over which cytokines act.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4928282"
+      ],
+      "returned_docs": [
+        "4928282",
+        "17991818",
+        "15135001",
+        "7211056",
+        "5132358",
+        "22210434",
+        "22401720",
+        "26851674",
+        "43156471",
+        "38076716"
+      ]
+    },
+    {
+      "claim_id": "1211",
+      "claim": "The density of cytokine receptor bearing cells has no effect on the distance over which cytokines act.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4928282"
+      ],
+      "returned_docs": [
+        "7622767",
+        "15561961",
+        "21392223",
+        "154549459",
+        "4928282",
+        "11181416",
+        "37205759",
+        "52095986",
+        "6540064",
+        "4366738"
+      ]
+    },
+    {
+      "claim_id": "122",
+      "claim": "Antimicrobial agents are more effective due to the pressure of antimicrobial usage.",
+      "label": "CONTRADICT",
+      "doc_hit": false,
+      "sentence_hit": true,
+      "gold_docs": [
+        "31460499"
+      ],
+      "returned_docs": [
+        "36497180",
+        "12801438",
+        "22191759",
+        "1234098",
+        "3272084",
+        "43165768",
+        "350542",
+        "20132778",
+        "21535641",
+        "24157077"
+      ]
+    },
+    {
+      "claim_id": "1220",
+      "claim": "The generation of reactive oxygen species by activated oncogenes contributes to the increased genomic instability of leukaemia cells.",
+      "label": "SUPPORT",
+      "doc_hit": false,
+      "sentence_hit": true,
+      "gold_docs": [
+        "13023410"
+      ],
+      "returned_docs": [
+        "6609935",
+        "44693226",
+        "26121646",
+        "4391121",
+        "6259170",
+        "6308416",
+        "7506409",
+        "21439640",
+        "12489688",
+        "15381976"
+      ]
+    },
+    {
+      "claim_id": "1223",
+      "claim": "The innate immune response struggles to remove small numbers of parasites.",
+      "label": "CONTRADICT",
+      "doc_hit": false,
+      "sentence_hit": false,
+      "gold_docs": [
+        "5289038"
+      ],
+      "returned_docs": [
+        "24157077",
+        "29015485",
+        "27264454",
+        "25942757",
+        "28517384",
+        "7968532",
+        "5137019",
+        "21320417",
+        "26474812",
+        "72159"
+      ]
+    },
+    {
+      "claim_id": "1224",
+      "claim": "The latent infection of myeloid cells with human cytomegalovirus induces a number of changes in gene expression.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "21932050",
+        "34016987"
+      ],
+      "returned_docs": [
+        "25141908",
+        "3672261",
+        "5372773",
+        "30933307",
+        "26133404",
+        "21932050",
+        "26873988",
+        "10450300",
+        "6559701",
+        "3765739"
+      ]
+    },
+    {
+      "claim_id": "1227",
+      "claim": "The mean suicide rate in women is higher after miscarriage than live birth.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "25641414"
+      ],
+      "returned_docs": [
+        "25641414",
+        "25806385",
+        "9976969",
+        "881332",
+        "45920278",
+        "33533307",
+        "3150030",
+        "25135304",
+        "15282056",
+        "35100235"
+      ]
+    },
+    {
+      "claim_id": "1228",
+      "claim": "The mean suicide rate in women is lower after miscarriage than live birth.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "25641414"
+      ],
+      "returned_docs": [
+        "25641414",
+        "45920278",
+        "881332",
+        "33458992",
+        "25806385",
+        "202259",
+        "23670644",
+        "9976969",
+        "23639838",
+        "7198295"
+      ]
+    },
+    {
+      "claim_id": "1229",
+      "claim": "The microtubule-dependent delivery and secretion of matrix metalloproteases (MMPs) is partially responsible for the disassembly of adhesion sites.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": false,
+      "gold_docs": [
+        "1676568"
+      ],
+      "returned_docs": [
+        "16863359",
+        "13007205",
+        "21250322",
+        "1676568",
+        "343052",
+        "20491205",
+        "7317051",
+        "22505710",
+        "5821617",
+        "16128711"
+      ]
+    },
+    {
+      "claim_id": "123",
+      "claim": "Antiretroviral therapy increases rates of tuberculosis across a broad range of CD4 strata.",
+      "label": "CONTRADICT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "4883040"
+      ],
+      "returned_docs": [
+        "4883040",
+        "7111021",
+        "35008773",
+        "13071728",
+        "45908102",
+        "31363207",
+        "1986482",
+        "32770503",
+        "12225214",
+        "23244529"
+      ]
+    },
+    {
+      "claim_id": "1230",
+      "claim": "The minor G allele of FOXO3 downregulates pro-inflammatory cytokines.",
+      "label": "SUPPORT",
+      "doc_hit": true,
+      "sentence_hit": true,
+      "gold_docs": [
+        "13905670"
+      ],
+      "returned_docs": [
+        "13905670",
+        "45449835",
+        "18199839",
+        "343052",
+        "41877386",
+        "120626",
+        "3475317",
+        "28937856",
+        "21382907",
+        "44562221"
+      ]
+    }
+  ]
+}
