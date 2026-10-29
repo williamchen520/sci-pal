@@ -1,0 +1,27 @@
+{
+  "v1.0_f1.0": {
+    "doc_recall@10": 0.97,
+    "sentence_recall@10": 0.97,
+    "mrr": 0.8276
+  },
+  "v1.5_f0.5": {
+    "doc_recall@10": 0.97,
+    "sentence_recall@10": 0.97,
+    "mrr": 0.8318
+  },
+  "v1.2_f0.8": {
+    "doc_recall@10": 0.97,
+    "sentence_recall@10": 0.97,
+    "mrr": 0.8332
+  },
+  "v0.8_f1.2": {
+    "doc_recall@10": 0.9,
+    "sentence_recall@10": 0.9,
+    "mrr": 0.7835
+  },
+  "v0.5_f1.5": {
+    "doc_recall@10": 0.9,
+    "sentence_recall@10": 0.9,
+    "mrr": 0.7743
+  }
+}
