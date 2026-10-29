@@ -278,9 +278,16 @@ class UnifiedRetriever:
                     if self.domain_router is None:
                         self.domain_router = DomainRouter()
                     weight = float(os.environ.get("SCIPAL_DOMAIN_PRIOR", "0.1"))
+                    candidate_papers = [
+                        item.get("paper_id") for item in fused[:20] if item.get("paper_id")
+                    ]
+                    distribution = self.domain_router.route(query, candidate_papers)
                     for paragraph in paragraphs:
                         bonus = self.domain_router.prior(
-                            query, paragraph.get("paper_id") or "", weight
+                            query,
+                            paragraph.get("paper_id") or "",
+                            weight,
+                            distribution=distribution,
                         )
                         if bonus:
                             paragraph["rerank_score"] = (
