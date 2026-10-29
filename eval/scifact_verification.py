@@ -45,6 +45,8 @@ def label_of(evidence: dict) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=50)
+    parser.add_argument("--oracle", action="store_true")
+    parser.add_argument("--top-k", type=int, default=5)
     parser.add_argument("--output", default=str(DEFAULT_OUT))
     args = parser.parse_args()
     import services.search.hybrid_search as hs
@@ -63,12 +65,29 @@ def main() -> None:
     correct = 0
     for claim_id, claim, evidence_json in claims:
         gold = label_of(json.loads(evidence_json))
-        vector = searcher.vector_search(claim, 10)
-        try:
-            fts = searcher.fts_search(claim, 10)
-        except Exception:
-            fts = []
-        evidence = "\n\n".join(item.get("text", "") for item in fuse(vector, fts, 5))
+        if args.oracle:
+            sentence_ids = []
+            for doc_id, entries in json.loads(evidence_json).items():
+                for entry in entries:
+                    for index in entry.get("sentences") or []:
+                        sentence_ids.append(f"scifact_{doc_id}_s{index}")
+            if sentence_ids:
+                marks = ",".join("?" * len(sentence_ids))
+                conn = sqlite3.connect(str(DEFAULT_DB))
+                evidence_rows = conn.execute(
+                    f"SELECT text FROM sentences WHERE sentence_id IN ({marks})", sentence_ids
+                ).fetchall()
+                conn.close()
+                evidence = "\n\n".join(row[0] for row in evidence_rows)
+            else:
+                evidence = ""
+        else:
+            vector = searcher.vector_search(claim, 10)
+            try:
+                fts = searcher.fts_search(claim, 10)
+            except Exception:
+                fts = []
+            evidence = "\n\n".join(item.get("text", "") for item in fuse(vector, fts, args.top_k))
         prompt = (
             "You are verifying a scientific claim against evidence.\n"
             "Answer with exactly one word: SUPPORT or CONTRADICT.\n"
