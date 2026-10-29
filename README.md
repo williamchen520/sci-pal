@@ -24,6 +24,7 @@
 | 句子种子 | `sentences_fts` 召回段落候选；`SCIPAL_SENTENCE_SEEDS=1` 可提高召回，延迟约 3.6× |
 | 领域自适应 | `domain_profiles` + `paper_domains` + 软路由；默认关闭，供后续监控/简报复用 |
 | 答案级评测 | 异步 QA + coverage / citation / refusal；100 题云端 coverage 0.7733、refusal 1.00 |
+| 外部评测 | SciFact 100 claims：doc recall 0.97 / sentence recall 0.97 / MRR 0.828；LitQA2 20 题 smoke |
 | 拒答与 grounding | 领域化拒答、词重合 / cross-encoder / LLM grounding 均保留为实验开关 |
 | QA 预算自适应 | 简单/复杂均默认 top10；`SCIPAL_QA_COMPLEX_TOPK=20` 可提高复杂问题覆盖 |
 | 综述生成 | 大纲 → 按章节检索分配 → 分章生成 → 证据-声明矩阵 → 迭代评分 |
@@ -186,6 +187,9 @@ sci-pal/
 - [领域自适应对齐计划](docs/工作计划-领域自适应对齐.md)
 - [文献监控简报备忘录](docs/备忘录-文献监控简报系统.md)
 - [QA 答案级评测](docs/QA答案级评测.md)
+- [SciFact 适配器](docs/评测-SciFact适配器.md)
+- [LitQA2 适配器](docs/评测-LitQA2适配器.md)
+- [外部评测集接入计划](docs/工作计划-外部评测集接入.md)
 - [云端模型评测](docs/云端模型评测.md)
 - [阶段性总结](docs/阶段性总结-20261027.md)
 - [可选项与用户配置](docs/可选项与用户配置.md)
