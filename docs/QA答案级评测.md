@@ -85,6 +85,31 @@ q006 8, q007 11, q008 10, q009 1, q010 3
 
 | 配置 | coverage | avg citations | refusal_accuracy |
 |---|---|---|---|
+| 本地 7B baseline | 0.5444 | 10.77 | 0.25 |
+| 本地 7B adaptive | 0.5722 | 14.17 | 0.25 |
+| 云端 deepseek-chat | **0.9667** | **25.13** | **1.00** |
+
+云端配置：
+
+```
+SCIPAL_LLM_PROVIDER=openai
+SCIPAL_LLM_BASE_URL=https://api.deepseek.com/v1
+SCIPAL_LLM_MODEL=deepseek-chat
+```
+
+结论：
+
+- 云端模型把 coverage 从 0.57 提到 0.97；
+- refusal 从 0.25 提到 1.00；
+- 引用数从 14 提到 25；
+- 本地 7B 的 answer-level 结论不能代表产品。
+
+> 指标修正：拒答现在允许“带引用的拒答陈述”（如 "does not contain"），不再要求引用数为 0。
+
+## 7. 30 题对比（旧）
+
+| 配置 | coverage | avg citations | refusal_accuracy |
+|---|---|---|---|
 | baseline | 0.5444 | 10.77 | **0.00（0/4）** |
 | adaptive contextual | **0.5722** | 14.17 | **0.00（0/4）** |
 
