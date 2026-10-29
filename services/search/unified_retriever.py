@@ -244,72 +244,6 @@ class UnifiedRetriever:
                         finally:
                             seed_conn.close()
 
-                if os.environ.get("SCIPAL_TREE_ROUTER") == "1" and fused:
-                    if self.tree_router is None:
-                        from services.search.summary_vector_search import SummaryVectorSearch
-
-                        self.tree_router = TreeRouter(
-                            summary_search=SummaryVectorSearch().search
-                        )
-                    paper_ids = [
-                        item.get("paper_id")
-                        for item in fused[:20]
-                        if item.get("paper_id")
-                    ]
-                    para_scores: dict = {}
-                    for item in fused:
-                        sid = item.get("section_id")
-                        if not sid:
-                            continue
-                        score = float(item.get("rrf_score") or item.get("score") or 0.0)
-                        para_scores[sid] = max(para_scores.get(sid, 0.0), score)
-                    routed = self.tree_router.search(
-                        query,
-                        paper_ids,
-                        beam=int(os.environ.get("SCIPAL_TREE_BEAM", "4")),
-                        depth=int(os.environ.get("SCIPAL_TREE_DEPTH", "3")),
-                        max_sections=int(os.environ.get("SCIPAL_TREE_SECTIONS", "8")),
-                        paragraph_scores=para_scores,
-                    )
-                    existing_ids = {
-                        item.get("para_id")
-                        or item.get("paragraph_id")
-                        or item.get("id")
-                        for item in fused
-                    }
-                    section_ids = [
-                        item["section_id"] for item in routed if item.get("section_id")
-                    ]
-                    if section_ids:
-                        marks = ",".join("?" * len(section_ids))
-                        tree_conn = sqlite3.connect(str(STRUCT_DB))
-                        tree_conn.row_factory = sqlite3.Row
-                        try:
-                            rows = tree_conn.execute(
-                                "SELECT para_id, paper_id, section_id, text, "
-                                "section_level1, section_level2 FROM paragraphs "
-                                f"WHERE section_id IN ({marks}) LIMIT 30",
-                                section_ids,
-                            ).fetchall()
-                            for row in rows:
-                                if row["para_id"] in existing_ids:
-                                    continue
-                                fused.append(
-                                    {
-                                        "para_id": row["para_id"],
-                                        "paper_id": row["paper_id"],
-                                        "section_id": row["section_id"],
-                                        "text": row["text"],
-                                        "section_l1": row["section_level1"],
-                                        "section_l2": row["section_level2"],
-                                        "score": 0.3,
-                                        "rrf_score": 0.0,
-                                        "source": "tree_router",
-                                    }
-                                )
-                        finally:
-                            tree_conn.close()
-
                 # V27.2: 增加 rerank_k，让 MMR 有更多候选做多样性选择
                 rerank_k = (
                     min(
@@ -374,6 +308,52 @@ class UnifiedRetriever:
                                 key=lambda item: float(item.get("rerank_score") or 0.0),
                                 reverse=True,
                             )
+
+                if os.environ.get("SCIPAL_TREE_ROUTER") == "1" and paragraphs:
+                    if self.tree_router is None:
+                        from services.search.summary_vector_search import SummaryVectorSearch
+
+                        self.tree_router = TreeRouter(
+                            summary_search=SummaryVectorSearch().search
+                        )
+                    paper_ids = [
+                        item.get("paper_id")
+                        for item in paragraphs[:20]
+                        if item.get("paper_id")
+                    ]
+                    para_scores: dict = {}
+                    for item in paragraphs:
+                        sid = item.get("section_id")
+                        if not sid:
+                            continue
+                        score = float(item.get("rerank_score") or 0.0)
+                        para_scores[sid] = max(para_scores.get(sid, 0.0), score)
+                    routed = self.tree_router.search(
+                        query,
+                        paper_ids,
+                        beam=int(os.environ.get("SCIPAL_TREE_BEAM", "4")),
+                        depth=int(os.environ.get("SCIPAL_TREE_DEPTH", "3")),
+                        max_sections=int(os.environ.get("SCIPAL_TREE_SECTIONS", "8")),
+                        paragraph_scores=para_scores,
+                    )
+                    if routed:
+                        section_scores = {
+                            item["section_id"]: float(item.get("score") or 0.0)
+                            for item in routed
+                            if item.get("section_id")
+                        }
+                        prior_weight = float(os.environ.get("SCIPAL_TREE_PRIOR", "0.1"))
+                        for paragraph in paragraphs:
+                            bonus = section_scores.get(paragraph.get("section_id"))
+                            if bonus:
+                                paragraph["rerank_score"] = (
+                                    float(paragraph.get("rerank_score") or 0.0)
+                                    + prior_weight * bonus
+                                )
+                        paragraphs.sort(
+                            key=lambda item: float(item.get("rerank_score") or 0.0),
+                            reverse=True,
+                        )
 
                 if os.environ.get("SCIPAL_SECTION_ROUTING") == "1" and paragraphs:
                     intent = query_intent(query)
