@@ -398,11 +398,43 @@ class QAService:
                 "answer_status": "insufficient",
                 "refused": True,
                 "grounding": grounding,
+            "semantic_grounding": semantic,
                 "llm_provider": self.llm.provider,
                 "llm_model": self.llm.model,
             }
 
         # Step 5: 构建来源详情
+        semantic = None
+        if os.environ.get("SCIPAL_SEMANTIC_GROUNDING") == "1":
+            from services.qa.semantic_grounding import get_semantic_grounder
+
+            semantic = get_semantic_grounder().check(
+                answer,
+                [
+                    ctx.get("text", "")
+                    for ctx in retrieval_result.get("parent_contexts") or []
+                ],
+                min_support=float(
+                    os.environ.get("SCIPAL_SEMANTIC_MIN_SUPPORT", "0.2")
+                ),
+                min_ratio=float(os.environ.get("SCIPAL_SEMANTIC_MIN_RATIO", "0.5")),
+            )
+            if not semantic["grounded"]:
+                print(f"Ungrounded semantic answer: {semantic}")
+                return {
+                    "answer": (
+                        "The retrieved evidence does not support the generated answer. "
+                        "Please refine the question or add relevant papers to the library."
+                    ),
+                    "citations": [],
+                    "sources": self._build_sources(retrieval_result, []),
+                    "answer_status": "insufficient",
+                    "refused": True,
+                    "semantic_grounding": semantic,
+                    "llm_provider": self.llm.provider,
+                    "llm_model": self.llm.model,
+                }
+
         sources = self._build_sources(retrieval_result, citations)
 
         # Step 5b: deterministic verification (blocking for formal conclusions)
