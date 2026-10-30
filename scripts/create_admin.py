@@ -5,6 +5,10 @@ from __future__ import annotations
 import argparse
 import getpass
 import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from services.tenancy import add_member, create_user
 from services.tenancy.service import DEFAULT_WORKSPACE_ID
