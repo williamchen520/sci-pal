@@ -100,7 +100,7 @@ def _digest(profile: Dict[str, Any], run: Dict[str, Any], items: List[Dict[str, 
         if item.get("doi"):
             lines.append(f"   DOI: {item['doi']}")
         lines.append("")
-    lines.append(f"全部：/watch?profile={profile['id']}&run={run['id']}")
+    lines.append(f"全部：/watch.html?profile={profile['id']}&run={run['id']}")
     return "\n".join(lines)
 
 
