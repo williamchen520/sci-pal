@@ -26,9 +26,22 @@
     .tile strong { display: block; color: #e2e8f0; margin-bottom: 6px; }
     code { background: #0f1a2e; padding: 2px 6px; border-radius: 6px; color: #7dd3fc; }
     .note { margin-top: 24px; font-size: 13px; color: #64748b; }
+    .userbar {
+      position: fixed; top: 16px; right: 20px; display: flex; gap: 10px;
+      align-items: center; font-size: 13px; color: #94a3b8;
+    }
+    .userbar a, .userbar button {
+      color: #38bdf8; background: none; border: 0; cursor: pointer;
+      text-decoration: none; font: inherit;
+    }
   </style>
 </head>
 <body>
+  <div class="userbar">
+    <span id="who"></span>
+    <a href="/login.html">登录</a>
+    <button id="logout" hidden>退出</button>
+  </div>
   <main class="card">
     <h1>SciPal V33.42</h1>
     <p>
@@ -56,6 +69,21 @@
       <code>verify_answer</code> · <code>watch_run</code> ·
       <code>ask_question</code> · <code>generate_review</code>
     </p>
-  </main>
+    </main>
+  <script>
+    fetch("/api/auth/me", { credentials: "same-origin" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body) => {
+        if (!body) return;
+        document.getElementById("who").textContent = body.user_id || "";
+        const logout = document.getElementById("logout");
+        logout.hidden = false;
+        logout.addEventListener("click", async () => {
+          await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
+          window.location.reload();
+        });
+      })
+      .catch(() => {});
+  </script>
 </body>
 </html>

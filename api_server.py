@@ -44,7 +44,9 @@ from routes.search_downloads import build_search_downloads_blueprint
 from routes.system import build_system_blueprint
 from routes.systematic_review import build_systematic_review_blueprint
 from routes.tasks import build_tasks_blueprint
+from routes.tenancy import build_tenancy_blueprint
 from routes.watch import build_watch_blueprint
+from services.tenancy import bootstrap_default_workspace
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -52,6 +54,11 @@ DOCUMENTS_DIR = PROJECT_ROOT / "documents"
 OUTLINE_DIR = PROJECT_ROOT / "data" / "outlines"
 
 app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
+app.secret_key = os.environ.get("SCIPAL_SECRET_KEY") or os.urandom(32)
+try:
+    bootstrap_default_workspace(db_path=DB_PATH)
+except Exception:
+    app.logger.exception("tenancy bootstrap failed")
 
 # Optional bearer-token guard for remote deployment (single-user token today).
 _API_TOKEN = os.environ.get("SCIPAL_API_TOKEN", "")
@@ -253,6 +260,7 @@ app.register_blueprint(
     )
 )
 app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
+app.register_blueprint(build_tenancy_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_data_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_systematic_review_blueprint(db_path=DB_PATH, log=app.logger))
 
