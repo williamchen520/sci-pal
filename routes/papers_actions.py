@@ -15,6 +15,8 @@ from typing import Any, Callable
 
 from flask import Blueprint, Response, jsonify, request, send_from_directory
 
+from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
+
 from build_db.parse_service import (
     PARSE_MAX_CONCURRENT,
     ParseCancelled,
@@ -56,6 +58,42 @@ def build_papers_actions_blueprint(
     bp = Blueprint("papers_actions", __name__)
     globals()["db_path_for_lookup"] = lambda: db_path
     globals()["DOCUMENTS_DIR"] = project_root / "documents"
+
+    @bp.before_request
+    def scope_paper_routes():
+        paper_id = (request.view_args or {}).get("paper_id")
+        if not paper_id:
+            return None
+        workspace_id = resolve_workspace(db_path=db_path)
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 401
+        conn = sqlite3.connect(str(db_path))
+        try:
+            ensure_workspace_scoping(conn)
+            row = conn.execute(
+                "SELECT 1 FROM papers WHERE paper_id = ? AND workspace_id = ?",
+                (paper_id, workspace_id),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not row:
+            return jsonify({"error": "Paper not found"}), 404
+        return None
+
+    def assign_paper_workspace(paper_id: str) -> None:
+        workspace_id = resolve_workspace(db_path=db_path)
+        if not workspace_id:
+            return
+        conn = sqlite3.connect(str(db_path))
+        try:
+            ensure_workspace_scoping(conn)
+            conn.execute(
+                "UPDATE papers SET workspace_id = ? WHERE paper_id = ?",
+                (workspace_id, paper_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
 
     @bp.route("/api/papers/local", methods=["GET"])
     def list_local_papers():
@@ -201,6 +239,7 @@ def build_papers_actions_blueprint(
             return jsonify({"error": f"è§£æžå¤±è´¥: {str(e)}"}), 500
 
         print(f"âœ… è§£æžå®Œæˆ: {result['title']} ({result['paragraph_count']} æ®µè½)")
+        assign_paper_workspace(result["paper_id"])
         return jsonify({
             "paper_id": result["paper_id"],
             "status": "parsed",
