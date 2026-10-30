@@ -8,8 +8,12 @@ from typing import Any
 from flask import Blueprint, jsonify, request, session
 
 from services.experiments import (
+    ProtocolNotFound,
+    create_access_request,
     create_experiment,
+    decide_access_request,
     get_experiment,
+    list_access_requests,
     list_experiments,
     update_experiment,
 )
@@ -52,14 +56,16 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
                 workspace_id,
                 user_id,
                 str(body.get("title") or ""),
+                protocol_id=str(body.get("protocol_id") or ""),
+                protocol_version=str(body.get("protocol_version") or ""),
                 status=str(body.get("status") or "planned"),
-                protocol_id=body.get("protocol_id") or None,
-                protocol_version=body.get("protocol_version") or None,
                 content=str(body.get("content") or ""),
                 db_path=db,
             )
         except PermissionError:
             return jsonify({"error": "Project not found"}), 404
+        except ProtocolNotFound:
+            return jsonify({"error": "Protocol not found"}), 404
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(row), 201
@@ -99,5 +105,50 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
         if not row:
             return jsonify({"error": "Experiment not found"}), 404
         return jsonify(row)
+
+    @bp.post("/api/experiments/<experiment_id>/access-requests")
+    def experiment_request_access(experiment_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        row = create_access_request(experiment_id, workspace_id, user_id, db_path=db)
+        if not row:
+            return jsonify({"error": "Request not allowed"}), 404
+        return jsonify(row), 201
+
+    @bp.get("/api/experiments/<experiment_id>/access-requests")
+    def experiment_list_access(experiment_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        rows = list_access_requests(experiment_id, workspace_id, user_id, db_path=db)
+        if rows is None:
+            return jsonify({"error": "Experiment not found"}), 404
+        return jsonify({"requests": rows})
+
+    @bp.post("/api/experiments/<experiment_id>/access-requests/<request_id>/decide")
+    def experiment_decide_access(experiment_id: str, request_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        body = request.get_json(silent=True) or {}
+        request_row = decide_access_request(
+            experiment_id,
+            request_id,
+            workspace_id,
+            user_id,
+            bool(body.get("approve")),
+            hours=int(body.get("hours") or 24),
+            db_path=db,
+        )
+        if not request_row:
+            return jsonify({"error": "Request not found"}), 404
+        return jsonify(request_row)
 
     return bp

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,6 +19,11 @@ class ExperimentRouteTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.tmp.cleanup)
         self.db = Path(self.tmp.name) / "experiments.db"
+        conn = sqlite3.connect(self.db)
+        conn.execute("CREATE TABLE protocol_imports (protocol_id TEXT PRIMARY KEY, title TEXT)")
+        conn.execute("INSERT INTO protocol_imports VALUES ('proto_1', 'Protocol')")
+        conn.commit()
+        conn.close()
         self.owner = create_user("owner", "long-enough-password", db_path=self.db)
         self.alice = create_user("alice", "long-enough-password", db_path=self.db)
         self.bob = create_user("bob", "long-enough-password", db_path=self.db)
@@ -53,7 +59,12 @@ class ExperimentRouteTests(unittest.TestCase):
         self.login(self.alice)
         created = self.client.post(
             f"/api/projects/{self.project_id}/experiments",
-            json={"title": "Run A", "status": "planned"},
+            json={
+                "title": "Run A",
+                "status": "planned",
+                "protocol_id": "proto_1",
+                "protocol_version": "1",
+            },
         )
         self.assertEqual(created.status_code, 201)
         rows = self.client.get(f"/api/projects/{self.project_id}/experiments").get_json()["experiments"]
@@ -62,7 +73,8 @@ class ExperimentRouteTests(unittest.TestCase):
     def test_member_cannot_see_other_member_record(self) -> None:
         self.login(self.alice)
         experiment_id = self.client.post(
-            f"/api/projects/{self.project_id}/experiments", json={"title": "A"}
+            f"/api/projects/{self.project_id}/experiments",
+            json={"title": "A", "protocol_id": "proto_1", "protocol_version": "1"},
         ).get_json()["experiment_id"]
         self.login(self.bob)
         self.assertEqual(self.client.get(f"/api/experiments/{experiment_id}").status_code, 404)
@@ -77,7 +89,8 @@ class ExperimentRouteTests(unittest.TestCase):
         self.login(outsider)
         self.assertEqual(
             self.client.post(
-                f"/api/projects/{self.project_id}/experiments", json={"title": "X"}
+                f"/api/projects/{self.project_id}/experiments",
+                json={"title": "X", "protocol_id": "proto_1", "protocol_version": "1"},
             ).status_code,
             404,
         )
@@ -85,7 +98,8 @@ class ExperimentRouteTests(unittest.TestCase):
     def test_owner_updates_own_record(self) -> None:
         self.login(self.alice)
         experiment_id = self.client.post(
-            f"/api/projects/{self.project_id}/experiments", json={"title": "A"}
+            f"/api/projects/{self.project_id}/experiments",
+            json={"title": "A", "protocol_id": "proto_1", "protocol_version": "1"},
         ).get_json()["experiment_id"]
         updated = self.client.put(
             f"/api/experiments/{experiment_id}",
