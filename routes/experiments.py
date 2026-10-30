@@ -18,6 +18,7 @@ from services.experiments import (
     list_experiments,
     list_revisions,
     list_signatures,
+    list_workspace_requests,
     sign_experiment,
     update_experiment,
 )
@@ -73,6 +74,17 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(row), 201
+
+    @bp.get("/api/experiment-access-requests")
+    def experiment_access_requests():
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        return jsonify(
+            {"requests": list_workspace_requests(workspace_id, user_id, db_path=db)}
+        )
 
     @bp.get("/api/experiments/<experiment_id>")
     def experiments_detail(experiment_id: str):

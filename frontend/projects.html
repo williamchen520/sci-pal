@@ -71,11 +71,15 @@
       <p class="muted">选择左侧项目，或先创建一个。</p>
     </section>
   </div>
+  <section class="panel" id="access-panel" style="margin-top:18px; display:none">
+    <h2>PI 访问请求</h2>
+    <div id="access-body"></div>
+  </section>
 </main>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const state = { user: null, workspaceId: null, workspaces: [], projects: [], project: null, experiments: [], experiment: null, runs: [], revisions: [], audit: [], workspaceMembers: [], signatures: [] };
+const state = { user: null, workspaceId: null, workspaceRole: null, workspaces: [], projects: [], project: null, experiments: [], experiment: null, runs: [], revisions: [], audit: [], workspaceMembers: [], signatures: [], requests: [] };
 
 function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
@@ -321,6 +325,8 @@ $("projects").addEventListener("click", (event) => {
 function renderWorkspaces(me) {
   state.workspaces = me.workspaces || [];
   state.workspaceId = me.workspace_id || (state.workspaces[0] && state.workspaces[0].workspace_id) || null;
+  const active = state.workspaces.find((w) => w.workspace_id === state.workspaceId);
+  state.workspaceRole = active ? active.role : null;
   $("workspace-select").innerHTML = state.workspaces
     .map((w) => `<option value="${esc(w.workspace_id)}" ${w.workspace_id === state.workspaceId ? "selected" : ""}>${esc(w.name)} (${esc(w.role)})</option>`)
     .join("");
@@ -332,6 +338,73 @@ async function refreshSession() {
   $("who").textContent = me.user_id;
   renderWorkspaces(me);
   return me;
+}
+
+async function loadAccessRequests() {
+  const body = await api("/api/experiment-access-requests");
+  state.requests = body.requests || [];
+  renderAccessPanel();
+}
+
+function renderAccessPanel() {
+  const panel = $("access-panel");
+  const requested = state.requests.length > 0;
+  if (!requested && state.workspaceRole !== "pi") {
+    panel.style.display = "none";
+    return;
+  }
+  panel.style.display = "block";
+  const canRequest = state.workspaceRole === "pi";
+  $("access-body").innerHTML = `
+    ${canRequest ? `
+      <form id="access-request-form" class="row" style="margin-bottom:12px">
+        <input id="access-experiment-id" placeholder="实验 ID（exp_...）" required>
+        <button type="submit">请求访问</button>
+      </form>` : ""}
+    <div class="list">
+      ${state.requests.length ? state.requests.map((r) => `
+        <div class="item">
+          <strong>${esc(r.experiment_title)}</strong>
+          <div class="meta">
+            <span class="pill">${esc(r.status)}</span>
+            ${esc(r.experiment_id)} · requester ${esc(r.requester_user_id)}
+          </div>
+          ${r.status === "pending" && r.owner_user_id === state.user ? `
+            <div class="row" style="margin-top:8px">
+              <button class="small" data-decide="${esc(r.request_id)}" data-approve="1">批准</button>
+              <button class="secondary small" data-decide="${esc(r.request_id)}" data-approve="0">拒绝</button>
+            </div>` : ""}
+        </div>`).join("") : '<p class="muted">暂无请求。</p>'}
+    </div>`;
+  if ($("access-request-form")) $("access-request-form").addEventListener("submit", requestAccess);
+  document.querySelectorAll("[data-decide]").forEach((button) => {
+    button.addEventListener("click", () => decideAccess(button.dataset.decide, button.dataset.approve === "1"));
+  });
+}
+
+async function requestAccess(event) {
+  event.preventDefault();
+  showError(null);
+  try {
+    await api(`/api/experiments/${encodeURIComponent($("access-experiment-id").value.trim())}/access-requests`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    await loadAccessRequests();
+  } catch (error) { showError(error); }
+}
+
+async function decideAccess(requestId, approve) {
+  showError(null);
+  const row = state.requests.find((item) => item.request_id === requestId);
+  if (!row) return;
+  try {
+    await api(`/api/experiments/${encodeURIComponent(row.experiment_id)}/access-requests/${encodeURIComponent(requestId)}/decide`, {
+      method: "POST",
+      body: JSON.stringify({ approve, hours: 24 }),
+    });
+    await loadAccessRequests();
+  } catch (error) { showError(error); }
 }
 
 $("workspace-select").addEventListener("change", async (event) => {
@@ -346,6 +419,7 @@ $("workspace-select").addEventListener("change", async (event) => {
     state.experiment = null;
     $("project-view").innerHTML = '<p class="muted">选择左侧项目，或先创建一个。</p>';
     await loadProjects();
+    await loadAccessRequests();
   } catch (error) { showError(error); }
 });
 
@@ -366,6 +440,7 @@ $("new-workspace").addEventListener("click", async () => {
     state.project = null;
     $("project-view").innerHTML = '<p class="muted">选择左侧项目，或先创建一个。</p>';
     await loadProjects();
+    await loadAccessRequests();
   } catch (error) { showError(error); }
 });
 
@@ -373,6 +448,7 @@ $("new-workspace").addEventListener("click", async () => {
   try {
     await refreshSession();
     await loadProjects();
+    await loadAccessRequests();
   } catch (error) { showError(error); }
 })();
 </script>
