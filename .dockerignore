@@ -13,3 +13,5 @@ __pycache__
 *.pyc
 .pytest_cache
 eval/results
+.env
+deploy/.env
