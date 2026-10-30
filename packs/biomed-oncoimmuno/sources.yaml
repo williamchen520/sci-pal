@@ -1,0 +1,26 @@
+schema_version: 1
+sources:
+  - id: pubmed
+    label: PubMed
+    kind: literature
+    enabled: true
+  - id: europe_pmc
+    label: Europe PMC
+    kind: literature
+    enabled: true
+  - id: crossref
+    label: Crossref
+    kind: metadata
+    enabled: true
+  - id: openalex
+    label: OpenAlex
+    kind: metadata
+    enabled: true
+  - id: clinicaltrials
+    label: ClinicalTrials.gov
+    kind: trial_registry
+    enabled: false
+  - id: local_pdf
+    label: 本地 PDF
+    kind: local
+    enabled: true

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SciPal · 领域包</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#131c31; --line:#1e3a5f; --text:#e2e8f0; --muted:#94a3b8; --gold:#f5c542; --blue:#38bdf8; --red:#f87171; --green:#4ade80; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Microsoft YaHei",sans-serif; }
+    header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:14px 24px; border-bottom:1px solid var(--line); background:#0f1a2e; position:sticky; top:0; z-index:5; }
+    h1 { margin:0; font-size:18px; color:var(--gold); white-space:nowrap; }
+    main { max-width:1200px; margin:0 auto; padding:20px 18px 60px; }
+    .grid { display:grid; grid-template-columns:340px 1fr; gap:18px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
+    .stack { display:flex; flex-direction:column; gap:9px; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    button { padding:8px 13px; border:0; border-radius:8px; background:var(--gold); color:#111827; font-weight:700; cursor:pointer; }
+    button.secondary { background:#1e3a5f; color:var(--text); }
+    button.small { padding:6px 10px; font-size:13px; }
+    a { color:var(--blue); text-decoration:none; }
+    .muted { color:var(--muted); font-size:13px; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#1e3a5f; color:#bae6fd; font-size:12px; }
+    .pack-item { padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:#0f1a2e; cursor:pointer; }
+    .pack-item:hover, .pack-item.active { border-color:var(--gold); }
+    .pack-item .meta { color:var(--muted); font-size:12px; margin-top:4px; }
+    h2 { margin:0 0 8px; font-size:17px; }
+    h3 { margin:16px 0 8px; font-size:15px; color:#cbd5e1; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:6px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); font-weight:600; }
+    pre { white-space:pre-wrap; background:#0f1a2e; border:1px solid var(--line); border-radius:9px; padding:10px; font-size:12px; max-height:220px; overflow:auto; }
+    .status { padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:#0f1a2e; font-size:13px; }
+    .status.ok { border-color:var(--green); }
+    .status.bad { border-color:var(--red); }
+    .hidden { display:none !important; }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="row"><h1>SciPal · 领域包</h1><span class="pill" id="who"></span></div>
+  <div class="row"><a href="/">首页</a><a href="/watch.html">文献监控</a><a href="/projects.html">项目</a><a href="/login.html">切换账号</a></div>
+</header>
+<main>
+  <div class="grid">
+    <section class="panel">
+      <h2>已安装</h2>
+      <p class="muted">领域包只包含声明式知识，核心不依赖具体学科。</p>
+      <div class="stack" id="packs"><p class="muted">加载中…</p></div>
+    </section>
+    <section class="panel">
+      <div id="empty" class="muted">选择一个领域包查看。</div>
+      <div id="detail" class="hidden">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <h2 id="pack-name"></h2>
+            <div class="muted" id="pack-meta"></div>
+          </div>
+          <div class="row">
+            <button class="secondary small" id="validate-btn">校验</button>
+            <a id="use-watch" class="pill" href="/watch.html">用于监控</a>
+          </div>
+        </div>
+        <div class="status" id="status" style="margin-top:10px">未校验</div>
+
+        <h3>术语</h3>
+        <table><thead><tr><th>ID</th><th>名称</th><th>别名</th><th>类型</th></tr></thead><tbody id="terms"></tbody></table>
+
+        <h3>限定条件</h3>
+        <table><thead><tr><th>字段</th><th>名称</th><th>必填</th><th>示例</th></tr></thead><tbody id="qualifiers"></tbody></table>
+
+        <h3>证据字段</h3>
+        <table><thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead><tbody id="fields"></tbody></table>
+
+        <h3>章节类型</h3>
+        <div id="sections" class="muted"></div>
+
+        <h3>Prompt</h3>
+        <pre id="prompt"></pre>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { packs: [], current: null };
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, { credentials: "same-origin", ...options });
+  if (response.status === 401) {
+    window.location.replace("/login.html");
+    throw new Error("login required");
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+  return body;
+}
+
+function renderPacks() {
+  $("packs").innerHTML = state.packs.length ? state.packs.map((pack) => `
+    <div class="pack-item ${state.current?.id === pack.id ? "active" : ""}" data-pack="${esc(pack.id)}">
+      <strong>${esc(pack.name)}</strong>
+      <div class="meta">${esc(pack.id)} · v${esc(pack.version)} · ${esc(pack.discipline || "")}</div>
+      <div class="meta">${pack.term_count || 0} 术语 · ${esc((pack.section_types || []).join(" / "))}</div>
+    </div>`).join("") : '<p class="muted">没有领域包。</p>';
+  document.querySelectorAll("[data-pack]").forEach((el) => {
+    el.addEventListener("click", () => loadPack(el.dataset.pack));
+  });
+}
+
+async function loadPacks() {
+  const body = await api("/api/domain-packs");
+  state.packs = body.packs || [];
+  renderPacks();
+  if (state.packs.length) await loadPack(state.packs[0].id);
+}
+
+async function loadPack(packId) {
+  try {
+    const pack = await api(`/api/domain-packs/${encodeURIComponent(packId)}`);
+    state.current = pack;
+    renderPacks();
+    $("empty").classList.add("hidden");
+    $("detail").classList.remove("hidden");
+    $("pack-name").textContent = pack.name;
+    $("pack-meta").textContent = `${pack.id} · v${pack.version} · ${pack.license || ""} · ${pack.description || ""}`;
+    $("use-watch").href = `/watch.html?pack=${encodeURIComponent(pack.id)}`;
+    const terms = pack.taxonomy?.terms || [];
+    $("terms").innerHTML = terms.map((term) => `
+      <tr><td>${esc(term.id)}</td><td>${esc(term.label)}</td>
+      <td>${esc((term.aliases || []).join(", "))}</td><td>${esc(term.type || "")}</td></tr>`).join("")
+      || '<tr><td colspan="4" class="muted">无</td></tr>';
+    const qualifiers = pack.taxonomy?.qualifiers || {};
+    $("qualifiers").innerHTML = Object.entries(qualifiers).map(([key, value]) => `
+      <tr><td>${esc(key)}</td><td>${esc(value.label || "")}</td>
+      <td>${value.required ? "是" : "否"}</td><td>${esc((value.examples || []).join(", "))}</td></tr>`).join("")
+      || '<tr><td colspan="4" class="muted">无</td></tr>';
+    const fields = pack.evidence_schema?.fields || {};
+    $("fields").innerHTML = Object.entries(fields).map(([key, value]) => `
+      <tr><td>${esc(key)}</td><td>${esc(value.type || "")}</td><td>${esc(value.description || "")}</td></tr>`).join("")
+      || '<tr><td colspan="3" class="muted">无</td></tr>';
+    const sections = pack.section_types?.types || {};
+    $("sections").textContent = Object.entries(sections).map(([key, value]) => `${key}: ${value.label || ""} (${value.evidence_prior ?? ""})`).join(" · ") || "无";
+    const prompt = pack.prompts?.review || pack.prompts?.qa || "";
+    $("prompt").textContent = prompt || "无";
+    $("status").textContent = "未校验";
+    $("status").className = "status";
+  } catch (error) {
+    $("empty").textContent = `加载失败：${error.message}`;
+    $("empty").classList.remove("hidden");
+    $("detail").classList.add("hidden");
+  }
+}
+
+async function validatePack() {
+  if (!state.current) return;
+  try {
+    const result = await api(`/api/domain-packs/${encodeURIComponent(state.current.id)}/validate`);
+    $("status").textContent = result.ok
+      ? `校验通过 · ${result.warnings?.length || 0} 个提示`
+      : `校验失败 · ${(result.errors || []).join("; ")}`;
+    $("status").className = `status ${result.ok ? "ok" : "bad"}`;
+  } catch (error) {
+    $("status").textContent = `校验失败：${error.message}`;
+    $("status").className = "status bad";
+  }
+}
+
+$("validate-btn").addEventListener("click", validatePack);
+(async function init() {
+  try {
+    const me = await api("/api/auth/me");
+    $("who").textContent = me.display_name || me.username || me.user_id;
+    await loadPacks();
+  } catch (error) {
+    $("packs").innerHTML = `<p class="muted">${esc(error.message)}</p>`;
+  }
+})();
+</script>
+</body>
+</html>

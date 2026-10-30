@@ -30,6 +30,7 @@ from contracts import InternalError, fail, ok
 from routes.abstracts import build_abstracts_blueprint
 from routes.core import build_core_blueprint
 from routes.data import build_data_blueprint
+from routes.domain_packs import build_domain_packs_blueprint
 from routes.evidence import build_evidence_blueprint
 from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
@@ -267,6 +268,7 @@ app.register_blueprint(
     )
 )
 app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
+app.register_blueprint(build_domain_packs_blueprint(log=app.logger))
 app.register_blueprint(build_tenancy_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_notes_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_projects_blueprint(db_path=DB_PATH, log=app.logger))

@@ -1,0 +1,18 @@
+id: biomed.oncoimmuno
+name: 肿瘤免疫
+version: 0.1.0
+discipline: biomedicine
+language: zh
+license: AGPL-3.0-only
+extends: null
+description: 肿瘤免疫治疗领域包：检查点抑制剂、肝癌/肺癌/黑色素瘤、疗效终点与免疫相关不良事件。
+requires:
+  scipal: ">=33.96"
+taxonomy: taxonomy.yaml
+section_types: section_types.yaml
+evidence_schema: evidence_schema.yaml
+sources: sources.yaml
+prompts:
+  qa: prompts/qa.md
+  review: prompts/review.md
+  brief: prompts/brief.md
