@@ -7,6 +7,7 @@ import uuid
 from pathlib import Path
 
 from config.settings import DATABASE_PATH
+from services.tenancy.permissions import audit, pi_can_copy
 
 STATUSES = ("planning", "active", "paused", "completed", "archived")
 
@@ -20,6 +21,7 @@ SCHEMA = (
         description TEXT DEFAULT '',
         status TEXT NOT NULL DEFAULT 'active',
         data_class TEXT NOT NULL DEFAULT 'internal',
+        copied_from TEXT,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
@@ -41,6 +43,9 @@ SCHEMA = (
 def ensure_projects_schema(conn: sqlite3.Connection) -> None:
     for statement in SCHEMA:
         conn.execute(statement)
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(projects)")}
+    if "copied_from" not in columns:
+        conn.execute("ALTER TABLE projects ADD COLUMN copied_from TEXT")
     conn.commit()
 
 
@@ -237,5 +242,63 @@ def add_member(
         )
         conn.commit()
         return {"project_id": project_id, "user_id": target_user_id, "role": role}
+    finally:
+        conn.close()
+
+
+def copy_project(
+    project_id: str,
+    workspace_id: str,
+    actor_user_id: str,
+    *,
+    db_path: str | Path = DATABASE_PATH,
+) -> dict | None:
+    """Copy a readable project into the actor's own project space.
+
+    PI may copy internal/public projects, never private/sealed ones. The copy
+    gets a new owner and keeps a provenance pointer to the source project.
+    """
+    conn = _connect(db_path)
+    try:
+        role = _workspace_role(conn, workspace_id, actor_user_id)
+        if role not in {"owner", "pi"}:
+            return None
+        source = conn.execute(
+            "SELECT * FROM projects WHERE project_id = ? AND workspace_id = ?",
+            (project_id, workspace_id),
+        ).fetchone()
+        if not source:
+            return None
+        if role == "pi" and not pi_can_copy(source["data_class"]):
+            return None
+        new_id = f"project_{uuid.uuid4().hex}"
+        conn.execute(
+            "INSERT INTO projects "
+            "(project_id, workspace_id, owner_user_id, name, description, status, data_class, copied_from) "
+            "VALUES (?, ?, ?, ?, ?, 'planning', ?, ?)",
+            (
+                new_id,
+                workspace_id,
+                actor_user_id,
+                f"Copy of {source['name']}",
+                source["description"] or "",
+                source["data_class"],
+                project_id,
+            ),
+        )
+        conn.execute(
+            "INSERT INTO project_members (project_id, user_id, role) VALUES (?, ?, 'owner')",
+            (new_id, actor_user_id),
+        )
+        conn.commit()
+        audit(
+            workspace_id,
+            actor_user_id,
+            "pi.copy" if role == "pi" else "project.copy",
+            target=new_id,
+            detail=f"source={project_id}",
+            db_path=db_path,
+        )
+        return get_project(new_id, workspace_id, actor_user_id, db_path=db_path)
     finally:
         conn.close()
