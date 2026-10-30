@@ -1,0 +1,234 @@
+# Claim pilot: 10 claims over 20 HCC / immuno-oncology papers.
+# Evidence quotes are resolved from sentence_id at seed time.
+corpus:
+  - paper_PMC13616637_ab84d6de_xml
+  - paper_PMC13615806_d62ab6f2_xml
+  - paper_PMC13632145_3219ab94_xml
+  - paper_PMC12707966_ae9a35bd
+  - paper_PMC12707946_2d3bcc67
+  - paper_PMC13682802_0f1b88ab_xml
+  - paper_PMC13614329_bd12b5b1_xml
+  - paper_PMC13620086_8200b09a_xml
+  - paper_PMC13612562_fad0ff46_mineru
+  - paper_PMC13623383_99ff76bf_xml
+  - paper_PMC13627992_573f0063_xml
+  - paper_PMC13624743_34713948_xml
+  - paper_PMC13399579_937f5057_xml
+  - paper_PMC13630722_e6d55cab_xml
+  - paper_PMC13621559_0e624875_xml
+  - paper_PMC13625843_9a608ecd_xml
+  - paper_watch_cfe63988d289
+  - paper_watch_17aaa5212002
+  - paper_watch_5f839e52dcec
+  - paper_watch_9231c6ae0848
+claims:
+  - claim_id: claim_hcc_triple_os
+    title: TACE + anti-VEGF/TKI + PD-1/PD-L1 改善 uHCC OS
+    claim_text: 在不可切除肝细胞癌中，TACE 联合抗 VEGF/TKI 与 PD-1/PD-L1 抑制剂的方案，较 TACE 单药或其他对照方案提高总生存。
+    claim_type: comparative
+    status: supported
+    qualifiers:
+      population: unresectable HCC
+      intervention: TACE + anti-VEGF/TKI + PD-1/PD-L1
+      comparator: TACE alone / TACE-TKI / TACE-PD-1/PD-L1
+      outcome: overall survival
+      unit: hazard ratio
+      scope: meta-analysis of 53 studies
+    warrant: 随机效应模型合并的 HR 在多个对照亚组中均低于 1，且置信区间不跨 1。
+    backing: 53 项研究的 meta-analysis；以 OS 为主要终点。
+    rebuttal: 研究间异质性与治疗方案差异可能影响效应量。
+    strongest_counter: 不同 TACE 方案、系统治疗顺序与患者选择可能使部分亚组获益不明显。
+    evidence:
+      - sentence_id: paper_PMC13616637_ab84d6de_xml_para_00015_sent_001
+        relation: supports
+        strength: 0.9
+        rationale: 直接报告 triple therapy 相对 TACE 单药的 OS HR 0.54（95%CI 0.45–0.64）。
+
+  - claim_id: claim_hcc_dtace_haic
+    title: dTACE + HAIC + 靶向 + PD-1 改善大 HCC 合并 IVC/RA 癌栓疗效
+    claim_text: 对大肝癌合并下腔静脉和/或右心房癌栓患者，dTACE 联合 HAIC、分子靶向治疗与 PD-1 抑制剂，较不含 dTACE 的同类方案提高疗效且安全性可接受。
+    claim_type: comparative
+    status: supported
+    qualifiers:
+      population: large HCC with IVC/RA tumor thrombus
+      intervention: dTACE + HAIC + MTT + PD-1 inhibitor
+      comparator: HAIC + MTT + PD-1 inhibitor
+      outcome: objective response / survival
+      scope: multicenter retrospective cohort
+    warrant: 研究结论直接比较两组疗效，并报告可接受的安全性。
+    backing: 113 例多中心回顾性队列。
+    rebuttal: 回顾性设计，存在选择偏倚。
+    strongest_counter: 两组基线可能不平衡，dTACE 的局部控制效应可能部分解释差异。
+    evidence:
+      - sentence_id: paper_PMC13632145_3219ab94_xml_para_00049_sent_001
+        relation: supports
+        strength: 0.8
+        rationale: 结论句明确报告 dTACE-HAIC-MTT-PD-1i 优于 HAIC-MTT-PD-1i。
+
+  - claim_id: claim_hcc_ici_rechallenge
+    title: HCC 的 ICI rechallenge 可能提高反应但增加 irAE
+    claim_text: 对部分 HCC 患者，免疫检查点抑制剂再挑战可能增强抗肿瘤反应，但与更高的免疫相关不良事件发生率相关。
+    claim_type: comparative
+    status: contested
+    qualifiers:
+      population: HCC with prior ICI exposure
+      intervention: ICI rechallenge
+      comparator: initial ICI / no rechallenge
+      outcome: antitumor response / irAE
+      scope: narrative review
+    warrant: 综述同时报告再挑战的反应增强与 irAE 增加，构成疗效与安全性的权衡。
+    backing: 多项临床研究汇总。
+    rebuttal: 再挑战人群经过选择，反应率可能被高估。
+    strongest_counter: 缺乏随机对照证据，不能排除选择偏倚与病程差异。
+    evidence:
+      - sentence_id: para_paper_PMC12707946_2d3bcc67_0019_sent_001
+        relation: supports
+        strength: 0.6
+        rationale: 报告再挑战后抗肿瘤反应增强。
+      - sentence_id: para_paper_PMC12707946_2d3bcc67_0027_sent_001
+        relation: mentions
+        strength: 0.6
+        rationale: 同时报告 irAE 与 grade ≥3 irAE 发生率更高，构成安全性代价。
+
+  - claim_id: claim_hdv_hcc_signature
+    title: HDV-HCC 与 HBV-HCC 具有不同的全身炎症特征
+    claim_text: 与 HBV 相关 HCC 相比，HDV 相关 HCC 呈现不同的全身炎症介质谱：HDV-HCC 偏免疫调节型，HBV-HCC 偏促炎型。
+    claim_type: mechanistic
+    status: supported
+    qualifiers:
+      population: HDV-HCC vs HBV-HCC
+      intervention: plasma soluble inflammatory mediator profiling
+      comparator: HBV-HCC / non-HCC controls
+      outcome: systemic inflammatory signatures
+      scope: single-center retrospective
+    warrant: 差异介质经 FDR 与 MELD 校正后仍显著，并呈不同富集模式。
+    backing: 92 种可溶性炎症介质、162 例 HCC。
+    rebuttal: 单中心、样本量有限，不能直接推断治疗反应。
+    strongest_counter: 病毒病因与肝病严重度高度相关，炎症谱差异可能部分由肝功能驱动。
+    evidence:
+      - sentence_id: paper_PMC13682802_0f1b88ab_xml_para_00023_sent_001
+        relation: supports
+        strength: 0.8
+        rationale: 明确支持两种病因存在不同全身炎症签名。
+
+  - claim_id: claim_tcsp_prognosis
+    title: CD8 T 细胞状态可塑性评分与 HCC 预后相关
+    claim_text: 基于单细胞 CD8+ T 细胞状态构建的 TCSP 评分越高，HCC 患者总生存越短。
+    claim_type: prognostic
+    status: supported
+    qualifiers:
+      population: TCGA-LIHC HCC
+      intervention: TCSP score
+      comparator: low vs high TCSP
+      outcome: overall survival
+      scope: retrospective public cohort
+    warrant: 高 TCSP 组在 TCGA-LIHC 中显示显著更短 OS（P=0.00011）。
+    backing: 单细胞来源评分 + TCGA-LIHC 验证。
+    rebuttal: 需要外部队列验证与前瞻性研究。
+    strongest_counter: 评分与肿瘤分期/肝功能可能共线，独立预后价值需多变量校正。
+    evidence:
+      - sentence_id: paper_PMC13614329_bd12b5b1_xml_para_00034_sent_001
+        relation: supports
+        strength: 0.8
+        rationale: 直接报告高 TCSP 与更短 OS 相关。
+
+  - claim_id: claim_hcc_time_immunosuppressive
+    title: HCC 肿瘤免疫微环境以髓系优势和多重检查点耗竭为特征
+    claim_text: HCC 的肿瘤免疫微环境呈深度免疫抑制，主要由髓系细胞优势和多检查点 T 细胞耗竭驱动。
+    claim_type: mechanistic
+    status: supported
+    qualifiers:
+      population: HCC
+      intervention: single-cell transcriptomics
+      outcome: immunosuppressive TIME
+      scope: public scRNA-seq
+    warrant: 单细胞转录组显示髓系优势与多检查点耗竭共存。
+    backing: 单细胞转录组分析。
+    rebuttal: 样本量与数据来源有限，需空间/功能验证。
+    strongest_counter: 不同病因与分期可能对应不同免疫抑制模式。
+    evidence:
+      - sentence_id: paper_PMC13612562_fad0ff46_mineru_para_00013_sent_001
+        relation: supports
+        strength: 0.8
+        rationale: 结论句直接表述免疫抑制、髓系优势与多检查点耗竭。
+
+  - claim_id: claim_fabp5_immune
+    title: FABP5 高表达与 HCC 免疫细胞浸润增加相关
+    claim_text: 在 HCC 中，FABP5 高表达与 CD8+ T 细胞和巨噬细胞等免疫细胞浸润增加相关。
+    claim_type: mechanistic
+    status: supported
+    qualifiers:
+      population: HCC
+      intervention: FABP5 expression
+      outcome: immune cell infiltration
+      scope: TCGA / scRNA-seq / in vitro
+    warrant: 转录组分析发现 FABP5 高表达组免疫浸润增加。
+    backing: TCGA、CCLE、scRNA-seq 与体外实验。
+    rebuttal: 相关性不能直接证明 FABP5 驱动免疫抑制。
+    strongest_counter: FABP5 与免疫浸润的关系可能受肿瘤纯度与代谢状态混杂。
+    evidence:
+      - sentence_id: paper_PMC13623383_99ff76bf_xml_para_00042_sent_001
+        relation: supports
+        strength: 0.6
+        rationale: 报告 FABP5 高表达与 CD8+ T 细胞、巨噬细胞浸润增加相关。
+
+  - claim_id: claim_rt_immunomodulation_gap
+    title: RT 的免疫调节作用与临床获益之间仍有验证缺口
+    claim_text: 放疗对 HCC 肿瘤免疫微环境具有双向调节作用，但从机制假设到稳健临床获益之间仍存在显著验证缺口。
+    claim_type: methodological
+    status: underdetermined
+    qualifiers:
+      population: HCC
+      intervention: radiotherapy ± immunotherapy
+      outcome: clinical benefit
+      scope: review
+    warrant: 综述明确指出现有证据不足以把机制假设转化为稳健临床结论。
+    backing: 临床前与临床证据综述。
+    rebuttal: 部分组合方案已显示 promising 结果，不能一概否定。
+    strongest_counter: 生物标志物与照射剂量/分割方式未统一，阴性结果可能反映设计问题。
+    evidence:
+      - sentence_id: paper_PMC13399579_937f5057_xml_para_00124_sent_002
+        relation: supports
+        strength: 0.6
+        rationale: 直接指出机制假设与稳健临床验证之间存在 gap。
+
+  - claim_id: claim_lenvatinib_vs_bev_uncertain
+    title: HCC 合并 MaVI 的最佳一线三联方案仍不确定
+    claim_text: 对 HCC 合并大血管侵犯患者，lenvatinib 为基础与 bevacizumab 为基础的三联方案孰优，目前仍缺乏一致证据。
+    claim_type: comparative
+    status: underdetermined
+    qualifiers:
+      population: HCC with macrovascular invasion
+      intervention: lenvatinib-based vs bevacizumab-based triple therapy
+      comparator: each other
+      outcome: survival / response
+      scope: real-world retrospective
+    warrant: 现有研究结论不一致，且缺乏随机对照。
+    backing: 多中心真实世界研究背景。
+    rebuttal: 真实世界研究提示一定差异，但不足以定论。
+    strongest_counter: 两组基线、后续治疗与介入方式差异可能掩盖真实差异。
+    evidence:
+      - sentence_id: paper_PMC13615806_d62ab6f2_xml_para_00004_sent_001
+        relation: supports
+        strength: 0.6
+        rationale: 明确指出 MaVI 的最佳组合策略仍不确定。
+
+  - claim_id: claim_sbrt_ici_watch
+    title: SBRT 后 ICI 达 CR 的部分 HCC 可考虑 watch-and-wait
+    claim_text: 在部分不可切除 HCC 中，SBRT 后接受 PD-1/PD-L1 治疗并达到完全缓解者，可在严密随访下考虑暂停免疫治疗。
+    claim_type: clinical
+    status: contested
+    qualifiers:
+      population: unresectable HCC
+      intervention: SBRT followed by anti-PD-1/PD-L1
+      outcome: complete response / treatment discontinuation
+      scope: selected cases, median 35 Gy / 5 fractions
+    warrant: 29/63 例达到 CR，且 CR 者未手术并停用免疫治疗，支持选择性 watch-and-wait。
+    backing: 单中心经验/已发表队列。
+    rebuttal: 选择偏倚与随访不足，不能推广到所有 CR 患者。
+    strongest_counter: 停药后复发风险与最佳随访策略尚未确定。
+    evidence:
+      - sentence_id: paper_PMC13399579_937f5057_xml_para_00088_sent_002
+        relation: supports
+        strength: 0.6
+        rationale: 报告 29/63 例 CR，CR 者停药并采用 watch-and-wait。

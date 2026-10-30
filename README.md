@@ -147,9 +147,9 @@ sci-pal/
 │  └─ audit_structure.py     结构完整性审计
 ├─ mcp_server/               search / generate / guard（MCP 薄转发）
 ├─ packs/                    领域包（biomed-oncoimmuno）
-├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs
+├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    661 项测试
+├─ tests/                    664 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
