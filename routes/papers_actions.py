@@ -80,8 +80,8 @@ def build_papers_actions_blueprint(
             return jsonify({"error": "Paper not found"}), 404
         return None
 
-    def assign_paper_workspace(paper_id: str) -> None:
-        workspace_id = resolve_workspace(db_path=db_path)
+    def assign_paper_workspace(paper_id: str, workspace_id: str | None = None) -> None:
+        workspace_id = workspace_id or resolve_workspace(db_path=db_path)
         if not workspace_id:
             return
         conn = sqlite3.connect(str(db_path))
@@ -307,6 +307,10 @@ def build_papers_actions_blueprint(
         if not pdf_path.is_file():
             return jsonify({"error": f"æ–‡ä»¶ä¸å­˜åœ¨æˆ–ä¸æ˜¯æ™®é€šæ–‡ä»¶: {filename}"}), 404
 
+        workspace_id = resolve_workspace(db_path=db_path)
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 401
+
         # T3-3: å¹¶å‘å‡†å…¥ã€‚ã€ŒæŸ¥ running æ•°ã€ä¸Žã€Œcreate_taskã€å¿…é¡»åœ¨åŒä¸€æŠŠçŸ­é”é‡Œï¼Œ
         # å¦åˆ™ä¸¤ä¸ªè¯·æ±‚å¯èƒ½åŒæ—¶è¯»åˆ° running=2 éƒ½æ”¾è¡Œã€‚è¶…é™**ä¸å»ºä»»åŠ¡è¡Œ**ã€‚
         with parse_admit_lock:
@@ -400,6 +404,7 @@ def build_papers_actions_blueprint(
                     "paragraph_count": result["paragraph_count"],
                     "stats": result["stats"],
                 })
+                assign_paper_workspace(result["paper_id"], workspace_id)
             except ParseCancelled as exc:
                 # å·²å–æ¶ˆ â†’ æ•°æ®æ²¡å†™åº“ã€‚çŠ¶æ€ç”±å–æ¶ˆç«¯ç‚¹ç½®ä¸º cancelledï¼Œè¿™é‡Œåªç•™æ—¥å¿—ã€‚
                 get_task_manager().cancel_task(task_id)  # å·²æ˜¯ cancelled æ—¶ rowcount=0ï¼Œå¹‚ç­‰
