@@ -187,6 +187,7 @@ sci-pal/
 - [自适应与文献情报计划](docs/工作计划-自适应与文献情报.md)
 - [项目跟踪与实验记录计划](docs/工作计划-项目跟踪与实验记录.md)
 - [DSH 适配与插件化计划](docs/工作计划-DSH适配与插件化.md)
+- [论证工作台改造计划](docs/工作计划-论证工作台改造.md)
 - [QA 答案级评测](docs/QA答案级评测.md)
 - [SciFact 适配器](docs/评测-SciFact适配器.md)
 - [LitQA2 适配器](docs/评测-LitQA2适配器.md)
