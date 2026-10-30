@@ -44,6 +44,7 @@ from routes.search_downloads import build_search_downloads_blueprint
 from routes.experiments import build_experiments_blueprint
 from routes.notes import build_notes_blueprint
 from routes.projects import build_projects_blueprint
+from routes.runs import build_runs_blueprint
 from routes.system import build_system_blueprint
 from routes.systematic_review import build_systematic_review_blueprint
 from routes.tasks import build_tasks_blueprint
@@ -268,6 +269,7 @@ app.register_blueprint(build_tenancy_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_notes_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_projects_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_experiments_blueprint(db_path=DB_PATH, log=app.logger))
+app.register_blueprint(build_runs_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_data_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_systematic_review_blueprint(db_path=DB_PATH, log=app.logger))
 

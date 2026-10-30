@@ -134,6 +134,37 @@ class ExperimentAccessTests(unittest.TestCase):
             404,
         )
 
+    def test_sign_requires_password_and_binds_revision(self) -> None:
+        experiment_id = self.create_experiment()
+        self.login(self.member)
+        wrong = self.client.post(
+            f"/api/experiments/{experiment_id}/sign",
+            json={"password": "wrong", "meaning": "author"},
+        )
+        self.assertEqual(wrong.status_code, 401)
+        signed = self.client.post(
+            f"/api/experiments/{experiment_id}/sign",
+            json={"password": "long-enough-password", "meaning": "author"},
+        )
+        self.assertEqual(signed.status_code, 201)
+        signature = signed.get_json()
+        self.assertEqual(signature["revision"], 1)
+        self.assertEqual(signature["signer_user_id"], self.member["user_id"])
+        rows = self.client.get(f"/api/experiments/{experiment_id}/signatures").get_json()["signatures"]
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(len(rows[0]["record_hash"]), 64)
+
+    def test_non_owner_cannot_sign(self) -> None:
+        experiment_id = self.create_experiment()
+        self.login(self.pi)
+        self.assertEqual(
+            self.client.post(
+                f"/api/experiments/{experiment_id}/sign",
+                json={"password": "long-enough-password"},
+            ).status_code,
+            404,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -10,6 +10,8 @@ from .service import (
     list_access_requests,
     list_experiments,
     list_revisions,
+    list_signatures,
+    sign_experiment,
     update_experiment,
 )
 
@@ -23,5 +25,7 @@ __all__ = [
     "list_access_requests",
     "list_experiments",
     "list_revisions",
+    "list_signatures",
+    "sign_experiment",
     "update_experiment",
 ]
