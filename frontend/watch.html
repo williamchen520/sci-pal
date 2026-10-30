@@ -424,11 +424,22 @@ async function applyPackQuery() {
   }
 }
 
+async function applyQuerySelection() {
+  const params = new URLSearchParams(location.search);
+  const profileId = Number(params.get("profile"));
+  if (profileId && state.profiles.some((profile) => profile.id === profileId)) {
+    await selectProfile(profileId);
+  }
+  const runId = Number(params.get("run"));
+  if (runId) await showRun(runId);
+}
+
 (async function init() {
   try {
     const me = await api("/api/auth/me");
     $("who").textContent = me.display_name || me.username || me.user_id;
     await loadProfiles();
+    await applyQuerySelection();
     await applyPackQuery();
   } catch (error) { showError(error); }
 })();
