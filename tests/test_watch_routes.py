@@ -76,6 +76,43 @@ class WatchRouteTests(unittest.TestCase):
         conn.close()
         self.assertEqual(status, "read")
 
+    def test_item_feedback_and_abstract(self) -> None:
+        conn = repo.connect(self.db)
+        profile_id = repo.create_profile(conn, {"name": "P"})
+        run_id = repo.create_run(conn, profile_id, "2026-10-20", "2026-10-27")
+        item_id = repo.add_item(
+            conn,
+            run_id,
+            profile_id,
+            {
+                "title": "T",
+                "abstract": "A short abstract",
+                "acquisition": "abstract",
+            },
+        )
+        conn.close()
+        self.assertEqual(
+            self.client.post(
+                f"/api/watch/items/{item_id}/feedback",
+                json={"feedback": "useful"},
+            ).status_code,
+            200,
+        )
+        self.assertEqual(
+            self.client.post(
+                f"/api/watch/items/{item_id}/feedback",
+                json={"feedback": "bad"},
+            ).status_code,
+            400,
+        )
+        conn = repo.connect(self.db)
+        row = conn.execute(
+            "SELECT feedback, abstract FROM watch_items WHERE id = ?", (item_id,)
+        ).fetchone()
+        conn.close()
+        self.assertEqual(row["feedback"], "useful")
+        self.assertEqual(row["abstract"], "A short abstract")
+
 
 if __name__ == "__main__":
     unittest.main()

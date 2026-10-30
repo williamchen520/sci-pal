@@ -1,5 +1,6 @@
 services:
   app:
+    image: scipal-app:latest
     build:
       context: ..
       dockerfile: deploy/Dockerfile
@@ -29,6 +30,23 @@ services:
       timeout: 5s
       retries: 3
       start_period: 60s
+
+  watch-cron:
+    image: scipal-app:latest
+    command: ["python", "scripts/run_watch_due.py", "--loop", "--interval", "300"]
+    env_file:
+      - .env
+    environment:
+      SCIPAL_AUTH_REQUIRED: "1"
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    restart: unless-stopped
 
   caddy:
     image: caddy:2

@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, Response, g, jsonify, request
+from flask import Blueprint, Response, g, jsonify, request, session
 
 from services.watch import discovery, repo, runner
 
 
 def build_watch_blueprint(*, db_path, log) -> Blueprint:
     bp = Blueprint("watch", __name__, url_prefix="/api/watch")
+
+    @bp.before_request
+    def _set_owner():
+        g.owner = session.get("user_id") or "default"
 
     def _owner() -> str:
         return getattr(g, "owner", "default")
@@ -186,6 +190,24 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
                 return jsonify({"error": "item not found"}), 404
             repo.mark_item_read(conn, item_id)
             return jsonify({"ok": True})
+        finally:
+            conn.close()
+
+    @bp.route("/items/<int:item_id>/feedback", methods=["POST"])
+    def feedback(item_id: int):
+        conn = repo.connect(db_path)
+        try:
+            row = conn.execute(
+                "SELECT owner FROM watch_items WHERE id = ?", (item_id,)
+            ).fetchone()
+            if not row or (row["owner"] or "default") != _owner():
+                return jsonify({"error": "item not found"}), 404
+            data = request.get_json(silent=True) or {}
+            value = str(data.get("feedback") or "").strip()
+            if value not in {"useful", "not_useful"}:
+                return jsonify({"error": "feedback must be useful or not_useful"}), 400
+            repo.set_item_feedback(conn, item_id, value)
+            return jsonify({"ok": True, "feedback": value})
         finally:
             conn.close()
 
