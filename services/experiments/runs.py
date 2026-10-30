@@ -119,8 +119,8 @@ def create_run(
         conn.execute(
             "INSERT INTO experiment_runs "
             "(run_id, experiment_id, workspace_id, owner_user_id, protocol_id, title, status, "
-            "planned_json, actual_json, observations, result) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "planned_json, actual_json, observations, result, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
             (
                 run_id,
                 experiment_id,
