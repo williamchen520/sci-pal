@@ -111,8 +111,13 @@ class HybridSearch:
         year_min = filters.get("year_min")
         year_max = filters.get("year_max")
         journal = filters.get("journal")
-        if not any([year_min, year_max, journal]):
+        paper_ids = filters.get("paper_ids")
+        if not any([year_min, year_max, journal]) and paper_ids is None:
             return None
+        if paper_ids is not None and not any([year_min, year_max, journal]):
+            return set(paper_ids)
+        if paper_ids is not None and not paper_ids:
+            return set()
 
         clauses = []
         params = []
@@ -130,7 +135,10 @@ class HybridSearch:
         rows = self.conn.execute(
             f"SELECT paper_id FROM papers WHERE {where}", params
         ).fetchall()
-        return [r["paper_id"] for r in rows]
+        result = [r["paper_id"] for r in rows]
+        if paper_ids is not None:
+            result = [pid for pid in result if pid in set(paper_ids)]
+        return result
 
     def vector_search(self, query: str, top_k: int = VECTOR_TOP_K,
                       paper_id: str = None,
@@ -251,6 +259,16 @@ class HybridSearch:
         if paper_id:
             sql += " AND paper_id = ?"
             params.append(paper_id)
+
+        paper_ids = (filters or {}).get("paper_ids")
+        if paper_ids is not None:
+            paper_ids = list(paper_ids)
+            if not paper_ids:
+                return []
+            column = "f.paper_id" if need_paper_join else "paper_id"
+            marks = ",".join("?" * len(paper_ids))
+            sql += f" AND {column} IN ({marks})"
+            params.extend(paper_ids)
 
         # V24.2: section filter
         if section_filter:
