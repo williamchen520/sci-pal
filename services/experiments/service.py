@@ -11,6 +11,7 @@ from pathlib import Path
 
 from config.settings import DATABASE_PATH
 from services.tenancy.permissions import audit
+from services.tenancy.service import verify_password
 
 
 class ProtocolNotFound(ValueError):
@@ -82,6 +83,20 @@ SCHEMA = (
     """,
     "CREATE INDEX IF NOT EXISTS idx_exp_revisions_experiment ON experiment_revisions(experiment_id)",
     "CREATE INDEX IF NOT EXISTS idx_exp_audit_experiment ON experiment_audit(experiment_id)",
+    """
+    CREATE TABLE IF NOT EXISTS experiment_signatures (
+        signature_id TEXT PRIMARY KEY,
+        experiment_id TEXT NOT NULL,
+        workspace_id TEXT NOT NULL,
+        revision INTEGER NOT NULL,
+        signer_user_id TEXT NOT NULL,
+        meaning TEXT NOT NULL,
+        record_hash TEXT NOT NULL,
+        signature_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_exp_signatures_experiment ON experiment_signatures(experiment_id)",
 )
 
 
@@ -555,3 +570,91 @@ def decide_access_request(
         return dict(row)
     finally:
         conn.close()
+
+
+def sign_experiment(
+    experiment_id: str,
+    workspace_id: str,
+    user_id: str,
+    password: str,
+    *,
+    meaning: str = "author",
+    db_path: str | Path = DATABASE_PATH,
+) -> dict | None:
+    """Sign the current revision after re-authentication."""
+    if meaning not in {"author", "reviewer", "approver"}:
+        raise ValueError("invalid signature meaning")
+    conn = _connect(db_path)
+    try:
+        experiment = conn.execute(
+            "SELECT * FROM experiments WHERE experiment_id = ? AND workspace_id = ? "
+            "AND owner_user_id = ?",
+            (experiment_id, workspace_id, user_id),
+        ).fetchone()
+        if not experiment:
+            return None
+        user = conn.execute(
+            "SELECT password_hash FROM users WHERE user_id = ?", (user_id,)
+        ).fetchone()
+        if not user or not verify_password(password, user["password_hash"]):
+            raise PermissionError("re-authentication failed")
+        revision = int(experiment["current_revision"] or 1)
+        rev = conn.execute(
+            "SELECT * FROM experiment_revisions WHERE experiment_id = ? AND revision = ?",
+            (experiment_id, revision),
+        ).fetchone()
+        if not rev:
+            return None
+        now = _now().isoformat()
+        signature_id = f"sig_{uuid.uuid4().hex}"
+        signature_hash = hashlib.sha256(
+            f"{rev['hash']}|{user_id}|{meaning}|{now}".encode("utf-8")
+        ).hexdigest()
+        conn.execute(
+            "INSERT INTO experiment_signatures "
+            "(signature_id, experiment_id, workspace_id, revision, signer_user_id, "
+            "meaning, record_hash, signature_hash, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                signature_id,
+                experiment_id,
+                workspace_id,
+                revision,
+                user_id,
+                meaning,
+                rev["hash"],
+                signature_hash,
+                now,
+            ),
+        )
+        _write_audit(conn, experiment_id, workspace_id, user_id, "sign", revision, meaning)
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM experiment_signatures WHERE signature_id = ?", (signature_id,)
+        ).fetchone()
+        return dict(row)
+    finally:
+        conn.close()
+
+
+def list_signatures(
+    experiment_id: str,
+    workspace_id: str,
+    user_id: str,
+    *,
+    db_path: str | Path = DATABASE_PATH,
+) -> list[dict] | None:
+    if not get_experiment(experiment_id, workspace_id, user_id, db_path=db_path):
+        return None
+    conn = _connect(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT signature_id, revision, signer_user_id, meaning, record_hash, "
+            "signature_hash, created_at FROM experiment_signatures "
+            "WHERE experiment_id = ? AND workspace_id = ? ORDER BY created_at",
+            (experiment_id, workspace_id),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+

@@ -17,6 +17,8 @@ from services.experiments import (
     list_access_requests,
     list_experiments,
     list_revisions,
+    list_signatures,
+    sign_experiment,
     update_experiment,
 )
 from services.tenancy.web import resolve_workspace
@@ -131,6 +133,43 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
         if rows is None:
             return jsonify({"error": "Experiment not found"}), 404
         return jsonify({"audit": rows})
+
+    @bp.post("/api/experiments/<experiment_id>/sign")
+    def experiment_sign(experiment_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        body = request.get_json(silent=True) or {}
+        try:
+            signature = sign_experiment(
+                experiment_id,
+                workspace_id,
+                user_id,
+                str(body.get("password") or ""),
+                meaning=str(body.get("meaning") or "author"),
+                db_path=db,
+            )
+        except PermissionError:
+            return jsonify({"error": "re-authentication failed"}), 401
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        if not signature:
+            return jsonify({"error": "Experiment not found"}), 404
+        return jsonify(signature), 201
+
+    @bp.get("/api/experiments/<experiment_id>/signatures")
+    def experiment_signatures(experiment_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        rows = list_signatures(experiment_id, workspace_id, user_id, db_path=db)
+        if rows is None:
+            return jsonify({"error": "Experiment not found"}), 404
+        return jsonify({"signatures": rows})
 
     @bp.post("/api/experiments/<experiment_id>/access-requests")
     def experiment_request_access(experiment_id: str):
