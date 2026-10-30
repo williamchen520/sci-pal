@@ -103,6 +103,25 @@ class RunRouteTests(unittest.TestCase):
             404,
         )
 
+    def test_comparison_reports_deviation(self) -> None:
+        self.login(self.alice)
+        run_id = self.client.post(
+            f"/api/experiments/{self.experiment_id}/runs",
+            json={
+                "title": "Run",
+                "planned": {"dose": 10, "duration": 4},
+                "actual": {"dose": 8, "duration": 4, "extra": "x"},
+            },
+        ).get_json()["run_id"]
+        result = self.client.get(f"/api/runs/{run_id}/comparison").get_json()
+        self.assertEqual(result["summary"]["total"], 3)
+        self.assertEqual(result["summary"]["changed"], 1)
+        self.assertEqual(result["summary"]["unplanned"], 1)
+        self.assertFalse(result["summary"]["compliant"])
+        dose = next(item for item in result["deviations"] if item["field"] == "dose")
+        self.assertEqual(dose["delta"], -2)
+        self.assertEqual(dose["delta_pct"], -20.0)
+
 
 if __name__ == "__main__":
     unittest.main()
