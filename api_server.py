@@ -25,10 +25,12 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from services.review.task_manager import task_manager
 
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
+from build_db.claim_pilot_schema import migrate as migrate_claim_pilot
 from build_db.watch_schema import migrate as migrate_watch
 from contracts import InternalError, fail, ok
 from routes.abstracts import build_abstracts_blueprint
 from routes.core import build_core_blueprint
+from routes.claims import build_claims_blueprint
 from routes.data import build_data_blueprint
 from routes.domain_packs import build_domain_packs_blueprint
 from routes.evidence import build_evidence_blueprint
@@ -64,6 +66,7 @@ app.secret_key = os.environ.get("SCIPAL_SECRET_KEY") or os.urandom(32)
 try:
     bootstrap_default_workspace(db_path=DB_PATH)
     migrate_watch(DB_PATH)
+    migrate_claim_pilot(DB_PATH)
 except Exception:
     app.logger.exception("tenancy bootstrap failed")
 
@@ -268,6 +271,7 @@ app.register_blueprint(
     )
 )
 app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
+app.register_blueprint(build_claims_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_domain_packs_blueprint(log=app.logger))
 app.register_blueprint(build_tenancy_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_notes_blueprint(db_path=DB_PATH, log=app.logger))

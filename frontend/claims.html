@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SciPal · Claim 试点</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#131c31; --line:#1e3a5f; --text:#e2e8f0; --muted:#94a3b8; --gold:#f5c542; --blue:#38bdf8; --red:#f87171; --green:#4ade80; --orange:#fb923c; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Microsoft YaHei",sans-serif; }
+    header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:14px 24px; border-bottom:1px solid var(--line); background:#0f1a2e; position:sticky; top:0; z-index:5; }
+    h1 { margin:0; font-size:18px; color:var(--gold); white-space:nowrap; }
+    main { max-width:1200px; margin:0 auto; padding:20px 18px 60px; }
+    .grid { display:grid; grid-template-columns:360px 1fr; gap:18px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
+    .stack { display:flex; flex-direction:column; gap:9px; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    button { padding:8px 13px; border:0; border-radius:8px; background:var(--gold); color:#111827; font-weight:700; cursor:pointer; }
+    button.secondary { background:#1e3a5f; color:var(--text); }
+    button.small { padding:5px 9px; font-size:12px; }
+    button:disabled { opacity:.5; cursor:wait; }
+    a { color:var(--blue); text-decoration:none; }
+    .muted { color:var(--muted); font-size:13px; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#1e3a5f; color:#bae6fd; font-size:12px; }
+    .pill.supported, .pill.accepted { background:#14532d; color:#86efac; }
+    .pill.contested, .pill.revised { background:#713f12; color:#fde68a; }
+    .pill.underdetermined, .pill.draft { background:#334155; color:#cbd5e1; }
+    .pill.rejected { background:#7f1d1d; color:#fecaca; }
+    .claim-item { padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:#0f1a2e; cursor:pointer; }
+    .claim-item:hover, .claim-item.active { border-color:var(--gold); }
+    .claim-item .meta { color:var(--muted); font-size:12px; margin-top:4px; }
+    h2 { margin:0 0 8px; font-size:17px; }
+    h3 { margin:16px 0 8px; font-size:15px; color:#cbd5e1; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:6px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); font-weight:600; }
+    .claim-text { font-size:16px; line-height:1.65; background:#0f1a2e; border-left:3px solid var(--gold); padding:10px 12px; border-radius:6px; }
+    .candidate { padding:9px; border:1px solid var(--line); border-radius:8px; background:#0f1a2e; margin-bottom:7px; }
+    .candidate .quote { font-size:13px; line-height:1.5; }
+    .candidate .meta { font-size:12px; color:var(--muted); margin-bottom:4px; }
+    .status { padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:#0f1a2e; font-size:13px; }
+    .status.ok { border-color:var(--green); }
+    .status.bad { border-color:var(--red); }
+    textarea { width:100%; min-height:60px; padding:9px; border-radius:8px; border:1px solid #27405f; background:#0f1a2e; color:var(--text); font:inherit; }
+    .hidden { display:none !important; }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media (max-width:900px) { .grid, .two { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="row"><h1>SciPal · Claim 试点</h1><span class="pill" id="who"></span></div>
+  <div class="row"><a href="/">首页</a><a href="/packs.html">领域包</a><a href="/watch.html">文献监控</a><a href="/login.html">切换账号</a></div>
+</header>
+<main>
+  <div class="grid">
+    <section class="panel">
+      <h2>Claim Inbox</h2>
+      <p class="muted">10 个 claim / 20 篇 HCC 免疫治疗论文。先审讯，再裁决。</p>
+      <div class="stack" id="claims"><p class="muted">加载中…</p></div>
+    </section>
+    <section class="panel">
+      <div id="empty" class="muted">选择一个 claim。</div>
+      <div id="detail" class="hidden">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <h2 id="claim-title"></h2>
+            <div class="muted" id="claim-meta"></div>
+          </div>
+          <span class="pill" id="claim-status"></span>
+        </div>
+        <div class="claim-text" id="claim-text"></div>
+        <div class="status" id="status" style="margin-top:10px">未裁决</div>
+
+        <h3>限定条件</h3>
+        <table><thead><tr><th>字段</th><th>值</th></tr></thead><tbody id="qualifiers"></tbody></table>
+
+        <h3>Warrant</h3>
+        <p class="muted" id="warrant"></p>
+
+        <h3>证据</h3>
+        <div class="two">
+          <div><strong>支持</strong><div id="supports"></div></div>
+          <div><strong>反对 / 削弱</strong><div id="refutes"></div></div>
+        </div>
+
+        <h3>审讯</h3>
+        <div class="row">
+          <button class="secondary" id="search-support">找支持证据</button>
+          <button class="secondary" id="search-oppose">找反对证据</button>
+        </div>
+        <div id="candidates" style="margin-top:10px"></div>
+
+        <h3>裁决</h3>
+        <textarea id="decision-note" placeholder="裁决理由（必填）"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button id="accept">接受</button>
+          <button class="secondary" id="revise">退回修改</button>
+          <button class="secondary" id="reject">拒绝</button>
+        </div>
+
+        <h3>事件</h3>
+        <div id="events" class="muted"></div>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { claims: [], current: null, candidates: [] };
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    headers: options.body ? { "Content-Type": "application/json" } : {},
+    ...options,
+  });
+  if (response.status === 401) {
+    window.location.replace("/login.html");
+    throw new Error("login required");
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+  return body;
+}
+
+function showError(error) { $("status").textContent = error?.message || ""; $("status").className = "status bad"; }
+
+function renderClaims() {
+  $("claims").innerHTML = state.claims.length ? state.claims.map((claim) => `
+    <div class="claim-item ${state.current?.claim_id === claim.claim_id ? "active" : ""}" data-claim="${esc(claim.claim_id)}">
+      <strong>${esc(claim.title)}</strong>
+      <div class="meta">${esc(claim.claim_type)} · <span class="pill ${esc(claim.status)}">${esc(claim.status)}</span></div>
+    </div>`).join("") : '<p class="muted">没有 claim。</p>';
+  document.querySelectorAll("[data-claim]").forEach((el) => {
+    el.addEventListener("click", () => loadClaim(el.dataset.claim));
+  });
+}
+
+function evidenceBlock(items, empty) {
+  return items.length ? items.map((item) => `
+    <div class="candidate">
+      <div class="meta">${esc(item.paper_id)} · ${esc(item.relation)} · ${esc(item.rationale || "")}</div>
+      <div class="quote">“${esc(item.quote)}”</div>
+    </div>`).join("") : `<p class="muted">${empty}</p>`;
+}
+
+async function loadClaims() {
+  const body = await api("/api/claims");
+  state.claims = body.claims || [];
+  renderClaims();
+  if (state.claims.length) await loadClaim(state.claims[0].claim_id);
+}
+
+async function loadClaim(claimId) {
+  try {
+    const claim = await api(`/api/claims/${encodeURIComponent(claimId)}`);
+    state.current = claim;
+    renderClaims();
+    $("empty").classList.add("hidden");
+    $("detail").classList.remove("hidden");
+    $("claim-title").textContent = claim.title;
+    $("claim-meta").textContent = `${claim.claim_id} · ${claim.claim_type} · ${claim.decision}`;
+    $("claim-status").textContent = claim.status;
+    $("claim-status").className = `pill ${claim.status}`;
+    $("claim-text").textContent = claim.claim_text;
+    $("warrant").textContent = claim.warrant || "（未填写）";
+    $("status").textContent = claim.decision_note || "未裁决";
+    $("status").className = "status";
+    const qualifiers = claim.qualifiers || {};
+    $("qualifiers").innerHTML = Object.entries(qualifiers).map(([key, value]) => `
+      <tr><td>${esc(key)}</td><td>${esc(value)}</td></tr>`).join("")
+      || '<tr><td colspan="2" class="muted">无</td></tr>';
+    const evidence = claim.evidence || [];
+    $("supports").innerHTML = evidenceBlock(evidence.filter((item) => item.relation === "supports"), "暂无支持证据");
+    $("refutes").innerHTML = evidenceBlock(evidence.filter((item) => item.relation !== "supports"), "暂无反对证据");
+    $("events").innerHTML = (claim.events || []).map((event) => `
+      <div>${esc(event.created_at)} · ${esc(event.action)} · ${esc(event.note || "")}</div>`).join("") || "无事件";
+    $("candidates").innerHTML = "";
+    $("decision-note").value = "";
+  } catch (error) { showError(error); }
+}
+
+async function search(direction) {
+  if (!state.current) return;
+  try {
+    const body = await api(`/api/claims/${encodeURIComponent(state.current.claim_id)}/search`, {
+      method: "POST",
+      body: JSON.stringify({ direction }),
+    });
+    state.candidates = body.candidates || [];
+    $("candidates").innerHTML = state.candidates.length ? state.candidates.map((candidate) => `
+      <div class="candidate">
+        <div class="meta">${esc(candidate.paper_title || candidate.paper_id)} · ${esc(candidate.sentence_id)}</div>
+        <div class="quote">“${esc(candidate.quote)}”</div>
+        <div class="row" style="margin-top:5px">
+          <button class="small" data-add="${esc(candidate.sentence_id)}" data-rel="supports">加为支持</button>
+          <button class="secondary small" data-add="${esc(candidate.sentence_id)}" data-rel="refutes">加为反对</button>
+        </div>
+      </div>`).join("") : '<p class="muted">没有候选。</p>';
+    document.querySelectorAll("[data-add]").forEach((el) => {
+      el.addEventListener("click", () => addEvidence(el.dataset.add, el.dataset.rel));
+    });
+  } catch (error) { showError(error); }
+}
+
+async function addEvidence(sentenceId, relation) {
+  if (!state.current) return;
+  try {
+    await api(`/api/claims/${encodeURIComponent(state.current.claim_id)}/evidence`, {
+      method: "POST",
+      body: JSON.stringify({
+        sentence_id: sentenceId,
+        relation,
+        rationale: relation === "supports" ? "人工确认支持" : "人工确认反对",
+      }),
+    });
+    await loadClaim(state.current.claim_id);
+    $("status").textContent = "证据已加入";
+    $("status").className = "status ok";
+  } catch (error) { showError(error); }
+}
+
+async function decide(decision) {
+  if (!state.current) return;
+  const note = $("decision-note").value.trim();
+  if (!note) return showError(new Error("请填写裁决理由"));
+  try {
+    await api(`/api/claims/${encodeURIComponent(state.current.claim_id)}/decision`, {
+      method: "POST",
+      body: JSON.stringify({ decision, note }),
+    });
+    await loadClaims();
+  } catch (error) { showError(error); }
+}
+
+$("search-support").addEventListener("click", () => search("support"));
+$("search-oppose").addEventListener("click", () => search("oppose"));
+$("accept").addEventListener("click", () => decide("accept"));
+$("revise").addEventListener("click", () => decide("revise"));
+$("reject").addEventListener("click", () => decide("reject"));
+
+(async function init() {
+  try {
+    const me = await api("/api/auth/me");
+    $("who").textContent = me.display_name || me.username || me.user_id;
+    await loadClaims();
+  } catch (error) { showError(error); }
+})();
+</script>
+</body>
+</html>
