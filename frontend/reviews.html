@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SciPal · 综述写作</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#131c31; --line:#1e3a5f; --text:#e2e8f0; --muted:#94a3b8; --gold:#f5c542; --blue:#38bdf8; --red:#f87171; --green:#4ade80; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Microsoft YaHei",sans-serif; }
+    header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:14px 24px; border-bottom:1px solid var(--line); background:#0f1a2e; position:sticky; top:0; z-index:5; }
+    h1 { margin:0; font-size:18px; color:var(--gold); white-space:nowrap; }
+    main { max-width:1200px; margin:0 auto; padding:20px 18px 60px; }
+    .grid { display:grid; grid-template-columns:360px 1fr; gap:18px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
+    .stack { display:flex; flex-direction:column; gap:10px; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    input, textarea, select { width:100%; padding:9px 10px; border-radius:8px; border:1px solid #27405f; background:#0f1a2e; color:var(--text); font:inherit; }
+    textarea { min-height:90px; resize:vertical; }
+    button { padding:9px 14px; border:0; border-radius:8px; background:var(--gold); color:#111827; font-weight:700; cursor:pointer; }
+    button.secondary { background:#1e3a5f; color:var(--text); }
+    button.small { padding:6px 10px; font-size:13px; }
+    button:disabled { opacity:.5; cursor:wait; }
+    a { color:var(--blue); text-decoration:none; }
+    .muted { color:var(--muted); font-size:13px; }
+    .error { color:var(--red); min-height:20px; font-size:13px; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#1e3a5f; color:#bae6fd; font-size:12px; }
+    .status { padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#0f1a2e; font-size:13px; }
+    .status.running { border-color:var(--gold); }
+    .status.done { border-color:var(--green); }
+    .status.failed { border-color:var(--red); }
+    .list { display:flex; flex-direction:column; gap:8px; }
+    .item { padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:#0f1a2e; cursor:pointer; }
+    .item:hover { border-color:var(--blue); }
+    .item .meta { color:var(--muted); font-size:12px; margin-top:4px; }
+    .outline-section { border-left:3px solid var(--blue); padding:8px 12px; margin:10px 0; background:#0f1a2e; }
+    .outline-section h4 { margin:0 0 4px; font-size:14px; }
+    .outline-section p { margin:3px 0; font-size:13px; color:#cbd5e1; }
+    pre.markdown { white-space:pre-wrap; word-break:break-word; background:#0f1a2e; border:1px solid var(--line); border-radius:10px; padding:14px; line-height:1.6; font-size:13px; max-height:620px; overflow:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:6px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); font-weight:600; }
+    .hidden { display:none !important; }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="row"><h1>SciPal · 综述写作</h1><span class="pill" id="who"></span></div>
+  <div class="row"><a href="/">首页</a><a href="/projects.html">项目</a><a href="/login.html">切换账号</a></div>
+</header>
+
+<main>
+  <div class="error" id="error"></div>
+  <div class="grid">
+    <section class="panel">
+      <h2 style="margin-top:0">新建综述</h2>
+      <form id="review-form" class="stack">
+        <input id="topic" placeholder="综述主题" required>
+        <div class="row">
+          <select id="review-type" style="flex:1">
+            <option value="narrative">narrative</option>
+            <option value="comparative">comparative</option>
+            <option value="systematic">systematic</option>
+          </select>
+          <select id="language" style="flex:1">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div class="row">
+          <input id="max-papers" type="number" min="1" max="100" value="20" title="max_papers">
+          <select id="citation-style" style="flex:1">
+            <option value="apa">APA</option>
+            <option value="nature">Nature</option>
+            <option value="vancouver">Vancouver</option>
+          </select>
+        </div>
+        <label class="muted"><input id="verify" type="checkbox" style="width:auto"> LLM 深度校验</label>
+        <div class="row">
+          <button type="button" id="outline-btn">生成大纲</button>
+          <button type="button" id="review-btn">生成综述</button>
+          <button type="button" class="secondary" id="cancel-btn" disabled>取消</button>
+        </div>
+      </form>
+      <div class="status" id="status" style="margin-top:12px">就绪</div>
+
+      <h3 style="margin-top:18px">历史综述</h3>
+      <div class="list" id="history"><p class="muted">加载中…</p></div>
+    </section>
+
+    <section class="panel" id="workspace">
+      <p class="muted">先生成大纲，再生成综述；也可以直接生成综述。</p>
+
+      <div id="outline-panel" class="hidden">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">大纲</h2>
+          <button class="secondary small" id="outline-json-toggle">查看 JSON</button>
+        </div>
+        <div id="outline-view"></div>
+        <textarea id="outline-json" class="hidden" spellcheck="false" style="min-height:240px"></textarea>
+      </div>
+
+      <div id="review-panel" class="hidden" style="margin-top:18px">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">综述草稿</h2>
+          <div class="row">
+            <button class="secondary small" id="download-btn">下载 Markdown</button>
+            <button class="secondary small" id="copy-btn">复制</button>
+          </div>
+        </div>
+        <pre class="markdown" id="markdown"></pre>
+        <h3>参考文献</h3>
+        <table><thead><tr><th>#</th><th>标题</th><th>年份</th><th>DOI</th></tr></thead><tbody id="references"></tbody></table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { taskId: null, outline: null, result: null, poll: null };
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    headers: options.body ? { "Content-Type": "application/json" } : {},
+    ...options,
+  });
+  if (response.status === 401) {
+    window.location.replace("/login.html");
+    throw new Error("login required");
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+  return body;
+}
+
+function showError(error) { $("error").textContent = error?.message || ""; }
+
+function setStatus(text, kind = "") {
+  const el = $("status");
+  el.textContent = text;
+  el.className = `status ${kind}`;
+}
+
+function setBusy(busy) {
+  $("outline-btn").disabled = busy;
+  $("review-btn").disabled = busy;
+  $("cancel-btn").disabled = !busy;
+}
+
+async function startTask(url, payload) {
+  showError(null);
+  setBusy(true);
+  try {
+    const body = await api(url, { method: "POST", body: JSON.stringify(payload) });
+    state.taskId = body.task_id;
+    setStatus(`任务已提交：${state.taskId}`, "running");
+    await poll(state.taskId);
+  } catch (error) {
+    setBusy(false);
+    setStatus(`失败：${error.message}`, "failed");
+    showError(error);
+  }
+}
+
+async function poll(taskId) {
+  while (state.taskId === taskId) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const task = await api(`/api/review/task/${encodeURIComponent(taskId)}`);
+    if (task.status === "running") {
+      setStatus(task.progress || "运行中…", "running");
+      continue;
+    }
+    setBusy(false);
+    state.taskId = null;
+    if (task.status === "completed") {
+      setStatus("完成", "done");
+      return task.result;
+    }
+    if (task.status === "cancelled") {
+      setStatus("已取消", "failed");
+      return null;
+    }
+    setStatus(`失败：${task.error || task.status}`, "failed");
+    return null;
+  }
+  return null;
+}
+
+async function generateOutline() {
+  const topic = $("topic").value.trim();
+  if (!topic) return showError(new Error("请填写主题"));
+  $("outline-panel").classList.add("hidden");
+  $("review-panel").classList.add("hidden");
+  const result = await startTask("/api/review/outline", {
+    topic,
+    review_type: $("review-type").value,
+    language: $("language").value,
+    max_papers: Number($("max-papers").value || 20),
+  });
+  if (!result) return;
+  state.outline = result.outline || { sections: [] };
+  renderOutline(result);
+}
+
+function renderOutline(result) {
+  const outline = result.outline || { sections: [] };
+  state.outline = outline;
+  $("outline-panel").classList.remove("hidden");
+  $("outline-json").value = JSON.stringify(outline, null, 2);
+  $("outline-view").innerHTML = outline.sections?.length
+    ? outline.sections.map((section, index) => `
+      <div class="outline-section">
+        <h4>${index + 1}. ${esc(section.title)}</h4>
+        <p>${esc(section.description || "")}</p>
+        ${(section.paragraphs || []).map((p) => `<p>· ${esc(p.topic)} — ${esc(p.description || "")}</p>`).join("")}
+      </div>`).join("")
+    : '<p class="muted">没有生成大纲。</p>';
+  const stats = result.stats || {};
+  setStatus(`大纲完成：${stats.total_sections || 0} 节 / ${stats.total_paragraphs || 0} 段 / ${stats.total_papers || 0} 篇`, "done");
+}
+
+async function generateReview() {
+  const topic = $("topic").value.trim();
+  if (!topic) return showError(new Error("请填写主题"));
+  let custom = null;
+  if (!$("outline-json").classList.contains("hidden") && $("outline-json").value.trim()) {
+    try { custom = JSON.parse($("outline-json").value); } catch { return showError(new Error("大纲 JSON 无效")); }
+  } else if (state.outline) {
+    custom = state.outline;
+  }
+  $("review-panel").classList.add("hidden");
+  const result = await startTask("/api/review/generate_async", {
+    topic,
+    review_type: $("review-type").value,
+    language: $("language").value,
+    max_papers: Number($("max-papers").value || 20),
+    citation_style: $("citation-style").value,
+    use_llm_verify: $("verify").checked,
+    custom_outline: custom,
+  });
+  if (!result) return;
+  state.result = result;
+  renderReview(result);
+}
+
+function renderReview(result) {
+  $("review-panel").classList.remove("hidden");
+  $("markdown").textContent = result.markdown || "";
+  const refs = result.references || [];
+  $("references").innerHTML = refs.length
+    ? refs.map((ref, index) => `<tr><td>${index + 1}</td><td>${esc(ref.title || ref.paper_id || "")}</td><td>${esc(ref.year || "")}</td><td>${esc(ref.doi || "")}</td></tr>`).join("")
+    : '<tr><td colspan="4" class="muted">无参考文献</td></tr>';
+  const stats = result.stats || {};
+  setStatus(`综述完成：${stats.total_citations ?? refs.length} 条引用`, "done");
+}
+
+async function cancelTask() {
+  if (!state.taskId) return;
+  const taskId = state.taskId;
+  try {
+    await api(`/api/review/cancel/${encodeURIComponent(taskId)}`, { method: "POST" });
+    setStatus("取消请求已提交", "failed");
+  } catch (error) { showError(error); }
+}
+
+async function loadHistory() {
+  try {
+    const body = await api("/api/reviews?limit=20");
+    const reviews = body.data?.reviews || [];
+    $("history").innerHTML = reviews.length
+      ? reviews.map((r) => `<div class="item" data-review="${esc(r.review_id)}"><strong>${esc(r.topic)}</strong><div class="meta">${esc(r.created_at)}</div></div>`).join("")
+      : '<p class="muted">还没有综述。</p>';
+    document.querySelectorAll("[data-review]").forEach((el) => el.addEventListener("click", () => loadReview(el.dataset.review)));
+  } catch (error) {
+    $("history").innerHTML = `<p class="muted">加载失败：${esc(error.message)}</p>`;
+  }
+}
+
+async function loadReview(reviewId) {
+  showError(null);
+  try {
+    const body = await api(`/api/reviews/${encodeURIComponent(reviewId)}`);
+    const record = body.data || {};
+    state.result = { markdown: record.markdown || "", references: record.references || [], stats: record.stats || {} };
+    $("topic").value = record.topic || "";
+    renderReview(state.result);
+  } catch (error) { showError(error); }
+}
+
+$("outline-btn").addEventListener("click", generateOutline);
+$("review-btn").addEventListener("click", generateReview);
+$("cancel-btn").addEventListener("click", cancelTask);
+$("outline-json-toggle").addEventListener("click", () => $("outline-json").classList.toggle("hidden"));
+$("download-btn").addEventListener("click", () => {
+  const blob = new Blob([state.result?.markdown || ""], { type: "text/markdown;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "review.md";
+  link.click();
+  URL.revokeObjectURL(link.href);
+});
+$("copy-btn").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(state.result?.markdown || ""); setStatus("已复制", "done"); }
+  catch { showError(new Error("复制失败")); }
+});
+
+(async function init() {
+  try {
+    const me = await api("/api/auth/me");
+    $("who").textContent = me.display_name || me.username || me.user_id;
+    await loadHistory();
+  } catch (error) { showError(error); }
+})();
+</script>
+</body>
+</html>
