@@ -7,13 +7,20 @@ from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request
 
+from services.tenancy.scoping import allowed_paper_ids
+from services.tenancy.web import resolve_workspace
+
 
 def build_qa_blueprint(
     *,
     get_qa_service: Callable[[], Any],
     get_retriever: Callable[[], Any],
     get_task_manager: Callable[[], Any],
+    db_path: str | None = None,
 ) -> Blueprint:
+    from config.settings import DATABASE_PATH
+
+    db = db_path or DATABASE_PATH
     bp = Blueprint("qa", __name__)
 
     @bp.route("/api/qa/ask", methods=["POST"])
@@ -33,6 +40,11 @@ def build_qa_blueprint(
 
         if not question:
             return jsonify({"error": "参数 'question' 不能为空"}), 400
+        workspace_id = resolve_workspace(db_path=db)
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 401
+        if paper_id and paper_id not in allowed_paper_ids(workspace_id, db_path=db):
+            return jsonify({"error": "Paper not found"}), 404
 
         try:
             qa = get_qa_service()
@@ -40,6 +52,7 @@ def build_qa_blueprint(
                 question=question,
                 paper_id=paper_id,
                 include_diagnostics=include_diagnostics,
+                workspace_id=workspace_id,
             )
             return jsonify(result)
         except Exception as e:
@@ -73,6 +86,11 @@ def build_qa_blueprint(
 
         if not question:
             return jsonify({"error": "参数 'question' 不能为空"}), 400
+        workspace_id = resolve_workspace(db_path=db)
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 401
+        if paper_id and paper_id not in allowed_paper_ids(workspace_id, db_path=db):
+            return jsonify({"error": "Paper not found"}), 404
 
         task_id = get_task_manager().create_task("qa_ask")
 
@@ -88,6 +106,7 @@ def build_qa_blueprint(
                     question=question,
                     paper_id=paper_id,
                     include_diagnostics=include_diagnostics,
+                    workspace_id=workspace_id,
                 )
 
                 if get_task_manager().is_cancelled(task_id):

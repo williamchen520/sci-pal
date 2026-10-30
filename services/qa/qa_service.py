@@ -19,6 +19,7 @@ from services.ai.rag_validator import RAGValidator
 from services.qa.verify import verify_answer
 from services.qa.budget import choose_top_k
 from services.qa.citations import fallback_citations, paragraph_citation
+from services.tenancy.scoping import allowed_paper_ids
 
 
 # ============================================================
@@ -158,6 +159,7 @@ class QAService:
         question: str,
         paper_id: Optional[str] = None,
         include_diagnostics: bool = False,
+        workspace_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         提问并获取 RAG 答案。
@@ -203,11 +205,13 @@ class QAService:
             ),
         )
         print(f"🔍 Step 1: Retrieving relevant passages (top_paragraphs={top_paragraphs})...")
+        allowed = allowed_paper_ids(workspace_id) if workspace_id else None
         retrieval_result = self.retriever.retrieve(
             question,
             paper_id=paper_id,
             top_paragraphs=top_paragraphs,
             top_figures=self.top_figures,
+            allowed_paper_ids=allowed,
         )
 
         # 检查是否有检索结果
@@ -276,6 +280,7 @@ class QAService:
             paper_id=paper_id,
             top_paragraphs=top_paragraphs,
             top_figures=self.top_figures,
+            allowed_paper_ids=allowed,
         )
 
         # Step 3: 调用 LLM（英文优先，与文献语言一致，准确性更高）

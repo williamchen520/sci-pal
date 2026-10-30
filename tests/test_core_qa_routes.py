@@ -20,7 +20,7 @@ class FakeRetriever:
 
 
 class FakeQA:
-    def ask(self, question, paper_id=None, include_diagnostics=False):
+    def ask(self, question, paper_id=None, include_diagnostics=False, workspace_id=None, **kwargs):
         return {"answer": f"answer to {question}"}
 
     def get_llm_status(self):

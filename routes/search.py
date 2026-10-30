@@ -11,12 +11,17 @@ from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request
 
+from config.settings import DATABASE_PATH
+from services.tenancy.scoping import allowed_paper_ids, filter_items
+from services.tenancy.web import resolve_workspace
+
 
 def build_search_blueprint(
     *,
     get_task_manager: Callable[[], Any],
     log: Any,
     get_hybrid_retriever: Callable[[], Any] | None = None,
+    db_path: str | None = None,
 ) -> Blueprint:
     bp = Blueprint("search", __name__, url_prefix="/api")
 
@@ -38,6 +43,9 @@ def build_search_blueprint(
 
         if not query:
             return jsonify({"error": "缺少搜索关键词 q"}), 400
+        workspace_id = resolve_workspace(db_path=db_path or DATABASE_PATH)
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 401
         try:
             result = get_hybrid_retriever().search_papers(
                 query=query,
@@ -45,6 +53,15 @@ def build_search_blueprint(
                 use_online=use_online,
                 online_max_results=online_max,
             )
+            allowed = allowed_paper_ids(workspace_id, db_path=db_path or DATABASE_PATH)
+            result["local_papers"] = filter_items(result.get("local_papers") or [], allowed)
+            result["papers"] = [
+                item
+                for item in result.get("papers") or []
+                if item.get("source") != "local" or item.get("paper_id") in allowed
+            ]
+            result["local_count"] = len(result["local_papers"])
+            result["total"] = len(result["papers"])
             return jsonify(result)
         except Exception as exc:  # noqa: BLE001
             log.exception("hybrid search failed")

@@ -81,7 +81,8 @@ class UnifiedRetriever:
     def retrieve(self, query: str, paper_id: Optional[str] = None,
                  top_paragraphs: int = 6, top_figures: int = 3,
                  top_tables: int = 2, top_papers: int = 3,
-                 filters: Optional[Dict] = None) -> Dict:
+                 filters: Optional[Dict] = None,
+                 allowed_paper_ids: Optional[set[str]] = None) -> Dict:
         """
         Run the needed retrieval channels and assemble an evidence envelope.
         With routing enabled, only channels matching the query intent run.
@@ -539,6 +540,10 @@ class UnifiedRetriever:
             "graph_neighbors": graph_neighbors,  # papers found via graph traversal
             "abstracts": abstracts,  # V30.0: 摘要库结果
         }
+        if allowed_paper_ids is not None:
+            from services.tenancy.scoping import filter_retrieval_result
+
+            result = filter_retrieval_result(result, allowed_paper_ids)
 
         # V25.19: finish diagnostics
         if self.diagnostics.enabled:
