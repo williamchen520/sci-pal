@@ -1,0 +1,15 @@
+# Keep the build context small. Runtime data is mounted by compose.
+.git
+.github
+.githooks
+.vscode
+venv_sciPal_py312
+data
+documents
+documents_xml
+models
+logs
+__pycache__
+*.pyc
+.pytest_cache
+eval/results

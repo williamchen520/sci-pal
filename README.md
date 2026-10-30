@@ -192,6 +192,7 @@ sci-pal/
 - [LitQA2 适配器](docs/评测-LitQA2适配器.md)
 - [云端模型评测](docs/云端模型评测.md)
 - [可选项与用户配置](docs/可选项与用户配置.md)
+- [部署（Docker Compose）](deploy/README.md)
 - [历史文档归档](docs/archive/README.md)
 
 ## 许可证
