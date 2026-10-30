@@ -336,7 +336,7 @@ function renderWorkspaces(me) {
 async function refreshSession() {
   const me = await api("/api/auth/me");
   state.user = me.user_id;
-  $("who").textContent = me.user_id;
+  $("who").textContent = me.display_name || me.username || me.user_id;
   renderWorkspaces(me);
   return me;
 }
