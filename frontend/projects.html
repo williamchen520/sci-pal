@@ -8,9 +8,9 @@
     :root { color-scheme: dark; --bg:#0b1020; --panel:#131c31; --line:#1e3a5f; --text:#e2e8f0; --muted:#94a3b8; --gold:#f5c542; --blue:#38bdf8; --red:#f87171; }
     * { box-sizing: border-box; }
     body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Microsoft YaHei",sans-serif; }
-    header { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-bottom:1px solid var(--line); background:#0f1a2e; position:sticky; top:0; z-index:5; }
+    header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:14px 24px; border-bottom:1px solid var(--line); background:#0f1a2e; position:sticky; top:0; z-index:5; }
     header a { color:var(--blue); text-decoration:none; }
-    h1 { margin:0; font-size:20px; color:var(--gold); }
+    h1 { margin:0; font-size:18px; color:var(--gold); white-space:nowrap; }
     h2 { margin:0 0 10px; font-size:17px; }
     h3 { margin:0 0 8px; font-size:15px; color:#cbd5e1; }
     main { max-width:1100px; margin:0 auto; padding:22px 18px 60px; }
@@ -41,6 +41,7 @@
     .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .form-grid .full { grid-column:1 / -1; }
     @media (max-width: 800px) { .grid { grid-template-columns:1fr; } .form-grid { grid-template-columns:1fr; } }
+    @media (max-width: 700px) { h1 { font-size:16px; } #who { display:none; } }
   </style>
 </head>
 <body>
