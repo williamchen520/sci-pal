@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SciPal · headless</title>
+  <title>SciPal · 科研工作台</title>
   <style>
     :root { color-scheme: dark; }
     body {
@@ -18,7 +18,7 @@
     h1 { margin: 0 0 8px; font-size: 40px; color: #f5c542; }
     p { line-height: 1.7; color: #94a3b8; }
     a { color: #38bdf8; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 24px; }
     .tile {
       display: block; padding: 18px; text-decoration: none;
       background: #0f1a2e; border: 1px solid #1e3a5f; border-radius: 12px;
@@ -39,14 +39,15 @@
 <body>
   <div class="userbar">
     <span id="who"></span>
-    <a href="/login.html">登录</a>
+    <a id="login-link" href="/login.html">登录</a>
     <button id="logout" hidden>退出</button>
   </div>
   <main class="card">
-    <h1>SciPal V33.42</h1>
+    <h1>SciPal V33.96</h1>
     <p>
-      SciPal 现在是 <strong>headless 服务</strong>：检索、综述、问答、文献监测由
-      DSH 通过 MCP 调用。浏览器端只保留 PDF 阅读与溯源页面。
+      SciPal 同时提供 <strong>headless API</strong> 与 <strong>浏览器工作台</strong>：
+      文献检索、综述、问答由 DSH 通过 MCP 调用；浏览器端可管理项目、实验、run、
+      签名与句子溯源。
     </p>
 
     <div class="grid">
@@ -79,7 +80,8 @@
       .then((response) => (response.ok ? response.json() : null))
       .then((body) => {
         if (!body) return;
-        document.getElementById("who").textContent = body.user_id || "";
+        document.getElementById("who").textContent = body.display_name || body.username || body.user_id || "";
+        document.getElementById("login-link").hidden = true;
         const logout = document.getElementById("logout");
         logout.hidden = false;
         logout.addEventListener("click", async () => {

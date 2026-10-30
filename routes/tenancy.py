@@ -16,6 +16,7 @@ from services.tenancy import (
     authorize,
     create_workspace,
     get_membership,
+    get_user,
     get_user_by_username,
     list_members,
     list_workspaces,
@@ -57,9 +58,12 @@ def build_tenancy_blueprint(*, db_path: str | Path, log: Any = None) -> Blueprin
         user_id = current_user_id()
         if not user_id:
             return error("authentication required", 401)
+        user = get_user(user_id, db_path=db) or {}
         return jsonify(
             {
                 "user_id": user_id,
+                "username": user.get("username"),
+                "display_name": user.get("display_name"),
                 "workspace_id": resolve_workspace(default=None, db_path=db),
                 "workspaces": list_workspaces(user_id, db_path=db),
             }

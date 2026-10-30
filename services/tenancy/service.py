@@ -363,6 +363,24 @@ def get_user_by_username(
         conn.close()
 
 
+def get_user(
+    user_id: str,
+    *,
+    db_path: str | os.PathLike[str] = DATABASE_PATH,
+) -> dict[str, Any] | None:
+    conn = _connect(db_path)
+    try:
+        ensure_schema(conn)
+        row = conn.execute(
+            "SELECT user_id, username, display_name, email, status, is_admin "
+            "FROM users WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
 def authorize(
     user_id: str,
     workspace_id: str,
