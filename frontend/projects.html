@@ -30,6 +30,8 @@
     .item .meta { color:var(--muted); font-size:12px; margin-top:4px; }
     .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#1e3a5f; color:#bae6fd; font-size:12px; }
     .muted { color:var(--muted); font-size:13px; }
+    .workspace-select { width:auto; padding:6px 9px; font-size:13px; }
+    button.small { padding:6px 10px; font-size:13px; }
     .error { color:var(--red); min-height:20px; font-size:13px; }
     .hidden { display:none !important; }
     table { width:100%; border-collapse:collapse; font-size:13px; }
@@ -43,7 +45,12 @@
 </head>
 <body>
 <header>
-  <div class="row"><h1>SciPal · 项目与实验</h1><span class="pill" id="who"></span></div>
+  <div class="row">
+    <h1>SciPal · 项目与实验</h1>
+    <select id="workspace-select" class="workspace-select" title="切换工作区"></select>
+    <button id="new-workspace" class="secondary small" type="button">+ 工作区</button>
+    <span class="pill" id="who"></span>
+  </div>
   <div class="row"><a href="/">首页</a><a href="/login.html">切换账号</a></div>
 </header>
 
@@ -68,7 +75,7 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
-const state = { user: null, projects: [], project: null, experiments: [], experiment: null, runs: [], revisions: [], audit: [], workspaceMembers: [], signatures: [] };
+const state = { user: null, workspaceId: null, workspaces: [], projects: [], project: null, experiments: [], experiment: null, runs: [], revisions: [], audit: [], workspaceMembers: [], signatures: [] };
 
 function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
@@ -311,11 +318,60 @@ $("projects").addEventListener("click", (event) => {
   if (item) openProject(item.dataset.project).catch(showError);
 });
 
+function renderWorkspaces(me) {
+  state.workspaces = me.workspaces || [];
+  state.workspaceId = me.workspace_id || (state.workspaces[0] && state.workspaces[0].workspace_id) || null;
+  $("workspace-select").innerHTML = state.workspaces
+    .map((w) => `<option value="${esc(w.workspace_id)}" ${w.workspace_id === state.workspaceId ? "selected" : ""}>${esc(w.name)} (${esc(w.role)})</option>`)
+    .join("");
+}
+
+async function refreshSession() {
+  const me = await api("/api/auth/me");
+  state.user = me.user_id;
+  $("who").textContent = me.user_id;
+  renderWorkspaces(me);
+  return me;
+}
+
+$("workspace-select").addEventListener("change", async (event) => {
+  showError(null);
+  try {
+    await api("/api/auth/workspace", {
+      method: "POST",
+      body: JSON.stringify({ workspace_id: event.target.value }),
+    });
+    state.workspaceId = event.target.value;
+    state.project = null;
+    state.experiment = null;
+    $("project-view").innerHTML = '<p class="muted">选择左侧项目，或先创建一个。</p>';
+    await loadProjects();
+  } catch (error) { showError(error); }
+});
+
+$("new-workspace").addEventListener("click", async () => {
+  const name = prompt("新工作区名称");
+  if (!name || !name.trim()) return;
+  showError(null);
+  try {
+    const workspace = await api("/api/workspaces", {
+      method: "POST",
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    await api("/api/auth/workspace", {
+      method: "POST",
+      body: JSON.stringify({ workspace_id: workspace.workspace_id }),
+    });
+    await refreshSession();
+    state.project = null;
+    $("project-view").innerHTML = '<p class="muted">选择左侧项目，或先创建一个。</p>';
+    await loadProjects();
+  } catch (error) { showError(error); }
+});
+
 (async function init() {
   try {
-    const me = await api("/api/auth/me");
-    state.user = me.user_id;
-    $("who").textContent = me.user_id;
+    await refreshSession();
     await loadProjects();
   } catch (error) { showError(error); }
 })();
