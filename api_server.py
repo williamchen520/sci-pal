@@ -217,6 +217,7 @@ app.register_blueprint(
         get_task_manager=_download_task_manager,
         log=app.logger,
         get_hybrid_retriever=lambda: get_hybrid_retriever(),
+        db_path=DB_PATH,
     )
 )
 
@@ -270,6 +271,7 @@ app.register_blueprint(
         get_qa_service=lambda: get_qa_service(),
         get_retriever=lambda: get_retriever(),
         get_task_manager=lambda: task_manager,
+        db_path=DB_PATH,
     )
 )
 
