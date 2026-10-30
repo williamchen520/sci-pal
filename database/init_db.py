@@ -11,6 +11,7 @@ import sqlite3
 import os
 from pathlib import Path
 from config.settings import DATABASE_PATH
+from services.tenancy.schema import ensure_schema
 
 def init_database():
     """Initialize all database tables"""
@@ -317,6 +318,7 @@ def init_database():
     print("  ✅ Tasks table")
 
     # Commit and close
+    ensure_schema(conn)
     conn.commit()
     conn.close()
     
