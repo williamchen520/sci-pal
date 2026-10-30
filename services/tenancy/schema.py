@@ -75,4 +75,20 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             conn.execute(f"ALTER TABLE users ADD COLUMN {name} {definition}")
     for statement in SCHEMA:
         conn.execute(statement)
+    _scope_legacy_tables(conn)
     conn.commit()
+
+
+def _scope_legacy_tables(conn: sqlite3.Connection) -> None:
+    tables = {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+    }
+    for table in ("papers", "notes", "favorites"):
+        if table not in tables:
+            continue
+        columns = _columns(conn, table)
+        if "workspace_id" not in columns:
+            conn.execute(
+                f"ALTER TABLE {table} ADD COLUMN workspace_id TEXT DEFAULT 'ws_default'"
+            )

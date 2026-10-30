@@ -13,6 +13,8 @@ from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request
 
+from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
+
 
 def build_papers_blueprint(
     *,
@@ -24,15 +26,20 @@ def build_papers_blueprint(
 
     @bp.get("/papers")
     def list_papers():
+        workspace_id = resolve_workspace(db_path=db_path)
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 401
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
+            ensure_workspace_scoping(conn)
             rows = conn.execute(
                 """
                 SELECT paper_id, title, authors, journal, year, doi,
-                       total_paragraphs, total_figures, total_tables
-                FROM papers ORDER BY year DESC, title
-                """
+                       total_paragraphs, total_figures, total_tables, workspace_id
+                FROM papers WHERE workspace_id = ? ORDER BY year DESC, title
+                """,
+                (workspace_id,),
             ).fetchall()
         finally:
             conn.close()
@@ -40,11 +47,16 @@ def build_papers_blueprint(
 
     @bp.get("/papers/<paper_id>")
     def paper_detail(paper_id):
+        workspace_id = resolve_workspace(db_path=db_path)
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 401
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
+            ensure_workspace_scoping(conn)
             paper = conn.execute(
-                "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)
+                "SELECT * FROM papers WHERE paper_id = ? AND workspace_id = ?",
+                (paper_id, workspace_id),
             ).fetchone()
             if not paper:
                 return jsonify({"error": "Paper not found"}), 404
@@ -55,9 +67,10 @@ def build_papers_blueprint(
                 FROM cross_paper_index c
                 JOIN papers p ON p.paper_id = c.target_paper_id
                 WHERE c.source_paper_id = ? AND c.relation = 'cites'
+                  AND p.workspace_id = ?
                 ORDER BY c.confidence DESC
                 """,
-                (paper_id,),
+                (paper_id, workspace_id),
             ).fetchall()
             cited_by = conn.execute(
                 """
@@ -65,9 +78,10 @@ def build_papers_blueprint(
                 FROM cross_paper_index c
                 JOIN papers p ON p.paper_id = c.source_paper_id
                 WHERE c.target_paper_id = ? AND c.relation = 'cites'
+                  AND p.workspace_id = ?
                 ORDER BY c.confidence DESC
                 """,
-                (paper_id,),
+                (paper_id, workspace_id),
             ).fetchall()
             similar = conn.execute(
                 """
@@ -75,9 +89,10 @@ def build_papers_blueprint(
                 FROM cross_paper_index c
                 JOIN papers p ON p.paper_id = c.target_paper_id
                 WHERE c.source_paper_id = ? AND c.relation = 'similar'
+                  AND p.workspace_id = ?
                 ORDER BY c.confidence DESC LIMIT 10
                 """,
-                (paper_id,),
+                (paper_id, workspace_id),
             ).fetchall()
         finally:
             conn.close()

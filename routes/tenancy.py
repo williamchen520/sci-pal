@@ -20,6 +20,7 @@ from services.tenancy import (
     list_members,
     list_workspaces,
 )
+from services.tenancy.web import resolve_workspace
 
 
 def build_tenancy_blueprint(*, db_path: str | Path, log: Any = None) -> Blueprint:
@@ -41,7 +42,10 @@ def build_tenancy_blueprint(*, db_path: str | Path, log: Any = None) -> Blueprin
         session.clear()
         session["user_id"] = user["user_id"]
         session.permanent = False
-        return jsonify({"user": user, "workspaces": list_workspaces(user["user_id"], db_path=db)})
+        workspaces = list_workspaces(user["user_id"], db_path=db)
+        if workspaces:
+            session["workspace_id"] = workspaces[0]["workspace_id"]
+        return jsonify({"user": user, "workspaces": workspaces})
 
     @bp.post("/api/auth/logout")
     def logout():
@@ -53,7 +57,25 @@ def build_tenancy_blueprint(*, db_path: str | Path, log: Any = None) -> Blueprin
         user_id = current_user_id()
         if not user_id:
             return error("authentication required", 401)
-        return jsonify({"user_id": user_id, "workspaces": list_workspaces(user_id, db_path=db)})
+        return jsonify(
+            {
+                "user_id": user_id,
+                "workspace_id": resolve_workspace(default=None, db_path=db),
+                "workspaces": list_workspaces(user_id, db_path=db),
+            }
+        )
+
+    @bp.post("/api/auth/workspace")
+    def switch_workspace():
+        user_id = current_user_id()
+        if not user_id:
+            return error("authentication required", 401)
+        body = request.get_json(silent=True) or {}
+        workspace_id = str(body.get("workspace_id") or "")
+        if not authorize(user_id, workspace_id, "read_workspace", db_path=db):
+            return error("workspace access denied", 403)
+        session["workspace_id"] = workspace_id
+        return jsonify({"workspace_id": workspace_id})
 
     @bp.get("/api/workspaces")
     def workspaces():
