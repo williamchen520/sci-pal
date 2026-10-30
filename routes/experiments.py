@@ -12,9 +12,11 @@ from services.experiments import (
     create_access_request,
     create_experiment,
     decide_access_request,
+    get_audit,
     get_experiment,
     list_access_requests,
     list_experiments,
+    list_revisions,
     update_experiment,
 )
 from services.tenancy.web import resolve_workspace
@@ -105,6 +107,30 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
         if not row:
             return jsonify({"error": "Experiment not found"}), 404
         return jsonify(row)
+
+    @bp.get("/api/experiments/<experiment_id>/revisions")
+    def experiment_revisions(experiment_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        rows = list_revisions(experiment_id, workspace_id, user_id, db_path=db)
+        if rows is None:
+            return jsonify({"error": "Experiment not found"}), 404
+        return jsonify({"revisions": rows})
+
+    @bp.get("/api/experiments/<experiment_id>/audit")
+    def experiment_audit(experiment_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        rows = get_audit(experiment_id, workspace_id, user_id, db_path=db)
+        if rows is None:
+            return jsonify({"error": "Experiment not found"}), 404
+        return jsonify({"audit": rows})
 
     @bp.post("/api/experiments/<experiment_id>/access-requests")
     def experiment_request_access(experiment_id: str):

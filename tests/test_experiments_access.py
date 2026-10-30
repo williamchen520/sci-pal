@@ -109,6 +109,31 @@ class ExperimentAccessTests(unittest.TestCase):
         self.login(self.pi)
         self.assertEqual(self.client.get(f"/api/experiments/{experiment_id}").status_code, 404)
 
+    def test_update_creates_revision_and_audit(self) -> None:
+        experiment_id = self.create_experiment()
+        self.login(self.member)
+        updated = self.client.put(
+            f"/api/experiments/{experiment_id}",
+            json={"status": "completed", "content": "finished"},
+        )
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(updated.get_json()["current_revision"], 2)
+        revisions = self.client.get(f"/api/experiments/{experiment_id}/revisions").get_json()["revisions"]
+        self.assertEqual([row["revision"] for row in revisions], [2, 1])
+        self.assertIn("finished", revisions[0]["content"])
+        self.assertNotIn("finished", revisions[1]["content"])
+        audit_rows = self.client.get(f"/api/experiments/{experiment_id}/audit").get_json()["audit"]
+        self.assertEqual([row["action"] for row in audit_rows], ["create", "update"])
+        self.assertEqual(audit_rows[-1]["detail"], "content,status")
+
+    def test_other_member_cannot_read_revisions(self) -> None:
+        experiment_id = self.create_experiment()
+        self.login(self.pi)
+        self.assertEqual(
+            self.client.get(f"/api/experiments/{experiment_id}/revisions").status_code,
+            404,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
