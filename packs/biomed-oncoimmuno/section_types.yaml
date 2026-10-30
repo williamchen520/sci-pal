@@ -1,0 +1,35 @@
+schema_version: 1
+types:
+  abstract:
+    label: 摘要
+    evidence_prior: 0.3
+  introduction:
+    label: 引言
+    evidence_prior: 0.2
+  methods:
+    label: 方法
+    evidence_prior: 0.5
+  results:
+    label: 结果
+    evidence_prior: 1.0
+  discussion:
+    label: 讨论
+    evidence_prior: 0.6
+  conclusion:
+    label: 结论
+    evidence_prior: 0.4
+  references:
+    label: 参考文献
+    evidence_prior: 0.0
+  supplementary:
+    label: 补充材料
+    evidence_prior: 0.7
+aliases:
+  background: introduction
+  patients: methods
+  materials: methods
+  statistical_analysis: methods
+  efficacy: results
+  outcomes: results
+  safety: results
+  limitations: discussion

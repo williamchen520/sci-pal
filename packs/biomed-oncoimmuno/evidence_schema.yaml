@@ -1,0 +1,45 @@
+schema_version: 1
+required: [claim_text, population, intervention, outcome, source_node]
+fields:
+  claim_text:
+    type: string
+    description: 原子主张，必须能独立成立
+  population:
+    type: string
+    description: 疾病、分期、治疗线数、纳排标准
+  intervention:
+    type: string
+    description: 药物/方案/剂量
+  comparator:
+    type: string
+    description: 对照；单臂研究写 none
+  outcome:
+    type: string
+    description: ORR/PFS/OS/irAE 等
+  effect_size:
+    type: number
+    description: 效应量
+  unit:
+    type: string
+    description: "%、months、hazard ratio"
+  confidence_interval:
+    type: string
+    description: 95% CI
+  p_value:
+    type: number
+    description: p 值
+  study_design:
+    type: string
+    description: rct / single_arm / cohort / case_series / preclinical
+  sample_size:
+    type: integer
+    description: 样本量
+  line_of_therapy:
+    type: string
+    description: first-line / second-line / adjuvant / metastatic
+  source_node:
+    type: object
+    description: paper_id + node_type + node_id + quote
+  notes:
+    type: string
+    description: 限定与解释

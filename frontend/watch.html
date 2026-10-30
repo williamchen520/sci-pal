@@ -408,11 +408,28 @@ $("run-btn").addEventListener("click", runNow);
 $("delete-btn").addEventListener("click", removeProfile);
 $("refresh-btn").addEventListener("click", loadLatest);
 
+async function applyPackQuery() {
+  const packId = new URLSearchParams(location.search).get("pack");
+  if (!packId) return;
+  try {
+    const pack = await api(`/api/domain-packs/${encodeURIComponent(packId)}`);
+    $("new-btn").click();
+    const defaults = pack.taxonomy?.profile_defaults || {};
+    $("name").value = pack.name || packId;
+    $("field-text").value = defaults.field_text || pack.description || "";
+    $("keywords").value = defaults.keywords || "";
+    setStatus(`已载入领域包：${pack.name}`, "done");
+  } catch (error) {
+    showError(error);
+  }
+}
+
 (async function init() {
   try {
     const me = await api("/api/auth/me");
     $("who").textContent = me.display_name || me.username || me.user_id;
     await loadProfiles();
+    await applyPackQuery();
   } catch (error) { showError(error); }
 })();
 </script>

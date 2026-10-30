@@ -1,0 +1,118 @@
+schema_version: 1
+profile_defaults:
+  field_text: hepatocellular carcinoma immunotherapy
+  keywords: hepatocellular carcinoma, immune checkpoint inhibitor, PD-1, PD-L1, atezolizumab, nivolumab, pembrolizumab
+terms:
+  - id: hcc
+    label: 肝细胞癌
+    aliases: [hepatocellular carcinoma, HCC, liver cancer]
+    type: disease
+  - id: nsclc
+    label: 非小细胞肺癌
+    aliases: [non-small cell lung cancer, NSCLC]
+    type: disease
+  - id: melanoma
+    label: 黑色素瘤
+    aliases: [melanoma]
+    type: disease
+  - id: ici
+    label: 免疫检查点抑制剂
+    aliases: [immune checkpoint inhibitor, ICI, checkpoint blockade]
+    type: intervention_class
+  - id: pd1
+    label: PD-1
+    aliases: [PD-1, PD1, programmed cell death protein 1]
+    type: target
+  - id: pdl1
+    label: PD-L1
+    aliases: [PD-L1, PDL1, programmed death-ligand 1]
+    type: target
+  - id: ctla4
+    label: CTLA-4
+    aliases: [CTLA-4, CTLA4, cytotoxic T-lymphocyte-associated protein 4]
+    type: target
+  - id: atezo
+    label: 阿替利珠单抗
+    aliases: [atezolizumab, Tecentriq]
+    type: drug
+  - id: nivo
+    label: 纳武利尤单抗
+    aliases: [nivolumab, Opdivo]
+    type: drug
+  - id: pembro
+    label: 帕博利珠单抗
+    aliases: [pembrolizumab, Keytruda]
+    type: drug
+  - id: orr
+    label: 客观缓解率
+    aliases: [objective response rate, ORR, overall response rate]
+    type: outcome
+  - id: pfs
+    label: 无进展生存期
+    aliases: [progression-free survival, PFS]
+    type: outcome
+  - id: os
+    label: 总生存期
+    aliases: [overall survival, OS]
+    type: outcome
+  - id: tmb
+    label: 肿瘤突变负荷
+    aliases: [tumor mutational burden, TMB]
+    type: biomarker
+  - id: msi
+    label: 微卫星不稳定
+    aliases: [microsatellite instability, MSI-H, dMMR]
+    type: biomarker
+  - id: iraes
+    label: 免疫相关不良事件
+    aliases: [immune-related adverse event, irAE, irAEs]
+    type: safety
+qualifiers:
+  population:
+    label: 人群
+    examples: [HCC, NSCLC, melanoma, treatment-naive, pretreated]
+    required: true
+  intervention:
+    label: 干预
+    examples: [atezolizumab, nivolumab, pembrolizumab, combination]
+    required: true
+  comparator:
+    label: 对照
+    examples: [sorafenib, lenvatinib, placebo, chemotherapy]
+    required: false
+  outcome:
+    label: 结局
+    examples: [ORR, PFS, OS, irAE]
+    required: true
+  unit:
+    label: 单位
+    examples: ["%", months, hazard ratio]
+    required: false
+  scope:
+    label: 范围
+    examples: [first-line, second-line, adjuvant, metastatic]
+    required: false
+  time:
+    label: 时间
+    examples: [median follow-up, 12-month, 5-year]
+    required: false
+evidence_types:
+  - id: rct
+    label: 随机对照试验
+    strength: high
+  - id: single_arm
+    label: 单臂试验
+    strength: medium
+  - id: cohort
+    label: 队列研究
+    strength: medium
+  - id: case_series
+    label: 病例系列
+    strength: low
+  - id: preclinical
+    label: 临床前研究
+    strength: low
+notes:
+  - ORR、PFS、OS 不可混用；必须记录终点定义。
+  - 一线/二线、单药/联合必须作为限定条件。
+  - irAE 与疗效证据分开记录。

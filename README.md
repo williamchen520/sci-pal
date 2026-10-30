@@ -146,9 +146,10 @@ sci-pal/
 │  ├─ rebuild_sentence_links.py
 │  └─ audit_structure.py     结构完整性审计
 ├─ mcp_server/               search / generate / guard（MCP 薄转发）
-├─ frontend/                 viewer / compare / trace / projects / reviews / watch
+├─ packs/                    领域包（biomed-oncoimmuno）
+├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    656 项测试
+├─ tests/                    661 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -188,6 +189,7 @@ sci-pal/
 - [项目跟踪与实验记录计划](docs/工作计划-项目跟踪与实验记录.md)
 - [DSH 适配与插件化计划](docs/工作计划-DSH适配与插件化.md)
 - [论证工作台改造计划](docs/工作计划-论证工作台改造.md)
+- [肿瘤免疫领域包](packs/biomed-oncoimmuno/README.md)
 - [QA 答案级评测](docs/QA答案级评测.md)
 - [SciFact 适配器](docs/评测-SciFact适配器.md)
 - [LitQA2 适配器](docs/评测-LitQA2适配器.md)
