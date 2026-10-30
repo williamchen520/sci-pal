@@ -7,7 +7,16 @@ from typing import Any
 
 from flask import Blueprint, jsonify, request, session
 
-from services.projects import add_member, create_project, get_project, list_projects, update_project
+from services.projects import (
+    add_member,
+    copy_project,
+    create_project,
+    get_project,
+    list_projects,
+    update_project,
+)
+from services.tenancy import get_membership
+from services.tenancy.permissions import audit
 from services.tenancy.web import resolve_workspace
 
 
@@ -63,7 +72,22 @@ def build_projects_blueprint(*, db_path: str | Path, log: Any = None) -> Bluepri
         project = get_project(project_id, workspace_id, user_id, db_path=db)
         if not project:
             return jsonify({"error": "Project not found"}), 404
+        membership = get_membership(workspace_id, user_id, db_path=db)
+        if membership and membership.role == "pi":
+            audit(workspace_id, user_id, "pi.read", target=project_id, db_path=db)
         return jsonify(project)
+
+    @bp.post("/api/projects/<project_id>/copy")
+    def projects_copy(project_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        project = copy_project(project_id, workspace_id, user_id, db_path=db)
+        if not project:
+            return jsonify({"error": "Project not found or copy denied"}), 404
+        return jsonify(project), 201
 
     @bp.put("/api/projects/<project_id>")
     def projects_update(project_id: str):
