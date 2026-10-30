@@ -80,11 +80,14 @@ CREATE TABLE IF NOT EXISTS watch_items (
     doi TEXT,
     title TEXT,
     journal TEXT,
+    abstract TEXT,
     published TEXT,
     score REAL,
     reason TEXT,
     acquisition TEXT,
     status TEXT DEFAULT 'new',
+    feedback TEXT,
+    feedback_at TEXT,
     read_at TEXT
 );
 
@@ -113,6 +116,14 @@ def migrate(db_path: Path | str = DEFAULT_DB) -> Dict[str, int]:
             cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
             if "owner" not in cols:
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN owner TEXT DEFAULT 'default'")
+        item_cols = {row[1] for row in conn.execute("PRAGMA table_info(watch_items)")}
+        for column, ddl in (
+            ("abstract", "ALTER TABLE watch_items ADD COLUMN abstract TEXT"),
+            ("feedback", "ALTER TABLE watch_items ADD COLUMN feedback TEXT"),
+            ("feedback_at", "ALTER TABLE watch_items ADD COLUMN feedback_at TEXT"),
+        ):
+            if column not in item_cols:
+                conn.execute(ddl)
         run_cols = {row[1] for row in conn.execute("PRAGMA table_info(watch_runs)")}
         if "heartbeat" not in run_cols:
             conn.execute("ALTER TABLE watch_runs ADD COLUMN heartbeat INTEGER DEFAULT 0")

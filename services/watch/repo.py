@@ -56,6 +56,8 @@ def create_profile(conn: sqlite3.Connection, data: Dict[str, Any]) -> int:
         "metric_type", "metric_min", "language", "delivery", "enabled",
     ]
     values = [data.get(f) for f in fields]
+    if values[-1] is None:
+        values[-1] = 1
     if isinstance(data.get("openalex_topic_ids"), (list, tuple)):
         values[4] = json.dumps(list(data["openalex_topic_ids"]))
     if not data.get("name"):
@@ -182,12 +184,13 @@ def finish_run(conn: sqlite3.Connection, run_id: int, **stats) -> None:
 def add_item(conn: sqlite3.Connection, run_id: int, profile_id: int, item: Dict) -> int:
     cur = conn.execute(
         "INSERT INTO watch_items (owner, run_id, profile_id, paper_id, doi, title, journal, "
-        "published, score, reason, acquisition, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')",
+        "abstract, published, score, reason, acquisition, status) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')",
         (
             item.get("owner") or "default",
             run_id, profile_id, item.get("paper_id"), item.get("doi"), item.get("title"),
-            item.get("journal"), item.get("published"), item.get("score"),
-            item.get("reason"), item.get("acquisition"),
+            item.get("journal"), item.get("abstract"), item.get("published"),
+            item.get("score"), item.get("reason"), item.get("acquisition"),
         ),
     )
     conn.commit()
@@ -221,6 +224,14 @@ def mark_item_read(conn: sqlite3.Connection, item_id: int) -> None:
     conn.execute(
         "UPDATE watch_items SET status = 'read', read_at = ? WHERE id = ?",
         (now_iso(), item_id),
+    )
+    conn.commit()
+
+
+def set_item_feedback(conn: sqlite3.Connection, item_id: int, feedback: str) -> None:
+    conn.execute(
+        "UPDATE watch_items SET feedback = ?, feedback_at = ? WHERE id = ?",
+        (feedback, now_iso(), item_id),
     )
     conn.commit()
 

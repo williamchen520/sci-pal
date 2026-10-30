@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SciPal · 文献监控</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#131c31; --line:#1e3a5f; --text:#e2e8f0; --muted:#94a3b8; --gold:#f5c542; --blue:#38bdf8; --red:#f87171; --green:#4ade80; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Microsoft YaHei",sans-serif; }
+    header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:14px 24px; border-bottom:1px solid var(--line); background:#0f1a2e; position:sticky; top:0; z-index:5; }
+    h1 { margin:0; font-size:18px; color:var(--gold); white-space:nowrap; }
+    main { max-width:1200px; margin:0 auto; padding:20px 18px 60px; }
+    .grid { display:grid; grid-template-columns:340px 1fr; gap:18px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
+    .stack { display:flex; flex-direction:column; gap:10px; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    input, textarea, select { width:100%; padding:9px 10px; border-radius:8px; border:1px solid #27405f; background:#0f1a2e; color:var(--text); font:inherit; }
+    textarea { min-height:64px; resize:vertical; }
+    button { padding:9px 14px; border:0; border-radius:8px; background:var(--gold); color:#111827; font-weight:700; cursor:pointer; }
+    button.secondary { background:#1e3a5f; color:var(--text); }
+    button.small { padding:6px 10px; font-size:13px; }
+    button:disabled { opacity:.5; cursor:wait; }
+    a { color:var(--blue); text-decoration:none; }
+    .muted { color:var(--muted); font-size:13px; }
+    .error { color:var(--red); min-height:20px; font-size:13px; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#1e3a5f; color:#bae6fd; font-size:12px; }
+    .profile-item { padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:#0f1a2e; cursor:pointer; }
+    .profile-item:hover { border-color:var(--blue); }
+    .profile-item.active { border-color:var(--gold); }
+    .profile-item .meta { color:var(--muted); font-size:12px; margin-top:4px; }
+    .status { padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:#0f1a2e; font-size:13px; }
+    .status.busy { border-color:var(--gold); }
+    .status.done { border-color:var(--green); }
+    .status.failed { border-color:var(--red); }
+    pre.digest { white-space:pre-wrap; word-break:break-word; background:#0f1a2e; border:1px solid var(--line); border-radius:10px; padding:12px; font-size:13px; line-height:1.55; max-height:340px; overflow:auto; }
+    .item { padding:12px; border:1px solid var(--line); border-radius:10px; background:#0f1a2e; margin-bottom:9px; }
+    .item h4 { margin:0 0 5px; font-size:14px; }
+    .item .meta { color:var(--muted); font-size:12px; line-height:1.5; }
+    .item .actions { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+    .run-item { padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#0f1a2e; cursor:pointer; font-size:13px; }
+    .run-item:hover { border-color:var(--blue); }
+    .hidden { display:none !important; }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="row"><h1>SciPal · 文献监控</h1><span class="pill" id="who"></span></div>
+  <div class="row"><a href="/">首页</a><a href="/projects.html">项目</a><a href="/reviews.html">综述</a><a href="/login.html">切换账号</a></div>
+</header>
+<main>
+  <div class="error" id="error"></div>
+  <div class="grid">
+    <section class="panel">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0;font-size:17px">监控主题</h2>
+        <button class="secondary small" id="new-btn">新建</button>
+      </div>
+      <p class="muted">按主题/期刊追踪新论文，生成周报。</p>
+      <div class="stack" id="profiles"><p class="muted">加载中…</p></div>
+    </section>
+
+    <section class="panel">
+      <div id="empty" class="muted">先创建一个监控主题。</div>
+      <div id="editor" class="hidden">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0;font-size:17px" id="editor-title">主题</h2>
+          <span class="pill" id="profile-id"></span>
+        </div>
+        <div class="stack" style="margin-top:12px">
+          <input id="name" placeholder="名称，如 HCC 免疫治疗">
+          <input id="field-text" placeholder="领域描述，如 hepatocellular carcinoma immunotherapy">
+          <input id="keywords" placeholder="关键词，逗号分隔">
+          <div class="row">
+            <input id="interval-days" type="number" min="1" value="3" title="间隔天数">
+            <input id="window-days" type="number" min="1" value="7" title="窗口天数">
+            <input id="max-items" type="number" min="1" value="3" title="每期条数">
+            <input id="same-journal-limit" type="number" min="1" value="2" title="同刊上限">
+          </div>
+          <div class="row">
+            <select id="language"><option value="zh">中文</option><option value="en">English</option></select>
+            <label class="muted"><input id="enabled" type="checkbox" style="width:auto" checked> 启用</label>
+          </div>
+          <div class="row">
+            <button id="save-btn">保存</button>
+            <button class="secondary" id="discover-btn">发现期刊</button>
+            <button class="secondary" id="run-btn">立即运行</button>
+            <button class="secondary" id="delete-btn">删除</button>
+          </div>
+        </div>
+        <div class="status" id="status" style="margin-top:12px">选择或创建主题</div>
+
+        <div class="row" style="justify-content:space-between;margin-top:16px">
+          <h3 style="margin:0;font-size:15px">最新周报</h3>
+          <button class="secondary small" id="refresh-btn">刷新</button>
+        </div>
+        <pre class="digest" id="digest">暂无周报。</pre>
+        <div id="items"></div>
+
+        <h3 style="font-size:15px;margin-top:16px">运行历史</h3>
+        <div class="stack" id="runs"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { profiles: [], current: null, busy: false, isNew: false };
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    headers: options.body ? { "Content-Type": "application/json" } : {},
+    ...options,
+  });
+  if (response.status === 401) {
+    window.location.replace("/login.html");
+    throw new Error("login required");
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+  return body;
+}
+
+function setStatus(text, kind = "") {
+  $("status").textContent = text;
+  $("status").className = `status ${kind}`;
+}
+
+function showError(error) {
+  $("error").textContent = error?.message || "";
+}
+
+function setBusy(value) {
+  state.busy = value;
+  for (const id of ["save-btn", "discover-btn", "run-btn", "delete-btn"]) $(id).disabled = value;
+}
+
+function profilePayload() {
+  return {
+    name: $("name").value.trim(),
+    field_text: $("field-text").value.trim(),
+    keywords: $("keywords").value.trim(),
+    interval_days: Number($("interval-days").value || 3),
+    window_days: Number($("window-days").value || 7),
+    max_items: Number($("max-items").value || 3),
+    same_journal_limit: Number($("same-journal-limit").value || 2),
+    language: $("language").value,
+    enabled: $("enabled").checked ? 1 : 0,
+  };
+}
+
+function renderProfiles() {
+  if (!state.profiles.length) {
+    $("profiles").innerHTML = '<p class="muted">还没有监控主题。</p>';
+    return;
+  }
+  $("profiles").innerHTML = state.profiles.map((profile) => `
+    <div class="profile-item ${state.current?.id === profile.id ? "active" : ""}" data-id="${profile.id}">
+      <strong>${esc(profile.name)}</strong>
+      <div class="meta">${esc(profile.field_text || profile.keywords || "")}</div>
+      <div class="meta">每 ${esc(profile.interval_days || 3)} 天 · ${profile.enabled ? "启用" : "停用"}</div>
+    </div>`).join("");
+  document.querySelectorAll("[data-id]").forEach((el) => {
+    el.addEventListener("click", () => selectProfile(Number(el.dataset.id)));
+  });
+}
+
+function fillEditor(profile) {
+  $("empty").classList.add("hidden");
+  $("editor").classList.remove("hidden");
+  $("editor-title").textContent = profile.name || "主题";
+  $("profile-id").textContent = `#${profile.id}`;
+  $("name").value = profile.name || "";
+  $("field-text").value = profile.field_text || "";
+  $("keywords").value = profile.keywords || "";
+  $("interval-days").value = profile.interval_days || 3;
+  $("window-days").value = profile.window_days || 7;
+  $("max-items").value = profile.max_items || 3;
+  $("same-journal-limit").value = profile.same_journal_limit || 2;
+  $("language").value = profile.language || "zh";
+  $("enabled").checked = Boolean(profile.enabled);
+  $("discover-btn").disabled = false;
+  $("run-btn").disabled = false;
+  $("delete-btn").disabled = false;
+}
+
+async function loadProfiles() {
+  const body = await api("/api/watch/profiles");
+  state.profiles = body.profiles || [];
+  renderProfiles();
+  if (state.profiles.length) {
+    const keep = state.current && state.profiles.find((item) => item.id === state.current.id);
+    await selectProfile((keep || state.profiles[0]).id);
+  } else {
+    $("editor").classList.add("hidden");
+    $("empty").classList.remove("hidden");
+  }
+}
+
+async function selectProfile(id) {
+  const profile = state.profiles.find((item) => item.id === id);
+  if (!profile) return;
+  state.current = profile;
+  state.isNew = false;
+  fillEditor(profile);
+  renderProfiles();
+  await Promise.all([loadLatest(), loadRuns()]);
+}
+
+async function loadLatest() {
+  if (!state.current) return;
+  try {
+    const body = await api(`/api/watch/profiles/${state.current.id}/latest`);
+    const run = body.run;
+    if (!run) {
+      $("digest").textContent = "暂无周报。";
+      $("items").innerHTML = "";
+      return;
+    }
+    setStatus(`最新：${run.window_end?.slice(0, 10) || ""} · 入选 ${run.selected || 0}`, "done");
+    await loadDigest(run);
+    renderItems(body.items || []);
+  } catch (error) {
+    $("digest").textContent = `加载失败：${error.message}`;
+  }
+}
+
+async function loadDigest(run) {
+  if (!run) return;
+  try {
+    const response = await fetch(`/api/watch/runs/${run.id}/digest.md`, { credentials: "same-origin" });
+    if (response.ok) {
+      $("digest").textContent = await response.text();
+      return;
+    }
+  } catch (_) {}
+  $("digest").textContent = `入选 ${run.selected || 0} 条；${run.error || ""}`;
+}
+
+function renderItems(items) {
+  $("items").innerHTML = items.length ? items.map((item) => `
+    <div class="item">
+      <h4>${esc(item.title || "(无标题)")}</h4>
+      <div class="meta">${esc(item.journal || "")} · ${esc(item.published || "")} · ${esc(item.acquisition === "fulltext" ? "全文" : "摘要")}</div>
+      <div class="meta">${esc(item.reason || "")}</div>
+      ${item.abstract ? `<div class="meta" style="margin-top:6px">${esc(item.abstract.slice(0, 280))}</div>` : ""}
+      ${item.doi ? `<div class="meta">DOI: ${esc(item.doi)}</div>` : ""}
+      <div class="actions">
+        <button class="secondary small" data-feedback="useful" data-item="${item.id}">有用</button>
+        <button class="secondary small" data-feedback="not_useful" data-item="${item.id}">没用</button>
+        <button class="secondary small" data-read="${item.id}">已读</button>
+        ${item.feedback ? `<span class="pill">${esc(item.feedback)}</span>` : ""}
+      </div>
+    </div>`).join("") : '<p class="muted">本期没有入选条目。</p>';
+  document.querySelectorAll("[data-feedback]").forEach((el) => {
+    el.addEventListener("click", () => sendFeedback(Number(el.dataset.item), el.dataset.feedback));
+  });
+  document.querySelectorAll("[data-read]").forEach((el) => {
+    el.addEventListener("click", () => markRead(Number(el.dataset.read)));
+  });
+}
+
+async function sendFeedback(itemId, feedback) {
+  try {
+    await api(`/api/watch/items/${itemId}/feedback`, {
+      method: "POST",
+      body: JSON.stringify({ feedback }),
+    });
+    setStatus(feedback === "useful" ? "已标记有用" : "已标记没用", "done");
+    await loadLatest();
+  } catch (error) { showError(error); }
+}
+
+async function markRead(itemId) {
+  try {
+    await api(`/api/watch/items/${itemId}/read`, { method: "POST" });
+    setStatus("已标记已读", "done");
+    await loadLatest();
+  } catch (error) { showError(error); }
+}
+
+async function loadRuns() {
+  if (!state.current) return;
+  try {
+    const body = await api(`/api/watch/profiles/${state.current.id}/runs`);
+    const runs = body.runs || [];
+    $("runs").innerHTML = runs.length ? runs.map((run) => `
+      <div class="run-item" data-run="${run.id}">
+        #${run.id} · ${esc(run.window_end?.slice(0, 10) || "")} · ${esc(run.status || "")} ·
+        入选 ${run.selected || 0} / 发现 ${run.found || 0}
+      </div>`).join("") : '<p class="muted">还没有运行记录。</p>';
+    document.querySelectorAll("[data-run]").forEach((el) => {
+      el.addEventListener("click", () => showRun(Number(el.dataset.run)));
+    });
+  } catch (error) {
+    $("runs").innerHTML = `<p class="muted">${esc(error.message)}</p>`;
+  }
+}
+
+async function showRun(runId) {
+  try {
+    const body = await api(`/api/watch/runs/${runId}`);
+    setStatus(`运行 #${runId} · ${body.run?.status || ""}`, "done");
+    await loadDigest(body.run);
+    renderItems(body.items || []);
+  } catch (error) { showError(error); }
+}
+
+async function createProfile() {
+  const payload = profilePayload();
+  if (!payload.name) return showError(new Error("请填写名称"));
+  try {
+    const body = await api("/api/watch/profiles", { method: "POST", body: JSON.stringify(payload) });
+    state.current = { id: body.profile_id, ...payload };
+    state.isNew = false;
+    await loadProfiles();
+    setStatus("已创建", "done");
+  } catch (error) { showError(error); }
+}
+
+async function saveProfile() {
+  if (!state.current || state.isNew) {
+    return createProfile();
+  }
+  const payload = profilePayload();
+  if (!payload.name) return showError(new Error("请填写名称"));
+  setBusy(true);
+  try {
+    await api(`/api/watch/profiles/${state.current.id}`, { method: "PUT", body: JSON.stringify(payload) });
+    state.current = { ...state.current, ...payload };
+    await loadProfiles();
+    setStatus("已保存", "done");
+  } catch (error) { showError(error); }
+  finally { setBusy(false); }
+}
+
+async function discover() {
+  if (!state.current) return;
+  setBusy(true);
+  setStatus("正在发现期刊…", "busy");
+  try {
+    const body = await api(`/api/watch/profiles/${state.current.id}/discover`, { method: "POST" });
+    setStatus(`发现 ${body.journals?.length || 0} 本期刊`, "done");
+  } catch (error) {
+    setStatus(`发现失败：${error.message}`, "failed");
+    showError(error);
+  } finally { setBusy(false); }
+}
+
+async function runNow() {
+  if (!state.current) return;
+  setBusy(true);
+  setStatus("正在运行；抓取/入库可能需要几分钟…", "busy");
+  try {
+    const body = await api(`/api/watch/profiles/${state.current.id}/run`, { method: "POST" });
+    setStatus(`完成：发现 ${body.found || 0}，入选 ${body.selected || 0}`, "done");
+    await loadProfiles();
+  } catch (error) {
+    setStatus(`运行失败：${error.message}`, "failed");
+    showError(error);
+  } finally { setBusy(false); }
+}
+
+async function removeProfile() {
+  if (!state.current || !confirm("删除这个监控主题？")) return;
+  setBusy(true);
+  try {
+    await api(`/api/watch/profiles/${state.current.id}`, { method: "DELETE" });
+    state.current = null;
+    await loadProfiles();
+    setStatus("已删除", "done");
+  } catch (error) { showError(error); }
+  finally { setBusy(false); }
+}
+
+$("new-btn").addEventListener("click", () => {
+  state.current = null;
+  state.isNew = true;
+  $("empty").classList.add("hidden");
+  $("editor").classList.remove("hidden");
+  $("editor-title").textContent = "新建主题";
+  $("profile-id").textContent = "";
+  for (const id of ["name", "field-text", "keywords"]) $(id).value = "";
+  $("interval-days").value = 3;
+  $("window-days").value = 7;
+  $("max-items").value = 3;
+  $("same-journal-limit").value = 2;
+  $("enabled").checked = true;
+  $("digest").textContent = "保存后运行一次。";
+  $("items").innerHTML = "";
+  $("runs").innerHTML = "";
+  setStatus("填写并保存", "");
+  $("discover-btn").disabled = true;
+  $("run-btn").disabled = true;
+  $("delete-btn").disabled = true;
+});
+
+$("save-btn").addEventListener("click", saveProfile);
+$("discover-btn").addEventListener("click", discover);
+$("run-btn").addEventListener("click", runNow);
+$("delete-btn").addEventListener("click", removeProfile);
+$("refresh-btn").addEventListener("click", loadLatest);
+
+(async function init() {
+  try {
+    const me = await api("/api/auth/me");
+    $("who").textContent = me.display_name || me.username || me.user_id;
+    await loadProfiles();
+  } catch (error) { showError(error); }
+})();
+</script>
+</body>
+</html>

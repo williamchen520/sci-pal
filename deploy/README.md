@@ -53,6 +53,27 @@ docker compose -f deploy/docker-compose.yml exec app \
 http://<服务器IP>/login.html
 ```
 
+## 3.1 文献监控定时任务
+
+compose 会启动独立的 `watch-cron` 服务，每 5 分钟检查一次到期 profile：
+
+```text
+python scripts/run_watch_due.py --loop --interval 300
+```
+
+手动运行一次：
+
+```bash
+docker compose -f deploy/docker-compose.yml exec app \
+  python scripts/run_watch_due.py --once
+```
+
+查看日志：
+
+```bash
+docker compose -f deploy/docker-compose.yml logs -f watch-cron
+```
+
 ## 4. 数据与备份
 
 数据通过 volume 挂载：
