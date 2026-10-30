@@ -7,6 +7,7 @@ from typing import Any
 
 from flask import Blueprint, jsonify, request, session
 
+from services.experiments.compare import compare_run_row
 from services.experiments.runs import create_run, get_run, list_runs, update_run
 from services.tenancy.web import resolve_workspace
 
@@ -71,6 +72,18 @@ def build_runs_blueprint(*, db_path: str | Path, log: Any = None) -> Blueprint:
         if not row:
             return jsonify({"error": "Run not found"}), 404
         return jsonify(row)
+
+    @bp.get("/api/runs/<run_id>/comparison")
+    def runs_comparison(run_id: str):
+        user_id, workspace_id = context()
+        if not user_id:
+            return jsonify({"error": "authentication required"}), 401
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 403
+        row = get_run(run_id, workspace_id, user_id, db_path=db)
+        if not row:
+            return jsonify({"error": "Run not found"}), 404
+        return jsonify(compare_run_row(row))
 
     @bp.put("/api/runs/<run_id>")
     def runs_update(run_id: str):
