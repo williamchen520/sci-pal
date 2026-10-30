@@ -68,7 +68,7 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
-const state = { user: null, projects: [], project: null, experiments: [], experiment: null, runs: [], revisions: [], audit: [] };
+const state = { user: null, projects: [], project: null, experiments: [], experiment: null, runs: [], revisions: [], audit: [], workspaceMembers: [], signatures: [] };
 
 function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
@@ -109,6 +109,7 @@ async function openProject(projectId) {
   showError(null);
   state.project = await api(`/api/projects/${encodeURIComponent(projectId)}`);
   state.experiments = (await api(`/api/projects/${encodeURIComponent(projectId)}/experiments`)).experiments || [];
+  state.workspaceMembers = (await api(`/api/workspaces/${encodeURIComponent(state.project.workspace_id)}/members`)).members || [];
   state.experiment = null;
   renderProject();
 }
@@ -121,6 +122,16 @@ function renderProject() {
       <div><h2>${esc(p.name)}</h2><p class="muted">${esc(p.description || "无描述")} · <span class="pill">${esc(p.status)}</span></p></div>
       <button class="secondary" id="refresh-project">刷新</button>
     </div>
+    <h3 style="margin-top:18px">成员</h3>
+    <table><thead><tr><th>用户</th><th>项目角色</th></tr></thead><tbody>
+      ${(p.members || []).map((m) => `<tr><td>${esc(m.username)}</td><td>${esc(m.role)}</td></tr>`).join("")}
+    </tbody></table>
+    ${p.owner_user_id === state.user ? `
+      <form id="member-form" class="row" style="margin-top:10px">
+        <select id="member-select">${state.workspaceMembers.map((m) => `<option value="${esc(m.user_id)}">${esc(m.username)}</option>`).join("")}</select>
+        <select id="member-role"><option value="member">member</option><option value="viewer">viewer</option></select>
+        <button type="submit">加入项目</button>
+      </form>` : ""}
     <h3 style="margin-top:18px">实验</h3>
     <div class="list" id="experiments">
       ${state.experiments.length ? state.experiments.map((e) => `
@@ -141,6 +152,7 @@ function renderProject() {
     <div id="experiment-view" style="margin-top:18px"></div>`;
   $("refresh-project").addEventListener("click", () => openProject(p.project_id).catch(showError));
   $("experiment-form").addEventListener("submit", createExperiment);
+  if ($("member-form")) $("member-form").addEventListener("submit", addProjectMember);
   document.querySelectorAll("[data-experiment]").forEach((el) => {
     el.addEventListener("click", () => openExperiment(el.dataset.experiment).catch(showError));
   });
@@ -163,12 +175,28 @@ async function createExperiment(event) {
   } catch (error) { showError(error); }
 }
 
+async function addProjectMember(event) {
+  event.preventDefault();
+  showError(null);
+  try {
+    await api(`/api/projects/${encodeURIComponent(state.project.project_id)}/members`, {
+      method: "POST",
+      body: JSON.stringify({
+        user_id: $("member-select").value,
+        role: $("member-role").value,
+      }),
+    });
+    await openProject(state.project.project_id);
+  } catch (error) { showError(error); }
+}
+
 async function openExperiment(experimentId) {
   showError(null);
   state.experiment = await api(`/api/experiments/${encodeURIComponent(experimentId)}`);
   state.runs = (await api(`/api/experiments/${encodeURIComponent(experimentId)}/runs`)).runs || [];
   state.revisions = (await api(`/api/experiments/${encodeURIComponent(experimentId)}/revisions`)).revisions || [];
   state.audit = (await api(`/api/experiments/${encodeURIComponent(experimentId)}/audit`)).audit || [];
+  state.signatures = (await api(`/api/experiments/${encodeURIComponent(experimentId)}/signatures`)).signatures || [];
   renderExperiment();
 }
 
@@ -205,9 +233,20 @@ function renderExperiment() {
       <table><thead><tr><th>action</th><th>rev</th><th>actor</th><th>at</th></tr></thead><tbody>
         ${state.audit.map((r) => `<tr><td>${esc(r.action)}</td><td>${esc(r.revision ?? "")}</td><td>${esc(r.actor_user_id)}</td><td>${esc(r.created_at)}</td></tr>`).join("")}
       </tbody></table>
+      <h3 style="margin-top:16px">签名</h3>
+      <table><thead><tr><th>rev</th><th>meaning</th><th>signer</th><th>at</th></tr></thead><tbody>
+        ${state.signatures.map((s) => `<tr><td>${esc(s.revision)}</td><td>${esc(s.meaning)}</td><td>${esc(s.signer_user_id)}</td><td>${esc(s.created_at)}</td></tr>`).join("")}
+      </tbody></table>
+      ${e.owner_user_id === state.user ? `
+        <form id="sign-form" class="row" style="margin-top:10px">
+          <input id="sign-password" type="password" placeholder="密码重认证" required>
+          <select id="sign-meaning"><option value="author">author</option><option value="reviewer">reviewer</option><option value="approver">approver</option></select>
+          <button type="submit">签名当前 revision</button>
+        </form>` : ""}
     </div>`;
   $("refresh-experiment").addEventListener("click", () => openExperiment(e.experiment_id).catch(showError));
   $("run-form").addEventListener("submit", createRun);
+  if ($("sign-form")) $("sign-form").addEventListener("submit", signExperiment);
   document.querySelectorAll("[data-run]").forEach((el) => {
     el.addEventListener("click", () => compareRun(el.dataset.run));
   });
@@ -235,6 +274,21 @@ async function compareRun(runId) {
     const result = await api(`/api/runs/${encodeURIComponent(runId)}/comparison`);
     const s = result.summary;
     alert(`Run ${runId}\n\nmatch: ${s.match}\nchanged: ${s.changed}\nmissing_actual: ${s.missing_actual}\nunplanned: ${s.unplanned}\ncompliant: ${s.compliant}`);
+  } catch (error) { showError(error); }
+}
+
+async function signExperiment(event) {
+  event.preventDefault();
+  showError(null);
+  try {
+    await api(`/api/experiments/${encodeURIComponent(state.experiment.experiment_id)}/sign`, {
+      method: "POST",
+      body: JSON.stringify({
+        password: $("sign-password").value,
+        meaning: $("sign-meaning").value,
+      }),
+    });
+    await openExperiment(state.experiment.experiment_id);
   } catch (error) { showError(error); }
 }
 
