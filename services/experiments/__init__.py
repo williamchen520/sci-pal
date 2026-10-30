@@ -5,9 +5,11 @@ from .service import (
     create_access_request,
     create_experiment,
     decide_access_request,
+    get_audit,
     get_experiment,
     list_access_requests,
     list_experiments,
+    list_revisions,
     update_experiment,
 )
 
@@ -16,8 +18,10 @@ __all__ = [
     "create_access_request",
     "create_experiment",
     "decide_access_request",
+    "get_audit",
     "get_experiment",
     "list_access_requests",
     "list_experiments",
+    "list_revisions",
     "update_experiment",
 ]

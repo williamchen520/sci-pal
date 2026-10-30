@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import sqlite3
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -31,6 +33,7 @@ SCHEMA = (
         protocol_version TEXT,
         content TEXT DEFAULT '',
         data_class TEXT NOT NULL DEFAULT 'private',
+        current_revision INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
@@ -52,12 +55,44 @@ SCHEMA = (
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_exp_requests_experiment ON experiment_access_requests(experiment_id)",
+    """
+    CREATE TABLE IF NOT EXISTS experiment_revisions (
+        revision_id TEXT PRIMARY KEY,
+        experiment_id TEXT NOT NULL,
+        workspace_id TEXT NOT NULL,
+        revision INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        hash TEXT NOT NULL,
+        created_by TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE (experiment_id, revision)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS experiment_audit (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        experiment_id TEXT NOT NULL,
+        workspace_id TEXT NOT NULL,
+        actor_user_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        revision INTEGER,
+        detail TEXT,
+        created_at TEXT NOT NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_exp_revisions_experiment ON experiment_revisions(experiment_id)",
+    "CREATE INDEX IF NOT EXISTS idx_exp_audit_experiment ON experiment_audit(experiment_id)",
 )
 
 
 def ensure_experiments_schema(conn: sqlite3.Connection) -> None:
     for statement in SCHEMA:
         conn.execute(statement)
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(experiments)")}
+    if "current_revision" not in columns:
+        conn.execute(
+            "ALTER TABLE experiments ADD COLUMN current_revision INTEGER NOT NULL DEFAULT 1"
+        )
     conn.commit()
 
 
@@ -123,6 +158,63 @@ def _active_approval(
     ).fetchone()
 
 
+def _snapshot(row: sqlite3.Row | dict) -> dict:
+    return {
+        "title": row["title"],
+        "status": row["status"],
+        "protocol_id": row["protocol_id"],
+        "protocol_version": row["protocol_version"],
+        "content": row["content"],
+    }
+
+
+def _revision_hash(snapshot: dict) -> str:
+    payload = json.dumps(snapshot, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _write_revision(
+    conn: sqlite3.Connection,
+    experiment_id: str,
+    workspace_id: str,
+    revision: int,
+    snapshot: dict,
+    actor_user_id: str,
+) -> None:
+    conn.execute(
+        "INSERT INTO experiment_revisions "
+        "(revision_id, experiment_id, workspace_id, revision, content, hash, created_by, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            f"rev_{uuid.uuid4().hex}",
+            experiment_id,
+            workspace_id,
+            revision,
+            json.dumps(snapshot, ensure_ascii=False, sort_keys=True),
+            _revision_hash(snapshot),
+            actor_user_id,
+            _now().isoformat(),
+        ),
+    )
+
+
+def _write_audit(
+    conn: sqlite3.Connection,
+    experiment_id: str,
+    workspace_id: str,
+    actor_user_id: str,
+    action: str,
+    revision: int | None,
+    detail: str | None = None,
+) -> None:
+    conn.execute(
+        "INSERT INTO experiment_audit "
+        "(experiment_id, workspace_id, actor_user_id, action, revision, detail, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (experiment_id, workspace_id, actor_user_id, action, revision, detail, _now().isoformat()),
+    )
+
+
 def list_experiments(
     project_id: str,
     workspace_id: str,
@@ -175,7 +267,7 @@ def create_experiment(
         conn.execute(
             "INSERT INTO experiments "
             "(experiment_id, project_id, workspace_id, owner_user_id, title, status, "
-            "protocol_id, protocol_version, content) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "protocol_id, protocol_version, content, current_revision) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
             (
                 experiment_id,
                 project_id,
@@ -188,6 +280,15 @@ def create_experiment(
                 content,
             ),
         )
+        snapshot = {
+            "title": title,
+            "status": status,
+            "protocol_id": protocol_id,
+            "protocol_version": protocol_version,
+            "content": content,
+        }
+        _write_revision(conn, experiment_id, workspace_id, 1, snapshot, user_id)
+        _write_audit(conn, experiment_id, workspace_id, user_id, "create", 1)
         conn.commit()
         row = conn.execute(
             "SELECT * FROM experiments WHERE experiment_id = ?", (experiment_id,)
@@ -234,6 +335,13 @@ def update_experiment(
 ) -> dict | None:
     conn = _connect(db_path)
     try:
+        current = conn.execute(
+            "SELECT * FROM experiments WHERE experiment_id = ? AND workspace_id = ? "
+            "AND owner_user_id = ?",
+            (experiment_id, workspace_id, user_id),
+        ).fetchone()
+        if not current:
+            return None
         fields = {}
         if title is not None:
             if not title.strip():
@@ -247,15 +355,71 @@ def update_experiment(
             fields["content"] = content
         if fields:
             assignments = ", ".join(f"{key} = ?" for key in fields)
-            cursor = conn.execute(
-                f"UPDATE experiments SET {assignments}, updated_at = CURRENT_TIMESTAMP "
+            revision = int(current["current_revision"] or 1) + 1
+            conn.execute(
+                f"UPDATE experiments SET {assignments}, current_revision = ?, "
+                "updated_at = CURRENT_TIMESTAMP "
                 "WHERE experiment_id = ? AND workspace_id = ? AND owner_user_id = ?",
-                [*fields.values(), experiment_id, workspace_id, user_id],
+                [*fields.values(), revision, experiment_id, workspace_id, user_id],
+            )
+            snapshot = _snapshot(current)
+            snapshot.update(fields)
+            _write_revision(conn, experiment_id, workspace_id, revision, snapshot, user_id)
+            _write_audit(
+                conn,
+                experiment_id,
+                workspace_id,
+                user_id,
+                "update",
+                revision,
+                ",".join(sorted(fields)),
             )
             conn.commit()
-            if cursor.rowcount == 0:
-                return None
         return get_experiment(experiment_id, workspace_id, user_id, db_path=db_path)
+    finally:
+        conn.close()
+
+
+def list_revisions(
+    experiment_id: str,
+    workspace_id: str,
+    user_id: str,
+    *,
+    db_path: str | Path = DATABASE_PATH,
+) -> list[dict] | None:
+    if not get_experiment(experiment_id, workspace_id, user_id, db_path=db_path):
+        return None
+    conn = _connect(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT revision_id, revision, hash, created_by, created_at, content "
+            "FROM experiment_revisions WHERE experiment_id = ? AND workspace_id = ? "
+            "ORDER BY revision DESC",
+            (experiment_id, workspace_id),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def get_audit(
+    experiment_id: str,
+    workspace_id: str,
+    user_id: str,
+    *,
+    db_path: str | Path = DATABASE_PATH,
+) -> list[dict] | None:
+    if not get_experiment(experiment_id, workspace_id, user_id, db_path=db_path):
+        return None
+    conn = _connect(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT id, actor_user_id, action, revision, detail, created_at "
+            "FROM experiment_audit WHERE experiment_id = ? AND workspace_id = ? "
+            "ORDER BY id",
+            (experiment_id, workspace_id),
+        ).fetchall()
+        return [dict(row) for row in rows]
     finally:
         conn.close()
 
