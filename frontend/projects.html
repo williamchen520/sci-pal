@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SciPal · 项目与实验</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#131c31; --line:#1e3a5f; --text:#e2e8f0; --muted:#94a3b8; --gold:#f5c542; --blue:#38bdf8; --red:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Microsoft YaHei",sans-serif; }
+    header { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-bottom:1px solid var(--line); background:#0f1a2e; position:sticky; top:0; z-index:5; }
+    header a { color:var(--blue); text-decoration:none; }
+    h1 { margin:0; font-size:20px; color:var(--gold); }
+    h2 { margin:0 0 10px; font-size:17px; }
+    h3 { margin:0 0 8px; font-size:15px; color:#cbd5e1; }
+    main { max-width:1100px; margin:0 auto; padding:22px 18px 60px; }
+    .grid { display:grid; grid-template-columns: 320px 1fr; gap:18px; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
+    .row { display:flex; gap:8px; align-items:center; }
+    .row.wrap { flex-wrap:wrap; }
+    input, textarea, select { width:100%; padding:9px 10px; border-radius:8px; border:1px solid #27405f; background:#0f1a2e; color:var(--text); font:inherit; }
+    textarea { min-height:70px; resize:vertical; font-family:ui-monospace,Consolas,monospace; font-size:13px; }
+    button { padding:9px 14px; border:0; border-radius:8px; background:var(--gold); color:#111827; font-weight:700; cursor:pointer; }
+    button.secondary { background:#1e3a5f; color:var(--text); }
+    button.danger { background:#7f1d1d; color:#fecaca; }
+    button:disabled { opacity:.5; cursor:wait; }
+    .list { display:flex; flex-direction:column; gap:8px; }
+    .item { padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#0f1a2e; cursor:pointer; }
+    .item:hover { border-color:var(--blue); }
+    .item .meta { color:var(--muted); font-size:12px; margin-top:4px; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#1e3a5f; color:#bae6fd; font-size:12px; }
+    .muted { color:var(--muted); font-size:13px; }
+    .error { color:var(--red); min-height:20px; font-size:13px; }
+    .hidden { display:none !important; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:7px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); font-weight:600; }
+    .stack { display:flex; flex-direction:column; gap:14px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .form-grid .full { grid-column:1 / -1; }
+    @media (max-width: 800px) { .grid { grid-template-columns:1fr; } .form-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="row"><h1>SciPal · 项目与实验</h1><span class="pill" id="who"></span></div>
+  <div class="row"><a href="/">首页</a><a href="/login.html">切换账号</a></div>
+</header>
+
+<main>
+  <div class="error" id="error"></div>
+  <div class="grid">
+    <section class="panel">
+      <h2>项目</h2>
+      <form id="project-form" class="stack">
+        <input id="project-name" placeholder="项目名称" required>
+        <input id="project-desc" placeholder="一句话描述">
+        <button type="submit">创建项目</button>
+      </form>
+      <div class="list" id="projects" style="margin-top:14px"></div>
+    </section>
+
+    <section class="panel" id="project-view">
+      <p class="muted">选择左侧项目，或先创建一个。</p>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { user: null, projects: [], project: null, experiments: [], experiment: null, runs: [], revisions: [], audit: [] };
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    headers: options.body ? { "Content-Type": "application/json" } : {},
+    ...options,
+  });
+  if (response.status === 401) {
+    window.location.replace("/login.html");
+    throw new Error("login required");
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+  return body;
+}
+
+function showError(error) {
+  $("error").textContent = error?.message || "";
+}
+
+async function loadProjects() {
+  const body = await api("/api/projects");
+  state.projects = body.projects || [];
+  $("projects").innerHTML = state.projects.length
+    ? state.projects.map((p) => `
+      <div class="item" data-project="${esc(p.project_id)}">
+        <strong>${esc(p.name)}</strong>
+        <div class="meta"><span class="pill">${esc(p.status)}</span> ${esc(p.description || "")}</div>
+      </div>`).join("")
+    : '<p class="muted">还没有项目。</p>';
+}
+
+async function openProject(projectId) {
+  showError(null);
+  state.project = await api(`/api/projects/${encodeURIComponent(projectId)}`);
+  state.experiments = (await api(`/api/projects/${encodeURIComponent(projectId)}/experiments`)).experiments || [];
+  state.experiment = null;
+  renderProject();
+}
+
+function renderProject() {
+  const p = state.project;
+  if (!p) return;
+  $("project-view").innerHTML = `
+    <div class="row wrap" style="justify-content:space-between">
+      <div><h2>${esc(p.name)}</h2><p class="muted">${esc(p.description || "无描述")} · <span class="pill">${esc(p.status)}</span></p></div>
+      <button class="secondary" id="refresh-project">刷新</button>
+    </div>
+    <h3 style="margin-top:18px">实验</h3>
+    <div class="list" id="experiments">
+      ${state.experiments.length ? state.experiments.map((e) => `
+        <div class="item" data-experiment="${esc(e.experiment_id)}">
+          <strong>${esc(e.title)}</strong>
+          <div class="meta"><span class="pill">${esc(e.status)}</span> rev ${esc(e.current_revision)} · ${esc(e.experiment_id)}</div>
+        </div>`).join("") : '<p class="muted">还没有实验。</p>'}
+    </div>
+    <form id="experiment-form" class="stack" style="margin-top:14px">
+      <h3>新建实验</h3>
+      <input id="experiment-title" placeholder="实验标题" required>
+      <div class="form-grid">
+        <input id="protocol-id" placeholder="protocol_id" required>
+        <input id="protocol-version" placeholder="protocol_version" value="1" required>
+      </div>
+      <button type="submit">创建实验</button>
+    </form>
+    <div id="experiment-view" style="margin-top:18px"></div>`;
+  $("refresh-project").addEventListener("click", () => openProject(p.project_id).catch(showError));
+  $("experiment-form").addEventListener("submit", createExperiment);
+  document.querySelectorAll("[data-experiment]").forEach((el) => {
+    el.addEventListener("click", () => openExperiment(el.dataset.experiment).catch(showError));
+  });
+}
+
+async function createExperiment(event) {
+  event.preventDefault();
+  showError(null);
+  try {
+    const row = await api(`/api/projects/${encodeURIComponent(state.project.project_id)}/experiments`, {
+      method: "POST",
+      body: JSON.stringify({
+        title: $("experiment-title").value.trim(),
+        protocol_id: $("protocol-id").value.trim(),
+        protocol_version: $("protocol-version").value.trim(),
+      }),
+    });
+    await openProject(state.project.project_id);
+    await openExperiment(row.experiment_id);
+  } catch (error) { showError(error); }
+}
+
+async function openExperiment(experimentId) {
+  showError(null);
+  state.experiment = await api(`/api/experiments/${encodeURIComponent(experimentId)}`);
+  state.runs = (await api(`/api/experiments/${encodeURIComponent(experimentId)}/runs`)).runs || [];
+  state.revisions = (await api(`/api/experiments/${encodeURIComponent(experimentId)}/revisions`)).revisions || [];
+  state.audit = (await api(`/api/experiments/${encodeURIComponent(experimentId)}/audit`)).audit || [];
+  renderExperiment();
+}
+
+function renderExperiment() {
+  const e = state.experiment;
+  $("experiment-view").innerHTML = `
+    <div class="panel" style="background:#0f1a2e">
+      <div class="row wrap" style="justify-content:space-between">
+        <div><h3>${esc(e.title)}</h3><p class="muted">${esc(e.status)} · rev ${esc(e.current_revision)} · protocol ${esc(e.protocol_id)} v${esc(e.protocol_version)}</p></div>
+        <button class="secondary" id="refresh-experiment">刷新</button>
+      </div>
+      <h3 style="margin-top:14px">Runs</h3>
+      <div class="list">
+        ${state.runs.length ? state.runs.map((r) => `
+          <div class="item" data-run="${esc(r.run_id)}">
+            <strong>${esc(r.title)}</strong>
+            <div class="meta"><span class="pill">${esc(r.status)}</span> ${esc(r.run_id)}</div>
+          </div>`).join("") : '<p class="muted">还没有 run。</p>'}
+      </div>
+      <form id="run-form" class="stack" style="margin-top:14px">
+        <h3>新建 run</h3>
+        <input id="run-title" placeholder="Run 标题" required>
+        <div class="form-grid">
+          <textarea id="run-planned" placeholder='planned JSON，例如 {"dose": 10}'>{}</textarea>
+          <textarea id="run-actual" placeholder='actual JSON，例如 {"dose": 8}'>{}</textarea>
+        </div>
+        <button type="submit">创建 run</button>
+      </form>
+      <h3 style="margin-top:16px">Revisions</h3>
+      <table><thead><tr><th>rev</th><th>hash</th><th>by</th><th>at</th></tr></thead><tbody>
+        ${state.revisions.map((r) => `<tr><td>${esc(r.revision)}</td><td>${esc(String(r.hash).slice(0, 12))}…</td><td>${esc(r.created_by)}</td><td>${esc(r.created_at)}</td></tr>`).join("")}
+      </tbody></table>
+      <h3 style="margin-top:16px">Audit</h3>
+      <table><thead><tr><th>action</th><th>rev</th><th>actor</th><th>at</th></tr></thead><tbody>
+        ${state.audit.map((r) => `<tr><td>${esc(r.action)}</td><td>${esc(r.revision ?? "")}</td><td>${esc(r.actor_user_id)}</td><td>${esc(r.created_at)}</td></tr>`).join("")}
+      </tbody></table>
+    </div>`;
+  $("refresh-experiment").addEventListener("click", () => openExperiment(e.experiment_id).catch(showError));
+  $("run-form").addEventListener("submit", createRun);
+  document.querySelectorAll("[data-run]").forEach((el) => {
+    el.addEventListener("click", () => compareRun(el.dataset.run));
+  });
+}
+
+async function createRun(event) {
+  event.preventDefault();
+  showError(null);
+  try {
+    await api(`/api/experiments/${encodeURIComponent(state.experiment.experiment_id)}/runs`, {
+      method: "POST",
+      body: JSON.stringify({
+        title: $("run-title").value.trim(),
+        planned: JSON.parse($("run-planned").value || "{}"),
+        actual: JSON.parse($("run-actual").value || "{}"),
+      }),
+    });
+    await openExperiment(state.experiment.experiment_id);
+  } catch (error) { showError(error); }
+}
+
+async function compareRun(runId) {
+  showError(null);
+  try {
+    const result = await api(`/api/runs/${encodeURIComponent(runId)}/comparison`);
+    const s = result.summary;
+    alert(`Run ${runId}\n\nmatch: ${s.match}\nchanged: ${s.changed}\nmissing_actual: ${s.missing_actual}\nunplanned: ${s.unplanned}\ncompliant: ${s.compliant}`);
+  } catch (error) { showError(error); }
+}
+
+$("project-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  showError(null);
+  try {
+    await api("/api/projects", {
+      method: "POST",
+      body: JSON.stringify({ name: $("project-name").value.trim(), description: $("project-desc").value.trim() }),
+    });
+    $("project-name").value = "";
+    $("project-desc").value = "";
+    await loadProjects();
+  } catch (error) { showError(error); }
+});
+
+$("projects").addEventListener("click", (event) => {
+  const item = event.target.closest("[data-project]");
+  if (item) openProject(item.dataset.project).catch(showError);
+});
+
+(async function init() {
+  try {
+    const me = await api("/api/auth/me");
+    state.user = me.user_id;
+    $("who").textContent = me.user_id;
+    await loadProjects();
+  } catch (error) { showError(error); }
+})();
+</script>
+</body>
+</html>
