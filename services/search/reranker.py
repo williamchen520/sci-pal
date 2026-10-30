@@ -7,11 +7,15 @@ Bi-encoder (embedding) compares query/doc independently -> fast but coarse.
 Cross-encoder feeds query+doc together -> slower but much more accurate.
 """
 from typing import List, Dict
+import os
 
 # BGE reranker: good on English academic text, small (~280MB), fast on CPU.
 # Alternative: "cross-encoder/ms-marco-MiniLM-L-6-v2"
 # V31.74: 直接用本地路径，避免从 HuggingFace 下载
-RERANK_MODEL = "D:\\models\\models\\BAAI--bge-reranker-base"
+RERANK_MODEL = os.environ.get(
+    "SCIPAL_RERANK_MODEL",
+    r"D:\models\models\BAAI--bge-reranker-base",
+)
 
 
 class Reranker:
