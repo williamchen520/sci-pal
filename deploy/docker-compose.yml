@@ -8,11 +8,14 @@ services:
     environment:
       SCIPAL_AUTH_REQUIRED: "1"
       SCIPAL_HOST: "0.0.0.0"
+      SCIPAL_EMBEDDING_MODEL: "/models/models/BAAI--bge-base-en-v1.5"
+      SCIPAL_RERANK_MODEL: "/models/models/BAAI--bge-reranker-base"
     volumes:
       - ../data:/app/data
       - ../documents:/app/documents
       - ../documents_xml:/app/documents_xml
       - ../logs:/app/logs
+      - ../models:/models:ro
     expose:
       - "5000"
     restart: unless-stopped

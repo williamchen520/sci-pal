@@ -21,7 +21,10 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 CHROMA_PATH = PROJECT_ROOT / "data" / "chroma"
 
-EMBEDDING_MODEL = r"D:\models\models\BAAI--bge-base-en-v1.5"  # V31.26: 从 all-mpnet-base-v2 改成 bge-base-en-v1.5
+EMBEDDING_MODEL = os.environ.get(
+    "SCIPAL_EMBEDDING_MODEL",
+    r"D:\models\models\BAAI--bge-base-en-v1.5",
+)
 RRF_K = 60  # RRF constant
 VECTOR_TOP_K = 20
 FTS_TOP_K = 20
