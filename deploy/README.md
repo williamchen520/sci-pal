@@ -101,9 +101,47 @@ backups/scipal-<UTC时间>.tar.gz
 - 模型/解析服务需要单独部署；
 - 本 compose 不含 GPU 调度。
 
-## 7. 后续
+## 7. 离线 bundle
+
+在联网机器生成：
+
+```bash
+python deploy/build_offline_bundle.py --out backups
+```
+
+如需带镜像：
+
+```bash
+python deploy/build_offline_bundle.py --out backups \
+  --images scipal-app:latest,caddy:2
+```
+
+产物：
+
+```text
+backups/scipal-offline-<UTC>.tar.gz
+├─ app/            # 源码 + deploy
+├─ images/         # 可选 docker save
+├─ install.sh
+└─ manifest.json   # 文件 hash 清单
+```
+
+目标机器：
+
+```bash
+tar xzf scipal-offline-*.tar.gz
+bash install.sh
+```
+
+说明：
+
+- 不包含 `data/`、`documents/`、模型、`.env`；
+- 安装后需编辑 `app/deploy/.env`；
+- 镜像方式可减少目标机器构建时间。
+
+## 8. 后续
 
 - PostgreSQL/Redis 版本；
-- 离线 bundle；
 - systemd/NSSM 备选方案；
-- 监控与日志轮转。
+- 监控与日志轮转；
+- 部署机实际 build 验收。
