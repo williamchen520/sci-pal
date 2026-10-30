@@ -166,5 +166,19 @@ class ExperimentAccessTests(unittest.TestCase):
         )
 
 
+    def test_workspace_request_list_for_pi_and_owner(self) -> None:
+        experiment_id = self.create_experiment()
+        self.login(self.pi)
+        request_id = self.client.post(
+            f"/api/experiments/{experiment_id}/access-requests"
+        ).get_json()["request_id"]
+        pi_rows = self.client.get("/api/experiment-access-requests").get_json()["requests"]
+        self.assertEqual([row["request_id"] for row in pi_rows], [request_id])
+        self.assertEqual(pi_rows[0]["experiment_title"], "Run")
+        self.login(self.member)
+        owner_rows = self.client.get("/api/experiment-access-requests").get_json()["requests"]
+        self.assertEqual([row["request_id"] for row in owner_rows], [request_id])
+
+
 if __name__ == "__main__":
     unittest.main()

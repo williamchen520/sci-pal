@@ -658,3 +658,33 @@ def list_signatures(
     finally:
         conn.close()
 
+def list_workspace_requests(
+    workspace_id: str,
+    user_id: str,
+    *,
+    db_path: str | Path = DATABASE_PATH,
+) -> list[dict]:
+    """Pending/history access requests for a PI or an experiment owner."""
+    conn = _connect(db_path)
+    try:
+        role = _workspace_role(conn, workspace_id, user_id)
+        if role == "pi":
+            sql = (
+                "SELECT r.*, e.title AS experiment_title FROM experiment_access_requests r "
+                "JOIN experiments e ON e.experiment_id = r.experiment_id "
+                "WHERE r.workspace_id = ? AND (r.owner_user_id = ? OR r.requester_user_id = ?) "
+                "ORDER BY r.created_at DESC"
+            )
+            params = (workspace_id, user_id, user_id)
+        else:
+            sql = (
+                "SELECT r.*, e.title AS experiment_title FROM experiment_access_requests r "
+                "JOIN experiments e ON e.experiment_id = r.experiment_id "
+                "WHERE r.workspace_id = ? AND r.owner_user_id = ? "
+                "ORDER BY r.created_at DESC"
+            )
+            params = (workspace_id, user_id)
+        return [dict(row) for row in conn.execute(sql, params)]
+    finally:
+        conn.close()
+
