@@ -93,6 +93,9 @@ class UnifiedRetriever:
         """
         # V27.2: 打印 reranker 状态
         print(f"  🔍 Retrieval: rerank={self.rerank}, top_paragraphs={top_paragraphs}")
+        if allowed_paper_ids is not None:
+            filters = dict(filters or {})
+            filters["paper_ids"] = allowed_paper_ids
         # V25.19: start diagnostics
         if self.diagnostics.enabled:
             self.diagnostics.start(query)
