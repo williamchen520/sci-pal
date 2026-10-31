@@ -332,7 +332,128 @@ writing_brief:
 
 ---
 
-## 9. 下一步
+## 9. 案例：prism-seed1/2/3
+
+### 9.1 找到的文章
+
+标题：
+
+> GPU-Aware Model Placement for Multi-LLM Serving with KV Cache Pressure Minimization
+
+仓库中有三个 seed：
+
+```text
+generated-papers/adrs/prism-seed1.pdf
+generated-papers/adrs/prism-seed2.pdf
+generated-papers/adrs/prism-seed3.pdf
+```
+
+对应代码：
+
+```text
+solution-code/adrs/prism-seed1.py
+solution-code/adrs/prism-seed2.py
+solution-code/adrs/prism-seed3.py
+```
+
+所以这篇论文**有 solution code**，缺的是 CoE 框架代码和 run/metric 绑定。
+
+### 9.2 Methods 主线
+
+```text
+多 LLM 放到多 GPU
+  ↓
+最小化最大 KV Cache Pressure
+  ↓
+非线性的分数型 bin packing
+  ↓
+固定阈值 λ / T
+  ↓
+线性化成背包/装箱问题
+  ↓
+二分搜索最小可行阈值
+  ↓
+精确搜索 + 启发式兜底
+```
+
+核心公式：
+
+```text
+KVPR_i = Σ R_m / (M − Σ S_m)
+
+Σ R_m + λ Σ S_m ≤ λ M
+```
+
+变换后：
+
+```text
+模型虚拟重量 = R_m + λS_m
+GPU 虚拟容量 = λM
+```
+
+### 9.3 三个 seed 的差异
+
+| seed | Methods 重点 | 声称运行时间 |
+|---|---|---|
+| seed1 | Dinkelbach 启发 + 二分 + 有界精确搜索 + 启发式 | 0.117 s |
+| seed2 | 贪心初始化 + 二分 + 局部搜索 | 0.021 s |
+| seed3 | Bisection-Driven Linearization + 启发式矩阵 + 有界精确兜底 | 15.5 ms |
+
+三者都声称：
+
+```text
+score = 26.2560
+```
+
+但运行时间相差约 7 倍，方法描述也不完全一致。
+
+### 9.4 这说明什么
+
+```text
+同一分数
++ 不同方法
++ 不同 runtime
++ 只有 code，没有 run/metric 绑定
+```
+
+结论：
+
+1. Methods 可以写得完整；
+2. solution code 可以存在；
+3. 但论文里的性能 claim 仍不一定能回到某一次具体 run；
+4. `ADRS` 产物目录里只有 `.py`，没有 metrics / timing 日志。
+
+所以它是 **artifact-level provenance** 的例子，不是 **claim-level evidence chain** 的完成品。
+
+### 9.5 对 chain audit 的要求
+
+对性能类 claim，证据链至少需要：
+
+```text
+claim: runtime = 0.117s
+  ↓
+artifact: prism-seed1.py
+  ↓
+run: 哪次执行？
+  ↓
+metric: 哪个 timing 记录？
+```
+
+对文献类 claim，则至少需要：
+
+```text
+claim
+  ↓
+sentence / figure / table
+  ↓
+study type / endpoint / sample
+  ↓
+counterevidence
+```
+
+---
+
+## 10. 下一步
 
 建议顺序：
 
@@ -346,7 +467,7 @@ writing_brief:
 
 ---
 
-## 10. 参考
+## 11. 参考
 
 - [generated-artifacts 仓库](https://github.com/scientist-one/generated-artifacts)
 - [Google Research CoE 博客](https://research.google/blog/science-one-framework-a-verifiable-autonomous-research-framework-via-chain-of-evidence/)
