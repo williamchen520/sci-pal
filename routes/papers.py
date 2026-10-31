@@ -26,6 +26,15 @@ def build_papers_blueprint(
     log: Any,
 ) -> Blueprint:
     bp = Blueprint("papers", __name__, url_prefix="/api")
+
+    def _log(message: str) -> None:
+        if callable(log):
+            log(message)
+        else:
+            warning = getattr(log, "warning", None)
+            if warning:
+                warning(message)
+
     router = ReadRouter(
         db_path,
         pg_dsn=os.environ.get("SCIPAL_PG_DSN", ""),
@@ -50,7 +59,7 @@ def build_papers_blueprint(
                 )
                 response.headers["X-SciPal-Read-Backend"] = "postgres"
                 return response
-            log(f"read canary fell back to SQLite: {result.error}")
+            _log(f"read canary fell back to SQLite: {result.error}")
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:

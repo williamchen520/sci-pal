@@ -65,6 +65,9 @@ rich==13.8.0
 # CLI 框架（部分脚本用）
 typer>=0.12.5
 
+# PostgreSQL adapter (P4/P5)
+psycopg[binary]>=3.2
+
 # ============================================================
 # Windows 特别说明:
 # 1. torch 会被 sentence-transformers 自动安装，默认是 CPU 版本，够用
