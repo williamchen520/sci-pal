@@ -19,6 +19,7 @@ from .etl import (
     dry_run,
     run_etl,
 )
+from .shadow_read import FtsDiff, ShadowReader, TableDiff, write_report
 
 __all__ = [
     "DBAdapter",
@@ -28,12 +29,16 @@ __all__ = [
     "ETLError",
     "ETLReport",
     "InMemoryWriter",
+    "FtsDiff",
     "LIVE_DB",
     "PostgresAdapter",
     "PostgresCopyWriter",
     "SQLiteAdapter",
+    "ShadowReader",
+    "TableDiff",
     "assert_snapshot",
     "create_adapter",
     "dry_run",
     "run_etl",
+    "write_report",
 ]
