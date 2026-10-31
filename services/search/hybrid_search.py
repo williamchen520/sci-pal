@@ -62,6 +62,11 @@ MMR_LAMBDA = 0.6  # 1.0 = pure relevance, 0.5 = balanced diversity
 # （λ=0.6 在真实数据库上多样性和 λ=0.5 相同，但相关性更高）
 
 
+def chroma_paper_filter(paper_ids) -> Dict[str, List[str]]:
+    """Chroma expects a list for $in; callers often pass a set."""
+    return {"$in": list(paper_ids)}
+
+
 class HybridSearch:
     def __init__(self, hyde_generate: Optional[Callable[[str], str]] = None,
                  diagnostics: bool = False):
@@ -167,7 +172,7 @@ class HybridSearch:
                 if where["paper_id"] not in filtered_pids:
                     return []
             else:
-                where["paper_id"] = {"$in": filtered_pids}
+                where["paper_id"] = chroma_paper_filter(filtered_pids)
         where = where if where else None
 
         # Over-fetch so filtering bibliography + section doesn't shrink recall.

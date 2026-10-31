@@ -485,7 +485,7 @@ underdetermines: 1
 
 ---
 
-## 10. 语义反对检索 v2
+## 10. 语义反对检索 v2/v3
 
 已实现：
 
@@ -495,25 +495,56 @@ underdetermines: 1
 - 与 FTS 候选合并、去重、重排；
 - 生产环境已注入 `get_retriever`。
 
-对 `claim_hcc_triple_os` 实测：
+### 10.1 第一次实测：语义通道无增量
+
+`claim_hcc_triple_os` 的 Top 5 仍是 FTS 候选，语义没有新增 sentence。
+
+诊断脚本发现根因：
 
 ```text
-Retrieval: rerank=True, top_paragraphs=5
+Chroma filter $in 收到的是 set，不是 list
+→ Expected operand value to be an list for operator $in
+→ semantic_candidates 的异常被吞掉
 ```
 
-返回的 Top 5 仍是 FTS 候选；语义通道没有新增不同的 sentence。
+这是实际 bug，不是 query 问题。
 
-判断：
+### 10.2 修复
 
-1. 语义链路已接通，但尚未产生增量；
-2. 需要检查 corpus filter、query 质量和 paragraph→sentence 选择；
-3. 不能把“语义通道已接”误写成“语义检索已提升”。
+`services/search/hybrid_search.py`：
 
-下一步：
+```python
+where["paper_id"] = {"$in": list(filtered_pids)}
+```
+
+影响：
+
+- 不仅 claim 检索；
+- 所有使用 `paper_ids` 过滤的检索路径都受影响；
+- 之前 workspace / corpus 过滤在 Chroma 层可能直接抛异常。
+
+### 10.3 修复后实测
 
 ```text
-检查 retriever 的 paper_ids 过滤
-→ 检查 LLM refute query
-→ 检查 paragraph 内 sentence 选择
-→ 再评估是否真的增加 refutes
+Top 1: semantic | meta-analysis 总览
+Top 2: semantic | meta-analysis 结果段
+Top 3: fts      | SBRT/ICI 句子
 ```
+
+语义通道已产生增量，且召回的是域内 meta-analysis 段落。
+
+但仍没有 `refutes`：
+
+- 语义检索找到了“总览/结果”，不是“反例”；
+- 这批 20 篇语料中是否真的存在直接反例，尚未证明。
+
+### 10.4 下一步
+
+```text
+先用 LLM 生成真正的否定/边界查询
+→ 对 semantic 段落做 sentence 级选择
+→ NLI 判定
+→ 人工裁决
+```
+
+不要因为“语义通道已通”就升级 claim；需要看到真实的 refutes 或明确的“未找到反例”证据。
