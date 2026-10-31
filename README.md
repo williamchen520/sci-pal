@@ -19,6 +19,39 @@
 
 ---
 
+## ⚠️ 大规模/并发测试强制要求
+
+> **进行大规模（>100 篇）测试或并发测试时，必须使用 PostgreSQL 底座，严禁使用 SQLite 进行高并发测试。**
+>
+> **SQLite 只允许用于本地小规模功能验证（≤100 篇、单进程），且必须显式设置 `SCIPAL_BENCH_ALLOW_SQLITE=1`。**
+
+Benchmark 默认连接串：
+
+```text
+postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench
+```
+
+可通过以下环境变量覆盖：
+
+```powershell
+$env:SCIPAL_BENCH_DATABASE_URL = "postgresql://user:pass@host:5432/db"
+```
+
+小规模本地验证才允许：
+
+```powershell
+$env:SCIPAL_BENCH_DATABASE_URL = "sqlite:///data/bench_local.db"
+$env:SCIPAL_BENCH_ALLOW_SQLITE = "1"
+```
+
+说明：
+
+- 当前业务数据库仍是 SQLite；PostgreSQL 业务后端尚未实现。
+- 本策略是 **fail-fast**：没有 PostgreSQL 后端时，大规模/并发 benchmark 会直接失败，而不是悄悄退回 SQLite。
+- 详见 [docs/benchmark-PostgreSQL策略.md](docs/benchmark-PostgreSQL策略.md)。
+
+---
+
 ## 功能概览
 
 | 能力 | 说明 |
@@ -47,6 +80,7 @@
 | 领域包 | 声明式 pack（taxonomy / section types / evidence schema / prompts）；`/packs.html` |
 | Claim 试点 | Claim Card、qualifiers、正反证据、FTS/语义检索、NLI、裁决事件、writing brief |
 | 插件端口 M0/M1/M2 | `services/plugins` + `plugins/` manifest/port schema/adapter；JSONL provenance；ClaimVerifier + Retriever 端口 |
+| Benchmark DB 策略 | 默认 PostgreSQL URL；>100 篇/并发禁用 SQLite；小规模需显式 opt-in |
 | 部署 | Docker Compose（app + watch-cron + Caddy）、备份、离线 bundle |
 | 实验方案 | Protocols.io 实时检索/导入；Dockstore / bio.tools / nf-core |
 
@@ -178,7 +212,7 @@ sci-pal/
 ├─ eval/                     检索/QA/插件对比脚本（plugin_bench、claim_verifier_bench、retriever_bench）
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    692 项测试
+├─ tests/                    698 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -207,7 +241,7 @@ sci-pal/
 ## 测试
 
 ```
-692 tests, ~67s
+698 tests, ~70s
 ```
 
 覆盖：检索、路由、guard、结构、JATS 导入、watch、domain packs、claim 试点、多用户隔离、项目/实验/run、插件端口。
@@ -224,6 +258,7 @@ sci-pal/
 - [DSH 适配与插件化计划](docs/工作计划-DSH适配与插件化.md)
 - [论证工作台改造计划](docs/工作计划-论证工作台改造.md)
 - [插件端口与对比评测计划](docs/工作计划-插件端口与对比评测.md)
+- [Benchmark PostgreSQL 策略](docs/benchmark-PostgreSQL策略.md)
 - [肿瘤免疫领域包](packs/biomed-oncoimmuno/README.md)
 - [Claim 试点第一轮审讯记录](docs/claim-pilot-审讯记录-01.md)
 - [Claim 试点反例标注](docs/claim-pilot-反例标注-01.md)
@@ -264,4 +299,5 @@ sci-pal/
 10. Claim 试点仅覆盖 10 个 HCC claim；writing_brief 只有 1 个 claim 完成；
 11. 在线 ingest 只完成 2 篇（LEAP-012 / EMERALD-1 解读）；PMC13036683 下载失败；
 12. 写作闸门仍是 brief + 人工检查，尚未自动拒绝违规句子；
-13. 插件端口为 M0/M1/M2：可信插件进程内执行，尚未做 subprocess/container 隔离；Retriever 已接入，C 阶段 PaperGenerator 未实现。
+13. 插件端口为 M0/M1/M2：可信插件进程内执行，尚未做 subprocess/container 隔离；Retriever 已接入，C 阶段 PaperGenerator 未实现；
+14. PostgreSQL 业务后端尚未实现：benchmark 默认 fail-fast 指向 PostgreSQL，小规模本地测试需显式 `SCIPAL_BENCH_ALLOW_SQLITE=1`。
