@@ -118,7 +118,10 @@ venv_sciPal_py312\Scripts\python.exe api_server.py
 # 3. 解析服务（可选，PDF 三引擎）
 powershell -ExecutionPolicy Bypass -File scripts\start_parser_services.ps1
 
-# 4. 测试
+# 4. 测试（带连续失败止损）
+venv_sciPal_py312\Scripts\python.exe scripts\run_tests_guarded.py
+
+# 等价标准命令（不含止损）
 venv_sciPal_py312\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"
 ```
 
@@ -171,7 +174,7 @@ sci-pal/
 ├─ packs/                    领域包（biomed-oncoimmuno）
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    671 项测试
+├─ tests/                    677 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -200,7 +203,7 @@ sci-pal/
 ## 测试
 
 ```
-671 tests, ~60s
+677 tests, ~65s
 ```
 
 覆盖：检索、路由、guard、结构、JATS 导入、watch、domain packs、claim 试点、多用户隔离、项目/实验/run。
@@ -227,6 +230,8 @@ sci-pal/
 - [云端模型评测](docs/云端模型评测.md)
 - [可选项与用户配置](docs/可选项与用户配置.md)
 - [部署（Docker Compose）](deploy/README.md)
+- [协作规范](docs/协作规范.md)
+- [AI 最高优先级规则 `.dsh_rules`](.dsh_rules)
 - [历史文档归档](docs/archive/README.md)
 
 ## 许可证
