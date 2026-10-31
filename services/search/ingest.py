@@ -23,6 +23,8 @@ import threading
 import time
 import uuid
 from pathlib import Path
+
+from config.paths import EMBEDDING_MODEL
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 DEFAULT_BATCH_SIZE = 5
@@ -415,7 +417,7 @@ class IngestService:
         import chromadb
         from sentence_transformers import SentenceTransformer
 
-        model_path = Path(r"D:\models\models\BAAI--bge-base-en-v1.5")
+        model_path = Path(EMBEDDING_MODEL)
         model = getattr(self, "_model", None)
         if model is None:
             # Default to CPU: worker + Flask both load models, and two CUDA

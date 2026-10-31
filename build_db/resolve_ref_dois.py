@@ -17,7 +17,7 @@ Why a JSON file instead of a SQLite table:
   - Survives a fresh research.db rebuild (as long as you keep doi_cache.json).
 
 Usage:
-  cd /home/kokomi/sciPal && source venv_sciPal/bin/activate
+  cd /path/to/sciPal && source .venv/bin/activate
   # Proxy must be UP (127.0.0.1:7890)
   python -m build_db.resolve_ref_dois
 """

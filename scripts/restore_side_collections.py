@@ -10,6 +10,7 @@ tables. Run this after a paragraph rebuild, before switching the index over.
 from __future__ import annotations
 
 import argparse
+import os
 import sqlite3
 from pathlib import Path
 
@@ -18,7 +19,7 @@ from sentence_transformers import SentenceTransformer
 
 DB = Path(__file__).resolve().parents[1] / "data" / "research.db"
 CHROMA = Path(__file__).resolve().parents[1] / "data" / "chroma"
-MODEL = Path(r"D:\models\models\BAAI--bge-base-en-v1.5")
+MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 BATCH = 64
 
 

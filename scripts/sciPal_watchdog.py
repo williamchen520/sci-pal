@@ -19,12 +19,12 @@
     4. 探测必须绕过代理：本机存在 http_proxy，不绕过会把存活的服务误判成没起。
 
 用法
-    D:/sciPal/venv_sciPal_py312/Scripts/python.exe scripts/sciPal_watchdog.py --once
-    D:/sciPal/venv_sciPal_py312/Scripts/python.exe scripts/sciPal_watchdog.py
+    python scripts/sciPal_watchdog.py --once
+    python scripts/sciPal_watchdog.py
 
 日志（V33.17 · 看门狗日志落盘）
     文件：`logs/sciPal_watchdog.log` —— **绝对路径**，由 `PROJECT_ROOT` 派生（计划任务的
-        cwd 可能是 `C:/Windows/System32`，相对路径会写丢）。可用环境变量
+        cwd 可能是系统目录，相对路径会写丢）。可用环境变量
         `SCIPAL_WATCHDOG_LOG` 覆盖，仅供验收时临时指向别处，不参与生产逻辑。
     格式：与 stdout 完全一致 —— `[YYYY-MM-DD HH:MM:SS] msg`，UTF-8，追加写。
     双写：同一行同时进 stdout 与文件；**每次写入 open/close**，不复用长期句柄
@@ -66,7 +66,7 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-VENV_PYTHON = PROJECT_ROOT / "venv_sciPal_py312" / "Scripts" / "python.exe"
+VENV_PYTHON = Path(sys.executable).resolve()
 API_SCRIPT = PROJECT_ROOT / "api_server.py"
 LOGS_DIR = PROJECT_ROOT / "logs"
 API_LOG = LOGS_DIR / "sciPal_api.log"
@@ -80,7 +80,7 @@ LOCK_FILE = LOGS_DIR / "sciPal_watchdog.lock"
 LAUNCH_GUARD_FILE = LOGS_DIR / "sciPal_launch.guard"
 
 # L-1: 看门狗自身日志 —— **绝对路径**，由 PROJECT_ROOT / LOGS_DIR 派生。
-# 计划任务的工作目录可能是 C:\Windows\System32，用相对路径会把日志写到别处（甚至丢）。
+# 计划任务的工作目录可能是系统目录，用相对路径会把日志写到别处（甚至丢）。
 # SCIPAL_WATCHDOG_LOG 仅供验收时指向临时文件，不参与生产逻辑。
 _env_log = os.environ.get("SCIPAL_WATCHDOG_LOG", "").strip()
 WATCHDOG_LOG = (

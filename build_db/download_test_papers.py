@@ -7,7 +7,7 @@ V19.6 — use ISSN for Crossref (not journal name):
   3. Unpaywall: DOI → PDF URL → download
 
 Usage:
-  cd /home/kokomi/sciPal && source venv_sciPal/bin/activate
+  cd /path/to/sciPal && source .venv/bin/activate
   python -m build_db.download_test_papers
 """
 import json

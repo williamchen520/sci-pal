@@ -17,14 +17,7 @@ from services.search.fts_query_builder import FTSQueryBuilder
 from services.search.mmr_diversifier import MMRDiversifier
 from services.search.retrieval_diagnostics import RetrievalDiagnostics
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-DB_PATH = PROJECT_ROOT / "data" / "research.db"
-CHROMA_PATH = PROJECT_ROOT / "data" / "chroma"
-
-EMBEDDING_MODEL = os.environ.get(
-    "SCIPAL_EMBEDDING_MODEL",
-    r"D:\models\models\BAAI--bge-base-en-v1.5",
-)
+from config.paths import CHROMA_PATH, DB_PATH, EMBEDDING_MODEL
 RRF_K = 60  # RRF constant
 VECTOR_TOP_K = 20
 FTS_TOP_K = 20

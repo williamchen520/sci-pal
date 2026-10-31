@@ -13,16 +13,16 @@ import urllib.request
 from typing import Any, Dict, List
 
 PROMPTS = [
-    ("profile", "分析 D:/data/cohort.xlsx 的字段分布", {"path", "project_id"}),
-    ("aggregate", "按 sex 分组统计 D:/data/cohort.csv", {"path", "project_id", "group_by"}),
-    ("sample", "给 D:/data/cohort.tsv 生成脱敏样例", {"path", "project_id"}),
-    ("profile", "看看 D:/data/lab.xlsx 有哪些列", {"path", "project_id"}),
-    ("aggregate", "按 stage 和 sex 聚合 D:/data/trial.csv", {"path", "project_id", "group_by"}),
-    ("sample", "从 D:/data/patients.xlsx 抽样 5 行", {"path", "project_id"}),
-    ("profile", "读取 D:/data/raw.tsv 的列类型", {"path", "project_id"}),
-    ("aggregate", "统计 D:/data/cohort.xlsx 每个 age 的人数", {"path", "project_id", "group_by"}),
-    ("sample", "D:/data/notes.docx 做个脱敏摘要", {"path", "project_id"}),
-    ("profile", "D:/data/cohort.csv 缺失值多吗", {"path", "project_id"}),
+    ("profile", "分析 data/cohort.xlsx 的字段分布", {"path", "project_id"}),
+    ("aggregate", "按 sex 分组统计 data/cohort.csv", {"path", "project_id", "group_by"}),
+    ("sample", "给 data/cohort.tsv 生成脱敏样例", {"path", "project_id"}),
+    ("profile", "看看 data/lab.xlsx 有哪些列", {"path", "project_id"}),
+    ("aggregate", "按 stage 和 sex 聚合 data/trial.csv", {"path", "project_id", "group_by"}),
+    ("sample", "从 data/patients.xlsx 抽样 5 行", {"path", "project_id"}),
+    ("profile", "读取 data/raw.tsv 的列类型", {"path", "project_id"}),
+    ("aggregate", "统计 data/cohort.xlsx 每个 age 的人数", {"path", "project_id", "group_by"}),
+    ("sample", "data/notes.docx 做个脱敏摘要", {"path", "project_id"}),
+    ("profile", "data/cohort.csv 缺失值多吗", {"path", "project_id"}),
 ]
 
 SCHEMA = (
@@ -33,7 +33,7 @@ SCHEMA = (
 )
 
 MULTI = (
-    "Plan two tool calls for: 分析 D:/data/cohort.csv，先 profile 再按 sex aggregate。"
+    "Plan two tool calls for: 分析 data/cohort.csv，先 profile 再按 sex aggregate。"
     ' Return ONLY JSON: {"steps":[{"tool":"data_profile","args":{...}},'
     '{"tool":"data_aggregate","args":{...}}]}.'
 )

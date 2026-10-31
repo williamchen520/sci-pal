@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, r"D:\sciPal\scripts")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from sciPal_watchdog import _rotate_file_if_needed  # noqa: E402
 

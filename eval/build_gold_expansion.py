@@ -16,7 +16,7 @@ import urllib.request
 from pathlib import Path
 from typing import Dict, List
 
-DB = Path(r"D:\sciPal\data\research.db")
+DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 GOLD = Path(__file__).resolve().parent / "gold" / "seed.jsonl"
 OUT = Path(__file__).resolve().parent / "gold" / "seed_auto.jsonl"
 

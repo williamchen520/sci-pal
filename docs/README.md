@@ -17,6 +17,7 @@
 | 插件端口与对比评测 | [工作计划-插件端口与对比评测.md](工作计划-插件端口与对比评测.md) |
 | Benchmark PostgreSQL 策略 | [benchmark-PostgreSQL策略.md](benchmark-PostgreSQL策略.md) |
 | PostgreSQL 迁移计划 | [工作计划-PostgreSQL迁移.md](工作计划-PostgreSQL迁移.md) |
+| 跨平台路径体检 | [跨平台路径体检报告.md](跨平台路径体检报告.md) |
 | PostgreSQL 迁移基线 | [PostgreSQL迁移-基线.md](PostgreSQL迁移-基线.md) |
 | PostgreSQL ETL dry-run | [PostgreSQL迁移-ETL-dryrun.json](PostgreSQL迁移-ETL-dryrun.json) |
 | PostgreSQL ETL verify | [PostgreSQL迁移-ETL-verify.json](PostgreSQL迁移-ETL-verify.json) |

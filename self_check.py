@@ -248,14 +248,14 @@ def check_databases():
 def check_ai_models():
     print_header("检查 5: AI 模型")
 
-    # 检查常见模型路径
+    # 模型路径由 config.paths 提供；默认是 HuggingFace ID，离线时用 env 指本地目录
+    from config.paths import EMBEDDING_MODEL, MODELS_DIR, RERANK_MODEL
+
     model_paths = [
-        ("D:\\models\\models\\BAAI--bge-base-en-v1.5", "Embedding 模型 (Windows)"),
-        ("D:\\models\\models\\BAAI--bge-reranker-base", "Reranker 模型 (Windows)"),
-        ("/data/models/BAAI--bge-base-en-v1.5", "Embedding 模型 (Linux)"),
-        ("/data/models/BAAI--bge-reranker-base", "Reranker 模型 (Linux)"),
-        ("models/BAAI--bge-base-en-v1.5", "Embedding 模型 (相对路径)"),
-        ("models/BAAI--bge-reranker-base", "Reranker 模型 (相对路径)"),
+        (EMBEDDING_MODEL, "Embedding 模型"),
+        (RERANK_MODEL, "Reranker 模型"),
+        (str(MODELS_DIR / "bge-base-en-v1.5"), "Embedding 模型 (项目 models/)"),
+        (str(MODELS_DIR / "bge-reranker-base"), "Reranker 模型 (项目 models/)"),
     ]
 
     found_models = 0

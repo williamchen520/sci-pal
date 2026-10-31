@@ -60,7 +60,7 @@ class MinerUParser(BaseParser):
         wait_seconds: int = 900,
     ) -> None:
         self.name = "mineru"
-        self.output_dir = output_dir or str(Path("data") / "parsed_output")
+        self.output_dir = output_dir or str(Path(__file__).resolve().parents[2] / "data" / "parsed_output")
         self.api_url = api_url
         self.wait_seconds = wait_seconds
         self.cli_path = cli_path or self._find_cli()

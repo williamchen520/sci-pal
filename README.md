@@ -213,7 +213,7 @@ sci-pal/
 ├─ eval/                     检索/QA/插件对比脚本（plugin_bench、claim_verifier_bench、retriever_bench）
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    713 项测试
+├─ tests/                    716 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -242,7 +242,7 @@ sci-pal/
 ## 测试
 
 ```
-713 tests, ~65s
+716 tests, ~68s
 ```
 
 覆盖：检索、路由、guard、结构、JATS 导入、watch、domain packs、claim 试点、多用户隔离、项目/实验/run、插件端口。
@@ -261,6 +261,7 @@ sci-pal/
 - [插件端口与对比评测计划](docs/工作计划-插件端口与对比评测.md)
 - [Benchmark PostgreSQL 策略](docs/benchmark-PostgreSQL策略.md)
 - [PostgreSQL 迁移计划](docs/工作计划-PostgreSQL迁移.md)
+- [跨平台路径体检报告](docs/跨平台路径体检报告.md)
 - [PostgreSQL 迁移基线](docs/PostgreSQL迁移-基线.md)
 - [PostgreSQL ETL dry-run](docs/PostgreSQL迁移-ETL-dryrun.json)
 - [PostgreSQL ETL verify](docs/PostgreSQL迁移-ETL-verify.json)

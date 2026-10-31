@@ -1,7 +1,7 @@
 """SciFact abstract-level retrieval benchmark (standalone smoke test).
 
 Build:
-    python -m eval.scifact_benchmark --build --data-dir G:\\runs\\scifact_data\\data
+    python -m eval.scifact_benchmark --build --data-dir data/scifact/data
 
 Run:
     python -m eval.scifact_benchmark --limit 20
@@ -10,6 +10,7 @@ Run:
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import re
 import sqlite3
@@ -17,7 +18,7 @@ from pathlib import Path
 from typing import Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DATA = Path(r"G:\runs\scifact_data\data")
+DEFAULT_DATA = Path(os.environ.get("SCIPAL_SCIFACT_DATA", str(Path(__file__).resolve().parent.parent / "data" / "scifact" / "data")))
 DEFAULT_DB = ROOT / "data" / "benchmark_scifact.db"
 DEFAULT_OUT = ROOT / "eval" / "results" / "scifact_smoke.json"
 

@@ -4,7 +4,7 @@ Keeps the retriever (and therefore the embedding + rerank models) loaded between
 jobs, so repeated runs only pay the retrieval cost once. Jobs are dropped into a
 queue directory as ``*.job.json``::
 
-    {"spec": "G:/runs/job.json", "run_dir": "D:/sciPal/data/runs/2026-10-27", "approve": true}
+    {"spec": "data/runs/job.json", "run_dir": "data/runs/2026-10-27", "approve": true}
 
 Each job produces ``processed/<job>.result.json`` and is removed from the queue.
 """

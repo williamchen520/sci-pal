@@ -35,15 +35,21 @@ if sys.platform == "win32":
 
 
 # 路径配置（跟项目保持一致）
-DB_PATH = "data/research.db"
-CHROMA_PATH = "data/chroma"
-XML_OUTPUT_DIR = "documents_xml"
+from config.paths import (
+    CHROMA_PATH as _CHROMA_PATH,
+    DB_PATH as _DB_PATH,
+    EMBEDDING_MODEL,
+    MODELS_DIR,
+    XML_DIR,
+)
+DB_PATH = str(_DB_PATH)
+CHROMA_PATH = str(_CHROMA_PATH)
+XML_OUTPUT_DIR = str(XML_DIR)
 COLLECTION_NAME = "sci_pal_paragraphs"
 
 # Embedding 模型（跟主程序一致：bge-base-en-v1.5）
-EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
 # 本地模型路径（如果有的话优先用本地）
-LOCAL_EMBEDDING_PATH = "D:/models/models/BAAI--bge-base-en-v1.5"
+LOCAL_EMBEDDING_PATH = str(MODELS_DIR / "bge-base-en-v1.5")
 
 
 # ============================================================

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import sqlite3
@@ -24,10 +25,10 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from build_db.jats_parser import parse_jats
 
-DEFAULT_QUESTIONS = Path(r"G:\runs\LAB-Bench\LitQA2\litqa-v2-public.jsonl")
+DEFAULT_QUESTIONS = Path(os.environ.get("SCIPAL_LITQA2_DATA", str(ROOT / "data" / "lab-bench" / "LitQA2" / "litqa-v2-public.jsonl")))
 DEFAULT_DB = ROOT / "data" / "benchmark_litqa2.db"
 DEFAULT_CHROMA = ROOT / "data" / "benchmark_litqa2_chroma"
-MODEL = r"D:\models\models\BAAI--bge-base-en-v1.5"
+MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 SENT_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9])")
 
 
