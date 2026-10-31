@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, request
 from services.claims import service
 
 
-def build_claims_blueprint(*, db_path, log=None) -> Blueprint:
+def build_claims_blueprint(*, db_path, log=None, get_llm=None) -> Blueprint:
     bp = Blueprint("claims", __name__, url_prefix="/api/claims")
     service.ensure_schema(db_path)
 
@@ -42,6 +42,30 @@ def build_claims_blueprint(*, db_path, log=None) -> Blueprint:
             return jsonify(
                 {"candidates": service.search_candidates(conn, claim_id, direction=direction)}
             )
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 404
+        finally:
+            conn.close()
+
+    @bp.post("/<claim_id>/interrogate")
+    def interrogate(claim_id: str):
+        data = request.get_json(silent=True) or {}
+        direction = str(data.get("direction") or "support")
+        if direction not in {"support", "oppose"}:
+            return jsonify({"error": "direction must be support or oppose"}), 400
+        use_llm = bool(data.get("use_llm"))
+        client = get_llm() if (use_llm and get_llm) else None
+        conn = service.connect(db_path)
+        try:
+            candidates = service.interrogate(
+                conn,
+                claim_id,
+                direction=direction,
+                use_llm=use_llm,
+                llm_client=client,
+                limit=min(int(data.get("limit") or 5), 8),
+            )
+            return jsonify({"candidates": candidates, "use_llm": use_llm})
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 404
         finally:
