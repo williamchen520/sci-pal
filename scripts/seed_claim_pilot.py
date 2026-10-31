@@ -44,7 +44,7 @@ def main() -> int:
         papers = set()
         missing = []
         for item in claims:
-            claim_id = service.create_claim(conn, item)
+            claim_id = service.create_claim(conn, {**item, "corpus": corpus})
             for evidence in item.get("evidence") or []:
                 sentence_id = evidence.get("sentence_id")
                 try:
