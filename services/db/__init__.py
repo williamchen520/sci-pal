@@ -20,11 +20,13 @@ from .etl import (
     run_etl,
 )
 from .shadow_read import FtsDiff, ShadowReader, TableDiff, write_report
+from .dual_write import DEFAULT_TABLES, install, outbox_stats, replay
 
 __all__ = [
     "DBAdapter",
     "DBAdapterError",
     "DBConfig",
+    "DEFAULT_TABLES",
     "DryRunWriter",
     "ETLError",
     "ETLReport",
@@ -39,6 +41,9 @@ __all__ = [
     "assert_snapshot",
     "create_adapter",
     "dry_run",
+    "install",
+    "outbox_stats",
+    "replay",
     "run_etl",
     "write_report",
 ]

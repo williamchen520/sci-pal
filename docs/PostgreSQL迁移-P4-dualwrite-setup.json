@@ -1,0 +1,32 @@
+{
+  "installed": [
+    "papers",
+    "sections",
+    "paragraphs",
+    "sentences",
+    "figures",
+    "tables",
+    "citations",
+    "sentence_links",
+    "paper_links",
+    "claim_cards",
+    "claim_card_evidence",
+    "claim_card_events",
+    "watch_items",
+    "watch_profiles",
+    "watch_runs",
+    "watch_seen",
+    "users",
+    "workspaces",
+    "memberships",
+    "review_projects",
+    "review_events"
+  ],
+  "outbox": {
+    "pending": 0,
+    "oldest_pending": null
+  },
+  "backup": "D:\\sciPal\\data\\backups\\research_20261101_012330.db",
+  "db": "D:\\sciPal\\data\\research.db",
+  "integrity": "ok"
+}
