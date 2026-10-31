@@ -498,8 +498,27 @@ porter    vs english：平均 match Jaccard 0.989
 
 ```text
 porter + english 最接近；
-FTS 切流前应重建 SQLite FTS 为 porter；
-排序仍 bm25 vs ts_rank_cd，需单独评审。
+但 20 query paper-level 测试显示 porter 不提升检索：
+  unicode61 Recall@10 1.000
+  porter    Recall@10 0.950
+  PG english Recall@10 0.600
+```
+
+因此：
+
+```text
+FTS 暂不切换。
+P4 只双写元数据表，FTS 继续走 SQLite unicode61。
+```
+
+Porter 重建与 20 query：
+
+```text
+scripts/rebuild_fts_porter.py
+scripts/fts_porter_compare.py
+docs/PostgreSQL迁移-FTS-porter-20query.md
+docs/PostgreSQL迁移-FTS-porter-20query.json
+docs/PostgreSQL迁移-FTS-porter-rebuild.json
 ```
 
 ### P4：双写

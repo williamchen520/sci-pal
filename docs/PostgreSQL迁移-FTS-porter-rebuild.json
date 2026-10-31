@@ -1,0 +1,8 @@
+{
+  "target": "backups\\research_porter.db",
+  "paragraphs_indexed": 166347,
+  "papers_indexed": 3310,
+  "paragraphs_fts_rows": 166347,
+  "papers_fts_rows": 3310,
+  "integrity": "ok"
+}
