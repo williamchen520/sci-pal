@@ -732,7 +732,7 @@ if __name__ == "__main__":
     host = os.environ.get("SCIPAL_HOST", "0.0.0.0")
     port = int(os.environ.get("SCIPAL_PORT", "5000"))
     debug = os.environ.get("SCIPAL_DEBUG", "0") == "1"
-    print(f"🧪 Sci-Pal API V33.17 — http://{host}:{port}")
+    print(f"🧪 Sci-Pal API V33.96 — http://{host}:{port}")
     print(f"   DB: {DB_PATH}")
     print(f"   Frontend: {FRONTEND_DIR}")
     run_db_migrations()

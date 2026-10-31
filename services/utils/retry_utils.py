@@ -464,6 +464,62 @@ class DeadLetterQueue:
 # å…¨å±€å•ä¾‹
 # =============================================================================
 
+class ParserFallbackError(RuntimeError):
+    """All parsers in the fallback chain failed."""
+
+
+class ParserFallbackChain:
+    """Try parsers in order; return the first successful result.
+
+    A parser may be an object with ``parse(*args, **kwargs)`` or a callable.
+    """
+
+    def __init__(self, parsers=None):
+        self._parsers = []
+        self._stats = {}
+        for item in parsers or []:
+            if isinstance(item, (tuple, list)) and len(item) == 2:
+                self.add_parser(item[0], item[1])
+            else:
+                name = getattr(item, "name", item.__class__.__name__)
+                self.add_parser(name, item)
+
+    def add_parser(self, name, parser):
+        self._parsers.append((name, parser))
+        self._stats.setdefault(name, {"attempts": 0, "successes": 0, "failures": 0})
+        return self
+
+    def parse(self, *args, **kwargs):
+        if not self._parsers:
+            raise ParserFallbackError("no parsers registered")
+        last_error = None
+        for name, parser in self._parsers:
+            self._stats[name]["attempts"] += 1
+            try:
+                func = parser.parse if hasattr(parser, "parse") else parser
+                result = func(*args, **kwargs)
+                if result is None:
+                    raise ValueError("parser returned None")
+                self._stats[name]["successes"] += 1
+                return result
+            except Exception as exc:  # noqa: BLE001
+                self._stats[name]["failures"] += 1
+                last_error = exc
+        raise ParserFallbackError(
+            f"all {len(self._parsers)} parsers failed; last={last_error}"
+        ) from last_error
+
+    def get_stats(self):
+        return {
+            "parsers": [
+                {"name": name, **dict(counts)} for name, counts in self._stats.items()
+            ],
+            "total_attempts": sum(item["attempts"] for item in self._stats.values()),
+            "total_successes": sum(item["successes"] for item in self._stats.values()),
+            "total_failures": sum(item["failures"] for item in self._stats.values()),
+        }
+
+
 _dlq_instance: Optional[DeadLetterQueue] = None
 _dlq_lock = threading.Lock()
 

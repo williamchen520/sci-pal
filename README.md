@@ -213,7 +213,7 @@ sci-pal/
 ├─ eval/                     检索/QA/插件对比脚本（plugin_bench、claim_verifier_bench、retriever_bench）
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    716 项测试
+├─ tests/                    719 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -242,7 +242,7 @@ sci-pal/
 ## 测试
 
 ```
-716 tests, ~68s
+719 tests, ~68s
 ```
 
 覆盖：检索、路由、guard、结构、JATS 导入、watch、domain packs、claim 试点、多用户隔离、项目/实验/run、插件端口。
