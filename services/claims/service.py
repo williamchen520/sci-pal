@@ -177,6 +177,8 @@ def search_candidates(
     claim_id: str,
     direction: str = "support",
     limit: int = 8,
+    retriever=None,
+    llm_client=None,
 ) -> List[Dict[str, Any]]:
     claim = get_claim(conn, claim_id)
     if not claim:
@@ -201,16 +203,39 @@ def search_candidates(
     sql += " LIMIT ?"
     params.append(max(limit * 4, limit))
     rows = conn.execute(sql, params).fetchall()
-    candidates = retrieval.rank_candidates(
+    candidates = [{**dict(row), "retrieval": "fts"} for row in rows]
+
+    if direction == "oppose" and retriever is not None:
+        from services.claims import semantic
+
+        generated = semantic.generate_refute_queries(
+            claim["claim_text"], claim.get("qualifiers") or {}, llm_client=llm_client
+        )
+        semantic_rows = semantic.semantic_candidates(
+            conn,
+            retriever,
+            claim["claim_text"],
+            claim.get("qualifiers") or {},
+            corpus,
+            generated,
+            limit=limit,
+        )
+        seen = {candidate["sentence_id"] for candidate in candidates}
+        for candidate in semantic_rows:
+            if candidate["sentence_id"] not in seen:
+                candidates.append(candidate)
+                seen.add(candidate["sentence_id"])
+
+    ranked = retrieval.rank_candidates(
         claim["claim_text"],
         claim.get("qualifiers") or {},
-        [dict(row) for row in rows],
+        candidates,
         direction=direction,
     )
-    for candidate in candidates:
+    for candidate in ranked:
         candidate["direction"] = direction
         candidate["query"] = query
-    return candidates[:limit]
+    return ranked[:limit]
 
 
 def add_note(
@@ -236,12 +261,20 @@ def interrogate(
     direction: str = "support",
     use_llm: bool = False,
     llm_client=None,
+    retriever=None,
     limit: int = 5,
 ) -> List[Dict[str, Any]]:
     claim = get_claim(conn, claim_id)
     if not claim:
         raise ValueError("claim not found")
-    candidates = search_candidates(conn, claim_id, direction=direction, limit=limit)
+    candidates = search_candidates(
+        conn,
+        claim_id,
+        direction=direction,
+        limit=limit,
+        retriever=retriever,
+        llm_client=llm_client,
+    )
     if use_llm:
         from services.claims import nli
 

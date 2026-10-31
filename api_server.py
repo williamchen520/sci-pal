@@ -271,7 +271,7 @@ app.register_blueprint(
     )
 )
 app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
-app.register_blueprint(build_claims_blueprint(db_path=DB_PATH, log=app.logger))
+app.register_blueprint(build_claims_blueprint(db_path=DB_PATH, log=app.logger, get_llm=get_llm_client, get_retriever=get_retriever))
 app.register_blueprint(build_domain_packs_blueprint(log=app.logger))
 app.register_blueprint(build_tenancy_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_notes_blueprint(db_path=DB_PATH, log=app.logger))

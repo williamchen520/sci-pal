@@ -482,3 +482,38 @@ underdetermines: 1
 2. FTS + 方向词仍有天花板；
 3. 下一步应使用语义检索或 LLM 生成反对查询，而不是继续调 FTS 权重；
 4. 没有 refutes 不等于 claim 成立，只能说明当前检索没有找到反例。
+
+---
+
+## 10. 语义反对检索 v2
+
+已实现：
+
+- LLM 生成 3 条英文 refute query；
+- 调用现有 `UnifiedRetriever`（hybrid + rerank）；
+- paragraph 命中后映射回 sentence；
+- 与 FTS 候选合并、去重、重排；
+- 生产环境已注入 `get_retriever`。
+
+对 `claim_hcc_triple_os` 实测：
+
+```text
+Retrieval: rerank=True, top_paragraphs=5
+```
+
+返回的 Top 5 仍是 FTS 候选；语义通道没有新增不同的 sentence。
+
+判断：
+
+1. 语义链路已接通，但尚未产生增量；
+2. 需要检查 corpus filter、query 质量和 paragraph→sentence 选择；
+3. 不能把“语义通道已接”误写成“语义检索已提升”。
+
+下一步：
+
+```text
+检查 retriever 的 paper_ids 过滤
+→ 检查 LLM refute query
+→ 检查 paragraph 内 sentence 选择
+→ 再评估是否真的增加 refutes
+```
