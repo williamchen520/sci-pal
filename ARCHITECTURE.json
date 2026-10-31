@@ -1741,5 +1741,11 @@
     "claim_online_ingest": "docs/claim-pilot-在线入库-01.md",
     "domain_pack": "packs/biomed-oncoimmuno/README.md",
     "tests": "docs/评测说明.md"
+  },
+  "collaboration": {
+    "highest_priority_rules": ".dsh_rules",
+    "details": "docs/协作规范.md",
+    "pr_template": ".github/pull_request_template.md",
+    "violation_token": "RULE_VIOLATION"
   }
 }

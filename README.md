@@ -227,6 +227,8 @@ sci-pal/
 - [云端模型评测](docs/云端模型评测.md)
 - [可选项与用户配置](docs/可选项与用户配置.md)
 - [部署（Docker Compose）](deploy/README.md)
+- [协作规范](docs/协作规范.md)
+- [AI 最高优先级规则 `.dsh_rules`](.dsh_rules)
 - [历史文档归档](docs/archive/README.md)
 
 ## 许可证

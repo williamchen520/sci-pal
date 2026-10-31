@@ -36,6 +36,9 @@
 | Git 分支保护与本地钩子 | [Git-分支保护与钩子.md](Git-分支保护与钩子.md) |
 | 许可证与依赖合规 | [许可证说明.md](许可证说明.md) |
 | 历史工单 / 阶段验收 / 旧计划 | [archive/](archive/README.md) |
+| 协作规范 | [协作规范.md](协作规范.md) |
+| AI 最高优先级规则 | [`../.dsh_rules`](../.dsh_rules) |
+| PR 自检模板 | [`../.github/pull_request_template.md`](../.github/pull_request_template.md) |
 | 贡献指南 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
 | 给 AI 代码助手的项目说明 | [`../AGENTS.md`](../AGENTS.md) |
 | 机器可读架构（V33.96） | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
