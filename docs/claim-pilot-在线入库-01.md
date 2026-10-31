@@ -124,3 +124,35 @@ paper_PMC8940827_45a0a117_xml
 
 > OS 数据 immature ≠ 已经证明无效。  
 > 但它足以推翻“提高总生存”的无条件表述。
+
+---
+
+## 7. 人工裁决
+
+2026-10-31，人工确认：
+
+```text
+claim_hcc_triple_os -> contested
+```
+
+同时保留：
+
+```text
+refutes: paper_PMC12771288_fca97ed9_xml_para_00000_sent_001
+```
+
+裁决理由：
+
+> LEAP-012 / EMERALD-1 解读显示 OS 数据未成熟，且不支持联合治疗相对 TACE 单药的统计学显著 OS 获益；该证据直接挑战“提高总生存”的无条件表述。
+
+状态变化：
+
+```text
+accepted -> contested
+```
+
+注意：
+
+- 不是“证明无效”；
+- 是“不能再无条件写提高 OS”；
+- 后续写作必须同时写 PFS 获益与 OS 未成熟。

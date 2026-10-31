@@ -20,7 +20,7 @@ STOP = {
     "patient", "hcc", "hepatocellular", "carcinoma", "results", "conclusion",
 }
 RELATIONS = {"supports", "refutes", "mentions", "underdetermines"}
-DECISIONS = {"accept", "revise", "reject"}
+DECISIONS = {"accept", "revise", "reject", "contest"}
 
 
 def _now() -> str:
@@ -311,7 +311,12 @@ def decide(
     claim = get_claim(conn, claim_id)
     if not claim:
         raise ValueError("claim not found")
-    status = {"accept": "accepted", "revise": "revised", "reject": "rejected"}[decision]
+    status = {
+        "accept": "accepted",
+        "revise": "revised",
+        "reject": "rejected",
+        "contest": "contested",
+    }[decision]
     conn.execute(
         "UPDATE claim_cards SET status = ?, decision = ?, decision_note = ?, decided_by = ?, "
         "decided_at = ?, updated_at = ? WHERE claim_id = ?",

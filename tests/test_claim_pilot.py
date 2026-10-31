@@ -65,6 +65,13 @@ class ClaimPilotTests(unittest.TestCase):
         self.assertEqual(claim["decision"], "accept")
         self.assertTrue(any(event["action"] == "decision:accept" for event in claim["events"]))
 
+    def test_contest_decision(self) -> None:
+        conn = service.connect(self.db)
+        claim = service.decide(conn, self.claim_id, "contest", "conflicting evidence")
+        conn.close()
+        self.assertEqual(claim["status"], "contested")
+        self.assertEqual(claim["decision"], "contest")
+
     def test_search_candidates(self) -> None:
         conn = service.connect(self.db)
         candidates = service.search_candidates(conn, self.claim_id, direction="support")
