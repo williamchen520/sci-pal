@@ -223,7 +223,14 @@ def check_databases():
         try:
             conn = sqlite3.connect(str(abstracts_db))
             cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM abstracts")
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('abstracts','papers')"
+            )
+            present = {row[0] for row in cursor.fetchall()}
+            table = "abstracts" if "abstracts" in present else "papers"
+            if table not in present:
+                raise RuntimeError("neither abstracts nor papers table exists")
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
             abstract_count = cursor.fetchone()[0]
             conn.close()
             check_pass(f"abstracts.db 可连接，{abstract_count:,} 条摘要 ({size_mb:.1f} MB)")
@@ -929,56 +936,39 @@ def check_config():
 
 
 def check_version_pointers():
-    """检查 12: 版本指针一致性（V33.17 新增守卫）。
-
-    真值基准是 VERSION 文件；api_server.py 里只有两处是“版本指针”：
-      · /api/health 的 "version": "..." 返回值
-      · 启动 banner 的 `Sci-Pal API Vxx.yy`
-    `# V25.xx` 之类是历史功能注释，不是版本指针，不参与比对。
-
-    判语义而非形状：必须报出实际取到值与分母；任一处不一致即 FAIL。
-    """
+    """Check that /api/health and the startup banner match VERSION."""
     print_header("检查 12: 版本指针一致性")
 
     import re
 
     root = get_project_root()
     version_file = root / "VERSION"
-    api_server = root / "api_server.py"
-
     if not version_file.exists():
         check_fail("VERSION 文件不存在，无法确定基准版本")
         return
-    expected = version_file.read_text(encoding="utf-8").strip()
+    expected = version_file.read_text(encoding="utf-8").strip().lstrip("\ufeff")
     if not expected:
         check_fail("VERSION 文件为空，无法确定基准版本")
         return
-
     print(f"  基准版本（VERSION 文件）: {expected}")
-
-    if not api_server.exists():
-        check_fail("api_server.py 不存在")
-        return
-    try:
-        lines = api_server.read_text(encoding="utf-8").splitlines()
-    except OSError as exc:
-        check_fail(f"读取 api_server.py 失败: {exc}")
-        return
 
     health_re = re.compile(r'^\s*"version"\s*:\s*"([^"]+)"\s*,?\s*$')
     banner_re = re.compile(r"Sci-Pal API\s+(V\d+\.\d+)")
-
     found = []
-    for lineno, line in enumerate(lines, start=1):
-        match = health_re.match(line)
-        if match:
-            found.append(("/api/health 返回值", lineno, match.group(1)))
-            continue
-        match = banner_re.search(line)
-        if match:
-            found.append(("启动 banner", lineno, match.group(1)))
+    for rel in ("api_server.py", "routes/core.py"):
+        path = root / rel
+        if not path.exists():
+            check_fail(f"{rel} 不存在")
+            return
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            match = health_re.match(line)
+            if match:
+                found.append((f"{rel}:{lineno}", "/api/health 返回值", match.group(1)))
+                continue
+            match = banner_re.search(line)
+            if match:
+                found.append((f"{rel}:{lineno}", "启动 banner", match.group(1)))
 
-    # 定位数量异常 → 守卫本身失效，必须报出来，不能静默通过
     if len(found) != 2:
         check_fail(
             f"版本指针定位异常：期望 2 处（health + banner），实际 {len(found)} 处"
@@ -987,20 +977,17 @@ def check_version_pointers():
         return
 
     mismatches = []
-    for label, lineno, actual in found:
+    for location, label, actual in found:
         marker = "✅" if actual == expected else "❌"
-        print(f"    {marker} api_server.py:{lineno} {label} = {actual}")
+        print(f"    {marker} {location} {label} = {actual}")
         if actual != expected:
-            mismatches.append((label, lineno, actual))
+            mismatches.append((location, label, actual))
 
     if mismatches:
-        for label, lineno, actual in mismatches:
-            check_fail(
-                f"api_server.py:{lineno} {label} 版本不一致：当前 {actual}，期望 {expected}"
-            )
+        for location, label, actual in mismatches:
+            check_fail(f"{location} {label} 版本不一致：当前 {actual}，期望 {expected}")
     else:
-        check_pass(f"版本指针 {len(found)}/{len(found)} 与 VERSION ({expected}) 一致")
-
+        check_pass(f"版本指针 2/2 与 VERSION ({expected}) 一致")
 
 # =============================================================================
 # 主函数

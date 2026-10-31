@@ -41,7 +41,7 @@ def build_core_blueprint(*, db_path: Path, get_retriever: Callable[[], Any]) -> 
             {
                 "status": "ok",
                 "service": "sci-pal",
-                "version": "V33.17",
+                "version": "V33.96",
                 "db_exists": Path(db_path).exists(),
             }
         )
