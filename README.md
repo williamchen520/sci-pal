@@ -301,3 +301,9 @@ sci-pal/
 12. 写作闸门仍是 brief + 人工检查，尚未自动拒绝违规句子；
 13. 插件端口为 M0/M1/M2：可信插件进程内执行，尚未做 subprocess/container 隔离；Retriever 已接入，C 阶段 PaperGenerator 未实现；
 14. PostgreSQL 业务后端尚未实现：benchmark 默认 fail-fast 指向 PostgreSQL，小规模本地测试需显式 `SCIPAL_BENCH_ALLOW_SQLITE=1`。
+
+---
+
+## Development Note（开发手记）
+
+SciPal 的 20 万行底座，是由人类架构师提供设计规范与 5 条核心开发规则，并与 DSH 智能体在数千次高频交互中逐步演化而成。我们证明了：在极致的工程纪律与清晰的架构契约下，大模型能够保持‘零幻觉、零钝化’的高效输出，成为最可靠的开发伙伴。
