@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 698,
+    "count": 699,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1855,5 +1855,22 @@
     "module": "services/quality/benchmark_db.py",
     "tests": "tests/test_benchmark_db.py",
     "postgres_backend": "not-implemented"
+  },
+  "postgres_migration": {
+    "status": "planned",
+    "plan": "docs/工作计划-PostgreSQL迁移.md",
+    "baseline": "docs/PostgreSQL迁移-基线.md",
+    "backup_script": "scripts/backup_sqlite.py",
+    "phases": [
+      "P0-backup",
+      "P1-schema-adapter",
+      "P2-readonly-etl",
+      "P3-shadow-read",
+      "P4-dual-write",
+      "P5-cutover",
+      "P6-archive"
+    ],
+    "hard_rule": "original data/research.db is read-only; migrate from snapshot only",
+    "test_count": 699
   }
 }
