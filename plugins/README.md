@@ -83,17 +83,17 @@ Benchmark:
 python eval/retriever_bench.py
 ```
 
-Expanded result on 54 queries / 32 papers:
+Mixed result on 74 queries / 100 papers:
 
 ```text
-bm25        Recall@10 0.9259  MRR 0.8299
-dense       Recall@10 0.9259  MRR 0.8704
-hybrid      Recall@10 0.9444  MRR 0.9090
-hybrid+rr   Recall@10 0.9815  MRR 0.9204
+bm25        Recall@10 0.9459  MRR 0.8149
+dense       Recall@10 0.9324  MRR 0.8829
+hybrid      Recall@10 0.9459  MRR 0.9036
+hybrid+rr   Recall@10 0.9865  MRR 0.9081
 ```
 
-The query set is still local-HCC-heavy and title queries are easy; do not claim
-statistical superiority yet.
+The query set now includes 20 cross-topic queries and 48 distractor papers, but
+is still not a publication-grade benchmark.
 
 ## Add a plugin
 

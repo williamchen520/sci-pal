@@ -1814,33 +1814,34 @@
       ],
       "bench": "eval/retriever_bench.py",
       "dataset": "eval/plugins/retriever_queries.json",
-      "cases": 54,
-      "corpus": 32,
+      "cases": 74,
+      "corpus": 100,
       "results": {
         "bm25": {
-          "recall@10": 0.9259,
-          "mrr": 0.8299,
-          "ndcg@10": 0.8537
+          "recall@10": 0.9459,
+          "mrr": 0.8149,
+          "ndcg@10": 0.8476
         },
         "dense": {
-          "recall@10": 0.9259,
-          "mrr": 0.8704,
-          "ndcg@10": 0.8845
+          "recall@10": 0.9324,
+          "mrr": 0.8829,
+          "ndcg@10": 0.8954
         },
         "hybrid": {
-          "recall@10": 0.9444,
-          "mrr": 0.909,
-          "ndcg@10": 0.9178
+          "recall@10": 0.9459,
+          "mrr": 0.9036,
+          "ndcg@10": 0.9142
         },
         "hybrid_rerank": {
-          "recall@10": 0.9815,
-          "mrr": 0.9204,
-          "ndcg@10": 0.936
+          "recall@10": 0.9865,
+          "mrr": 0.9081,
+          "ndcg@10": 0.928
         }
       },
-      "caveat": "54 local-HCC-heavy queries; no statistical superiority claim",
+      "caveat": "74 queries, 20 cross-topic, 48 distractors; not publication-grade",
       "sources": {
         "seed_100": 14,
+        "cross_topic": 20,
         "claim_qualifiers": 20,
         "paper_title": 20
       }
