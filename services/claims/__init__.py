@@ -7,6 +7,7 @@ from .service import (
     decide,
     ensure_schema,
     get_claim,
+    interrogate,
     list_claims,
     search_candidates,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "decide",
     "ensure_schema",
     "get_claim",
+    "interrogate",
     "list_claims",
     "search_candidates",
 ]

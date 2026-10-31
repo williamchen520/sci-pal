@@ -219,6 +219,42 @@ def add_note(
     return get_claim(conn, claim_id) or {}
 
 
+def interrogate(
+    conn: sqlite3.Connection,
+    claim_id: str,
+    direction: str = "support",
+    use_llm: bool = False,
+    llm_client=None,
+    limit: int = 5,
+) -> List[Dict[str, Any]]:
+    claim = get_claim(conn, claim_id)
+    if not claim:
+        raise ValueError("claim not found")
+    candidates = search_candidates(conn, claim_id, direction=direction, limit=limit)
+    if use_llm:
+        from services.claims import nli
+
+        for candidate in candidates:
+            result = nli.classify(claim["claim_text"], candidate["quote"], llm_client)
+            candidate.update(
+                {
+                    "suggested_relation": result["relation"],
+                    "confidence": result["confidence"],
+                    "reason": result["reason"],
+                }
+            )
+    else:
+        for candidate in candidates:
+            candidate.update(
+                {
+                    "suggested_relation": "underdetermines",
+                    "confidence": 0.0,
+                    "reason": "LLM classification disabled",
+                }
+            )
+    return candidates
+
+
 def decide(
     conn: sqlite3.Connection,
     claim_id: str,

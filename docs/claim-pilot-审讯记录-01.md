@@ -416,3 +416,29 @@ python scripts/apply_claim_pilot_round1.py
 ```
 
 所有裁决均写入 `claim_card_events`，可审计。
+
+---
+
+## 8. NLI 预试验
+
+用 `POST /api/claims/<id>/interrogate` + DeepSeek 对 `claim_hcc_triple_os` 做一次“反对方向”预试验，Top 3 候选：
+
+| 候选 | LLM 判定 |
+|---|---|
+| 11-gene signature 预测一线治疗反应 | mentions |
+| CBLB/EGFR 泛素化论文中的 VEGF 受体句 | mentions |
+| IMbrave150 抗 VEGF + PD-1 机制句 | underdetermines |
+
+结果：
+
+```text
+refutes: 0
+mentions: 2
+underdetermines: 1
+```
+
+说明：
+
+1. LLM 没有把“同主题句子”误判成 refutes；
+2. 当前瓶颈不是分类器，而是候选检索：FTS 返回的是关键词邻居，不是反例；
+3. 下一步应先改“反对查询 + 候选排序”，再扩大 NLI 使用。

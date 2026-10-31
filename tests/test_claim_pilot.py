@@ -68,6 +68,26 @@ class ClaimPilotTests(unittest.TestCase):
         self.assertTrue(candidates)
         self.assertEqual(candidates[0]["sentence_id"], "s1")
 
+    def test_interrogate_with_fake_llm(self) -> None:
+        class FakeLLM:
+            def is_available(self):
+                return True
+
+            def chat_json(self, system_prompt, user_prompt, temperature=None):
+                return {
+                    "relation": "supports",
+                    "confidence": 0.8,
+                    "reason": "direct survival result",
+                }
+
+        conn = service.connect(self.db)
+        candidates = service.interrogate(
+            conn, self.claim_id, direction="support", use_llm=True, llm_client=FakeLLM()
+        )
+        conn.close()
+        self.assertEqual(candidates[0]["suggested_relation"], "supports")
+        self.assertEqual(candidates[0]["confidence"], 0.8)
+
     def test_api_list_detail_and_validation(self) -> None:
         listing = self.client.get("/api/claims").get_json()["claims"]
         self.assertEqual(len(listing), 1)

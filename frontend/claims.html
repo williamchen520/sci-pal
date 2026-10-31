@@ -88,6 +88,7 @@
         <div class="row">
           <button class="secondary" id="search-support">找支持证据</button>
           <button class="secondary" id="search-oppose">找反对证据</button>
+          <label class="muted"><input id="use-llm" type="checkbox" style="width:auto"> LLM 判定</label>
         </div>
         <div id="candidates" style="margin-top:10px"></div>
 
@@ -188,15 +189,16 @@ async function loadClaim(claimId) {
 async function search(direction) {
   if (!state.current) return;
   try {
-    const body = await api(`/api/claims/${encodeURIComponent(state.current.claim_id)}/search`, {
+    const body = await api(`/api/claims/${encodeURIComponent(state.current.claim_id)}/interrogate`, {
       method: "POST",
-      body: JSON.stringify({ direction }),
+      body: JSON.stringify({ direction, use_llm: $("use-llm").checked }),
     });
     state.candidates = body.candidates || [];
     $("candidates").innerHTML = state.candidates.length ? state.candidates.map((candidate) => `
       <div class="candidate">
         <div class="meta">${esc(candidate.paper_title || candidate.paper_id)} · ${esc(candidate.sentence_id)}</div>
         <div class="quote">“${esc(candidate.quote)}”</div>
+        ${candidate.suggested_relation ? `<div class="meta" style="margin-top:5px">判定：<span class="pill ${esc(candidate.suggested_relation)}">${esc(candidate.suggested_relation)}</span> ${esc(candidate.reason || "")}</div>` : ""}
         <div class="row" style="margin-top:5px">
           <button class="small" data-add="${esc(candidate.sentence_id)}" data-rel="supports">加为支持</button>
           <button class="secondary small" data-add="${esc(candidate.sentence_id)}" data-rel="refutes">加为反对</button>
