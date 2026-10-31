@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "citations" (
   "title" TEXT,
   "authors" TEXT,
   "journal" TEXT,
-  "year" BIGINT,
+  "year" TEXT,
   "page" BIGINT,
   "bbox" TEXT,
   PRIMARY KEY ("citation_id")
@@ -566,7 +566,7 @@ CREATE TABLE IF NOT EXISTS "supplementary_files" (
   "file_path" TEXT,
   "file_size" BIGINT,
   "description" TEXT,
-  "created_at" TEXT DEFAULT datetime('now'),
+  "created_at" TEXT DEFAULT (CURRENT_TIMESTAMP::text),
   PRIMARY KEY ("supp_id")
 );
 

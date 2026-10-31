@@ -40,7 +40,8 @@ def _default(value: str | None, pg_type: str = "TEXT") -> str:
     if value is None:
         return ""
     value = str(value).strip()
-    if value.upper() == "CURRENT_TIMESTAMP":
+    lower = value.lower()
+    if lower in {"current_timestamp", "datetime('now')", "date('now')"}:
         if pg_type.upper() == "TEXT":
             return " DEFAULT (CURRENT_TIMESTAMP::text)"
         return " DEFAULT CURRENT_TIMESTAMP"
@@ -74,6 +75,9 @@ def generate(db_path: Path) -> str:
         for col in columns:
             cid, col_name, col_type, notnull, default, pk = col
             pg_type = _type(col_type)
+            # Citation years contain free-text dates such as "Feb 3, 2020".
+            if name == "citations" and col_name == "year":
+                pg_type = "TEXT"
             if pk and isinstance(pk, int) and pk > 0:
                 primary.append((pk, col_name))
             if pk == 1 and col_name == "id" and "INT" in (col_type or "").upper():

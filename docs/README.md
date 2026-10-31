@@ -19,6 +19,7 @@
 | PostgreSQL 迁移计划 | [工作计划-PostgreSQL迁移.md](工作计划-PostgreSQL迁移.md) |
 | PostgreSQL 迁移基线 | [PostgreSQL迁移-基线.md](PostgreSQL迁移-基线.md) |
 | PostgreSQL ETL dry-run | [PostgreSQL迁移-ETL-dryrun.json](PostgreSQL迁移-ETL-dryrun.json) |
+| PostgreSQL ETL verify | [PostgreSQL迁移-ETL-verify.json](PostgreSQL迁移-ETL-verify.json) |
 | PostgreSQL ETL checksum | [PostgreSQL迁移-ETL-checksum.json](PostgreSQL迁移-ETL-checksum.json) |
 | PDF 三引擎解析 | [PDF解析-三引擎联合.md](PDF解析-三引擎联合.md) |
 | JATS 导入与外部文献源 | [文献源-JATS与外部源.md](文献源-JATS与外部源.md) |

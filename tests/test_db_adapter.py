@@ -110,6 +110,13 @@ class PostgresSchemaTests(unittest.TestCase):
         for table in ("papers", "paragraphs", "sentences", "claim_cards", "watch_items"):
             self.assertIn(f'CREATE TABLE IF NOT EXISTS "{table}"', schema)
         self.assertIn("search_vector tsvector", schema)
+
+    def test_citations_year_is_text(self) -> None:
+        schema = (
+            Path(__file__).resolve().parent.parent / "build_db" / "postgres_schema.sql"
+        ).read_text(encoding="utf-8")
+        citations = schema.split('CREATE TABLE IF NOT EXISTS "citations"', 1)[1].split(");", 1)[0]
+        self.assertIn('"year" TEXT', citations)
         self.assertIn("USING GIN (search_vector)", schema)
 
 
