@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from services.plugins import PluginRegistry, PluginRunner  # noqa: E402
+from services.quality.benchmark_db import ensure_benchmark_backend  # noqa: E402
 
 DEFAULT_PLUGINS = [
     "retriever-bm25",
@@ -64,6 +65,7 @@ def main() -> int:
     plugin_ids = [item.strip() for item in args.plugins.split(",") if item.strip()]
     dataset_path = Path(args.dataset)
     cases = json.loads(dataset_path.read_text(encoding="utf-8"))["cases"]
+    ensure_benchmark_backend(papers=len(cases), concurrent=1)
     dataset_hash = "sha256:" + hashlib.sha256(dataset_path.read_bytes()).hexdigest()
     registry = PluginRegistry().load()
     runner = PluginRunner(registry, run_log=args.run_log)

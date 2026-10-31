@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from services.plugins import PluginRegistry, PluginRunner  # noqa: E402
+from services.quality.benchmark_db import ensure_benchmark_backend  # noqa: E402
 
 
 def load_cases(path: Path) -> List[Dict[str, Any]]:
@@ -43,6 +44,7 @@ def main() -> int:
 
     dataset_path = Path(args.dataset)
     cases = load_cases(dataset_path)
+    ensure_benchmark_backend(papers=len(cases), concurrent=1)
     dataset_hash = "sha256:" + hashlib.sha256(dataset_path.read_bytes()).hexdigest()
     plugin_ids = [item.strip() for item in args.plugins.split(",") if item.strip()]
     if not plugin_ids:

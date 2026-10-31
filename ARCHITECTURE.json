@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 692,
+    "count": 698,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1845,5 +1845,14 @@
         "paper_title": 20
       }
     }
+  },
+  "benchmark_db": {
+    "policy": "postgresql-required-for-large-or-concurrent",
+    "default_url": "postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench",
+    "allow_sqlite_env": "SCIPAL_BENCH_ALLOW_SQLITE",
+    "large_threshold": 100,
+    "module": "services/quality/benchmark_db.py",
+    "tests": "tests/test_benchmark_db.py",
+    "postgres_backend": "not-implemented"
   }
 }
