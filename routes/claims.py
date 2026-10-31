@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, request
 from services.claims import service
 
 
-def build_claims_blueprint(*, db_path, log=None, get_llm=None) -> Blueprint:
+def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=None) -> Blueprint:
     bp = Blueprint("claims", __name__, url_prefix="/api/claims")
     service.ensure_schema(db_path)
 
@@ -55,6 +55,7 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None) -> Blueprint:
             return jsonify({"error": "direction must be support or oppose"}), 400
         use_llm = bool(data.get("use_llm"))
         client = get_llm() if (use_llm and get_llm) else None
+        retriever = get_retriever() if get_retriever else None
         conn = service.connect(db_path)
         try:
             candidates = service.interrogate(
@@ -63,6 +64,7 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None) -> Blueprint:
                 direction=direction,
                 use_llm=use_llm,
                 llm_client=client,
+                retriever=retriever,
                 limit=min(int(data.get("limit") or 5), 8),
             )
             return jsonify({"candidates": candidates, "use_llm": use_llm})

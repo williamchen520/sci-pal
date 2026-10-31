@@ -24,14 +24,16 @@ class ClaimPilotTests(unittest.TestCase):
             """
             CREATE TABLE papers (paper_id TEXT PRIMARY KEY, title TEXT);
             CREATE TABLE sentences (
-                sentence_id TEXT PRIMARY KEY, paper_id TEXT, text TEXT
+                sentence_id TEXT PRIMARY KEY, paper_id TEXT, text TEXT, para_id TEXT
             );
             CREATE VIRTUAL TABLE sentences_fts USING fts5(text);
             INSERT INTO papers VALUES ('p1', 'HCC immunotherapy trial');
-            INSERT INTO sentences VALUES ('s1', 'p1', 'PD-1 blockade improved overall survival in HCC');
-            INSERT INTO sentences VALUES ('s2', 'p1', 'PD-1 blockade did not improve overall survival in HCC');
+            INSERT INTO sentences VALUES ('s1', 'p1', 'PD-1 blockade improved overall survival in HCC', 'pa1');
+            INSERT INTO sentences VALUES ('s2', 'p1', 'PD-1 blockade did not improve overall survival in HCC', 'pa1');
+            INSERT INTO sentences VALUES ('s3', 'p1', 'PD-1 blockade showed no benefit in a resistant subgroup', 'pa2');
             INSERT INTO sentences_fts(rowid, text) VALUES (1, 'PD-1 blockade improved overall survival in HCC');
             INSERT INTO sentences_fts(rowid, text) VALUES (2, 'PD-1 blockade did not improve overall survival in HCC');
+            INSERT INTO sentences_fts(rowid, text) VALUES (3, 'PD-1 blockade showed no benefit in a resistant subgroup');
             """
         )
         conn.commit()
@@ -98,6 +100,21 @@ class ClaimPilotTests(unittest.TestCase):
         conn.close()
         self.assertEqual(candidates[0]["suggested_relation"], "supports")
         self.assertEqual(candidates[0]["confidence"], 0.8)
+
+    def test_semantic_retrieval_expands_paragraph_to_sentence(self) -> None:
+        class FakeRetriever:
+            def retrieve(self, query, **kwargs):
+                return {"paragraphs": [{"para_id": "pa2", "text": "resistant subgroup"}]}
+
+        conn = service.connect(self.db)
+        candidates = service.search_candidates(
+            conn,
+            self.claim_id,
+            direction="oppose",
+            retriever=FakeRetriever(),
+        )
+        conn.close()
+        self.assertTrue(any(item["sentence_id"] == "s3" for item in candidates))
 
     def test_api_list_detail_and_validation(self) -> None:
         listing = self.client.get("/api/claims").get_json()["claims"]
