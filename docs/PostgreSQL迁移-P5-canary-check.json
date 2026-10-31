@@ -1,0 +1,11 @@
+{
+  "db": "data\\research.db",
+  "workspace": "ws_default",
+  "sqlite_count": 3310,
+  "postgres_count": 3310,
+  "same_order": true,
+  "field_diffs": 0,
+  "missing_in_pg": 0,
+  "extra_in_pg": 0,
+  "status": "ok"
+}
