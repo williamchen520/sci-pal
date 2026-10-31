@@ -1786,6 +1786,22 @@
         "underdetermines_accuracy": 0.0,
         "majority_baseline": 0.9091,
         "note": "pipeline only; dataset imbalanced (10 supports / 1 mentions)"
+      },
+      "balanced_dataset": {
+        "path": "eval/plugins/claims_pilot_balanced_cases.json",
+        "builder": "scripts/build_claim_balanced_cases.py",
+        "cases": 30,
+        "labels": {
+          "supports": 10,
+          "refutes": 10,
+          "underdetermines": 10
+        },
+        "results": {
+          "rule_accuracy": 0.4333,
+          "underdetermines_accuracy": 0.3333,
+          "majority_baseline": 0.3333
+        },
+        "caveat": "refutes are derived_opposite_claim; human review required before publication"
       }
     }
   }
