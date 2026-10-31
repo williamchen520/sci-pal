@@ -149,7 +149,7 @@ sci-pal/
 ├─ packs/                    领域包（biomed-oncoimmuno）
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    670 项测试
+├─ tests/                    671 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
