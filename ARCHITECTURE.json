@@ -1,327 +1,1745 @@
 {
-  "schema_version": "1.0",
-  "generated_for": "V33.13",
+  "schema_version": "2.0",
+  "generated_for": "V33.96",
+  "generated_at": "2026-10-31",
   "project": {
-    "name": "Sci-Pal",
-    "display_name": "Sci-Pal 科研文献 RAG 助手",
-    "version": "V33.13",
-    "description": "本地化部署的科研文献检索与综述生成系统：确定性检索层（向量+FTS5/BM25+RRF+Cross-Encoder Rerank+查询路由+小到大扩展+多查询+MMR），生成式 LLM 为可选表达层；支持本地检索、按大纲分配论文生成综述、RAG 问答、NCBI 在线检索下载、Protocols.io 实时方法对接。",
-    "language": "zh-CN / English technical",
-    "license": "internal",
-    "repository": "https://gitee.com/williamsucas/sci-pal.git",
-    "branch": "master"
+    "name": "SciPal",
+    "display_name": "SciPal 科研文献 RAG 系统",
+    "version": "V33.96",
+    "status": "work-in-progress",
+    "license": "AGPL-3.0-only",
+    "repository": "https://github.com/williamchen520/sci-pal",
+    "mirror": "https://gitee.com/williamsucas/sci-pal",
+    "default_branch": "dev",
+    "description": "本地化科研文献检索、结构化解析、综述生成与 claim 审讯工作台。"
   },
+  "warning": [
+    "本项目目前处于重度开发阶段（Work In Progress），尚未发布任何正式 Release 版本。",
+    "当前主分支代码包含大量未修复的 Bug、不稳定的接口以及未经过全量测试的逻辑。",
+    "绝对禁止将当前代码直接部署于任何生产环境、医疗/科研关键业务或涉及重要数据的场景！",
+    "任何无视本警告、擅自将开发中代码用于实际生产导致的数据丢失、系统崩溃等重大损失，均由使用者自行承担全部法律与经济责任。作者概不负责！"
+  ],
   "runtime": {
     "python": "3.12",
     "venv_name": "venv_sciPal_py312",
-    "backend": "Flask 3.0.3",
-    "frontend": "vanilla HTML/CSS/JS, no framework; PDF.js",
+    "backend": "Flask 3.1.3",
+    "frontend": "原生 HTML/CSS/JS + PDF.js",
     "entrypoint": "api_server.py",
     "host": "0.0.0.0",
     "port": 5000,
-    "default_url": "http://127.0.0.1:5000"
+    "default_url": "http://127.0.0.1:5000",
+    "database": "SQLite data/research.db",
+    "vector_store": "ChromaDB data/chroma/"
   },
   "tech_stack": {
-    "backend": ["Flask==3.0.3", "flask-cors==4.0.1", "Werkzeug==3.0.3", "pydantic==2.8.2", "networkx==3.3"],
-    "retrieval": ["chromadb==0.5.5", "sentence-transformers==3.0.1", "SQLite FTS5/BM25", "RRF", "Cross-Encoder Rerank"],
-    "pdf": ["PyMuPDF==1.24.10", "pypdf==5.0.1", "pdfplumber==0.11.4", "docling>=2.0 (optional deep parser)"],
-    "llm": ["Ollama (default local)", "OpenAI-compatible API (optional cloud)"],
-    "other": ["requests==2.32.3", "python-dotenv==1.0.1", "pyarrow==17.0.0", "tqdm"]
+    "backend": [
+      "Python 3.12",
+      "Flask",
+      "flask-cors",
+      "pydantic 2",
+      "networkx"
+    ],
+    "retrieval": [
+      "ChromaDB",
+      "sentence-transformers",
+      "FTS5/BM25",
+      "RRF",
+      "bge-reranker"
+    ],
+    "pdf": [
+      "PyMuPDF",
+      "Docling",
+      "GROBID",
+      "MinerU"
+    ],
+    "xml": [
+      "PMC/Europe PMC JATS"
+    ],
+    "llm": [
+      "DeepSeek OpenAI-compatible",
+      "Ollama",
+      "DSH"
+    ],
+    "deployment": [
+      "Docker Compose",
+      "Caddy",
+      "watch-cron"
+    ]
   },
   "models": [
+    {
+      "id": "cloud_llm",
+      "name": "deepseek-chat",
+      "provider": "DeepSeek",
+      "role": "QA / review / claim NLI / writing"
+    },
     {
       "id": "light_llm",
       "name": "qwen2.5:3b",
       "provider": "ollama",
-      "role": "lightweight tasks: outline generation, evidence extraction, citation verification",
-      "vram_gb": 2.0,
-      "quantization": "default"
+      "role": "intent / routing / scheduling"
     },
     {
       "id": "heavy_llm",
       "name": "qwen2.5:7b-instruct-q4_K_M",
       "provider": "ollama",
-      "role": "heavy tasks: review writing, Q&A",
-      "vram_gb": 4.5,
-      "quantization": "Q4_K_M (FP16 OOM on 8GB)"
+      "role": "offline QA / review fallback"
     },
     {
       "id": "embedding",
       "name": "BAAI/bge-base-en-v1.5",
       "provider": "sentence-transformers",
-      "role": "semantic embeddings for paragraphs and abstracts",
-      "vram_gb": 1.5
+      "role": "paragraph / abstract embeddings"
     },
     {
       "id": "reranker",
       "name": "BAAI/bge-reranker-base",
       "provider": "sentence-transformers",
-      "role": "Cross-Encoder reranking",
-      "vram_gb": 1.2,
-      "config_note": "config.json must contain \"model_type\":\"bert\" or it reports Unrecognized model"
-    }
-  ],
-  "total_vram_gb": 7.2,
-  "target_vram_budget_gb": 8.0,
-  "three_layer_data_architecture": [
-    {
-      "tier": 1,
-      "name": "direct_api",
-      "mode": "real-time API call, never persisted",
-      "sources": ["Protocols.io"]
+      "role": "cross-encoder reranking"
     },
     {
-      "tier": 2,
-      "name": "online_real_time",
-      "mode": "search API at query time, no local vector store",
-      "sources": ["NCBI PubMed/PMC online search", "Dockstore", "bio.tools", "nf-core"]
-    },
-    {
-      "tier": 3,
-      "name": "local_built_store",
-      "mode": "download -> parse -> SQLite + ChromaDB",
-      "sources": ["PMC full-text JATS XML", "PubMed abstracts", "OpenAlex metadata", "Bio-protocol"]
+      "id": "ner",
+      "name": "scispacy en_ner_bionlp13cg_md",
+      "provider": "spacy",
+      "role": "biomedical entity recognition"
     }
   ],
+  "architecture": {
+    "principles": [
+      "确定性检索优先",
+      "claim 必须绑定精确 quote",
+      "状态变化写入事件表，可审计",
+      "研究裁决由人确认，工程实现可自动化"
+    ],
+    "layers": [
+      {
+        "name": "客户端",
+        "paths": [
+          "frontend/",
+          "mcp_server/"
+        ],
+        "responsibility": "浏览器页面、DSH/MCP 入口"
+      },
+      {
+        "name": "HTTP 层",
+        "paths": [
+          "routes/",
+          "api_server.py"
+        ],
+        "responsibility": "26 个蓝图，鉴权、检索、问答、综述、watch、claim、项目/实验"
+      },
+      {
+        "name": "业务层",
+        "paths": [
+          "services/"
+        ],
+        "responsibility": "检索、QA、review、watch、domain_packs、claims、tenancy、projects、experiments、security"
+      },
+      {
+        "name": "解析/入库层",
+        "paths": [
+          "build_db/"
+        ],
+        "responsibility": "PDF/JATS 解析、结构重建、句子/链接、表迁移"
+      },
+      {
+        "name": "存储层",
+        "paths": [
+          "data/",
+          "documents/",
+          "documents_xml/",
+          "packs/"
+        ],
+        "responsibility": "SQLite、Chroma、PDF/XML、领域包"
+      }
+    ],
+    "data_model": {
+      "L0_document_tree": [
+        "papers",
+        "sections",
+        "paragraphs",
+        "sentences",
+        "figures",
+        "tables"
+      ],
+      "L1_evidence": [
+        "sentence_links",
+        "paper_links",
+        "citations"
+      ],
+      "L2_claim": [
+        "claim_cards",
+        "claim_card_evidence",
+        "claim_card_events"
+      ],
+      "L3_watch": [
+        "watch_profiles",
+        "watch_profile_journals",
+        "watch_runs",
+        "watch_items",
+        "watch_seen"
+      ],
+      "L4_tenancy_projects": [
+        "users",
+        "workspaces",
+        "memberships",
+        "projects",
+        "experiments",
+        "experiment_runs",
+        "experiment_revisions"
+      ]
+    },
+    "claim_model": {
+      "statuses": [
+        "draft",
+        "interrogating",
+        "supported",
+        "contested",
+        "underdetermined",
+        "accepted",
+        "revised",
+        "rejected"
+      ],
+      "relations": [
+        "supports",
+        "refutes",
+        "mentions",
+        "underdetermines"
+      ],
+      "decisions": [
+        "accept",
+        "revise",
+        "reject",
+        "contest"
+      ],
+      "writing_brief_fields": [
+        "safe_claim",
+        "must_include",
+        "must_not_write",
+        "evidence_ids"
+      ]
+    },
+    "retrieval_flow": [
+      "vector recall (Chroma paragraphs)",
+      "BM25 recall (FTS5)",
+      "RRF fusion + MMR",
+      "cross-encoder rerank",
+      "paragraph -> section / neighbor / sentences",
+      "evidence envelope"
+    ],
+    "claim_flow": [
+      "claim text + qualifiers",
+      "support / oppose / boundary query",
+      "FTS + semantic candidates",
+      "NLI relation classification",
+      "human decision + event",
+      "writing brief"
+    ],
+    "watch_flow": [
+      "profile + journals",
+      "discover / window search",
+      "dedup + score",
+      "select + ingest",
+      "digest + feedback"
+    ],
+    "tenancy": {
+      "roles": [
+        "owner",
+        "pi",
+        "member",
+        "viewer"
+      ],
+      "isolation": [
+        "papers",
+        "notes",
+        "projects",
+        "experiments",
+        "watch profiles"
+      ],
+      "auth_env": "SCIPAL_AUTH_REQUIRED"
+    }
+  },
   "storage": {
     "relational": {
       "engine": "SQLite",
-      "path": "data/research.db",
-      "holds": ["paper metadata", "section structure", "evidence cards", "tasks", "annotations", "supplementary links"]
+      "path": "data/research.db"
     },
     "abstract_db": {
       "engine": "SQLite",
-      "path": "data/abstracts.db"
+      "path": "data/research.db"
     },
     "semantic": {
       "engine": "ChromaDB",
-      "path_fulltext": "data/chroma/",
-      "collection_fulltext": "sci_pal_paragraphs",
-      "path_abstracts": "data/chroma_abstracts/",
+      "path": "data/chroma/",
       "join_key": "paper_id"
     },
-    "cache": {
-      "protocols_io": "data/protocols_io_cache/"
-    },
-    "templates": {
-      "outlines": "data/outlines/ (7 preset chapter templates, must not be deleted)"
-    }
+    "documents": [
+      "documents/",
+      "documents_xml/"
+    ],
+    "packs": "packs/"
   },
-  "layers": [
-    {"id": "api", "files": ["api_server.py"], "responsibility": "Flask routing, static serving, request dispatch"},
-    {
-      "id": "search",
-      "directory": "services/search/",
-      "modules": [
-        {"file": "unified_retriever.py", "responsibility": "Unified retrieval: one query -> evidence envelope (paragraphs/figures/tables/neighbors); fixed interface retrieve()"},
-        {"file": "hybrid_search.py", "responsibility": "Vector + FTS5(BM25) recall with RRF fusion"},
-        {"file": "hybrid_search_v2.py", "responsibility": "Hybrid search variant V2"},
-        {"file": "hybrid_retriever.py", "responsibility": "Three-way hybrid: local + NCBI online + Protocols.io, dedup and unified ranking; fixed interface search_papers()"},
-        {"file": "online_search.py", "responsibility": "NCBI PubMed/PMC online search with rate limit, cache, retry"},
-        {"file": "online_downloader.py", "responsibility": "Async online paper download, incremental import, incremental indexing"},
-        {"file": "protocols_io_client.py", "responsibility": "Protocols.io API client, 7-day cache, rate limit, retry; never builds local store"},
-        {"file": "reranker.py", "responsibility": "Cross-Encoder rerank of fused candidate pool"},
-        {"file": "query_router.py", "responsibility": "Rule-based channel routing (qa/citation/figure/method)"},
-        {"file": "query_expander.py", "responsibility": "Multi-query rewriting + optional HyDE"},
-        {"file": "context_expander.py", "responsibility": "Small-to-big expansion: hit paragraph -> whole section"},
-        {"file": "mmr_diversifier.py", "responsibility": "Maximal Marginal Relevance dedup/diversify"},
-        {"file": "graph_traverser.py", "responsibility": "CITES/SIMILAR graph traversal for paper discovery"},
-        {"file": "agentic_search.py", "responsibility": "Agentic multi-hop retrieval"},
-        {"file": "retrieval_observability.py", "responsibility": "Retrieval pipeline observability/tracing"},
-        {"file": "retrieval_diagnostics.py", "responsibility": "Transparent inspectable retrieval diagnostics"},
-        {"file": "sentence_relation_classifier.py", "responsibility": "Sentence relation classification (Q&A/analysis, not review)"},
-        {"file": "abbreviation_expander.py", "responsibility": "Academic abbreviation expansion dictionary"},
-        {"file": "abstract_search.py", "responsibility": "Abstract-store vector + FTS search parallel to fulltext"},
-        {"file": "boilerplate_filter.py", "responsibility": "Line-level front-matter/boilerplate cleaning"},
-        {"file": "chunker.py", "responsibility": "Section-aware greedy chunking"},
-        {"file": "fts_query_builder.py", "responsibility": "Enhanced FTS5 query builder"},
-        {"file": "reference_filter.py", "responsibility": "High-precision reference-entry filter"}
-      ]
-    },
-    {
-      "id": "review",
-      "directory": "services/review/",
-      "modules": [
-        {"file": "review_generator.py", "responsibility": "Main review engine: per-chapter generation with progressive context injection"},
-        {"file": "evidence_extractor.py", "responsibility": "Evidence card extraction, dedup, confidence"},
-        {"file": "evidence_card_incremental_manager.py", "responsibility": "Incremental evidence card maintenance"},
-        {"file": "llm_client.py", "responsibility": "Unified LLM access: Ollama local or OpenAI-compatible cloud, light/heavy model split"},
-        {"file": "outline_generator.py", "responsibility": "Outline generation (optional)"},
-        {"file": "outline_store.py", "responsibility": "Outline save/load/delete in data/outlines/"},
-        {"file": "citation_formatter.py", "responsibility": "CSL-based reference formatting"},
-        {"file": "citation_verifier.py", "responsibility": "Citation verification against evidence"},
-        {"file": "sentence_locator.py", "responsibility": "Locate sentence to source PDF page"},
-        {"file": "user_feedback.py", "responsibility": "User feedback closed loop"},
-        {"file": "impact_analyzer.py", "responsibility": "Change impact analysis + local recompute"},
-        {"file": "export_manager.py", "responsibility": "Export and share review"},
-        {"file": "task_manager.py", "responsibility": "Review task management"},
-        {"file": "review_store.py", "responsibility": "Review result staging"},
-        {"file": "relation_extractor.py", "responsibility": "Inter-evidence relation extraction (Q&A/analysis only, skipped by review)"},
-        {"file": "conflict_detector.py", "responsibility": "Conflict detection (Q&A/analysis only, skipped by review)"},
-        {"file": "models.py", "responsibility": "Pydantic data models for review"}
-      ]
-    },
-    {
-      "id": "other_services",
-      "modules": [
-        {"file": "services/qa/qa_service.py", "responsibility": "RAG Q&A service"},
-        {"file": "services/ai/ai_service.py", "responsibility": "AI service"},
-        {"file": "services/ai/envelope_builder.py", "responsibility": "Evidence envelope builder"},
-        {"file": "services/ai/rag_validator.py", "responsibility": "RAG answer validation"},
-        {"file": "services/pdf/annotator.py", "responsibility": "PDF annotation"},
-        {"file": "services/data/version_manager.py", "responsibility": "Data version management and incremental sync"},
-        {"file": "services/utils/retry_utils.py", "responsibility": "Unified retry/error handling"},
-        {"file": "services/utils/structured_logger.py", "responsibility": "Structured logging/monitoring"}
-      ]
-    }
-  ],
   "frontend_pages": [
-    {"file": "index.html", "purpose": "local literature retrieval home"},
-    {"file": "review.html", "purpose": "review generation and preview with sentence traceability"},
-    {"file": "qa.html", "purpose": "AI academic Q&A"},
-    {"file": "viewer.html", "purpose": "PDF.js reader"},
-    {"file": "compare.html", "purpose": "two-column paper comparison"},
-    {"file": "tasks.html", "purpose": "task list over SSE"}
+    "index.html",
+    "login.html",
+    "projects.html",
+    "reviews.html",
+    "watch.html",
+    "packs.html",
+    "claims.html",
+    "trace.html",
+    "compare.html",
+    "viewer.html"
   ],
-  "pipelines": {
-    "retrieval": [
-      "query_router selects channel",
-      "query_expander produces multi-query / optional HyDE",
-      "hybrid_search recalls via Chroma vector + SQLite FTS5(BM25)",
-      "RRF(K=60) fuses rankings; multi-query score accumulation",
-      "context_expander grows hit paragraph to whole section",
-      "reranker Cross-Encoder re-ranks",
-      "mmr_diversifier dedups",
-      "optional graph_traverser / agentic_search multi-hop",
-      "unified_retriever returns evidence envelope"
+  "api": {
+    "blueprints": 26,
+    "route_count": 185,
+    "groups": [
+      {
+        "prefix": "/api/auth/*",
+        "purpose": "登录 / 当前用户"
+      },
+      {
+        "prefix": "/api/workspaces/*",
+        "purpose": "工作区"
+      },
+      {
+        "prefix": "/api/retrieve",
+        "purpose": "统一证据检索"
+      },
+      {
+        "prefix": "/api/search/*",
+        "purpose": "本地/在线/混合检索"
+      },
+      {
+        "prefix": "/api/papers/*",
+        "purpose": "论文、解析、PDF、trace"
+      },
+      {
+        "prefix": "/api/qa/*",
+        "purpose": "问答"
+      },
+      {
+        "prefix": "/api/agentic/*",
+        "purpose": "多跳检索"
+      },
+      {
+        "prefix": "/api/review/*",
+        "purpose": "综述大纲/生成"
+      },
+      {
+        "prefix": "/api/reviews/*",
+        "purpose": "综述历史"
+      },
+      {
+        "prefix": "/api/watch/*",
+        "purpose": "文献监控"
+      },
+      {
+        "prefix": "/api/domain-packs/*",
+        "purpose": "领域包"
+      },
+      {
+        "prefix": "/api/claims/*",
+        "purpose": "claim 审讯"
+      },
+      {
+        "prefix": "/api/projects/*",
+        "purpose": "项目"
+      },
+      {
+        "prefix": "/api/experiments/*",
+        "purpose": "实验"
+      },
+      {
+        "prefix": "/api/runs/*",
+        "purpose": "实验 run"
+      },
+      {
+        "prefix": "/api/ingest/*",
+        "purpose": "异步入库"
+      },
+      {
+        "prefix": "/api/tasks/*",
+        "purpose": "任务"
+      },
+      {
+        "prefix": "/api/guard/*",
+        "purpose": "术语校验"
+      },
+      {
+        "prefix": "/api/protocols/*",
+        "purpose": "实验方案"
+      }
     ],
-    "hybrid_online": [
-      "hybrid_retriever runs local + NCBI online + Protocols.io in parallel",
-      "three-level dedup",
-      "unified ranking"
-    ],
-    "review_generation": [
-      "select preset outline template",
-      "edit chapter keywords",
-      "search_and_assign: search per chapter and assign papers",
-      "generate chapter by chapter with progressive context",
-      "evidence-claim matrix validation",
-      "iterative refinement with 5-dim scoring",
-      "each sentence bound to evidence card, traceable to PDF page"
-    ],
-    "online_download": [
-      "online_search returns candidates",
-      "online_downloader queues async download",
-      "incremental parse + index",
-      "queue/status/history/retry via /api/search/*"
+    "endpoints": [
+      {
+        "rule": "/",
+        "endpoint": "index",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/<path:path>",
+        "endpoint": "static_files",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/abstracts/<paper_id>",
+        "endpoint": "abstracts.get_abstract",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/abstracts/list",
+        "endpoint": "abstracts.list_abstracts",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/agentic/search",
+        "endpoint": "qa.agentic_search",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/agentic/search_async",
+        "endpoint": "qa.agentic_search_async",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/auth/login",
+        "endpoint": "tenancy.login",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/auth/logout",
+        "endpoint": "tenancy.logout",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/auth/me",
+        "endpoint": "tenancy.me",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/auth/workspace",
+        "endpoint": "tenancy.switch_workspace",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/claims",
+        "endpoint": "claims.listing",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/claims/",
+        "endpoint": "claims.listing",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>",
+        "endpoint": "claims.detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/decision",
+        "endpoint": "claims.decision",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/events",
+        "endpoint": "claims.events",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/evidence",
+        "endpoint": "claims.evidence",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/interrogate",
+        "endpoint": "claims.interrogate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/note",
+        "endpoint": "claims.note",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/search",
+        "endpoint": "claims.search",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/communities",
+        "endpoint": "system.list_communities",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/data/aggregate",
+        "endpoint": "data.aggregate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/data/artifacts",
+        "endpoint": "data.artifacts",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/data/artifacts/<artifact_id>",
+        "endpoint": "data.artifact",
+        "methods": [
+          "GET",
+          "PUT"
+        ]
+      },
+      {
+        "rule": "/api/data/artifacts/<artifact_id>/validate",
+        "endpoint": "data.validate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/data/audit",
+        "endpoint": "data.audit_log",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/data/classify",
+        "endpoint": "data.classify",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/data/cloud-gate",
+        "endpoint": "data.cloud_gate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/data/cloud-send",
+        "endpoint": "data.cloud_send",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/data/profile",
+        "endpoint": "data.profile",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/data/projects",
+        "endpoint": "data.projects",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/data/sample",
+        "endpoint": "data.sample",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/data/session",
+        "endpoint": "data.open_session",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/domain-packs",
+        "endpoint": "domain_packs.packs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/domain-packs/",
+        "endpoint": "domain_packs.packs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/domain-packs/<pack_id>",
+        "endpoint": "domain_packs.detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/domain-packs/<pack_id>/validate",
+        "endpoint": "domain_packs.validate",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/embed",
+        "endpoint": "ingest.embed",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/evidence/context",
+        "endpoint": "evidence.evidence_context",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/evidence/search",
+        "endpoint": "evidence.evidence_search",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/experiment-access-requests",
+        "endpoint": "experiments.experiment_access_requests",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments",
+        "endpoint": "protocols.recent_runs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>",
+        "endpoint": "experiments.experiments_detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>",
+        "endpoint": "experiments.experiments_update",
+        "methods": [
+          "PUT"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/access-requests",
+        "endpoint": "experiments.experiment_list_access",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/access-requests",
+        "endpoint": "experiments.experiment_request_access",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/access-requests/<request_id>/decide",
+        "endpoint": "experiments.experiment_decide_access",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/audit",
+        "endpoint": "experiments.experiment_audit",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/revisions",
+        "endpoint": "experiments.experiment_revisions",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/runs",
+        "endpoint": "experiment_runs.runs_create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/runs",
+        "endpoint": "experiment_runs.runs_list",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/sign",
+        "endpoint": "experiments.experiment_sign",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/signatures",
+        "endpoint": "experiments.experiment_signatures",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>",
+        "endpoint": "protocols.delete_run",
+        "methods": [
+          "DELETE"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>",
+        "endpoint": "protocols.update_run",
+        "methods": [
+          "PATCH"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>/attachments",
+        "endpoint": "protocols.list_attachments",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>/attachments",
+        "endpoint": "protocols.upload_attachment",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>/attachments/<file_id>",
+        "endpoint": "protocols.delete_attachment",
+        "methods": [
+          "DELETE"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>/attachments/<file_id>",
+        "endpoint": "protocols.download_attachment",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/graph/stats",
+        "endpoint": "system.graph_stats",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/guard/check",
+        "endpoint": "guard.check",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/guard/stats",
+        "endpoint": "guard.stats",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/guard/term/<term>",
+        "endpoint": "guard.term",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/health",
+        "endpoint": "core.health",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/ingest",
+        "endpoint": "ingest.start_ingest",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/ingest/<task_id>",
+        "endpoint": "ingest.ingest_status",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/ingest/<task_id>/cancel",
+        "endpoint": "ingest.cancel_ingest",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/notes",
+        "endpoint": "notes.notes_create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/notes",
+        "endpoint": "notes.notes_list",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/notes/<note_id>",
+        "endpoint": "notes.notes_delete",
+        "methods": [
+          "DELETE"
+        ]
+      },
+      {
+        "rule": "/api/notes/<note_id>",
+        "endpoint": "notes.notes_update",
+        "methods": [
+          "PUT"
+        ]
+      },
+      {
+        "rule": "/api/papers",
+        "endpoint": "papers.list_papers",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>",
+        "endpoint": "papers.paper_detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/annotate",
+        "endpoint": "papers_actions.annotate_pdf",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/annotations",
+        "endpoint": "papers_actions.list_pdf_annotations",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/graph",
+        "endpoint": "papers.paper_graph",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/pdf",
+        "endpoint": "papers_actions.serve_pdf",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary",
+        "endpoint": "papers_actions.list_supplementary_files",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary",
+        "endpoint": "papers_actions.upload_supplementary_file",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary/<supp_id>",
+        "endpoint": "papers_actions.delete_supplementary_file",
+        "methods": [
+          "DELETE"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary/<supp_id>/download",
+        "endpoint": "papers_actions.download_supplementary_file",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary/link",
+        "endpoint": "papers_actions.link_supplementary_file",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/trace",
+        "endpoint": "papers_actions.sentence_trace",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/trace.png",
+        "endpoint": "papers_actions.sentence_trace_image",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/import",
+        "endpoint": "papers_actions.import_paper",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/papers/local",
+        "endpoint": "papers_actions.list_local_papers",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/papers/parse",
+        "endpoint": "papers_actions.parse_local_paper",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/papers/parse_async",
+        "endpoint": "papers_actions.parse_local_paper_async",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/projects",
+        "endpoint": "projects.projects_create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/projects",
+        "endpoint": "projects.projects_list",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>",
+        "endpoint": "projects.projects_detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>",
+        "endpoint": "projects.projects_update",
+        "methods": [
+          "PUT"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>/copy",
+        "endpoint": "projects.projects_copy",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>/experiments",
+        "endpoint": "experiments.experiments_create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>/experiments",
+        "endpoint": "experiments.experiments_list",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>/members",
+        "endpoint": "projects.projects_add_member",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/protocols",
+        "endpoint": "protocols.list_protocols",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/protocols/<protocol_id>",
+        "endpoint": "protocols.get_protocol",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/protocols/<protocol_id>/export",
+        "endpoint": "protocols.export_protocol",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/protocols/<protocol_id>/runs",
+        "endpoint": "protocols.add_run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/protocols/<protocol_id>/runs",
+        "endpoint": "protocols.list_runs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/protocols/import",
+        "endpoint": "protocols.import_protocol",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/qa/ask",
+        "endpoint": "qa.qa_ask",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/qa/ask_async",
+        "endpoint": "qa.qa_ask_async",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/qa/status",
+        "endpoint": "qa.qa_status",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/references",
+        "endpoint": "references.list_references",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/references/import",
+        "endpoint": "references.import_references",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/retrieve",
+        "endpoint": "core.retrieve",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects",
+        "endpoint": "review_projects.projects",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>",
+        "endpoint": "review_projects.project",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/adjudicate",
+        "endpoint": "review_projects.adjudicate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/brief",
+        "endpoint": "review_projects.review_brief",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/conflicts",
+        "endpoint": "review_projects.screening_conflicts",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/events",
+        "endpoint": "review_projects.review_events",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/evidence",
+        "endpoint": "review_projects.evidence",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/evidence.csv",
+        "endpoint": "review_projects.evidence_csv",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/export.json",
+        "endpoint": "review_projects.export_project",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/from-watch",
+        "endpoint": "review_projects.from_watch",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/import-file",
+        "endpoint": "review_projects.import_file",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/import-records",
+        "endpoint": "review_projects.import_records",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/kappa",
+        "endpoint": "review_projects.screening_kappa",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/members",
+        "endpoint": "review_projects.project_members",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/papers",
+        "endpoint": "review_projects.papers",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/pico",
+        "endpoint": "review_projects.extract_pico",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/prisma",
+        "endpoint": "review_projects.prisma",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/prisma.svg",
+        "endpoint": "review_projects.prisma_diagram",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/report.docx",
+        "endpoint": "review_projects.review_report_docx",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/report.html",
+        "endpoint": "review_projects.review_report",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/report.pdf",
+        "endpoint": "review_projects.review_report_pdf",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/risk-of-bias",
+        "endpoint": "review_projects.rob",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/screen",
+        "endpoint": "review_projects.screen",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/webhooks",
+        "endpoint": "review_projects.webhooks",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/webhooks/<int:webhook_id>",
+        "endpoint": "review_projects.delete_webhook",
+        "methods": [
+          "DELETE"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/import",
+        "endpoint": "review_projects.import_project",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review/<review_id>",
+        "endpoint": "reviews.review_detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review/<review_id>/sentence/<sentence_id>",
+        "endpoint": "reviews.review_sentence",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review/assign_papers",
+        "endpoint": "review_actions.assign_papers_to_outline_route",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review/cancel/<task_id>",
+        "endpoint": "reviews.review_cancel",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review/generate",
+        "endpoint": "review_actions.generate_review",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review/generate_async",
+        "endpoint": "review_actions.generate_review_async",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review/llm_status",
+        "endpoint": "reviews.review_llm_status",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review/outline",
+        "endpoint": "review_actions.generate_outline",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review/outline/save",
+        "endpoint": "review_actions.save_outline",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review/outline/saved",
+        "endpoint": "review_actions.list_saved_outlines",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review/outline/saved/<name>",
+        "endpoint": "review_actions.delete_saved_outline",
+        "methods": [
+          "DELETE"
+        ]
+      },
+      {
+        "rule": "/api/review/outline/saved/<name>",
+        "endpoint": "review_actions.load_saved_outline",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review/running_task",
+        "endpoint": "reviews.review_running_task",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/review/search_and_assign",
+        "endpoint": "review_actions.search_and_assign_route",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/review/task/<task_id>",
+        "endpoint": "reviews.review_task",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/reviews",
+        "endpoint": "reviews.list_reviews",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/reviews/<review_id>",
+        "endpoint": "reviews.get_review",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/reviews/<review_id>/to-protocol",
+        "endpoint": "protocols.review_to_protocol",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/runs/<run_id>",
+        "endpoint": "experiment_runs.runs_detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/runs/<run_id>",
+        "endpoint": "experiment_runs.runs_update",
+        "methods": [
+          "PUT"
+        ]
+      },
+      {
+        "rule": "/api/runs/<run_id>/comparison",
+        "endpoint": "experiment_runs.runs_comparison",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/search/clear_download_history",
+        "endpoint": "search_downloads.clear_download_history",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/search/download_history",
+        "endpoint": "search.download_history",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/search/download_online",
+        "endpoint": "search_downloads.download_online_papers",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/search/download_queue",
+        "endpoint": "search.download_queue_status",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/search/download_status",
+        "endpoint": "search.download_status",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/search/hybrid",
+        "endpoint": "search.hybrid_search",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/search/online",
+        "endpoint": "search.online_search",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/search/retry_download",
+        "endpoint": "search_downloads.retry_download",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/tasks",
+        "endpoint": "tasks.list_all",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/tasks/<task_id>",
+        "endpoint": "tasks.detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/tasks/<task_id>/events",
+        "endpoint": "tasks.events",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/verify",
+        "endpoint": "evidence.verify",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/watch/items/<int:item_id>/feedback",
+        "endpoint": "watch.feedback",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/watch/items/<int:item_id>/read",
+        "endpoint": "watch.read_item",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles",
+        "endpoint": "watch.profiles",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>",
+        "endpoint": "watch.profile",
+        "methods": [
+          "DELETE",
+          "GET",
+          "PUT"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/discover",
+        "endpoint": "watch.discover",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/journals",
+        "endpoint": "watch.journals",
+        "methods": [
+          "GET",
+          "PUT"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/latest",
+        "endpoint": "watch.latest_profile",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/run",
+        "endpoint": "watch.run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/runs",
+        "endpoint": "watch.runs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/watch/runs/<int:run_id>",
+        "endpoint": "watch.run_detail",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/watch/runs/<int:run_id>/digest.md",
+        "endpoint": "watch.digest",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/watch/runs/<int:run_id>/latest",
+        "endpoint": "watch.latest",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/watch/runs/<int:run_id>/read-all",
+        "endpoint": "watch.read_all",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/watch/topics",
+        "endpoint": "watch.topics",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/workspaces",
+        "endpoint": "tenancy.create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/workspaces",
+        "endpoint": "tenancy.workspaces",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/workspaces/<workspace_id>/members",
+        "endpoint": "tenancy.add",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "rule": "/api/workspaces/<workspace_id>/members",
+        "endpoint": "tenancy.members",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "rule": "/api/workspaces/<workspace_id>/role",
+        "endpoint": "tenancy.role",
+        "methods": [
+          "GET"
+        ]
+      }
     ]
   },
-  "api_endpoints": [
-    {"group": "health", "method": "GET", "path": "/api/health", "purpose": "service and version check"},
-    {"group": "local_retrieval", "method": "GET", "path": "/api/retrieve", "purpose": "unified retrieval envelope"},
-    {"group": "local_retrieval", "method": "POST", "path": "/api/retrieve", "purpose": "unified retrieval envelope"},
-    {"group": "local_retrieval", "method": "GET", "path": "/api/agentic/search", "purpose": "agentic multi-hop"},
-    {"group": "local_retrieval", "method": "POST", "path": "/api/agentic/search", "purpose": "agentic multi-hop"},
-    {"group": "local_retrieval", "method": "GET", "path": "/api/communities", "purpose": "detected communities"},
-    {"group": "local_retrieval", "method": "GET", "path": "/api/graph/stats", "purpose": "graph statistics"},
-    {"group": "hybrid_online", "method": "GET", "path": "/api/search/hybrid", "purpose": "local + NCBI + Protocols hybrid"},
-    {"group": "hybrid_online", "method": "POST", "path": "/api/search/hybrid", "purpose": "local + NCBI + Protocols hybrid"},
-    {"group": "hybrid_online", "method": "GET", "path": "/api/search/online", "purpose": "NCBI PubMed/PMC online search"},
-    {"group": "hybrid_online", "method": "POST", "path": "/api/search/online", "purpose": "NCBI PubMed/PMC online search"},
-    {"group": "hybrid_online", "method": "POST", "path": "/api/search/download_online", "purpose": "async online download + ingest"},
-    {"group": "hybrid_online", "method": "GET", "path": "/api/search/download_queue", "purpose": "download queue"},
-    {"group": "hybrid_online", "method": "GET", "path": "/api/search/download_status", "purpose": "download status"},
-    {"group": "hybrid_online", "method": "GET", "path": "/api/search/download_history", "purpose": "download history"},
-    {"group": "hybrid_online", "method": "POST", "path": "/api/search/retry_download", "purpose": "retry a failed download"},
-    {"group": "hybrid_online", "method": "POST", "path": "/api/search/clear_download_history", "purpose": "clear download history"},
-    {"group": "papers", "method": "GET", "path": "/api/papers", "purpose": "paper list"},
-    {"group": "papers", "method": "GET", "path": "/api/papers/local", "purpose": "local-library papers"},
-    {"group": "papers", "method": "POST", "path": "/api/papers/import", "purpose": "import paper"},
-    {"group": "papers", "method": "POST", "path": "/api/papers/parse", "purpose": "parse submitted file"},
-    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>", "purpose": "paper detail"},
-    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/pdf", "purpose": "serve PDF"},
-    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/graph", "purpose": "graph neighbors"},
-    {"group": "papers", "method": "POST", "path": "/api/papers/<paper_id>/annotate", "purpose": "add annotation"},
-    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/annotations", "purpose": "list annotations"},
-    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/supplementary", "purpose": "list supplementary"},
-    {"group": "papers", "method": "POST", "path": "/api/papers/<paper_id>/supplementary", "purpose": "add supplementary"},
-    {"group": "papers", "method": "POST", "path": "/api/papers/<paper_id>/supplementary/link", "purpose": "link supplementary"},
-    {"group": "papers", "method": "GET", "path": "/api/papers/<paper_id>/supplementary/<supp_id>/download", "purpose": "download supplementary"},
-    {"group": "papers", "method": "DELETE", "path": "/api/papers/<paper_id>/supplementary/<supp_id>", "purpose": "remove supplementary"},
-    {"group": "review", "method": "GET", "path": "/api/review/generate", "purpose": "review generation (async task)"},
-    {"group": "review", "method": "POST", "path": "/api/review/generate", "purpose": "review generation (async task)"},
-    {"group": "review", "method": "GET", "path": "/api/review/outline", "purpose": "get outline"},
-    {"group": "review", "method": "POST", "path": "/api/review/outline", "purpose": "generate/edit outline"},
-    {"group": "review", "method": "POST", "path": "/api/review/outline/save", "purpose": "save outline"},
-    {"group": "review", "method": "GET", "path": "/api/review/outline/saved", "purpose": "list saved outlines"},
-    {"group": "review", "method": "GET", "path": "/api/review/outline/saved/<name>", "purpose": "load saved outline"},
-    {"group": "review", "method": "DELETE", "path": "/api/review/outline/saved/<name>", "purpose": "delete saved outline"},
-    {"group": "review", "method": "POST", "path": "/api/review/search_and_assign", "purpose": "search per chapter and assign papers"},
-    {"group": "review", "method": "POST", "path": "/api/review/assign_papers", "purpose": "assign papers to chapters"},
-    {"group": "review", "method": "GET", "path": "/api/review/<review_id>", "purpose": "review detail"},
-    {"group": "review", "method": "GET", "path": "/api/review/<review_id>/sentence/<sentence_id>", "purpose": "sentence-to-evidence trace"},
-    {"group": "review", "method": "GET", "path": "/api/review/llm_status", "purpose": "LLM availability/status"},
-    {"group": "review", "method": "GET", "path": "/api/review/running_task", "purpose": "current running review task"},
-    {"group": "review", "method": "GET", "path": "/api/review/task/<task_id>", "purpose": "task status"},
-    {"group": "review", "method": "POST", "path": "/api/review/cancel/<task_id>", "purpose": "cancel task"},
-    {"group": "qa", "method": "POST", "path": "/api/qa/ask", "purpose": "RAG Q&A"},
-    {"group": "qa", "method": "GET", "path": "/api/qa/status", "purpose": "Q&A status"},
-    {"group": "tasks", "method": "GET", "path": "/api/tasks", "purpose": "unified task table"},
-    {"group": "tasks", "method": "GET", "path": "/api/tasks/<task_id>", "purpose": "single task"},
-    {"group": "tasks", "method": "GET", "path": "/api/tasks/<task_id>/events", "purpose": "SSE event stream"},
-    {"group": "abstracts", "method": "GET", "path": "/api/abstracts/list", "purpose": "abstract library list"},
-    {"group": "abstracts", "method": "GET", "path": "/api/abstracts/<paper_id>", "purpose": "abstract by paper"}
-  ],
-  "env_vars": [
-    {"name": "SCIPAL_LLM_PROVIDER", "required": false, "default": "ollama", "secret": false, "values": ["ollama", "openai"], "description": "LLM backend selector"},
-    {"name": "SCIPAL_LLM_HOST", "required": false, "default": "http://localhost:11434", "secret": false, "description": "Ollama host"},
-    {"name": "SCIPAL_LLM_MODEL", "required": false, "default": "qwen2.5:7b-instruct-q4_K_M", "secret": false, "description": "heavy model for review/Q&A"},
-    {"name": "SCIPAL_LLM_LIGHT_MODEL", "required": false, "default": "qwen2.5:3b", "secret": false, "description": "light model for outline/evidence/verification"},
-    {"name": "SCIPAL_LLM_BASE_URL", "required": false, "default": "", "secret": false, "description": "OpenAI-compatible endpoint (cloud provider)"},
-    {"name": "SCIPAL_LLM_API_KEY", "required": false, "default": "", "secret": true, "description": "OpenAI-compatible API key (cloud provider)"},
-    {"name": "SCIPAL_PROTOCOLS_IO_TOKEN", "required": false, "default": "", "secret": true, "description": "Protocols.io developer token; required to enable tier-1 real-time search"},
-    {"name": "SCIPAL_PROTOCOLS_IO_ENABLED", "required": false, "default": "true", "secret": false, "description": "set false to disable Protocols.io"},
-    {"name": "SCIPAL_LLM_TIMEOUT", "required": false, "default": "1800", "secret": false, "description": "LLM request timeout seconds"},
-    {"name": "SCIPAL_LLM_MAX_RETRIES", "required": false, "default": "1", "secret": false, "description": "LLM retry count"},
-    {"name": "SCIPAL_LLM_TEMPERATURE", "required": false, "default": "0.3", "secret": false, "description": "LLM sampling temperature"},
-    {"name": "HOST", "required": false, "default": "0.0.0.0", "secret": false, "description": "Flask bind host"},
-    {"name": "PORT", "required": false, "default": "5000", "secret": false, "description": "Flask port"},
-    {"name": "DATABASE_PATH", "required": false, "default": "data/research.db", "secret": false, "description": "SQLite main DB path"}
-  ],
-  "config_notes": [
-    "online_search.py currently uses built-in default NCBI email/api_key constants and does NOT read NCBI_API_KEY/NCBI_EMAIL from environment; they are only overridable via constructor arguments. Do not commit the built-in key.",
-    ".env.example still lists legacy AI_* prefix variables; the live code reads SCIPAL_* prefix (see env_vars). Treat code as authoritative.",
-    "Protocols.io token is the only tier-1 credential; NCBI works with the built-in fallback at lower rate limits."
-  ],
-  "download_scripts": [
-    {"file": "download_pubmed_abstracts.py", "tier": 3, "purpose": "batch PubMed abstracts -> abstract library"},
-    {"file": "download_pmc_xml.py", "tier": 3, "purpose": "PMC full-text JATS XML batch download, filter abstract-only"},
-    {"file": "batch_download_pmc.py", "tier": 3, "purpose": "incremental PMC XML download by topic"},
-    {"file": "download_openalex.py", "tier": 3, "purpose": "OpenAlex 200M+ metadata/abstract, resume support"},
-    {"file": "download_protocols.py", "tier": 3, "purpose": "Protocol special-issue batch download"},
-    {"file": "download_bioinformatics_methods.py", "tier": 2, "purpose": "Dockstore/bio.tools/nf-core real-time metadata, no vector store"},
-    {"file": "fetch_from_ncbi.py", "tier": 3, "purpose": "NCBI PubMed metadata batch fetch"}
-  ],
-  "build_db_scripts_dir": "build_db/",
-  "hard_constraints": [
-    "Do not change UnifiedRetriever.retrieve() signature; new data source added internally only",
-    "Do not change HybridRetriever.search_papers() signature",
-    "research.db schema changes must go through migration",
-    "Never delete the 7 preset chapter templates in data/outlines/",
-    "Review generation must skip relation extraction and conflict detection (those serve Q&A/analysis)",
-    "Do not introduce multi-agent architecture",
-    "Protocols.io is real-time API only; never download and build a local store for it",
-    "After code changes, sync WORK_LOG.md, test_workflow.sh and self_check.py"
-  ],
-  "git": {
-    "commit_format": "V33.x: brief description; pure docs use docs: prefix",
-    "push_branch": "master",
-    "remote": "gitee"
+  "deployment": {
+    "compose_file": "deploy/docker-compose.yml",
+    "services": [
+      "app",
+      "watch-cron",
+      "caddy"
+    ],
+    "caddy_ports": [
+      80,
+      443
+    ],
+    "data_root": "G:\\sciPal_deploy",
+    "image": "scipal-app:latest",
+    "models_mount": "/models:ro",
+    "offline_bundle": "deploy/build_offline_bundle.py"
   },
-  "test_commands": {
-    "self_check": "python self_check.py",
-    "workflow": "bash test_workflow.sh",
-    "syntax": "python -m py_compile api_server.py",
-    "start": "python api_server.py"
+  "tests": {
+    "framework": "unittest",
+    "count": 671,
+    "duration_seconds": 60,
+    "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
+    "coverage": [
+      "检索",
+      "路由",
+      "guard",
+      "JATS 导入",
+      "watch",
+      "domain packs",
+      "claim",
+      "多用户隔离",
+      "项目/实验"
+    ]
+  },
+  "limitations": [
+    "XML 论文无 bbox；MinerU 兜底路径也无 bbox",
+    "未被正文提及的图表/参考文献没有位置",
+    "Europe PMC 503 时无法继续扩量",
+    "PDF 章节树来自解析推断，XML 才是原生结构",
+    "多用户已实现，但仍是 SQLite 单节点",
+    "Claim 试点仅覆盖 10 个 HCC claim",
+    "writing_brief 仅 1 个 claim 完成",
+    "在线 ingest 仅完成 2 篇；PMC13036683 下载失败",
+    "写作闸门仍为 brief + 人工检查，未自动拒绝违规句",
+    "云端生成会把论文文本发送到外部 provider",
+    "DSH 插件化仍未实现 MCP evidence / validate 工具",
+    "ARCHITECTURE.json 为人工维护的快照，以 docs/架构与路由图.md 为准"
+  ],
+  "docs": {
+    "architecture": "docs/架构与路由图.md",
+    "readme": "README.md",
+    "claim": "docs/claim-pilot-审讯记录-01.md",
+    "claim_online_ingest": "docs/claim-pilot-在线入库-01.md",
+    "domain_pack": "packs/biomed-oncoimmuno/README.md",
+    "tests": "docs/评测说明.md"
   }
 }

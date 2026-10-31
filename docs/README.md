@@ -38,7 +38,7 @@
 | 历史工单 / 阶段验收 / 旧计划 | [archive/](archive/README.md) |
 | 贡献指南 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
 | 给 AI 代码助手的项目说明 | [`../AGENTS.md`](../AGENTS.md) |
-| 机器可读架构（历史 V33.13） | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
+| 机器可读架构（V33.96） | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
 
 ## 维护规则
 
