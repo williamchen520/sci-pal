@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 691,
+    "count": 692,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1814,31 +1814,36 @@
       ],
       "bench": "eval/retriever_bench.py",
       "dataset": "eval/plugins/retriever_queries.json",
-      "cases": 14,
+      "cases": 54,
       "corpus": 32,
       "results": {
         "bm25": {
-          "recall@10": 1.0,
-          "mrr": 1.0,
-          "ndcg@10": 1.0
+          "recall@10": 0.9259,
+          "mrr": 0.8299,
+          "ndcg@10": 0.8537
         },
         "dense": {
-          "recall@10": 1.0,
-          "mrr": 0.9286,
-          "ndcg@10": 0.9473
+          "recall@10": 0.9259,
+          "mrr": 0.8704,
+          "ndcg@10": 0.8845
         },
         "hybrid": {
-          "recall@10": 0.8571,
-          "mrr": 0.7738,
-          "ndcg@10": 0.7951
+          "recall@10": 0.9444,
+          "mrr": 0.909,
+          "ndcg@10": 0.9178
         },
         "hybrid_rerank": {
-          "recall@10": 1.0,
-          "mrr": 0.8333,
-          "ndcg@10": 0.8723
+          "recall@10": 0.9815,
+          "mrr": 0.9204,
+          "ndcg@10": 0.936
         }
       },
-      "caveat": "14 easy HCC queries; BM25 perfect score is a warning, not a conclusion"
+      "caveat": "54 local-HCC-heavy queries; no statistical superiority claim",
+      "sources": {
+        "seed_100": 14,
+        "claim_qualifiers": 20,
+        "paper_title": 20
+      }
     }
   }
 }

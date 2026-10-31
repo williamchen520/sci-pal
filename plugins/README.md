@@ -83,17 +83,17 @@ Benchmark:
 python eval/retriever_bench.py
 ```
 
-Initial result on 14 queries / 32 papers:
+Expanded result on 54 queries / 32 papers:
 
 ```text
-bm25        Recall@10 1.0000  MRR 1.0000
-dense       Recall@10 1.0000  MRR 0.9286
-hybrid      Recall@10 0.8571  MRR 0.7738
-hybrid+rr   Recall@10 1.0000  MRR 0.8333
+bm25        Recall@10 0.9259  MRR 0.8299
+dense       Recall@10 0.9259  MRR 0.8704
+hybrid      Recall@10 0.9444  MRR 0.9090
+hybrid+rr   Recall@10 0.9815  MRR 0.9204
 ```
 
-The query set is small and easy; BM25's perfect score is a warning, not a
-conclusion.
+The query set is still local-HCC-heavy and title queries are easy; do not claim
+statistical superiority yet.
 
 ## Add a plugin
 

@@ -12,10 +12,12 @@ class HybridRetriever(RetrieverAdapter):
     version = "0.1.0"
     rerank = False
 
-    def __init__(self):
-        from services.search.hybrid_search import HybridSearch
+    def __init__(self, searcher=None):
+        if searcher is None:
+            from services.search.hybrid_search import HybridSearch
 
-        self.searcher = HybridSearch()
+            searcher = HybridSearch()
+        self.searcher = searcher
 
     def retrieve(
         self,
@@ -36,10 +38,11 @@ class HybridRetriever(RetrieverAdapter):
         rows = result.get("results") or []
         results: List[RetrieverCandidate] = []
         for index, row in enumerate(rows):
+            metadata = row.get("metadata") or {}
             score = row.get("rerank_score", row.get("rrf_score", row.get("score", 0.0)))
             results.append(
                 RetrieverCandidate(
-                    paper_id=str(row.get("paper_id") or ""),
+                    paper_id=str(row.get("paper_id") or metadata.get("paper_id") or ""),
                     node_id=str(row.get("para_id") or ""),
                     text=str(row.get("text") or ""),
                     score=float(score or 0.0),

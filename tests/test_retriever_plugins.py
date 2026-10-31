@@ -7,7 +7,23 @@ import unittest
 from pathlib import Path
 
 from plugins.adapters.retriever_bm25 import BM25Retriever
+from plugins.adapters.retriever_hybrid import HybridRetriever
 from services.plugins import PluginRegistry, PluginRunner
+
+
+class _FakeHybridSearcher:
+    def search(self, *args, **kwargs):
+        return {
+            "results": [
+                {
+                    "paper_id": None,
+                    "para_id": "p1",
+                    "text": "text",
+                    "score": 0.9,
+                    "metadata": {"paper_id": "paper_x"},
+                }
+            ]
+        }
 
 
 class RetrieverPluginTests(unittest.TestCase):
@@ -49,6 +65,11 @@ class RetrieverPluginTests(unittest.TestCase):
         )
         self.assertIn("candidates", run.output)
         self.assertTrue(self.log.exists())
+
+    def test_hybrid_reads_paper_id_from_metadata(self) -> None:
+        adapter = HybridRetriever(searcher=_FakeHybridSearcher())
+        candidates = adapter.retrieve("q", corpus=["paper_x"], top_k=1)
+        self.assertEqual(candidates[0].paper_id, "paper_x")
 
 
 if __name__ == "__main__":
