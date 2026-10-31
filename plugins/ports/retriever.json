@@ -1,0 +1,38 @@
+{
+  "id": "retriever",
+  "version": "0.1.0",
+  "description": "Retrieve ranked paragraph candidates from a fixed paper corpus.",
+  "input_schema": {
+    "type": "object",
+    "required": ["query", "corpus"],
+    "properties": {
+      "query": {"type": "string"},
+      "corpus": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+      "top_k": {"type": "integer", "minimum": 1, "maximum": 100},
+      "options": {"type": "object"}
+    },
+    "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "object",
+    "required": ["candidates"],
+    "properties": {
+      "candidates": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["paper_id", "node_id", "text", "score", "rank"],
+          "properties": {
+            "paper_id": {"type": "string"},
+            "node_id": {"type": "string"},
+            "text": {"type": "string"},
+            "score": {"type": "number"},
+            "rank": {"type": "integer", "minimum": 1}
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

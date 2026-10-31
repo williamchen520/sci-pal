@@ -1,0 +1,12 @@
+id: retriever-dense
+port: retriever
+version: 0.1.0
+entrypoint: plugins.adapters.retriever_dense:DenseRetriever
+license: AGPL-3.0-only
+description: Chroma dense retrieval only.
+capabilities:
+  streaming: false
+  network: false
+runtime:
+  timeout_seconds: 120
+  memory_mb: 2048

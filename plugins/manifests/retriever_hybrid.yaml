@@ -1,0 +1,12 @@
+id: retriever-hybrid
+port: retriever
+version: 0.1.0
+entrypoint: plugins.adapters.retriever_hybrid:HybridRetriever
+license: AGPL-3.0-only
+description: Hybrid BM25 + dense with RRF, no rerank.
+capabilities:
+  streaming: false
+  network: false
+runtime:
+  timeout_seconds: 120
+  memory_mb: 2048

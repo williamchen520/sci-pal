@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 688,
+    "count": 691,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1759,7 +1759,7 @@
     }
   },
   "plugins": {
-    "status": "M0/M1",
+    "status": "M0/M1/M2",
     "paths": {
       "contracts": "services/plugins/contracts.py",
       "registry": "services/plugins/registry.py",
@@ -1803,6 +1803,42 @@
         },
         "caveat": "refutes are derived_opposite_claim; human review required before publication"
       }
+    },
+    "retriever": {
+      "port": "plugins/ports/retriever.json",
+      "adapters": [
+        "retriever-bm25",
+        "retriever-dense",
+        "retriever-hybrid",
+        "retriever-hybrid-rerank"
+      ],
+      "bench": "eval/retriever_bench.py",
+      "dataset": "eval/plugins/retriever_queries.json",
+      "cases": 14,
+      "corpus": 32,
+      "results": {
+        "bm25": {
+          "recall@10": 1.0,
+          "mrr": 1.0,
+          "ndcg@10": 1.0
+        },
+        "dense": {
+          "recall@10": 1.0,
+          "mrr": 0.9286,
+          "ndcg@10": 0.9473
+        },
+        "hybrid": {
+          "recall@10": 0.8571,
+          "mrr": 0.7738,
+          "ndcg@10": 0.7951
+        },
+        "hybrid_rerank": {
+          "recall@10": 1.0,
+          "mrr": 0.8333,
+          "ndcg@10": 0.8723
+        }
+      },
+      "caveat": "14 easy HCC queries; BM25 perfect score is a warning, not a conclusion"
     }
   }
 }
