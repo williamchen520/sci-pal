@@ -190,6 +190,7 @@ sci-pal/
 - [DSH 适配与插件化计划](docs/工作计划-DSH适配与插件化.md)
 - [论证工作台改造计划](docs/工作计划-论证工作台改造.md)
 - [肿瘤免疫领域包](packs/biomed-oncoimmuno/README.md)
+- [Claim 试点第一轮审讯记录](docs/claim-pilot-审讯记录-01.md)
 - [QA 答案级评测](docs/QA答案级评测.md)
 - [SciFact 适配器](docs/评测-SciFact适配器.md)
 - [LitQA2 适配器](docs/评测-LitQA2适配器.md)
