@@ -1,0 +1,63 @@
+{
+  "id": "claim_verifier",
+  "version": "0.1.0",
+  "description": "Classify the relation between a claim and one or more evidence quotes.",
+  "input_schema": {
+    "type": "object",
+    "required": ["claim", "evidence"],
+    "properties": {
+      "claim": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "claim_id": {"type": "string"},
+          "text": {"type": "string"},
+          "qualifiers": {"type": "object"}
+        },
+        "additionalProperties": false
+      },
+      "evidence": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": ["quote"],
+          "properties": {
+            "evidence_id": {"type": "string"},
+            "quote": {"type": "string"},
+            "paper_id": {"type": "string"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "options": {"type": "object"}
+    },
+    "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "object",
+    "required": ["verifications"],
+    "properties": {
+      "verifications": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": ["evidence_id", "relation", "confidence", "rationale"],
+          "properties": {
+            "evidence_id": {"type": "string"},
+            "relation": {
+              "type": "string",
+              "enum": ["supports", "refutes", "mentions", "underdetermines"]
+            },
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "rationale": {"type": "string"},
+            "model": {"type": "string"}
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

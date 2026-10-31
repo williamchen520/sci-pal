@@ -1,0 +1,12 @@
+id: claim-verifier-nli
+port: claim_verifier
+version: 0.1.0
+entrypoint: plugins.adapters.claim_verifier_nli:LLMClaimVerifier
+license: AGPL-3.0-only
+description: Existing SciPal LLM NLI classifier wrapped as an A0 adapter.
+capabilities:
+  streaming: false
+  network: true
+runtime:
+  timeout_seconds: 60
+  memory_mb: 512

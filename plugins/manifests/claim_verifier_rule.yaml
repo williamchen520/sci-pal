@@ -1,0 +1,12 @@
+id: claim-verifier-rule
+port: claim_verifier
+version: 0.1.0
+entrypoint: plugins.adapters.claim_verifier_rule:RuleClaimVerifier
+license: AGPL-3.0-only
+description: Deterministic keyword/direction baseline for claim-evidence relations.
+capabilities:
+  streaming: false
+  network: false
+runtime:
+  timeout_seconds: 5
+  memory_mb: 128

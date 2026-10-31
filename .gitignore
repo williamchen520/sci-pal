@@ -19,6 +19,7 @@ logs/
 
 # 插件评测输出（可重跑）
 eval/results/plugin_bench.jsonl
+eval/results/claim_verifier_bench.jsonl
 
 # 环境变量
 .env
