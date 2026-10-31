@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 671,
+    "count": 677,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1747,5 +1747,15 @@
     "details": "docs/协作规范.md",
     "pr_template": ".github/pull_request_template.md",
     "violation_token": "RULE_VIOLATION"
+  },
+  "quality_guards": {
+    "stop_loss": {
+      "module": "services/quality/stop_loss.py",
+      "test_runner": "scripts/run_tests_guarded.py",
+      "metric_recorder": "scripts/record_eval_metric.py",
+      "state_file": "logs/stop_loss_state.json",
+      "limit": 2,
+      "message": "触发止损规则，停止调参，等待人类介入"
+    }
   }
 }
