@@ -264,6 +264,7 @@ sci-pal/
 - [跨平台路径体检报告](docs/跨平台路径体检报告.md)
 - [Windows 开发警示与跨平台规范](docs/Windows开发警示与跨平台规范.md)
 - [PostgreSQL 迁移基线](docs/PostgreSQL迁移-基线.md)
+- [PostgreSQL FTS 对齐实验](docs/PostgreSQL迁移-FTS对齐实验.md)
 - [PostgreSQL ETL dry-run](docs/PostgreSQL迁移-ETL-dryrun.json)
 - [PostgreSQL ETL verify](docs/PostgreSQL迁移-ETL-verify.json)
 - [PostgreSQL ETL checksum](docs/PostgreSQL迁移-ETL-checksum.json)

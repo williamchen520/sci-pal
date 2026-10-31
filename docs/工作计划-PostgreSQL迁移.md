@@ -479,6 +479,29 @@ PostgreSQL 按 ts_rank_cd
 FTS 不能直接切换，需先统一 tokenizer/stemmer 或接受排序差异评审。
 ```
 
+FTS 对齐实验：
+
+```text
+scripts/fts_alignment.py
+docs/PostgreSQL迁移-FTS对齐实验.md
+docs/PostgreSQL迁移-FTS对齐实验.json
+```
+
+结果：
+
+```text
+unicode61 vs english：平均 match Jaccard 0.637
+porter    vs english：平均 match Jaccard 0.989
+```
+
+结论：
+
+```text
+porter + english 最接近；
+FTS 切流前应重建 SQLite FTS 为 porter；
+排序仍 bm25 vs ts_rank_cd，需单独评审。
+```
+
 ### P4：双写
 
 ```text

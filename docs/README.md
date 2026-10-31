@@ -20,6 +20,7 @@
 | 跨平台路径体检 | [跨平台路径体检报告.md](跨平台路径体检报告.md) |
 | Windows 开发警示 | [Windows开发警示与跨平台规范.md](Windows开发警示与跨平台规范.md) |
 | PostgreSQL 迁移基线 | [PostgreSQL迁移-基线.md](PostgreSQL迁移-基线.md) |
+| PostgreSQL FTS 对齐 | [PostgreSQL迁移-FTS对齐实验.md](PostgreSQL迁移-FTS对齐实验.md) |
 | PostgreSQL ETL dry-run | [PostgreSQL迁移-ETL-dryrun.json](PostgreSQL迁移-ETL-dryrun.json) |
 | PostgreSQL ETL verify | [PostgreSQL迁移-ETL-verify.json](PostgreSQL迁移-ETL-verify.json) |
 | PostgreSQL ETL checksum | [PostgreSQL迁移-ETL-checksum.json](PostgreSQL迁移-ETL-checksum.json) |
