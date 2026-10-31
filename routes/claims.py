@@ -89,6 +89,20 @@ def build_claims_blueprint(*, db_path, log=None) -> Blueprint:
             except Exception:
                 pass
 
+    @bp.post("/<claim_id>/note")
+    def note(claim_id: str):
+        data = request.get_json(silent=True) or {}
+        text = str(data.get("note") or "").strip()
+        if not text:
+            return jsonify({"error": "note required"}), 400
+        conn = service.connect(db_path)
+        try:
+            return jsonify(service.add_note(conn, claim_id, text))
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 404
+        finally:
+            conn.close()
+
     @bp.get("/<claim_id>/events")
     def events(claim_id: str):
         conn = service.connect(db_path)

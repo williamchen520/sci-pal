@@ -202,6 +202,23 @@ def search_candidates(
     ]
 
 
+def add_note(
+    conn: sqlite3.Connection,
+    claim_id: str,
+    note: str,
+    actor: str = "human",
+) -> Dict[str, Any]:
+    claim = get_claim(conn, claim_id)
+    if not claim:
+        raise ValueError("claim not found")
+    _event(conn, claim_id, "review_note", actor, note)
+    conn.execute(
+        "UPDATE claim_cards SET updated_at = ? WHERE claim_id = ?", (_now(), claim_id)
+    )
+    conn.commit()
+    return get_claim(conn, claim_id) or {}
+
+
 def decide(
     conn: sqlite3.Connection,
     claim_id: str,
