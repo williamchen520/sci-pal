@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 707,
+    "count": 712,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1857,7 +1857,7 @@
     "postgres_backend": "not-implemented"
   },
   "postgres_migration": {
-    "status": "P1-implemented-pending-merge",
+    "status": "P2-implemented-pending-merge",
     "plan": "docs/工作计划-PostgreSQL迁移.md",
     "baseline": "docs/PostgreSQL迁移-基线.md",
     "backup_script": "scripts/backup_sqlite.py",
@@ -1880,6 +1880,17 @@
       "default_backend": "sqlite",
       "pg_dsn_env": "SCIPAL_PG_DSN",
       "pool": "deferred-to-P2"
+    },
+    "p2": {
+      "etl": "services/db/etl.py",
+      "cli": "scripts/pg_etl.py",
+      "tests": "tests/test_pg_etl.py",
+      "dry_run_report": "docs/PostgreSQL迁移-ETL-dryrun.json",
+      "checksum_report": "docs/PostgreSQL迁移-ETL-checksum.json",
+      "tables": 60,
+      "total_rows": 2015676,
+      "real_copy_executed": false,
+      "safety": "snapshot-only; live data/research.db rejected"
     }
   }
 }

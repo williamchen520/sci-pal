@@ -1,0 +1,69 @@
+{
+  "source": "D:\\sciPal\\backups\\research_20261031_210616.db",
+  "tables": [
+    {
+      "table": "papers",
+      "rows": 3310,
+      "checksum": "015a7cd1147272353d788cd0529283fe753578cf7ad11d997eff91c6b1673e93",
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "paragraphs",
+      "rows": 167388,
+      "checksum": "4f6dc529e37094fc7502459c97aefc0a2f22071cbd625d616312094f26a0f5fc",
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "sentences",
+      "rows": 862677,
+      "checksum": "f26bef7594fd50883dc7f854b099f8f2041b54aa2521041043dcd39311860264",
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "citations",
+      "rows": 182817,
+      "checksum": "8e7e573f13b10aa0ad837cec0bf00f1a966aefec3049bb108d3049edcdf663fa",
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "claim_cards",
+      "rows": 10,
+      "checksum": "dc4a345796f0d09c5be847e32c7932275e5f5a7131e36600f807514d4fd6780f",
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "claim_card_evidence",
+      "rows": 17,
+      "checksum": "b93809a137614ddecc97b81ef55568fd139fa3b5a164aaf0aa96bcc6b8478c9b",
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "watch_items",
+      "rows": 11,
+      "checksum": "aba34e21c6f9fb2f1485aabedb9be541303506a9e40c60d01c7f144e3b8648b6",
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "users",
+      "rows": 1,
+      "checksum": "3fcf1e799d72b5a2092623b7a5d6e58add4d3ede339bc9e5cd9162eee4771f19",
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "workspaces",
+      "rows": 1,
+      "checksum": "4be6a856540c3df6f53bafce9ea126522be89d64191e4d84fb9552a21737b585",
+      "status": "ok",
+      "error": null
+    }
+  ],
+  "total_rows": 1216232
+}
