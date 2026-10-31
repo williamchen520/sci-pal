@@ -190,7 +190,41 @@ replay applied=1 failed=0
 
 ---
 
-## 7. 测试
+## 7. 健康检查
+
+```powershell
+python scripts\dual_write_healthcheck.py
+```
+
+检查：
+
+```text
+pending / failed / oldest_pending
+pending_age_seconds
+63 个触发器
+21 张表 SQLite vs PG 行数
+mismatches
+```
+
+本次：
+
+```text
+pending 0
+failed 0
+triggers 63
+mismatches []
+status ok
+```
+
+报告：
+
+```text
+docs/PostgreSQL迁移-P4-health.json
+```
+
+---
+
+## 8. 测试
 
 ```text
 tests/test_dual_write.py

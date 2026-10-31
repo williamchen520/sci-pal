@@ -1,0 +1,137 @@
+{
+  "pending": 0,
+  "failed": 0,
+  "oldest_pending": null,
+  "pending_age_seconds": null,
+  "triggers": 63,
+  "tables": [
+    {
+      "table": "papers",
+      "sqlite": 3310,
+      "postgres": 3310,
+      "match": true
+    },
+    {
+      "table": "sections",
+      "sqlite": 69128,
+      "postgres": 69128,
+      "match": true
+    },
+    {
+      "table": "paragraphs",
+      "sqlite": 167388,
+      "postgres": 167388,
+      "match": true
+    },
+    {
+      "table": "sentences",
+      "sqlite": 862677,
+      "postgres": 862677,
+      "match": true
+    },
+    {
+      "table": "figures",
+      "sqlite": 13471,
+      "postgres": 13471,
+      "match": true
+    },
+    {
+      "table": "tables",
+      "sqlite": 4922,
+      "postgres": 4922,
+      "match": true
+    },
+    {
+      "table": "citations",
+      "sqlite": 182817,
+      "postgres": 182817,
+      "match": true
+    },
+    {
+      "table": "sentence_links",
+      "sqlite": 296951,
+      "postgres": 296951,
+      "match": true
+    },
+    {
+      "table": "paper_links",
+      "sqlite": 164802,
+      "postgres": 164802,
+      "match": true
+    },
+    {
+      "table": "claim_cards",
+      "sqlite": 10,
+      "postgres": 10,
+      "match": true
+    },
+    {
+      "table": "claim_card_evidence",
+      "sqlite": 17,
+      "postgres": 17,
+      "match": true
+    },
+    {
+      "table": "claim_card_events",
+      "sqlite": 53,
+      "postgres": 53,
+      "match": true
+    },
+    {
+      "table": "watch_items",
+      "sqlite": 11,
+      "postgres": 11,
+      "match": true
+    },
+    {
+      "table": "watch_profiles",
+      "sqlite": 1,
+      "postgres": 1,
+      "match": true
+    },
+    {
+      "table": "watch_runs",
+      "sqlite": 5,
+      "postgres": 5,
+      "match": true
+    },
+    {
+      "table": "watch_seen",
+      "sqlite": 11,
+      "postgres": 11,
+      "match": true
+    },
+    {
+      "table": "users",
+      "sqlite": 1,
+      "postgres": 1,
+      "match": true
+    },
+    {
+      "table": "workspaces",
+      "sqlite": 1,
+      "postgres": 1,
+      "match": true
+    },
+    {
+      "table": "memberships",
+      "sqlite": 1,
+      "postgres": 1,
+      "match": true
+    },
+    {
+      "table": "review_projects",
+      "sqlite": 1,
+      "postgres": 1,
+      "match": true
+    },
+    {
+      "table": "review_events",
+      "sqlite": 0,
+      "postgres": 0,
+      "match": true
+    }
+  ],
+  "mismatches": [],
+  "status": "ok"
+}
