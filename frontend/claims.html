@@ -198,6 +198,7 @@ async function search(direction) {
       <div class="candidate">
         <div class="meta">${esc(candidate.paper_title || candidate.paper_id)} · ${esc(candidate.sentence_id)}</div>
         <div class="quote">“${esc(candidate.quote)}”</div>
+        <div class="meta" style="margin-top:5px">分数 ${esc(candidate.score ?? "")} · 限定命中 ${esc(candidate.qualifier_score ?? "")} · 方向词 ${esc(candidate.direction_cues ?? 0)}</div>
         ${candidate.suggested_relation ? `<div class="meta" style="margin-top:5px">判定：<span class="pill ${esc(candidate.suggested_relation)}">${esc(candidate.suggested_relation)}</span> ${esc(candidate.reason || "")}</div>` : ""}
         <div class="row" style="margin-top:5px">
           <button class="small" data-add="${esc(candidate.sentence_id)}" data-rel="supports">加为支持</button>

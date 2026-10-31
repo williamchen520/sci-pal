@@ -29,7 +29,9 @@ class ClaimPilotTests(unittest.TestCase):
             CREATE VIRTUAL TABLE sentences_fts USING fts5(text);
             INSERT INTO papers VALUES ('p1', 'HCC immunotherapy trial');
             INSERT INTO sentences VALUES ('s1', 'p1', 'PD-1 blockade improved overall survival in HCC');
+            INSERT INTO sentences VALUES ('s2', 'p1', 'PD-1 blockade did not improve overall survival in HCC');
             INSERT INTO sentences_fts(rowid, text) VALUES (1, 'PD-1 blockade improved overall survival in HCC');
+            INSERT INTO sentences_fts(rowid, text) VALUES (2, 'PD-1 blockade did not improve overall survival in HCC');
             """
         )
         conn.commit()
@@ -67,6 +69,15 @@ class ClaimPilotTests(unittest.TestCase):
         conn.close()
         self.assertTrue(candidates)
         self.assertEqual(candidates[0]["sentence_id"], "s1")
+
+    def test_opposition_retrieval_prefers_contrary_sentence(self) -> None:
+        conn = service.connect(self.db)
+        candidates = service.search_candidates(conn, self.claim_id, direction="oppose")
+        conn.close()
+        self.assertTrue(candidates)
+        self.assertEqual(candidates[0]["sentence_id"], "s2")
+        self.assertGreater(candidates[0]["direction_cues"], 0)
+        self.assertIn("query", candidates[0])
 
     def test_interrogate_with_fake_llm(self) -> None:
         class FakeLLM:

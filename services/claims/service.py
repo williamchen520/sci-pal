@@ -76,6 +76,7 @@ def get_claim(conn: sqlite3.Connection, claim_id: str) -> Optional[Dict[str, Any
         )
     ]
     card["qualifiers"] = json.loads(card.get("qualifiers_json") or "{}")
+    card["corpus"] = json.loads(card.get("corpus_json") or "[]")
     card["evidence"] = evidence
     card["events"] = events
     return card
@@ -88,8 +89,8 @@ def create_claim(conn: sqlite3.Connection, data: Dict[str, Any], actor: str = "h
     conn.execute(
         "INSERT OR REPLACE INTO claim_cards "
         "(claim_id, workspace_id, title, claim_text, claim_type, status, confidence, "
-        "qualifiers_json, warrant, backing, rebuttal, strongest_counter, decision, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "qualifiers_json, corpus_json, warrant, backing, rebuttal, strongest_counter, decision, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             claim_id,
             data.get("workspace_id") or "ws_default",
@@ -99,6 +100,7 @@ def create_claim(conn: sqlite3.Connection, data: Dict[str, Any], actor: str = "h
             data.get("status") or "draft",
             float(data.get("confidence") or 0.0),
             json.dumps(data.get("qualifiers") or {}, ensure_ascii=False),
+            json.dumps(data.get("corpus") or [], ensure_ascii=False),
             data.get("warrant") or "",
             data.get("backing") or "",
             data.get("rebuttal") or "",
@@ -179,27 +181,36 @@ def search_candidates(
     claim = get_claim(conn, claim_id)
     if not claim:
         raise ValueError("claim not found")
-    terms = _keywords(claim["claim_text"])
-    if not terms:
+    from services.claims import retrieval
+
+    queries = retrieval.build_queries(claim["claim_text"], claim.get("qualifiers") or {})
+    query = queries.get("refute" if direction == "oppose" else "support") or queries["support"]
+    if not query:
         return []
-    match = " OR ".join(f'"{term}"' for term in terms)
-    rows = conn.execute(
-        "SELECT s.sentence_id, s.paper_id, s.text, p.title "
+    corpus = [paper_id for paper_id in (claim.get("corpus") or []) if paper_id]
+    sql = (
+        "SELECT s.sentence_id, s.paper_id, s.text AS quote, p.title AS paper_title "
         "FROM sentences_fts f JOIN sentences s ON s.rowid = f.rowid "
         "JOIN papers p ON p.paper_id = s.paper_id "
-        "WHERE sentences_fts MATCH ? LIMIT ?",
-        (match, limit),
-    ).fetchall()
-    return [
-        {
-            "sentence_id": row["sentence_id"],
-            "paper_id": row["paper_id"],
-            "paper_title": row["title"],
-            "quote": row["text"],
-            "direction": direction,
-        }
-        for row in rows
-    ]
+        "WHERE sentences_fts MATCH ?"
+    )
+    params: List[Any] = [query]
+    if corpus:
+        sql += f" AND s.paper_id IN ({','.join('?' * len(corpus))})"
+        params.extend(corpus)
+    sql += " LIMIT ?"
+    params.append(max(limit * 4, limit))
+    rows = conn.execute(sql, params).fetchall()
+    candidates = retrieval.rank_candidates(
+        claim["claim_text"],
+        claim.get("qualifiers") or {},
+        [dict(row) for row in rows],
+        direction=direction,
+    )
+    for candidate in candidates:
+        candidate["direction"] = direction
+        candidate["query"] = query
+    return candidates[:limit]
 
 
 def add_note(

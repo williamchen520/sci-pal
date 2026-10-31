@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS claim_cards (
     status TEXT NOT NULL DEFAULT 'draft',
     confidence REAL NOT NULL DEFAULT 0.0,
     qualifiers_json TEXT NOT NULL DEFAULT '{}',
+    corpus_json TEXT NOT NULL DEFAULT '[]',
     warrant TEXT,
     backing TEXT,
     rebuttal TEXT,
@@ -63,6 +64,9 @@ def migrate(db_path: Path | str = DEFAULT_DB) -> dict:
     conn = sqlite3.connect(str(db_path))
     try:
         conn.executescript(SCHEMA)
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(claim_cards)")}
+        if "corpus_json" not in cols:
+            conn.execute("ALTER TABLE claim_cards ADD COLUMN corpus_json TEXT NOT NULL DEFAULT '[]'")
         conn.commit()
     finally:
         conn.close()
