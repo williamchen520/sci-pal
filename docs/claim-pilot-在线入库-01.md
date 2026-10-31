@@ -156,3 +156,28 @@ accepted -> contested
 - 不是“证明无效”；
 - 是“不能再无条件写提高 OS”；
 - 后续写作必须同时写 PFS 获益与 OS 未成熟。
+
+---
+
+## 8. 写作口径
+
+已写入 `claim_hcc_triple_os.writing_brief`：
+
+安全表述：
+
+> 在不可切除 HCC 中，TACE 联合抗 VEGF/TKI 与 PD-1/PD-L1 的方案与 PFS 改善相关；OS 数据仍不成熟，当前未显示统计学显著的 OS 获益。
+
+必须包含：
+
+- PFS 与 OS 必须分开写；
+- OS 数据 immature，不能说显著获益；
+- 研究间异质性与方案差异；
+- LEAP-012 / EMERALD-1 的 OS 未成熟证据。
+
+不能写：
+
+- TACE 三联提高总生存；
+- TACE 三联显著改善 OS；
+- PFS 获益等同于 OS 获益。
+
+页面 `/claims.html` 的 Claim Card 新增“写作口径”区块。

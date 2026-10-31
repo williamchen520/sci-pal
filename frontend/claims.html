@@ -70,6 +70,12 @@
           <span class="pill" id="claim-status"></span>
         </div>
         <div class="claim-text" id="claim-text"></div>
+        <div id="writing-brief" class="hidden" style="margin-top:12px">
+          <h3>写作口径</h3>
+          <div class="status" id="brief-safe"></div>
+          <p class="muted">必须包含：<span id="brief-include"></span></p>
+          <p class="muted">不能写：<span id="brief-exclude"></span></p>
+        </div>
         <div class="status" id="status" style="margin-top:10px">未裁决</div>
 
         <h3>限定条件</h3>
@@ -170,6 +176,15 @@ async function loadClaim(claimId) {
     $("claim-status").textContent = claim.status;
     $("claim-status").className = `pill ${claim.status}`;
     $("claim-text").textContent = claim.claim_text;
+    const brief = claim.writing_brief || {};
+    if (brief.safe_claim) {
+      $("writing-brief").classList.remove("hidden");
+      $("brief-safe").textContent = brief.safe_claim;
+      $("brief-include").textContent = (brief.must_include || []).join("；") || "—";
+      $("brief-exclude").textContent = (brief.must_not_write || []).join("；") || "—";
+    } else {
+      $("writing-brief").classList.add("hidden");
+    }
     $("warrant").textContent = claim.warrant || "（未填写）";
     $("status").textContent = claim.decision_note || "未裁决";
     $("status").className = "status";

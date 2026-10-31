@@ -10,6 +10,7 @@ from .service import (
     interrogate,
     list_claims,
     search_candidates,
+    set_writing_brief,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "interrogate",
     "list_claims",
     "search_candidates",
+    "set_writing_brief",
 ]

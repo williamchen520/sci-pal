@@ -4,7 +4,7 @@
 （向量 + FTS5/BM25 + RRF 融合 + Cross-Encoder 重排 + 查询路由 + 自适应上下文扩展），
 生成层推荐**本地小模型做调度 + 云端/DSH 模型做推理**。
 
-> 当前版本：**V33.96**（2026-10-29）
+> 当前版本：**V33.96**（2026-10-31）
 > Python 3.12 · Flask · ChromaDB · SQLite · OpenAI 兼容云端 / Ollama
 > 原生 HTML/CSS/JS 前端（无框架），DSH 可作为可选推理层
 
@@ -32,7 +32,12 @@
 | 文献源 | Europe PMC 批量、arXiv/bioRxiv/medRxiv、Crossref/OpenAlex/Unpaywall |
 | 元数据回填 | Crossref DOI → Crossref 标题 → OpenAlex 标题，全库覆盖率 99.9%+ |
 | 文章图谱 | `paper_links`：cites / cited_by / similar |
-| 文献监测（设计） | 多 profile、领域 Top 期刊、SJR/OpenAlex、DSH 推 Top 3（未实现） |
+| 文献监控 | 多 profile、期刊发现、增量抓取、去重、周报、条目反馈、`watch-cron` 定时调度 |
+| 多用户与隔离 | users / workspaces / memberships；role=owner/pi/member/viewer；paper/note/project/experiment 隔离 |
+| 项目与实验 | 项目成员、实验、两级 run、修订、字段审计、电子签名、PI 访问请求 |
+| 领域包 | 声明式 pack（taxonomy / section types / evidence schema / prompts）；`/packs.html` |
+| Claim 试点 | Claim Card、qualifiers、正反证据、FTS/语义检索、NLI、裁决事件、writing brief |
+| 部署 | Docker Compose（app + watch-cron + Caddy）、备份、离线 bundle |
 | 实验方案 | Protocols.io 实时检索/导入；Dockstore / bio.tools / nf-core |
 
 ## 架构
@@ -45,7 +50,7 @@
 DSH 桌面 / 浏览器
    │ MCP / HTTPS
    ▼
-Flask API（routes/* 17 个蓝图，98 条路由）
+Flask API（routes/* 26 个蓝图，约 180 条路由）
    │
 services/*（检索、问答、综述、guard、源适配）
    │
@@ -61,7 +66,8 @@ SQLite research.db + ChromaDB + documents/ + documents_xml/
 - PDF：PyMuPDF · Docling · GROBID · MinerU（按需，质量门兜底）
 - XML：PMC / Europe PMC JATS（`<sec>` / `<ref-list>` / `<xref>`）
 - LLM：云端 OpenAI 兼容 API（推荐推理）+ 本地 Ollama（调度/兜底）；DSH 可接管推理
-- 前端：原生 HTML/CSS/JS + PDF.js（viewer/compare/trace）
+- 前端：原生 HTML/CSS/JS + PDF.js（viewer / compare / trace / projects / reviews / watch / packs / claims）
+- 部署：Docker Compose（app + watch-cron + Caddy）· SQLite 单节点 · G 盘数据卷
 
 ### 模型
 
@@ -130,26 +136,33 @@ $env:MINERU_HOME = "D:\mineru_home"
 ```
 sci-pal/
 ├─ api_server.py             Flask 入口（注册蓝图，仅剩静态路由）
-├─ routes/                   15 个蓝图：core/search/papers/reviews/qa/guard/...
+├─ routes/                   26 个蓝图：core/search/papers/reviews/qa/watch/claims/...
 ├─ services/
 │  ├─ search/                混合检索、rerank、上下文扩展、源适配
 │  ├─ qa/                    问答、证据信封
 │  ├─ review/                综述生成、LLM 客户端、任务
+│  ├─ watch/                 profile / run / digest / scheduler
+│  ├─ domain_packs/          pack loader / validator / CLI
+│  ├─ claims/                retrieval / semantic / nli / service
+│  ├─ tenancy/               users / workspaces / roles
+│  ├─ projects/ experiments/ 项目 / 实验 / run / 审计 / 签名
 │  ├─ quality/               guard、术语校验
 │  └─ pdf/ workflow/ utils/
 ├─ build_db/
 │  ├─ parsers/               docling / grobid / mineru / pipeline
 │  ├─ jats_parser.py         JATS 解析
-│  ├─ import_jats.py         结构化导入
+│  ├─ import_jats.py         结构化导入（含 sentences）
 │  ├─ structure_v2.py        章节/句子/图谱迁移
 │  ├─ sentence_geometry.py   句子 bbox
 │  ├─ rebuild_sentence_links.py
+│  ├─ watch_schema.py        watch 表
+│  ├─ claim_pilot_schema.py  claim 表
 │  └─ audit_structure.py     结构完整性审计
 ├─ mcp_server/               search / generate / guard（MCP 薄转发）
 ├─ packs/                    领域包（biomed-oncoimmuno）
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    670 项测试
+├─ tests/                    671 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -160,23 +173,28 @@ sci-pal/
 
 | 组 | 前缀 |
 |---|---|
+| 认证/工作区 | `/api/auth/*` `/api/workspaces/*` |
 | 检索 | `/api/retrieve` `/api/search/*` |
 | 论文 | `/api/papers/*`（解析、PDF、附件、标注、trace） |
 | 问答 | `/api/qa/*` `/api/agentic/*` |
 | 综述 | `/api/review/*` `/api/reviews/*` |
+| 文献监控 | `/api/watch/*` |
+| 领域包 | `/api/domain-packs/*` |
+| Claim | `/api/claims/*` |
+| 项目/实验 | `/api/projects/*` `/api/experiments/*` `/api/runs/*` |
 | 质量 | `/api/guard/*` |
 | 入库/任务 | `/api/ingest/*` `/api/tasks/*` |
-| 其他 | `/api/protocols/*` `/api/references/*` `/api/abstracts/*` `/api/experiments/*` |
+| 其他 | `/api/protocols/*` `/api/references/*` `/api/abstracts/*` |
 
-完整 98 条路由见 [docs/架构与路由图.md](docs/架构与路由图.md)。
+完整路由以 `routes/` 与 `api_server.py` 为准，架构见 [docs/架构与路由图.md](docs/架构与路由图.md)。
 
 ## 测试
 
 ```
-592 tests, ~25s
+671 tests, ~60s
 ```
 
-覆盖：检索、路由、guard、结构 v2、JATS 导入、文献源、trace API、解析流水线。
+覆盖：检索、路由、guard、结构、JATS 导入、watch、domain packs、claim 试点、多用户隔离、项目/实验/run。
 
 ## 文档
 
@@ -220,7 +238,10 @@ sci-pal/
 3. 旧 PDF 的 GROBID 位置已回填 42 篇，个别 PDF 无正文引用标记；
 4. Europe PMC 搜索服务 503 时无法继续扩量；
 5. PDF 章节树来自解析推断，XML 才是原生结构；
-6. 当前为单用户；多用户与鉴权待 DSH 服务器版方案落地；
+6. 多用户/隔离已实现，但仍是 SQLite 单节点；1000 账号/100 并发需 PostgreSQL + Redis + 多 worker；
 7. 100 题中 69 题是 auto 生成题，coverage 0.686，仍是主要拖累；
 8. DSH 插件化仍为方案，尚未实现 MCP evidence / validate 工具；
-9. 云端评测会把论文文本发送到外部 provider，正式使用前需确认数据合规。
+9. 云端评测/生成会把论文文本发送到外部 provider，正式使用前需确认数据合规；
+10. Claim 试点仅覆盖 10 个 HCC claim；writing_brief 只有 1 个 claim 完成；
+11. 在线 ingest 只完成 2 篇（LEAP-012 / EMERALD-1 解读）；PMC13036683 下载失败；
+12. 写作闸门仍是 brief + 人工检查，尚未自动拒绝违规句子。

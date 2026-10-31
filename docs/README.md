@@ -9,6 +9,10 @@
 |------|------|
 | 项目是什么、怎么启动 | [`../README.md`](../README.md) |
 | 架构、模块、路由与数据流 | [架构与路由图.md](架构与路由图.md) |
+| 文献监控 | [工作计划-自适应与文献情报.md](工作计划-自适应与文献情报.md) |
+| 领域包 | [肿瘤免疫领域包](../packs/biomed-oncoimmuno/README.md) |
+| Claim 试点 | [claim-pilot-审讯记录-01.md](claim-pilot-审讯记录-01.md) |
+| Claim 写作口径 | [claim-pilot-在线入库-01.md](claim-pilot-在线入库-01.md) |
 | PDF 三引擎解析 | [PDF解析-三引擎联合.md](PDF解析-三引擎联合.md) |
 | JATS 导入与外部文献源 | [文献源-JATS与外部源.md](文献源-JATS与外部源.md) |
 | 多用户与数据隔离 | [工作计划-多用户与数据隔离.md](工作计划-多用户与数据隔离.md) |
@@ -34,7 +38,7 @@
 | 历史工单 / 阶段验收 / 旧计划 | [archive/](archive/README.md) |
 | 贡献指南 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
 | 给 AI 代码助手的项目说明 | [`../AGENTS.md`](../AGENTS.md) |
-| 机器可读架构 | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
+| 机器可读架构（历史 V33.13） | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
 
 ## 维护规则
 

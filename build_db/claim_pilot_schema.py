@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS claim_cards (
     backing TEXT,
     rebuttal TEXT,
     strongest_counter TEXT,
+    writing_brief TEXT,
     decision TEXT NOT NULL DEFAULT 'pending',
     decision_note TEXT,
     decided_by TEXT,
@@ -67,6 +68,8 @@ def migrate(db_path: Path | str = DEFAULT_DB) -> dict:
         cols = {row[1] for row in conn.execute("PRAGMA table_info(claim_cards)")}
         if "corpus_json" not in cols:
             conn.execute("ALTER TABLE claim_cards ADD COLUMN corpus_json TEXT NOT NULL DEFAULT '[]'")
+        if "writing_brief" not in cols:
+            conn.execute("ALTER TABLE claim_cards ADD COLUMN writing_brief TEXT")
         conn.commit()
     finally:
         conn.close()
