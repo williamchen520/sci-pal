@@ -81,6 +81,7 @@ $env:SCIPAL_BENCH_ALLOW_SQLITE = "1"
 | Claim 试点 | Claim Card、qualifiers、正反证据、FTS/语义检索、NLI、裁决事件、writing brief |
 | 插件端口 M0/M1/M2 | `services/plugins` + `plugins/` manifest/port schema/adapter；JSONL provenance；ClaimVerifier + Retriever 端口 |
 | Benchmark DB 策略 | 默认 PostgreSQL URL；>100 篇/并发禁用 SQLite；小规模需显式 opt-in |
+| DB adapter P1 | SQLite 默认；PostgreSQL schema + adapter opt-in；不迁移数据、不切换读路径 |
 | 部署 | Docker Compose（app + watch-cron + Caddy）、备份、离线 bundle |
 | 实验方案 | Protocols.io 实时检索/导入；Dockstore / bio.tools / nf-core |
 
@@ -212,7 +213,7 @@ sci-pal/
 ├─ eval/                     检索/QA/插件对比脚本（plugin_bench、claim_verifier_bench、retriever_bench）
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    699 项测试
+├─ tests/                    707 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -241,7 +242,7 @@ sci-pal/
 ## 测试
 
 ```
-699 tests, ~70s
+707 tests, ~62s
 ```
 
 覆盖：检索、路由、guard、结构、JATS 导入、watch、domain packs、claim 试点、多用户隔离、项目/实验/run、插件端口。

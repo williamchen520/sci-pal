@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 699,
+    "count": 707,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1857,7 +1857,7 @@
     "postgres_backend": "not-implemented"
   },
   "postgres_migration": {
-    "status": "planned",
+    "status": "P1-implemented-pending-merge",
     "plan": "docs/工作计划-PostgreSQL迁移.md",
     "baseline": "docs/PostgreSQL迁移-基线.md",
     "backup_script": "scripts/backup_sqlite.py",
@@ -1871,6 +1871,15 @@
       "P6-archive"
     ],
     "hard_rule": "original data/research.db is read-only; migrate from snapshot only",
-    "test_count": 699
+    "test_count": 699,
+    "p1": {
+      "schema": "build_db/postgres_schema.sql",
+      "generator": "build_db/generate_postgres_schema.py",
+      "adapter": "services/db/adapter.py",
+      "tests": "tests/test_db_adapter.py",
+      "default_backend": "sqlite",
+      "pg_dsn_env": "SCIPAL_PG_DSN",
+      "pool": "deferred-to-P2"
+    }
   }
 }
