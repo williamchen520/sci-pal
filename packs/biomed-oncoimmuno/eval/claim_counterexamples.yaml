@@ -1,0 +1,28 @@
+# Manual counterexample annotation for the first HCC claim pilot.
+# None of these are direct refutations; they are boundary/uncertainty evidence.
+annotations:
+  - claim_id: claim_hcc_triple_os
+    sentence_id: paper_PMC13399579_937f5057_xml_para_00013_sent_002
+    relation: underdetermines
+    rationale: 讨论的是 ICI 单药 ORR 有限，不是 TACE 三联 vs TACE 的直接反例；作为边界证据。
+    confidence: 0.7
+  - claim_id: claim_hcc_dtace_haic
+    sentence_id: paper_PMC13615806_d62ab6f2_xml_para_00035_sent_001
+    relation: underdetermines
+    rationale: 讨论 MaVI 中 lenvatinib/bevacizumab 三联的相对获益不一致，不是 dTACE vs HAIC 的直接反例。
+    confidence: 0.7
+  - claim_id: claim_hcc_ici_rechallenge
+    sentence_id: para_paper_PMC12707946_2d3bcc67_0008_sent_002
+    relation: underdetermines
+    rationale: 明确指出再挑战方案、患者选择尚无标准，削弱“可行”的普遍性。
+    confidence: 0.8
+  - claim_id: claim_hcc_ici_rechallenge
+    sentence_id: para_paper_PMC12707946_2d3bcc67_0063_sent_002
+    relation: underdetermines
+    rationale: 无 ICI rechallenge vs TKI 的头对头研究，现有证据多为回顾性/真实世界。
+    confidence: 0.8
+  - claim_id: claim_sbrt_ici_watch
+    sentence_id: paper_PMC13399579_937f5057_xml_para_00091_sent_007
+    relation: underdetermines
+    rationale: 作者明确要求更大样本验证，支持“需限定/待验证”而非普遍推荐。
+    confidence: 0.7
