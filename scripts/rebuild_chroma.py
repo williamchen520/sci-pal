@@ -17,6 +17,7 @@ Swap (services stopped)::
 from __future__ import annotations
 
 import argparse
+import os
 import sqlite3
 import time
 from pathlib import Path
@@ -26,7 +27,7 @@ from sentence_transformers import SentenceTransformer
 
 ROOT = Path(__file__).resolve().parents[1]
 DB = ROOT / "data" / "research.db"
-MODEL = Path(r"D:\models\models\BAAI--bge-base-en-v1.5")
+MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 COLLECTION = "paragraphs"
 
 

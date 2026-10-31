@@ -6,6 +6,8 @@ import os
 import re
 from typing import Dict, Iterable, List, Optional
 
+from config.paths import RERANK_MODEL
+
 CITE_RE = re.compile(r"\[[TPFRCG]\d+(?:\s*,\s*[TPFRCG]\d+)*\]")
 SENT_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\[])")
 
@@ -25,7 +27,7 @@ def split_claims(answer: str) -> List[str]:
 class SemanticGrounder:
     def __init__(self, model_name: Optional[str] = None):
         self.model_name = model_name or os.environ.get(
-            "SCIPAL_GROUNDING_MODEL", r"D:\models\models\BAAI--bge-reranker-base"
+            "SCIPAL_GROUNDING_MODEL", RERANK_MODEL
         )
         self._model = None
 

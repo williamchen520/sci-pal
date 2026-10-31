@@ -12,8 +12,10 @@ import os
 from pathlib import Path
 from typing import Any
 
+from config.paths import LOGS_DIR
+
 STOP_MESSAGE = "触发止损规则，停止调参，等待人类介入"
-DEFAULT_STATE = Path("logs") / "stop_loss_state.json"
+DEFAULT_STATE = LOGS_DIR / "stop_loss_state.json"
 
 
 class StopLossTriggered(RuntimeError):

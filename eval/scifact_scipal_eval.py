@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import re
 import sqlite3
@@ -13,10 +14,10 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DATA = Path(r"G:\runs\scifact_data\data")
+DEFAULT_DATA = Path(os.environ.get("SCIPAL_SCIFACT_DATA", str(Path(__file__).resolve().parent.parent / "data" / "scifact" / "data")))
 DEFAULT_DB = ROOT / "data" / "benchmark_scifact.db"
 DEFAULT_CHROMA = ROOT / "data" / "benchmark_scifact_chroma"
-MODEL = r"D:\models\models\BAAI--bge-base-en-v1.5"
+MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 SENT_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9])")
 TOKEN_RE = re.compile(r"[A-Za-z0-9]+")
 

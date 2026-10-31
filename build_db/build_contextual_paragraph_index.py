@@ -20,7 +20,7 @@ from sentence_transformers import SentenceTransformer
 DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 CHROMA = Path(__file__).resolve().parent.parent / "data" / "chroma"
 MODEL = os.environ.get(
-    "SCIPAL_EMBEDDING_MODEL", r"D:\models\models\BAAI--bge-base-en-v1.5"
+    "SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5"
 )
 COLLECTION = "paragraphs_contextual"
 

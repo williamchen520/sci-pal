@@ -12,9 +12,7 @@ import chromadb
 
 DEFAULT_CHROMA = Path(__file__).resolve().parent.parent.parent / "data" / "chroma"
 DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
-MODEL = os.environ.get(
-    "SCIPAL_EMBEDDING_MODEL", r"D:\models\models\BAAI--bge-base-en-v1.5"
-)
+from config.paths import EMBEDDING_MODEL as MODEL
 
 
 class SummaryVectorSearch:

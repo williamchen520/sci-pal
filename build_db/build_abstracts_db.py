@@ -12,6 +12,7 @@
 """
 
 import json
+import os
 import sqlite3
 from pathlib import Path
 
@@ -19,15 +20,15 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 # 路径配置
-# 脚本在 build_db/ 下，项目根目录是上一级（D:\sciPal\）
+# 脚本在 build_db/ 下，项目根目录是上一级
 # 数据库和向量库都放在项目根目录的 data/ 下，跟 research.db 在一起
-PROJECT_ROOT = Path(__file__).parent.parent  # D:\sciPal\
-ABSTRACTS_DIR = PROJECT_ROOT / "abstracts_xml"  # D:\sciPal\abstracts_xml\
-DB_PATH = PROJECT_ROOT / "data" / "abstracts.db"  # D:\sciPal\data\abstracts.db（跟 research.db 在一起）
-CHROMA_DIR = PROJECT_ROOT / "data" / "chroma_abstracts"  # D:\sciPal\data\chroma_abstracts\（跟 chroma/ 在一起）
+PROJECT_ROOT = Path(__file__).parent.parent
+ABSTRACTS_DIR = PROJECT_ROOT / "abstracts_xml"
+DB_PATH = PROJECT_ROOT / "data" / "abstracts.db"
+CHROMA_DIR = PROJECT_ROOT / "data" / "chroma_abstracts"
 
 # 模型配置
-EMBEDDING_MODEL = r"D:\models\models\BAAI--bge-base-en-v1.5"  # V31.26: 从 all-mpnet-base-v2 改成 bge-base-en-v1.5
+EMBEDDING_MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 
 
 def create_database():

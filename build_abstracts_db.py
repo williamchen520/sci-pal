@@ -30,7 +30,7 @@ CHROMA_DIR = PROJECT_ROOT / "data" / "chroma_abstracts"
 import os
 EMBEDDING_MODEL = os.environ.get(
     "ABSTRACT_EMBEDDING_MODEL",
-    r"D:\models\models\BAAI--bge-base-en-v1.5"  # Windows 本地路径
+    os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5"),
 )
 # 如果本地路径不存在，回退到模型名（会自动下载）
 if not os.path.exists(EMBEDDING_MODEL):

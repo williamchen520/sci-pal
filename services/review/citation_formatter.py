@@ -270,7 +270,6 @@ def _get_csl_styles_dir() -> Optional[str]:
     """获取 CSL 样式文件目录。优先在当前项目目录下找 csl_styles/。"""
     # 尝试多个可能的位置
     candidates = [
-        os.path.join(os.getcwd(), DEFAULT_CSL_STYLES_DIR),
         os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), DEFAULT_CSL_STYLES_DIR),
     ]
     for candidate in candidates:

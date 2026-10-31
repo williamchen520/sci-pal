@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 # 绝对路径：**不要**照抄 Path("data/research.db")（依赖 cwd，
-# 计划任务从 C:\Windows\System32 启动时会写错库）。
+# 避免从任意工作目录启动时写错库）。
 # parents[0]=services/review, [1]=services, [2]=项目根
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
