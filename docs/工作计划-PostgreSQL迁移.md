@@ -425,6 +425,60 @@ PostgreSQL schema 改为 TEXT，避免 bigint 转换失败。
 FTS 结果差异有清单
 ```
 
+P3 实现（待合并）：
+
+```text
+services/db/shadow_read.py
+scripts/shadow_read.py
+tests/test_shadow_read.py
+docs/PostgreSQL迁移-P3-shadow.json
+```
+
+执行结果（本地 PostgreSQL 16）：
+
+```text
+8 张核心表 key 全量对比：0 missing / 0 extra / 0 field diff
+papers        3,310
+paragraphs  167,388
+sentences   862,677
+claim_cards      10
+claim_card_evidence 17
+watch_items      11
+users              1
+workspaces         1
+```
+
+FTS 影子读：
+
+| query | SQLite matches | PG matches | match Jaccard | top-10 common |
+|---|---:|---:|---:|---:|
+| hepatocellular carcinoma | 1,023 | 785 | 0.757 | 0 |
+| immune checkpoint inhibitor | 321 | 786 | 0.326 | 1 |
+| tumor microenvironment | 2,813 | 2,611 | 0.828 | 2 |
+
+结论：
+
+```text
+表数据完全一致。
+FTS 不是数据丢失，而是分词/词干差异：
+  SQLite unicode61（无 stemming）
+  PostgreSQL english（有 stemming）
+```
+
+排序也不同：
+
+```text
+SQLite 按 bm25
+PostgreSQL 按 ts_rank_cd
+```
+
+因此 P3 结论：
+
+```text
+数据层可以继续 P4；
+FTS 不能直接切换，需先统一 tokenizer/stemmer 或接受排序差异评审。
+```
+
 ### P4：双写
 
 ```text

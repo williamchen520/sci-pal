@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 719,
+    "count": 723,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1857,7 +1857,7 @@
     "postgres_backend": "not-implemented"
   },
   "postgres_migration": {
-    "status": "P2-executed-verified-pending-merge",
+    "status": "P3-shadow-read-pending-merge",
     "plan": "docs/工作计划-PostgreSQL迁移.md",
     "baseline": "docs/PostgreSQL迁移-基线.md",
     "backup_script": "scripts/backup_sqlite.py",
@@ -1895,6 +1895,17 @@
       "count_mismatches": 0,
       "verify_report": "docs/PostgreSQL迁移-ETL-verify.json",
       "note": "citations.year uses TEXT; non-year fields diff 0"
+    },
+    "p3": {
+      "shadow_reader": "services/db/shadow_read.py",
+      "cli": "scripts/shadow_read.py",
+      "tests": "tests/test_shadow_read.py",
+      "report": "docs/PostgreSQL迁移-P3-shadow.json",
+      "tables": 8,
+      "table_key_mismatches": 0,
+      "fts_match_jaccard": "0.326-0.828",
+      "fts_note": "SQLite unicode61 no stemming vs PG english stemming; bm25 vs ts_rank_cd",
+      "cutover_ready": false
     }
   }
 }

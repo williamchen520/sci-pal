@@ -265,7 +265,7 @@ D:\models
 [ ] 临时文件用 tempfile
 [ ] 子进程解释器用 sys.executable
 [ ] 非项目目录下 --help / 最小命令能跑
-[ ] 719+ 测试通过
+[ ] 723+ 测试通过
 [ ] 新增路径已加入 config/paths.py
 ```
 
