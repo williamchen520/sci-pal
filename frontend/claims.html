@@ -97,6 +97,7 @@
         <div class="row" style="margin-top:8px">
           <button id="accept">接受</button>
           <button class="secondary" id="revise">退回修改</button>
+          <button class="secondary" id="contest">保留争议</button>
           <button class="secondary" id="reject">拒绝</button>
         </div>
 
@@ -245,6 +246,7 @@ $("search-support").addEventListener("click", () => search("support"));
 $("search-oppose").addEventListener("click", () => search("oppose"));
 $("accept").addEventListener("click", () => decide("accept"));
 $("revise").addEventListener("click", () => decide("revise"));
+$("contest").addEventListener("click", () => decide("contest"));
 $("reject").addEventListener("click", () => decide("reject"));
 
 (async function init() {

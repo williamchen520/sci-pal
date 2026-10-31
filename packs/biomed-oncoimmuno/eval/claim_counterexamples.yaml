@@ -26,3 +26,8 @@ annotations:
     relation: underdetermines
     rationale: 作者明确要求更大样本验证，支持“需限定/待验证”而非普遍推荐。
     confidence: 0.7
+  - claim_id: claim_hcc_triple_os
+    sentence_id: paper_PMC12771288_fca97ed9_xml_para_00000_sent_001
+    relation: refutes
+    rationale: LEAP-012 / EMERALD-1 解读明确指出 OS 数据仍未成熟，且不支持联合治疗相对 TACE 单药的统计学显著 OS 获益；直接挑战“提高总生存”的无条件表述。
+    confidence: 0.9
