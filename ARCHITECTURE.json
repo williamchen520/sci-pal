@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 723,
+    "count": 726,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1913,7 +1913,16 @@
       "report": "docs/PostgreSQL迁移-FTS对齐实验.json",
       "unicode_vs_english": 0.637,
       "porter_vs_english": 0.989,
-      "recommendation": "rebuild SQLite FTS with porter before cutover"
+      "recommendation": "rebuild SQLite FTS with porter before cutover",
+      "rebuild_script": "scripts/rebuild_fts_porter.py",
+      "compare_script": "scripts/fts_porter_compare.py",
+      "query_report": "docs/PostgreSQL迁移-FTS-porter-20query.json",
+      "twenty_query_recall": {
+        "sqlite_unicode": 1.0,
+        "sqlite_porter": 0.95,
+        "pg_english": 0.6
+      },
+      "decision": "do not switch FTS; P4 metadata only"
     }
   }
 }
