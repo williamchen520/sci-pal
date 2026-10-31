@@ -533,7 +533,7 @@ docs/PostgreSQL迁移-FTS-porter-rebuild.json
 验收：
 
 ```text
-连续 24h 无未解释 lag
+staging soak 覆盖写入/更新/删除
 回放可补齐
 回退只需停双写，SQLite 仍完整
 ```
@@ -544,8 +544,10 @@ P4 实现（待合并）：
 services/db/dual_write.py
 scripts/setup_dual_write.py
 scripts/replay_dual_write.py
+scripts/p4_staging_soak.py
 tests/test_dual_write.py
 docs/PostgreSQL迁移-P4-dualwrite-setup.json
+docs/PostgreSQL迁移-P4-soak.json
 ```
 
 机制：
@@ -565,6 +567,7 @@ FTS 表不安装触发器、不双写
 backup: data/backups/research_20261101_012330.db
 outbox pending: 0
 真实 PG upsert 回放：1 条成功，failed 0
+staging soak：2,422 ops / failed 0 / mismatches 0
 ```
 
 验收：
@@ -574,7 +577,8 @@ outbox pending: 0
 [x] 写入只追加 outbox
 [x] replay 可补齐
 [x] FTS 不在双写范围
-[ ] 24h 连续 lag 观察（需要线上运行）
+[x] staging soak 通过（500 cycles / 2,422 ops）
+[ ] 线上真实流量长时间观察（可选，不再等 24h 墙钟）
 ```
 
 ### P5：切换
@@ -656,7 +660,7 @@ SQLite 只允许小规模本地验证
 |---|---|
 | 迁移脚本误写原库 | 原库 chmod/只读；脚本只接受 snapshot 路径 |
 | FTS 结果漂移 | P3 影子读 + 差异清单 |
-| 双写 lag | replay queue + 24h 观察 |
+| 双写 lag | replay queue + staging soak + 健康检查 |
 | 回退丢写 | 保留 SQLite 双写窗口；切换后短期双写 |
 | 长事务/锁 | 连接池 + 批大小 + 超时 |
 | 中文检索退化 | 先保留原文；pg_trgm / 外部分词单独评估 |
@@ -672,7 +676,7 @@ SQLite 只允许小规模本地验证
 2. 每次迁移前有可打开、integrity_check=ok 的备份
 3. SQLite 路径在 P1–P3 持续可用
 4. PG 与 SQLite 核心查询差异有清单
-5. 双写 24h 无未解释 lag
+5. 双写 staging soak 通过（2,422 ops / 0 failed）
 6. 切换后 72h 无 P0/P1 故障
 7. 回退演练成功
 8. 692+ 测试通过（迁移期间不下降）

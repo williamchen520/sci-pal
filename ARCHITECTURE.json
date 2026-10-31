@@ -1939,7 +1939,17 @@
       "24h_lag_observed": false,
       "healthcheck": "scripts/dual_write_healthcheck.py",
       "health_report": "docs/PostgreSQL迁移-P4-health.json",
-      "health_status": "ok"
+      "health_status": "ok",
+      "soak": {
+        "script": "scripts/p4_staging_soak.py",
+        "report": "docs/PostgreSQL迁移-P4-soak.json",
+        "cycles": 500,
+        "operations": 2422,
+        "failed": 0,
+        "pending": 0,
+        "mismatches": 0,
+        "status": "ok"
+      }
     }
   }
 }

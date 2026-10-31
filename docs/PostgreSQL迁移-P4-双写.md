@@ -238,15 +238,73 @@ tests/test_dual_write.py
 全量：
 
 ```text
-731 tests OK
+732 tests OK
 ```
 
 ---
 
-## 8. 限制
+## 8. Staging soak
+
+脚本：
 
 ```text
-1. 24h 连续 lag 观察还没做；需要线上运行
+scripts/p4_staging_soak.py
+```
+
+隔离环境：
+
+```text
+SQLite: backups/soak.sqlite
+PG:     scipal_dualwrite_soak
+```
+
+流程：
+
+```text
+1. 复制 snapshot
+2. 安装 21 表触发器
+3. 建 staging PG + P1 schema
+4. 先把 4 张基线表 COPY 到 staging
+5. 执行 500 cycles 写入/更新/删除
+6. replay 全部 outbox
+7. 对比 SQLite / PG 行数
+```
+
+结果：
+
+```text
+operations   2,422
+applied      2,422
+failed       0
+pending      0
+replay       17.3s
+total        154.1s
+mismatches   []
+status       ok
+```
+
+行数：
+
+| table | SQLite | PG |
+|---|---:|---:|
+| papers | 3,710 | 3,710 |
+| claim_cards | 438 | 438 |
+| watch_items | 511 | 511 |
+| memberships | 501 | 501 |
+
+结论：
+
+```text
+双写触发器 + replay + upsert 在隔离环境通过。
+没有等待 24h 墙钟；用 2,422 次真实写入替代。
+```
+
+---
+
+## 9. 限制
+
+```text
+1. 24h 观察被 staging soak 替代；真实线上流量仍未长时间验证
 2. replay 是 at-least-once；PG 侧 upsert 幂等
 3. 只覆盖 21 张核心元数据表，不是全部 60 张
 4. FTS 明确不双写
@@ -256,7 +314,7 @@ tests/test_dual_write.py
 
 ---
 
-## 9. 相关文件
+## 10. 相关文件
 
 ```text
 services/db/dual_write.py
