@@ -77,6 +77,10 @@ def get_claim(conn: sqlite3.Connection, claim_id: str) -> Optional[Dict[str, Any
     ]
     card["qualifiers"] = json.loads(card.get("qualifiers_json") or "{}")
     card["corpus"] = json.loads(card.get("corpus_json") or "[]")
+    try:
+        card["writing_brief"] = json.loads(card.get("writing_brief") or "{}")
+    except (TypeError, ValueError):
+        card["writing_brief"] = {}
     card["evidence"] = evidence
     card["events"] = events
     return card
@@ -89,8 +93,9 @@ def create_claim(conn: sqlite3.Connection, data: Dict[str, Any], actor: str = "h
     conn.execute(
         "INSERT OR REPLACE INTO claim_cards "
         "(claim_id, workspace_id, title, claim_text, claim_type, status, confidence, "
-        "qualifiers_json, corpus_json, warrant, backing, rebuttal, strongest_counter, decision, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "qualifiers_json, corpus_json, warrant, backing, rebuttal, strongest_counter, "
+        "writing_brief, decision, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             claim_id,
             data.get("workspace_id") or "ws_default",
@@ -105,6 +110,7 @@ def create_claim(conn: sqlite3.Connection, data: Dict[str, Any], actor: str = "h
             data.get("backing") or "",
             data.get("rebuttal") or "",
             data.get("strongest_counter") or "",
+            json.dumps(data.get("writing_brief") or {}, ensure_ascii=False),
             data.get("decision") or "pending",
             data.get("created_at") or _now(),
             _now(),
@@ -251,6 +257,24 @@ def add_note(
     conn.execute(
         "UPDATE claim_cards SET updated_at = ? WHERE claim_id = ?", (_now(), claim_id)
     )
+    conn.commit()
+    return get_claim(conn, claim_id) or {}
+
+
+def set_writing_brief(
+    conn: sqlite3.Connection,
+    claim_id: str,
+    brief: Dict[str, Any],
+    actor: str = "human",
+) -> Dict[str, Any]:
+    claim = get_claim(conn, claim_id)
+    if not claim:
+        raise ValueError("claim not found")
+    conn.execute(
+        "UPDATE claim_cards SET writing_brief = ?, updated_at = ? WHERE claim_id = ?",
+        (json.dumps(brief, ensure_ascii=False), _now(), claim_id),
+    )
+    _event(conn, claim_id, "writing_brief", actor, "")
     conn.commit()
     return get_claim(conn, claim_id) or {}
 

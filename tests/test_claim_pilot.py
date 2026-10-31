@@ -72,6 +72,14 @@ class ClaimPilotTests(unittest.TestCase):
         self.assertEqual(claim["status"], "contested")
         self.assertEqual(claim["decision"], "contest")
 
+    def test_writing_brief(self) -> None:
+        conn = service.connect(self.db)
+        claim = service.set_writing_brief(
+            conn, self.claim_id, {"safe_claim": "bounded statement"}
+        )
+        conn.close()
+        self.assertEqual(claim["writing_brief"]["safe_claim"], "bounded statement")
+
     def test_search_candidates(self) -> None:
         conn = service.connect(self.db)
         candidates = service.search_candidates(conn, self.claim_id, direction="support")
