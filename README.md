@@ -262,6 +262,7 @@ sci-pal/
 - [Benchmark PostgreSQL 策略](docs/benchmark-PostgreSQL策略.md)
 - [PostgreSQL 迁移计划](docs/工作计划-PostgreSQL迁移.md)
 - [跨平台路径体检报告](docs/跨平台路径体检报告.md)
+- [Windows 开发警示与跨平台规范](docs/Windows开发警示与跨平台规范.md)
 - [PostgreSQL 迁移基线](docs/PostgreSQL迁移-基线.md)
 - [PostgreSQL ETL dry-run](docs/PostgreSQL迁移-ETL-dryrun.json)
 - [PostgreSQL ETL verify](docs/PostgreSQL迁移-ETL-verify.json)
