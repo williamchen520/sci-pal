@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 731,
+    "count": 732,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1936,7 +1936,10 @@
       "backup": "data/backups/research_20261101_012330.db",
       "outbox_pending": 0,
       "real_upsert_replay": "1 applied / 0 failed",
-      "24h_lag_observed": false
+      "24h_lag_observed": false,
+      "healthcheck": "scripts/dual_write_healthcheck.py",
+      "health_report": "docs/PostgreSQL迁移-P4-health.json",
+      "health_status": "ok"
     }
   }
 }
