@@ -311,17 +311,38 @@ summaries_fts
 
 ```text
 1. 写 PostgreSQL schema DDL
-2. 写 DBAdapter / connection pool
+2. 写 DBAdapter（连接/事务/行工厂）
 3. 保持 SQLite 默认，不切换
-4. 为 adapter 写单测（连接、事务、行工厂）
+4. 为 adapter 写单测
+```
+
+P1 实现（待合并）：
+
+```text
+build_db/postgres_schema.sql
+build_db/generate_postgres_schema.py
+services/db/adapter.py
+services/db/__init__.py
+tests/test_db_adapter.py
+```
+
+约束：
+
+```text
+默认 SCIPAL_DB_BACKEND=sqlite
+PostgreSQL 需要 SCIPAL_PG_DSN + psycopg
+本阶段不迁移数据
+本阶段不切换读路径
+连接池留到 P2
 ```
 
 验收：
 
 ```text
-SQLite 路径 692+ 测试仍通过
-PostgreSQL 可建空库
-adapter 可连接、回滚、关闭
+SQLite 路径 699+ 测试仍通过
+PostgreSQL schema 可生成
+adapter 可连接/提交/回滚/关闭
+schema 含核心表与 tsvector/GIN
 ```
 
 ### P2：只读 ETL
