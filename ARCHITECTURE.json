@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 726,
+    "count": 731,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1857,7 +1857,7 @@
     "postgres_backend": "not-implemented"
   },
   "postgres_migration": {
-    "status": "P3-shadow-read-pending-merge",
+    "status": "P4-metadata-dualwrite-installed-pending-merge",
     "plan": "docs/工作计划-PostgreSQL迁移.md",
     "baseline": "docs/PostgreSQL迁移-基线.md",
     "backup_script": "scripts/backup_sqlite.py",
@@ -1923,6 +1923,20 @@
         "pg_english": 0.6
       },
       "decision": "do not switch FTS; P4 metadata only"
+    },
+    "p4": {
+      "dual_write": "services/db/dual_write.py",
+      "setup": "scripts/setup_dual_write.py",
+      "replay": "scripts/replay_dual_write.py",
+      "tests": "tests/test_dual_write.py",
+      "document": "docs/PostgreSQL迁移-P4-双写.md",
+      "tables": 21,
+      "triggers": 63,
+      "fts_included": false,
+      "backup": "data/backups/research_20261101_012330.db",
+      "outbox_pending": 0,
+      "real_upsert_replay": "1 applied / 0 failed",
+      "24h_lag_observed": false
     }
   }
 }

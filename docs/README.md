@@ -22,6 +22,7 @@
 | PostgreSQL 迁移基线 | [PostgreSQL迁移-基线.md](PostgreSQL迁移-基线.md) |
 | PostgreSQL FTS 对齐 | [PostgreSQL迁移-FTS对齐实验.md](PostgreSQL迁移-FTS对齐实验.md) |
 | PostgreSQL FTS 20 query | [PostgreSQL迁移-FTS-porter-20query.md](PostgreSQL迁移-FTS-porter-20query.md) |
+| PostgreSQL P4 双写 | [PostgreSQL迁移-P4-双写.md](PostgreSQL迁移-P4-双写.md) |
 | PostgreSQL ETL dry-run | [PostgreSQL迁移-ETL-dryrun.json](PostgreSQL迁移-ETL-dryrun.json) |
 | PostgreSQL ETL verify | [PostgreSQL迁移-ETL-verify.json](PostgreSQL迁移-ETL-verify.json) |
 | PostgreSQL ETL checksum | [PostgreSQL迁移-ETL-checksum.json](PostgreSQL迁移-ETL-checksum.json) |

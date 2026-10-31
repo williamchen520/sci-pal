@@ -538,6 +538,45 @@ docs/PostgreSQL迁移-FTS-porter-rebuild.json
 回退只需停双写，SQLite 仍完整
 ```
 
+P4 实现（待合并）：
+
+```text
+services/db/dual_write.py
+scripts/setup_dual_write.py
+scripts/replay_dual_write.py
+tests/test_dual_write.py
+docs/PostgreSQL迁移-P4-dualwrite-setup.json
+```
+
+机制：
+
+```text
+SQLite 仍是主库
+21 张元数据表安装 AFTER INSERT/UPDATE/DELETE 触发器
+触发器只写 dual_write_outbox，不阻塞业务
+replay worker 读取 outbox，upsert/delete 到 PG
+FTS 表不安装触发器、不双写
+```
+
+当前状态：
+
+```text
+已安装 21 张表 / 63 个触发器
+backup: data/backups/research_20261101_012330.db
+outbox pending: 0
+真实 PG upsert 回放：1 条成功，failed 0
+```
+
+验收：
+
+```text
+[x] SQLite 主库不变
+[x] 写入只追加 outbox
+[x] replay 可补齐
+[x] FTS 不在双写范围
+[ ] 24h 连续 lag 观察（需要线上运行）
+```
+
 ### P5：切换
 
 ```text
