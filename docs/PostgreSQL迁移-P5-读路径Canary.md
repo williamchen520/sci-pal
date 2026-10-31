@@ -133,6 +133,22 @@ errors:   0
 
 比例符合 10%；PG 响应正常。
 
+生产数据实例（G 库 / 3312 篇）10% canary：
+
+```text
+sqlite:   90
+postgres: 10
+errors:   0
+```
+
+生产容器需要 `psycopg`：
+
+```text
+requirements.txt: psycopg[binary]>=3.2
+```
+
+没有它时 PG 分支会回退 SQLite，`X-SciPal-Read-Backend` 全是 sqlite。
+
 ---
 
 ## 6. 回退
