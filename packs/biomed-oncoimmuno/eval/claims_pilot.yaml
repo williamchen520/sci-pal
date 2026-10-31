@@ -21,6 +21,16 @@ corpus:
   - paper_watch_17aaa5212002
   - paper_watch_5f839e52dcec
   - paper_watch_9231c6ae0848
+  - paper_PMC12807518_6dfefde2
+  - paper_PMC13621873_801b0f7d_xml
+  - paper_PMC13630903_07ba59c9_xml
+  - paper_PMC13626788_82c7332e_xml
+  - paper_PMC13615818_420937c7_xml
+  - paper_PMC13632115_f52f450b_xml
+  - paper_PMC13623354_0f50f62a_xml
+  - paper_watch_pmc13661018
+  - paper_PMC13629315_20962d7f_xml
+  - paper_PMC13632189_982d7b11_xml
 claims:
   - claim_id: claim_hcc_triple_os
     title: TACE + anti-VEGF/TKI + PD-1/PD-L1 改善 uHCC OS
