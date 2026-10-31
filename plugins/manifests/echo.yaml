@@ -1,0 +1,12 @@
+id: echo
+port: echo
+version: 0.1.0
+entrypoint: plugins.adapters.echo:EchoPlugin
+license: AGPL-3.0-only
+description: M0 smoke-test plugin; not a research adapter.
+capabilities:
+  streaming: false
+  network: false
+runtime:
+  timeout_seconds: 5
+  memory_mb: 128
