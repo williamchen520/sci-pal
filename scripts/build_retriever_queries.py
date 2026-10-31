@@ -2,12 +2,14 @@
 """Build the M2 retrieval benchmark fixture.
 
 Sources (deterministic, no LLM):
-1. local seed_100 questions whose gold paper is in the 32-paper corpus;
-2. claim-derived queries from qualifiers + supporting evidence paper ids;
-3. paper-title queries for corpus papers that have sentences.
+1. local seed_100 questions whose gold paper is in the 32-paper HCC corpus;
+2. 20 cross-topic seed questions with non-HCC gold papers;
+3. claim-derived queries from qualifiers + supporting evidence paper ids;
+4. paper-title queries for corpus papers that have sentences.
 
-The fixture is designed to cover easy/medium/hard and claim/title/factual
-queries, not to make any retriever look good.
+The corpus is expanded to 100 papers (HCC + cross-topic gold + distractors) so
+lexical overlap alone is not enough. This is a benchmark fixture, not a gold
+clinical claim set.
 """
 
 from __future__ import annotations
@@ -26,6 +28,8 @@ OUT = ROOT / "eval" / "plugins" / "retriever_queries.json"
 
 TARGET_CLAIM_QUERIES = 20
 TARGET_TITLE_QUERIES = 20
+TARGET_CROSS_TOPIC = 20
+TARGET_CORPUS = 100
 
 
 def _dedupe(cases: list[dict]) -> list[dict]:
@@ -40,36 +44,74 @@ def _dedupe(cases: list[dict]) -> list[dict]:
     return result
 
 
+def _has_sentences(conn: sqlite3.Connection, paper_id: str) -> bool:
+    return conn.execute(
+        "SELECT 1 FROM sentences WHERE paper_id = ? LIMIT 1", (paper_id,)
+    ).fetchone() is not None
+
+
 def main() -> int:
     claims_data = yaml.safe_load(CLAIMS.read_text(encoding="utf-8"))
-    corpus = claims_data["corpus"]
+    corpus = list(claims_data["corpus"])
     corpus_set = set(corpus)
     conn = sqlite3.connect(DB)
     conn.row_factory = sqlite3.Row
+
+    seed_rows = [
+        json.loads(line)
+        for line in GOLD.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    hcc_cases = []
+    cross_cases = []
+    for item in seed_rows:
+        gold = [pid for pid in item.get("paper_ids") or [] if _has_sentences(conn, pid)]
+        if not gold:
+            continue
+        in_hcc = [pid for pid in gold if pid in corpus_set]
+        case = {
+            "case_id": item["id"],
+            "query": item["question"],
+            "gold_paper_ids": gold,
+            "gold_sentence_ids": item.get("evidence") or [],
+            "category": item.get("category") or "factual",
+            "difficulty": item.get("difficulty") or "medium",
+        }
+        if in_hcc:
+            hcc_cases.append({**case, "gold_paper_ids": in_hcc, "source": "seed_100"})
+        elif len(cross_cases) < TARGET_CROSS_TOPIC:
+            cross_cases.append({**case, "source": "cross_topic"})
+
+    # Build a 100-paper corpus: HCC + cross-topic gold + deterministic distractors.
+    mixed = list(corpus)
+    for case in cross_cases:
+        for paper_id in case["gold_paper_ids"]:
+            if paper_id not in mixed:
+                mixed.append(paper_id)
+    marks = ",".join("?" * len(mixed)) if mixed else "''"
+    distractors = conn.execute(
+        f"""
+        SELECT DISTINCT p.paper_id
+        FROM papers p JOIN sentences s ON s.paper_id = p.paper_id
+        WHERE p.paper_id NOT IN ({marks})
+        ORDER BY p.paper_id
+        LIMIT ?
+        """,
+        [*mixed, max(0, TARGET_CORPUS - len(mixed))],
+    ).fetchall()
+    for row in distractors:
+        if len(mixed) >= TARGET_CORPUS:
+            break
+        mixed.append(row["paper_id"])
+    mixed = mixed[:TARGET_CORPUS]
+
     cases: list[dict] = []
+    for case in hcc_cases:
+        cases.append({**case, "corpus": mixed})
+    for case in cross_cases:
+        cases.append({**case, "corpus": mixed})
 
-    # 1) seed questions with at least one gold paper in the fixed corpus
-    for line in GOLD.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        item = json.loads(line)
-        paper_ids = [pid for pid in item.get("paper_ids") or [] if pid in corpus_set]
-        if not paper_ids:
-            continue
-        cases.append(
-            {
-                "case_id": item["id"],
-                "query": item["question"],
-                "corpus": corpus,
-                "gold_paper_ids": paper_ids,
-                "gold_sentence_ids": item.get("evidence") or [],
-                "category": item.get("category") or "factual",
-                "difficulty": item.get("difficulty") or "medium",
-                "source": "seed_100",
-            }
-        )
-
-    # 2) claim-derived queries: qualifier terms + evidence paper ids
+    # Claim-derived queries: qualifier terms + evidence paper ids.
     claim_cases = 0
     for claim in claims_data.get("claims") or []:
         evidence_papers = []
@@ -101,7 +143,7 @@ def main() -> int:
                 {
                     "case_id": f"{claim['claim_id']}__q{index + 1}",
                     "query": query,
-                    "corpus": corpus,
+                    "corpus": mixed,
                     "gold_paper_ids": evidence_papers,
                     "gold_sentence_ids": [
                         item["sentence_id"] for item in claim.get("evidence") or []
@@ -115,7 +157,7 @@ def main() -> int:
         if claim_cases >= TARGET_CLAIM_QUERIES:
             break
 
-    # 3) title queries for corpus papers with sentence data
+    # Title queries for HCC corpus papers with sentence data.
     title_cases = 0
     for paper_id in corpus:
         if title_cases >= TARGET_TITLE_QUERIES:
@@ -123,16 +165,13 @@ def main() -> int:
         row = conn.execute(
             "SELECT title FROM papers WHERE paper_id = ?", (paper_id,)
         ).fetchone()
-        count = conn.execute(
-            "SELECT COUNT(*) FROM sentences WHERE paper_id = ?", (paper_id,)
-        ).fetchone()[0]
-        if not row or not row["title"] or count == 0:
+        if not row or not row["title"] or not _has_sentences(conn, paper_id):
             continue
         cases.append(
             {
                 "case_id": f"title_{paper_id[-12:]}",
                 "query": str(row["title"]),
-                "corpus": corpus,
+                "corpus": mixed,
                 "gold_paper_ids": [paper_id],
                 "gold_sentence_ids": [],
                 "category": "title",
@@ -154,7 +193,7 @@ def main() -> int:
     print(
         {
             "cases": len(cases),
-            "corpus": len(corpus),
+            "corpus": len(mixed),
             "by_source": by_source,
             "out": str(OUT),
         }
