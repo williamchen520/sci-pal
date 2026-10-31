@@ -1,4 +1,4 @@
-# SciPal Plugins (M0)
+# SciPal Plugins (M0/M1)
 
 This directory contains plugin manifests, port schemas and adapters.
 
@@ -39,6 +39,32 @@ Run log:
 ```text
 logs/plugin_runs.jsonl
 ```
+
+## M1: ClaimVerifierPort
+
+Adapters:
+
+```text
+claim-verifier-nli             existing LLM NLI (network optional)
+claim-verifier-rule            deterministic cue baseline
+claim-verifier-underdetermines smoke baseline
+```
+
+Benchmark:
+
+```bash
+python eval/claim_verifier_bench.py
+```
+
+Initial result on 10 claims / 11 evidence:
+
+```text
+rule accuracy          0.3636
+underdetermines        0.0000
+majority baseline      0.9091
+```
+
+The dataset is imbalanced; this run validates the contract, not algorithm quality.
 
 ## Add a plugin
 

@@ -46,7 +46,7 @@
 | 项目与实验 | 项目成员、实验、两级 run、修订、字段审计、电子签名、PI 访问请求 |
 | 领域包 | 声明式 pack（taxonomy / section types / evidence schema / prompts）；`/packs.html` |
 | Claim 试点 | Claim Card、qualifiers、正反证据、FTS/语义检索、NLI、裁决事件、writing brief |
-| 插件端口 M0 | `services/plugins` + `plugins/` manifest/port schema/adapter；JSONL provenance；`eval/plugin_bench.py` |
+| 插件端口 M0/M1 | `services/plugins` + `plugins/` manifest/port schema/adapter；JSONL provenance；`eval/plugin_bench.py`；ClaimVerifierPort 三个 adapter |
 | 部署 | Docker Compose（app + watch-cron + Caddy）、备份、离线 bundle |
 | 实验方案 | Protocols.io 实时检索/导入；Dockstore / bio.tools / nf-core |
 
@@ -175,10 +175,10 @@ sci-pal/
 ├─ mcp_server/               search / generate / guard（MCP 薄转发）
 ├─ packs/                    领域包（biomed-oncoimmuno）
 ├─ plugins/                  插件 manifest / port schema / adapter
-├─ eval/                     检索/QA/插件对比脚本（plugin_bench.py）
+├─ eval/                     检索/QA/插件对比脚本（plugin_bench.py、claim_verifier_bench.py）
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     架构、数据、设计文档
-├─ tests/                    683 项测试
+├─ tests/                    688 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db、chroma
@@ -207,7 +207,7 @@ sci-pal/
 ## 测试
 
 ```
-683 tests, ~67s
+688 tests, ~67s
 ```
 
 覆盖：检索、路由、guard、结构、JATS 导入、watch、domain packs、claim 试点、多用户隔离、项目/实验/run、插件端口。
@@ -264,4 +264,4 @@ sci-pal/
 10. Claim 试点仅覆盖 10 个 HCC claim；writing_brief 只有 1 个 claim 完成；
 11. 在线 ingest 只完成 2 篇（LEAP-012 / EMERALD-1 解读）；PMC13036683 下载失败；
 12. 写作闸门仍是 brief + 人工检查，尚未自动拒绝违规句子；
-13. 插件端口只有 M0：可信插件进程内执行，尚未做 subprocess/container 隔离；A/B/C 真实 adapter 未实现。
+13. 插件端口为 M0/M1：可信插件进程内执行，尚未做 subprocess/container 隔离；ClaimVerifier 已接入，B/C 真实 adapter 未实现。

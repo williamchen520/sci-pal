@@ -1,5 +1,12 @@
-"""Plugin port infrastructure (M0)."""
+"""Plugin port infrastructure (M0/M1)."""
 
+from .claim_contracts import (
+    ClaimInput,
+    ClaimVerification,
+    ClaimVerifierAdapter,
+    ClaimVerifierPort,
+    EvidenceInput,
+)
 from .contracts import (
     ManifestError,
     PluginError,
@@ -14,6 +21,11 @@ from .registry import PluginRegistry
 from .runner import PluginRunner
 
 __all__ = [
+    "ClaimInput",
+    "ClaimVerification",
+    "ClaimVerifierAdapter",
+    "ClaimVerifierPort",
+    "EvidenceInput",
     "ManifestError",
     "PluginError",
     "PluginExecutionError",

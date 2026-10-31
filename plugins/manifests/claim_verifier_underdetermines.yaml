@@ -1,0 +1,12 @@
+id: claim-verifier-underdetermines
+port: claim_verifier
+version: 0.1.0
+entrypoint: plugins.adapters.claim_verifier_underdetermines:UnderdeterminesVerifier
+license: AGPL-3.0-only
+description: Always-underdetermines smoke baseline; validates the pipeline, not quality.
+capabilities:
+  streaming: false
+  network: false
+runtime:
+  timeout_seconds: 5
+  memory_mb: 128

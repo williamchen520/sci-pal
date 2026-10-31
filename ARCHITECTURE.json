@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 683,
+    "count": 688,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1759,7 +1759,7 @@
     }
   },
   "plugins": {
-    "status": "M0",
+    "status": "M0/M1",
     "paths": {
       "contracts": "services/plugins/contracts.py",
       "registry": "services/plugins/registry.py",
@@ -1771,6 +1771,22 @@
       "run_log": "logs/plugin_runs.jsonl"
     },
     "trust_model": "trusted in-process adapters; subprocess/container isolation later",
-    "smoke_plugin": "echo"
+    "smoke_plugin": "echo",
+    "claim_verifier": {
+      "port": "plugins/ports/claim_verifier.json",
+      "adapters": [
+        "claim-verifier-nli",
+        "claim-verifier-rule",
+        "claim-verifier-underdetermines"
+      ],
+      "bench": "eval/claim_verifier_bench.py",
+      "dataset": "eval/plugins/claims_pilot_cases.json",
+      "first_result": {
+        "rule_accuracy": 0.3636,
+        "underdetermines_accuracy": 0.0,
+        "majority_baseline": 0.9091,
+        "note": "pipeline only; dataset imbalanced (10 supports / 1 mentions)"
+      }
+    }
   }
 }
