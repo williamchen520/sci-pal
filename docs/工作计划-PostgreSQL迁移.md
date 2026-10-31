@@ -362,6 +362,33 @@ schema 含核心表与 tsvector/GIN
 核心检索 query 结果可比
 ```
 
+P2 实现（待合并）：
+
+```text
+services/db/etl.py
+scripts/pg_etl.py
+tests/test_pg_etl.py
+docs/PostgreSQL迁移-ETL-dryrun.json
+docs/PostgreSQL迁移-ETL-checksum.json
+```
+
+安全：
+
+```text
+assert_snapshot 拒绝 data/research.db
+只读打开 snapshot
+不写回 SQLite
+```
+
+dry-run 结果：
+
+```text
+60 张表
+总行数 2,015,676
+```
+
+核心表 checksum 已记录；真实 COPY 未执行（无 PostgreSQL server）。
+
 ### P3：影子读
 
 ```text

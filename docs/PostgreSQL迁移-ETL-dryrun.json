@@ -1,0 +1,426 @@
+{
+  "source": "D:\\sciPal\\backups\\research_20261031_210616.db",
+  "tables": [
+    {
+      "table": "adjudications",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "chat_messages",
+      "rows": 260,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "chat_sessions",
+      "rows": 112,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "citation_mentions",
+      "rows": 6282,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "citation_network",
+      "rows": 114,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "citations",
+      "rows": 182817,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "claim_card_events",
+      "rows": 53,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "claim_card_evidence",
+      "rows": 17,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "claim_cards",
+      "rows": 10,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "claim_evidence",
+      "rows": 26,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "claims",
+      "rows": 29,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "cross_paper_index",
+      "rows": 6798,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "data_audit",
+      "rows": 40,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "domain_profiles",
+      "rows": 6,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "evidence_rows",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "experiment_run_files",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "experiment_runs",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "figures",
+      "rows": 13471,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "full_citation_edges",
+      "rows": 36088,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "ingest_tasks",
+      "rows": 11,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "journal_catalog",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "memberships",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "paper_domains",
+      "rows": 3308,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "paper_flags",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "paper_index",
+      "rows": 6148,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "paper_links",
+      "rows": 164802,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "papers",
+      "rows": 3310,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "paragraphs",
+      "rows": 167388,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "parse_provenance",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "protocol_imports",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "protocol_steps",
+      "rows": 15,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "reference_library",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "reference_nodes",
+      "rows": 35190,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "review_events",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "review_project_members",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "review_project_papers",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "review_projects",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "review_webhooks",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "reviews",
+      "rows": 29,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "risk_of_bias",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "screening_decisions",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "sections",
+      "rows": 69128,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "sentence_links",
+      "rows": 296951,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "sentences",
+      "rows": 862677,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "summaries",
+      "rows": 61932,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "supplementary_files",
+      "rows": 0,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "tables",
+      "rows": 4922,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "tasks",
+      "rows": 473,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "tenancy_audit",
+      "rows": 5,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "users",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "watch_items",
+      "rows": 11,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "watch_profile_journals",
+      "rows": 2,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "watch_profiles",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "watch_runs",
+      "rows": 5,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "watch_seen",
+      "rows": 11,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "workspaces",
+      "rows": 1,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "xml_citation_links",
+      "rows": 46825,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "xml_figure_links",
+      "rows": 8241,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "xml_references",
+      "rows": 37198,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    },
+    {
+      "table": "xml_table_links",
+      "rows": 959,
+      "checksum": null,
+      "status": "ok",
+      "error": null
+    }
+  ],
+  "total_rows": 2015676
+}
