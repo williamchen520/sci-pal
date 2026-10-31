@@ -1,0 +1,32 @@
+{
+  "source": "D:\\sciPal\\backups\\research_20261031_210616.db",
+  "sqlite_target": "backups\\soak.sqlite",
+  "pg_database": "scipal_dualwrite_soak",
+  "cycles": 500,
+  "operations": 2422,
+  "applied": 2422,
+  "failed": 0,
+  "pending": 0,
+  "replay_seconds": 17.32,
+  "total_seconds": 154.12,
+  "tables": {
+    "papers": {
+      "sqlite": 3710,
+      "postgres": 3710
+    },
+    "claim_cards": {
+      "sqlite": 438,
+      "postgres": 438
+    },
+    "watch_items": {
+      "sqlite": 511,
+      "postgres": 511
+    },
+    "memberships": {
+      "sqlite": 501,
+      "postgres": 501
+    }
+  },
+  "mismatches": [],
+  "status": "ok"
+}
