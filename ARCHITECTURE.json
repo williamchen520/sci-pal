@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 712,
+    "count": 713,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1857,7 +1857,7 @@
     "postgres_backend": "not-implemented"
   },
   "postgres_migration": {
-    "status": "P2-implemented-pending-merge",
+    "status": "P2-executed-verified-pending-merge",
     "plan": "docs/工作计划-PostgreSQL迁移.md",
     "baseline": "docs/PostgreSQL迁移-基线.md",
     "backup_script": "scripts/backup_sqlite.py",
@@ -1889,8 +1889,12 @@
       "checksum_report": "docs/PostgreSQL迁移-ETL-checksum.json",
       "tables": 60,
       "total_rows": 2015676,
-      "real_copy_executed": false,
-      "safety": "snapshot-only; live data/research.db rejected"
+      "real_copy_executed": true,
+      "safety": "snapshot-only; live data/research.db rejected",
+      "postgres_rows": 2015676,
+      "count_mismatches": 0,
+      "verify_report": "docs/PostgreSQL迁移-ETL-verify.json",
+      "note": "citations.year uses TEXT; non-year fields diff 0"
     }
   }
 }

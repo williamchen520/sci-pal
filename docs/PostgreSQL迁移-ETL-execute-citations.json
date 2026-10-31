@@ -1,0 +1,13 @@
+{
+  "source": "D:\\sciPal\\backups\\research_20261031_210616.db",
+  "tables": [
+    {
+      "table": "citations",
+      "rows": 182817,
+      "checksum": "8e7e573f13b10aa0ad837cec0bf00f1a966aefec3049bb108d3049edcdf663fa",
+      "status": "ok",
+      "error": null
+    }
+  ],
+  "total_rows": 182817
+}

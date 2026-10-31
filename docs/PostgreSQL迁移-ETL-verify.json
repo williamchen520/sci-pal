@@ -1,0 +1,19 @@
+{
+  "source": "D:\\sciPal\\backups\\research_20261031_210616.db",
+  "postgres": "scipal_bench@127.0.0.1:5433",
+  "tables": 60,
+  "expected_rows": 2015676,
+  "postgres_rows": 2015676,
+  "count_mismatches": [],
+  "key_table_row_compare": {
+    "papers": "0 missing / 0 extra / 0 diff",
+    "paragraphs": "0 missing / 0 extra / 0 diff",
+    "sentences": "0 missing / 0 extra / 0 diff",
+    "citations": "0 missing / 0 extra; year TEXT coercion, non-year diff 0"
+  },
+  "notes": [
+    "citations.year contains free-text dates such as 'Feb 3, 2020'; schema uses TEXT",
+    "search_vector is generated in PostgreSQL and excluded from COPY"
+  ],
+  "status": "ok"
+}

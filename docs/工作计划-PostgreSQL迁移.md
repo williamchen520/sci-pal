@@ -370,6 +370,8 @@ scripts/pg_etl.py
 tests/test_pg_etl.py
 docs/PostgreSQL迁移-ETL-dryrun.json
 docs/PostgreSQL迁移-ETL-checksum.json
+docs/PostgreSQL迁移-ETL-verify.json
+docs/PostgreSQL迁移-ETL-execute-citations.json
 ```
 
 安全：
@@ -380,14 +382,32 @@ assert_snapshot 拒绝 data/research.db
 不写回 SQLite
 ```
 
-dry-run 结果：
+执行结果（本地 PostgreSQL 16）：
 
 ```text
 60 张表
-总行数 2,015,676
+expected_rows = 2,015,676
+postgres_rows = 2,015,676
+count_mismatches = 0
 ```
 
-核心表 checksum 已记录；真实 COPY 未执行（无 PostgreSQL server）。
+核心表逐行对比：
+
+```text
+papers       0 missing / 0 extra / 0 diff
+paragraphs   0 missing / 0 extra / 0 diff
+sentences    0 missing / 0 extra / 0 diff
+citations    0 missing / 0 extra；year 类型转换为 TEXT，非 year 字段 diff 0
+```
+
+发现并修复：
+
+```text
+citations.year 含 'Feb 3, 2020' 这类自由文本；
+PostgreSQL schema 改为 TEXT，避免 bigint 转换失败。
+```
+
+真实 COPY 已执行；源库仍是只读 snapshot。
 
 ### P3：影子读
 
