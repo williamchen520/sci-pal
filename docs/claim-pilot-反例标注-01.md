@@ -98,3 +98,34 @@ python scripts/apply_claim_counterexamples.py
 ```text
 packs/biomed-oncoimmuno/eval/claim_counterexamples.yaml
 ```
+
+---
+
+## 7. 人工复核
+
+2026-10-31，人工确认：
+
+```text
+4 个 claim 的标注全部正确
+5 条证据均保留 underdetermines
+无 refutes
+```
+
+复核结果：
+
+| claim | 状态 | 结论 |
+|---|---|---|
+| claim_hcc_triple_os | accepted | 保留边界证据 |
+| claim_hcc_dtace_haic | revised | 保留边界证据 |
+| claim_hcc_ici_rechallenge | contested | 保留边界证据 |
+| claim_sbrt_ici_watch | revised | 保留边界证据 |
+
+复核事件已写入 `claim_card_events`：
+
+```bash
+python scripts/confirm_claim_annotations.py
+```
+
+这轮确认的含义：
+
+> 不是“claim 已被证明”，而是“当前 20 篇语料中确实没有直接反例，只有边界证据”。
