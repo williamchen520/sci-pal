@@ -389,3 +389,30 @@
 真正的反对检索
 数值/限定条件
 ```
+
+---
+
+## 7. 执行记录
+
+2026-10-31，按本记录建议写入。
+
+| claim | 状态 |
+|---|---|
+| claim_hcc_triple_os | accepted |
+| claim_hdv_hcc_signature | accepted |
+| claim_tcsp_prognosis | accepted |
+| claim_fabp5_immune | accepted |
+| claim_hcc_dtace_haic | revised |
+| claim_hcc_time_immunosuppressive | revised |
+| claim_sbrt_ici_watch | revised |
+| claim_hcc_ici_rechallenge | contested（note） |
+| claim_rt_immunomodulation_gap | underdetermined（note） |
+| claim_lenvatinib_vs_bev_uncertain | underdetermined（note） |
+
+执行脚本：
+
+```bash
+python scripts/apply_claim_pilot_round1.py
+```
+
+所有裁决均写入 `claim_card_events`，可审计。

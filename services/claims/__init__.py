@@ -2,6 +2,7 @@
 
 from .service import (
     add_evidence,
+    add_note,
     create_claim,
     decide,
     ensure_schema,
@@ -12,6 +13,7 @@ from .service import (
 
 __all__ = [
     "add_evidence",
+    "add_note",
     "create_claim",
     "decide",
     "ensure_schema",

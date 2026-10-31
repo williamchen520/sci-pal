@@ -90,6 +90,12 @@ class ClaimPilotTests(unittest.TestCase):
         )
         self.assertEqual(decided.status_code, 200)
         self.assertEqual(decided.get_json()["status"], "revised")
+        noted = self.client.post(
+            f"/api/claims/{self.claim_id}/note",
+            json={"note": "keep contested"},
+        )
+        self.assertEqual(noted.status_code, 200)
+        self.assertTrue(any(event["action"] == "review_note" for event in noted.get_json()["events"]))
 
 
 if __name__ == "__main__":
