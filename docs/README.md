@@ -16,6 +16,8 @@
 | Google CoE 对照 | [CoE-对照与借鉴.md](CoE-对照与借鉴.md) |
 | 插件端口与对比评测 | [工作计划-插件端口与对比评测.md](工作计划-插件端口与对比评测.md) |
 | Benchmark PostgreSQL 策略 | [benchmark-PostgreSQL策略.md](benchmark-PostgreSQL策略.md) |
+| PostgreSQL 迁移计划 | [工作计划-PostgreSQL迁移.md](工作计划-PostgreSQL迁移.md) |
+| PostgreSQL 迁移基线 | [PostgreSQL迁移-基线.md](PostgreSQL迁移-基线.md) |
 | PDF 三引擎解析 | [PDF解析-三引擎联合.md](PDF解析-三引擎联合.md) |
 | JATS 导入与外部文献源 | [文献源-JATS与外部源.md](文献源-JATS与外部源.md) |
 | 多用户与数据隔离 | [工作计划-多用户与数据隔离.md](工作计划-多用户与数据隔离.md) |

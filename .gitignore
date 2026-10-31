@@ -17,6 +17,9 @@ build/
 logs/
 *.log
 
+# SQLite 迁移备份（体积大，不入库）
+backups/
+
 # 插件评测输出（可重跑）
 eval/results/plugin_bench.jsonl
 eval/results/claim_verifier_bench.jsonl
