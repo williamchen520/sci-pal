@@ -266,6 +266,10 @@ class IngestService:
         has_fts = conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='paragraphs_fts'"
         ).fetchone() is not None
+        has_sentences = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sentences'"
+        ).fetchone() is not None
+        paper_cols = {row[1] for row in conn.execute("PRAGMA table_info(papers)")}
         if has_fts:
             conn.execute("DROP TRIGGER IF EXISTS paragraphs_ad")
         try:
@@ -293,14 +297,29 @@ class IngestService:
                             data.get("authors") or "",
                         ),
                     )
+                    if {"journal", "year", "doi"} <= paper_cols:
+                        conn.execute(
+                            "UPDATE papers SET journal = ?, year = ?, doi = ? WHERE paper_id = ?",
+                            (
+                                data.get("journal") or "",
+                                data.get("year"),
+                                data.get("doi") or "",
+                                paper_id,
+                            ),
+                        )
                     if has_fts:
                         conn.execute(
                             "DELETE FROM paragraphs_fts WHERE para_id IN "
                             "(SELECT para_id FROM paragraphs WHERE paper_id = ?)",
                             (paper_id,),
                         )
+                    conn.execute("DELETE FROM sentences WHERE paper_id = ?", (paper_id,)) if has_sentences else None
                     conn.execute("DELETE FROM paragraphs WHERE paper_id = ?", (paper_id,))
+                    from build_db.sentence_geometry import split_sentences
+
                     for index, para in enumerate(data.get("paragraphs") or []):
+                        para_id = f"{paper_id}_para_{index:05d}"
+                        path = para.get("path") or []
                         conn.execute(
                             """
                             INSERT OR REPLACE INTO paragraphs
@@ -308,13 +327,28 @@ class IngestService:
                             VALUES (?, ?, ?, ?, ?, 'xml')
                             """,
                             (
-                                f"{paper_id}_para_{index:05d}",
+                                para_id,
                                 paper_id,
-                                para.get("section") or "",
+                                (path[0] if path else para.get("section")) or "",
                                 para.get("text") or "",
                                 para.get("sequence") or index,
                             ),
                         )
+                        for sent_index, text in enumerate(split_sentences(para.get("text") or "")):
+                            if not has_sentences:
+                                break
+                            conn.execute(
+                                "INSERT OR REPLACE INTO sentences "
+                                "(sentence_id, para_id, paper_id, text, sequence, section_id) "
+                                "VALUES (?, ?, ?, ?, ?, NULL)",
+                                (
+                                    f"{para_id}_sent_{sent_index:03d}",
+                                    para_id,
+                                    paper_id,
+                                    text,
+                                    sent_index,
+                                ),
+                            )
                     written += 1
         finally:
             if has_fts:
@@ -360,9 +394,20 @@ class IngestService:
         return target if downloader.download_xml(pmc_id) else None
 
     def _default_parse(self, path: Path) -> Mapping[str, Any] | None:
-        from import_xml_v2 import parse_jats_xml
+        from build_db.import_jats import parse_file
 
-        return parse_jats_xml(path)
+        data = parse_file(path)
+        metadata = data.get("metadata") or {}
+        return {
+            **metadata,
+            "abstract": metadata.get("abstract") or "",
+            "authors": "; ".join(metadata.get("authors") or []),
+            "paragraphs": data.get("paragraphs") or [],
+            "sections": data.get("sections") or [],
+            "figures": data.get("figures") or [],
+            "tables": data.get("tables") or [],
+            "references": data.get("references") or [],
+        }
 
     def _default_embed(self, rows: Sequence[Mapping[str, Any]]) -> int:
         if not self.chroma_path:
