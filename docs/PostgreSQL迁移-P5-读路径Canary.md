@@ -123,6 +123,16 @@ count: 3310
 
 说明 PG 读路径已真实可用。
 
+本地 Flask 10% canary（100 次 `/api/papers`）：
+
+```text
+sqlite:   90
+postgres: 10
+errors:   0
+```
+
+比例符合 10%；PG 响应正常。
+
 ---
 
 ## 6. 回退
