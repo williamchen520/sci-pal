@@ -1,0 +1,6 @@
+{
+  "cases": [
+    {"case_id": "c1", "input": {"text": "SciPal plugin smoke test"}},
+    {"case_id": "c2", "input": {"text": "claim-level evidence"}}
+  ]
+}

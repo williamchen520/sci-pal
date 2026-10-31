@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 677,
+    "count": 683,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1757,5 +1757,20 @@
       "limit": 2,
       "message": "触发止损规则，停止调参，等待人类介入"
     }
+  },
+  "plugins": {
+    "status": "M0",
+    "paths": {
+      "contracts": "services/plugins/contracts.py",
+      "registry": "services/plugins/registry.py",
+      "runner": "services/plugins/runner.py",
+      "manifests": "plugins/manifests/",
+      "ports": "plugins/ports/",
+      "adapters": "plugins/adapters/",
+      "bench": "eval/plugin_bench.py",
+      "run_log": "logs/plugin_runs.jsonl"
+    },
+    "trust_model": "trusted in-process adapters; subprocess/container isolation later",
+    "smoke_plugin": "echo"
   }
 }
