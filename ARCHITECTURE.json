@@ -1906,6 +1906,14 @@
       "fts_match_jaccard": "0.326-0.828",
       "fts_note": "SQLite unicode61 no stemming vs PG english stemming; bm25 vs ts_rank_cd",
       "cutover_ready": false
+    },
+    "fts_alignment": {
+      "script": "scripts/fts_alignment.py",
+      "doc": "docs/PostgreSQL迁移-FTS对齐实验.md",
+      "report": "docs/PostgreSQL迁移-FTS对齐实验.json",
+      "unicode_vs_english": 0.637,
+      "porter_vs_english": 0.989,
+      "recommendation": "rebuild SQLite FTS with porter before cutover"
     }
   }
 }
