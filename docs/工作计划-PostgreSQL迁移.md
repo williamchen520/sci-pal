@@ -608,6 +608,48 @@ SCIPAL_DB_BACKEND=sqlite
 回退演练成功
 ```
 
+P5 canary 实现（待合并）：
+
+```text
+services/db/read_router.py
+scripts/read_canary_check.py
+tests/test_read_router.py
+docs/PostgreSQL迁移-P5-canary-check.json
+```
+
+范围：
+
+```text
+只切 GET /api/papers 列表读
+paper detail / graph 仍走 SQLite
+写路径不变
+FTS 不变
+```
+
+配置：
+
+```text
+SCIPAL_READ_CANARY_PERCENT=0..100
+SCIPAL_PG_DSN=...
+```
+
+结果：
+
+```text
+SQLite count 3,310
+PG count 3,310
+same_order true
+field_diffs 0
+missing/extra 0
+status ok
+```
+
+回退：
+
+```text
+SCIPAL_READ_CANARY_PERCENT=0
+```
+
 ### P6：归档
 
 ```text

@@ -1705,7 +1705,7 @@
   },
   "tests": {
     "framework": "unittest",
-    "count": 732,
+    "count": 735,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1857,7 +1857,7 @@
     "postgres_backend": "not-implemented"
   },
   "postgres_migration": {
-    "status": "P4-metadata-dualwrite-installed-pending-merge",
+    "status": "P5-read-canary-pending-merge",
     "plan": "docs/工作计划-PostgreSQL迁移.md",
     "baseline": "docs/PostgreSQL迁移-基线.md",
     "backup_script": "scripts/backup_sqlite.py",
@@ -1950,6 +1950,21 @@
         "mismatches": 0,
         "status": "ok"
       }
+    },
+    "p5": {
+      "router": "services/db/read_router.py",
+      "check": "scripts/read_canary_check.py",
+      "tests": "tests/test_read_router.py",
+      "document": "docs/PostgreSQL迁移-P5-读路径Canary.md",
+      "report": "docs/PostgreSQL迁移-P5-canary-check.json",
+      "scope": "GET /api/papers",
+      "canary_env": "SCIPAL_READ_CANARY_PERCENT",
+      "sqlite_count": 3310,
+      "postgres_count": 3310,
+      "same_order": true,
+      "field_diffs": 0,
+      "status": "ok",
+      "fallback": "PG error -> SQLite"
     }
   }
 }

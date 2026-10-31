@@ -7,12 +7,15 @@ these routes happens separately, together with their consumers.
 
 from __future__ import annotations
 
+import os
+import secrets
 import sqlite3
 from pathlib import Path
 from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request
 
+from services.db.read_router import ReadRouter
 from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 
 
@@ -23,12 +26,31 @@ def build_papers_blueprint(
     log: Any,
 ) -> Blueprint:
     bp = Blueprint("papers", __name__, url_prefix="/api")
+    router = ReadRouter(
+        db_path,
+        pg_dsn=os.environ.get("SCIPAL_PG_DSN", ""),
+        canary_percent=int(os.environ.get("SCIPAL_READ_CANARY_PERCENT", "0") or 0),
+    )
 
     @bp.get("/papers")
     def list_papers():
         workspace_id = resolve_workspace(db_path=db_path)
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 401
+        canary_key = (
+            request.headers.get("X-Request-ID")
+            or request.args.get("canary_key")
+            or secrets.token_hex(8)
+        )
+        if router.should_use_pg(canary_key):
+            result = router.list_papers(workspace_id, canary_key=canary_key)
+            if result.backend == "postgres":
+                response = jsonify(
+                    {"count": len(result.rows), "papers": result.rows}
+                )
+                response.headers["X-SciPal-Read-Backend"] = "postgres"
+                return response
+            log(f"read canary fell back to SQLite: {result.error}")
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
@@ -43,7 +65,9 @@ def build_papers_blueprint(
             ).fetchall()
         finally:
             conn.close()
-        return jsonify({"count": len(rows), "papers": [dict(row) for row in rows]})
+        response = jsonify({"count": len(rows), "papers": [dict(row) for row in rows]})
+        response.headers["X-SciPal-Read-Backend"] = "sqlite"
+        return response
 
     @bp.get("/papers/<paper_id>")
     def paper_detail(paper_id):

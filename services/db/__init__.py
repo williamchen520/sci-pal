@@ -21,6 +21,7 @@ from .etl import (
 )
 from .shadow_read import FtsDiff, ShadowReader, TableDiff, write_report
 from .dual_write import DEFAULT_TABLES, install, outbox_stats, replay
+from .read_router import ReadResult, ReadRouter
 
 __all__ = [
     "DBAdapter",
@@ -34,6 +35,8 @@ __all__ = [
     "FtsDiff",
     "LIVE_DB",
     "PostgresAdapter",
+    "ReadResult",
+    "ReadRouter",
     "PostgresCopyWriter",
     "SQLiteAdapter",
     "ShadowReader",
