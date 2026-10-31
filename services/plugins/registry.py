@@ -35,6 +35,7 @@ class PluginRegistry:
         self.root = Path(root) if root is not None else plugins_dir()
         self._plugins: Dict[str, PluginManifest] = {}
         self._ports: Dict[str, PortSpec] = {}
+        self._adapters: Dict[str, Any] = {}
         self._loaded = False
 
     # ------------------------------------------------------------------ load
@@ -115,7 +116,9 @@ class PluginRegistry:
         return spec
 
     def load_adapter(self, plugin_id: str) -> Any:
-        """Import and instantiate the declared adapter class."""
+        """Import and instantiate the declared adapter class (cached per registry)."""
+        if plugin_id in self._adapters:
+            return self._adapters[plugin_id]
         manifest = self.get(plugin_id)
         try:
             module = importlib.import_module(manifest.module)
@@ -135,6 +138,7 @@ class PluginRegistry:
             raise ManifestError(f"cannot instantiate {manifest.entrypoint}: {exc}") from exc
         if not callable(getattr(adapter, "run", None)):
             raise ManifestError(f"adapter has no run(): {manifest.entrypoint}")
+        self._adapters[plugin_id] = adapter
         return adapter
 
     def summary(self) -> Dict[str, Any]:

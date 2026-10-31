@@ -1,0 +1,12 @@
+id: retriever-bm25
+port: retriever
+version: 0.1.0
+entrypoint: plugins.adapters.retriever_bm25:BM25Retriever
+license: AGPL-3.0-only
+description: SQLite FTS5/BM25 retrieval baseline.
+capabilities:
+  streaming: false
+  network: false
+runtime:
+  timeout_seconds: 30
+  memory_mb: 512

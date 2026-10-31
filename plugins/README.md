@@ -66,6 +66,35 @@ majority baseline      0.9091
 
 The dataset is imbalanced; this run validates the contract, not algorithm quality.
 
+## M2: RetrieverPort
+
+Adapters:
+
+```text
+retriever-bm25              FTS5/BM25
+retriever-dense             Chroma dense
+retriever-hybrid            BM25 + dense + RRF
+retriever-hybrid-rerank     hybrid + cross-encoder
+```
+
+Benchmark:
+
+```bash
+python eval/retriever_bench.py
+```
+
+Initial result on 14 queries / 32 papers:
+
+```text
+bm25        Recall@10 1.0000  MRR 1.0000
+dense       Recall@10 1.0000  MRR 0.9286
+hybrid      Recall@10 0.8571  MRR 0.7738
+hybrid+rr   Recall@10 1.0000  MRR 0.8333
+```
+
+The query set is small and easy; BM25's perfect score is a warning, not a
+conclusion.
+
 ## Add a plugin
 
 1. Add a port schema under `ports/`.
