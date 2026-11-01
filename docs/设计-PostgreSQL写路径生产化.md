@@ -411,3 +411,38 @@ Next:
 3. verify registration/login/workspace/member flows
 4. then remove tenancy outbox replication
 ```
+
+## 13. Direct tenancy reads migrated (2026-11-02)
+
+Changed:
+
+```text
+services/projects/service.py
+  _workspace_role -> get_membership (PG read, SQLite fallback)
+
+services/experiments/service.py
+  _project_access -> _workspace_role
+  _workspace_role -> get_membership
+  re-auth password -> get_password_hash
+
+services/tenancy/service.py
+  get_password_hash (PG read, SQLite fallback)
+```
+
+Canary read against production PG:
+
+```text
+membership ws_default -> owner
+password hash prefix   -> scrypt
+```
+
+Production app still not restarted; flag still off.
+
+Next:
+
+```text
+1. enable SCIPAL_TENANCY_WRITE_BACKEND=postgres in production
+2. exercise register/login/workspace/invite
+3. verify SQLite mirror and PG
+4. remove tenancy outbox replication
+```

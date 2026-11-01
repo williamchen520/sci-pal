@@ -562,6 +562,32 @@ def get_user_by_username(
         conn.close()
 
 
+def get_password_hash(
+    user_id: str,
+    *,
+    db_path: str | os.PathLike[str] = DATABASE_PATH,
+) -> str | None:
+    if _pg_read_enabled() or pg_writes.enabled():
+        try:
+            with _pg_connection() as pg:
+                row = pg.execute(
+                    "SELECT password_hash FROM users WHERE user_id = %s", (user_id,)
+                ).fetchone()
+            if row:
+                return row["password_hash"]
+        except Exception:  # noqa: BLE001 - fall back to SQLite mirror
+            pass
+    conn = _connect(db_path)
+    try:
+        ensure_schema(conn)
+        row = conn.execute(
+            "SELECT password_hash FROM users WHERE user_id = ?", (user_id,)
+        ).fetchone()
+        return row["password_hash"] if row else None
+    finally:
+        conn.close()
+
+
 def get_user(
     user_id: str,
     *,

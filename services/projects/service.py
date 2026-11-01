@@ -8,6 +8,7 @@ from pathlib import Path
 
 from config.settings import DATABASE_PATH
 from services.tenancy.permissions import audit, pi_can_copy
+from services.tenancy.service import get_membership
 
 STATUSES = ("planning", "active", "paused", "completed", "archived")
 
@@ -56,7 +57,18 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
     return conn
 
 
+def _conn_db_path(conn: sqlite3.Connection) -> str:
+    row = conn.execute("PRAGMA database_list").fetchone()
+    return row[2] if row and row[2] else DATABASE_PATH
+
+
 def _workspace_role(conn: sqlite3.Connection, workspace_id: str, user_id: str) -> str | None:
+    try:
+        membership = get_membership(workspace_id, user_id, db_path=_conn_db_path(conn))
+    except Exception:  # noqa: BLE001 - fall back to the SQLite mirror
+        membership = None
+    if membership:
+        return membership.role
     row = conn.execute(
         "SELECT role FROM memberships WHERE workspace_id = ? AND user_id = ? AND status = 'active'",
         (workspace_id, user_id),
