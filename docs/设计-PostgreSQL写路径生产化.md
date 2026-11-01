@@ -246,44 +246,60 @@ keep outbox as repair log
 
 Script: `scripts/pg_write_health.py`
 
-```text
-outbox pending                0
-outbox failed_pending         0
-```
+### First check was invalid
 
-But PG/SQLite row counts already differ:
-
-| table | SQLite | PostgreSQL |
-|---|---:|---:|
-| papers | 3,310 | 3,312 |
-| claim_card_events | 53 | 55 |
-| watch_items | 11 | 13 |
-| watch_runs | 5 | 7 |
-| watch_seen | 11 | 13 |
-| users | 1 | 2 |
-| memberships | 1 | 2 |
-
-This is important:
+The first run compared:
 
 ```text
-PG is ahead of SQLite in several tables
-outbox is empty
-so the extra PG rows are not pending replay
+local dev SQLite: D:\sciPal\data\research.db
+production PG:    scipal_bench
 ```
 
-Conclusion:
+That produced apparent PG-ahead differences in 7 tables. They were not
+dual-write divergence; they were **different environments**.
+
+### Correct comparison
+
+Re-ran against the production SQLite copy:
 
 ```text
-Do not cut writes over until these differences are explained.
-Some PG data may come from v2/scipal_bench or manual/admin operations.
+production SQLite: G:\sciPal_deploy\data\research.db
+production PG:     scipal_bench
 ```
 
-The health report is stored at:
+Result:
+
+```text
+outbox pending          0
+outbox failed_pending   0
+row-count diff          {}
+```
+
+All tracked tables match exactly, including:
+
+```text
+papers 3,312
+users 2
+memberships 2
+watch_items 13
+watch_runs 7
+watch_seen 13
+claim_card_events 55
+```
+
+Health report:
 
 ```text
 eval/results/pg_write_health.json
 ```
 
+### Conclusion
+
+```text
+No PG-ahead divergence.
+No outbox lag.
+The blocker was a measurement error, not a data problem.
+```
 
 ## 9. Immediate Next Step
 
