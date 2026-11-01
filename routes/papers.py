@@ -7,6 +7,7 @@ these routes happens separately, together with their consumers.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import secrets
 import sqlite3
@@ -167,9 +168,26 @@ def build_papers_blueprint(
         direction = request.args.get("direction", "both")
         max_hops = min(_int_arg("max_hops", 1), 3)
         max_total = _int_arg("max_total", 10)
-
+        canary_key = (
+            request.headers.get("X-Request-ID")
+            or request.args.get("canary_key")
+            or secrets.token_hex(8)
+        )
+        percent = max(0, min(100, int(os.environ.get("SCIPAL_READ_GRAPH_PERCENT", "0") or 0)))
+        use_pg = percent >= 100 or (
+            percent > 0
+            and int(hashlib.sha256(f"graph:{canary_key}".encode()).hexdigest()[:8], 16) % 100
+            < percent
+        )
+        backend = "sqlite"
         try:
-            graph = get_graph()
+            if use_pg:
+                from services.search.graph_traverser_pg import PGGraphTraverser
+
+                graph = PGGraphTraverser()
+                backend = "postgres"
+            else:
+                graph = get_graph()
             if max_hops <= 1:
                 neighbors = graph.get_neighbors(
                     [paper_id], relation=relation, direction=direction
@@ -179,10 +197,27 @@ def build_papers_blueprint(
                     [paper_id], max_hops=max_hops, max_total=max_total, relation=relation
                 )
         except Exception as exc:
-            log.exception("paper_graph failed")
-            return jsonify({"error": f"Graph traversal failed: {exc}"}), 500
+            if use_pg:
+                _log(f"paper graph canary fell back to SQLite: {exc}")
+                graph = get_graph()
+                backend = "sqlite"
+                try:
+                    if max_hops <= 1:
+                        neighbors = graph.get_neighbors(
+                            [paper_id], relation=relation, direction=direction
+                        )[:max_total]
+                    else:
+                        neighbors = graph.traverse(
+                            [paper_id], max_hops=max_hops, max_total=max_total, relation=relation
+                        )
+                except Exception as inner:
+                    log.exception("paper_graph failed")
+                    return jsonify({"error": f"Graph traversal failed: {inner}"}), 500
+            else:
+                log.exception("paper_graph failed")
+                return jsonify({"error": f"Graph traversal failed: {exc}"}), 500
 
-        return jsonify(
+        response = jsonify(
             {
                 "paper_id": paper_id,
                 "relation": relation,
@@ -191,6 +226,8 @@ def build_papers_blueprint(
                 "neighbors": neighbors,
             }
         )
+        response.headers["X-SciPal-Read-Backend"] = backend
+        return response
 
     return bp
 

@@ -34,12 +34,33 @@ PG 异常自动回退 SQLite。
 GET /api/papers
 ```
 
+已切：
+
+```text
+GET /api/papers
+GET /api/papers/<id>
+GET /api/papers/<id>/graph
+```
+
 未切：
 
 ```text
-GET /api/papers/<id>/graph
 所有写接口
 FTS / 检索
+```
+
+graph 开关：
+
+```text
+SCIPAL_READ_GRAPH_PERCENT=0..100
+```
+
+验证：
+
+```text
+single: 200 / postgres / count 10
+5 workers:  50/50 postgres
+20 workers: 50/50 postgres
 ```
 
 detail 新开关（开发中）：
