@@ -52,6 +52,8 @@
 
 | 2026-11-01 | Full OpenAlex enrichment | 3,290/3,310 (99.4%); 12 missing; stored paper_domains_openalex; auto L1 labels also found | [Full OpenAlex audit](审计-全量OpenAlex与领域标签.md) |
 
+| 2026-11-01 | OpenAlex 100-paper validation kit | stratified 100 sample; 0/100 human labels; scorer ready | [Human validation kit](审计-OpenAlex-100篇人工校验.md) |
+
 ## Rules
 
 ```text
