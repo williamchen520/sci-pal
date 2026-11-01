@@ -3,8 +3,51 @@
 > Maintained by the project. Add one row for every new research, evaluation, or experiment archive.  
 > Convention: create the research document first, then add its relative link here in the same pull request.
 
+
+---
+
+## ⚠️ 重大决策：OpenAlex 标签暂时采用（2026-11-01）
+
+> **决策人**：项目负责人  
+> **状态**：PROVISIONAL — 不是人工 ground truth  
+> **范围**：实验与开发使用；生产 domain routing 仍关闭
+
+项目负责人明确：
+
+```text
+暂不做 100 篇人工复核，先使用 AI 预标注。
+```
+
+这意味着：
+
+```text
+OpenAlex primary_topic + auto L1 + AI prelabel
+可以作为开发期领域标签使用
+但不得声称已通过人工校验
+不得据此直接开启生产 domain routing / topic penalty
+```
+
+风险：
+
+```text
+AI prelabel 是启发式结果
+28 条 low-confidence 仍未人工复核
+topic 错误可能传导到 coverage audit
+```
+
+后续必须：
+
+```text
+1. 保留 ai_/human_ 字段区分
+2. 在报告里标注 provisional
+3. 重新评估前不得删除 human validation 任务
+```
+
+---
+
 | Date | Topic | Result | Document |
 |---|---|---|---|
+| ⚠️ 2026-11-01 | OpenAlex labels provisional | Owner waived human review; AI prelabels accepted for experiments only; not ground truth | [Human validation kit](审计-OpenAlex-100篇人工校验.md) |
 | 2026-11-01 | PostgreSQL migration read path | P5 canary 100% PG; 5/20-concurrency checks passed | [PostgreSQL P5 canary](PostgreSQL迁移-P5-读路径Canary.md) |
 | 2026-11-01 | Data-tree migration audit | Article→section→paragraph→sentence survived; figures/tables lacked section binding; XML has no PDF coordinates | [Data tree audit](数据树形结构迁移审计.md) |
 | 2026-11-01 | Source-aware schema v2 | XML keeps XPath/source_nodes; PDF keeps pages/blocks/bbox; sentence-level FTS | [Schema v2 design](数据重建-schema-v2-按源类型建模.md) |

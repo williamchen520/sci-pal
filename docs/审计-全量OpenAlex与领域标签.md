@@ -149,6 +149,7 @@ We still need a 100-paper manual validation before using it for routing.
 ```text
 OpenAlex enrichment: complete (99.4% coverage)
 Auto L1 labels: usable for L1 diagnostics
+OpenAlex labels: PROVISIONAL, owner waived human review
 Fine-grained domain routing: not yet
 Production ranking: unchanged
 ```
@@ -173,3 +174,18 @@ eval/results/openalex_paper_domains.csv
 eval/results/auto_domain_labels.csv
 eval/results/domain_coverage_audit_auto.json
 ```
+
+## 11. ⚠️ Provisional label decision (2026-11-01)
+
+The project owner waived the 100-paper human review for now and accepted
+OpenAlex + AI prelabels for **development experiments only**.
+
+```text
+human validation: not performed
+label status: provisional
+production routing: disabled
+topic penalty: disabled
+```
+
+See [Human validation kit](审计-OpenAlex-100篇人工校验.md) and the prominent
+decision block in [Research Logs Index](Research_Logs_Index.md).

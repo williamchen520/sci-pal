@@ -1,7 +1,7 @@
 # OpenAlex 100-Paper Human Validation Kit
 
 > Date: 2026-11-01  
-> Status: **sample generated; human labels not filled yet (0/100)**  
+> Status: **⚠️ PROVISIONAL — owner waived human review; AI prelabels accepted for experiments only (0/100 human labels)**  
 > Purpose: measure whether OpenAlex `primary_topic` is accurate enough for domain routing.
 
 ## 1. Important status
@@ -13,8 +13,14 @@ completed           0/100
 ```
 
 This document does **not** claim OpenAlex labels are validated.  
-The CSV is ready for human review; the conclusions must wait until the
-`human_*` columns are filled.
+The project owner has explicitly waived the 100-paper human review for now and
+accepted the AI prelabels for **experimental development only**.
+
+```text
+human labels        0/100
+owner decision      provisional acceptance
+production routing  still disabled
+```
 
 ## 2. Sample file
 
@@ -221,3 +227,31 @@ It can be wrong. The `human_*` columns are still blank.
 4. Fill human_domain / human_topic_match / human_notes
 5. Run scripts/score_openalex_validation.py
 ```
+
+## 12. ⚠️ Owner decision: provisional acceptance
+
+On 2026-11-01 the project owner decided:
+
+```text
+暂不做 100 篇人工复核，先使用 AI 预标注。
+```
+
+Scope:
+
+```text
+Allowed: development experiments using OpenAlex / auto L1 / AI prelabel
+Not allowed: claiming human validation
+Not allowed: production domain routing or topic penalty based on this alone
+```
+
+Known risks:
+
+```text
+- AI prelabel is heuristic, not ground truth
+- 28 low-confidence rows remain unreviewed
+- topic errors can propagate into coverage audit
+- coverage ceiling / hubness conclusions must stay provisional
+```
+
+This decision is also recorded prominently in
+[`Research_Logs_Index.md`](Research_Logs_Index.md).
