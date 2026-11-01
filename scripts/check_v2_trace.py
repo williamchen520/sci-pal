@@ -13,6 +13,7 @@ def main() -> int:
     parser.add_argument("--pg-dsn", default="")
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--term", default="diabetes")
+    parser.add_argument("--source-type", default="xml", choices=("xml", "pdf"))
     parser.add_argument("--out", default="")
     args = parser.parse_args()
     import psycopg
@@ -36,34 +37,37 @@ def main() -> int:
             SELECT 1 FROM sentences s
             JOIN paragraphs p2 ON p2.para_id=s.para_id
             WHERE s.paper_id=p.paper_id AND p2.section_id IS NOT NULL
+              AND s.source_type=%s
         )
         ORDER BY p.paper_id
         LIMIT %s
         """,
-        (args.limit,),
+        (args.source_type, args.limit),
     ).fetchall()
     report = []
     for paper_id, sentences, figures, figures_bound, tables, tables_bound in rows:
         trace = conn.execute(
             """
             SELECT s.sentence_id, sn.source_path, sec.section_id, sec.parent_id,
-                   pa.paper_id
+                   pa.paper_id, s.page, s.bbox
             FROM sentences s
             JOIN paragraphs p ON p.para_id=s.para_id
             JOIN sections sec ON sec.section_id=p.section_id
             JOIN papers pa ON pa.paper_id=s.paper_id
             JOIN source_nodes sn ON sn.node_id=s.source_node_id
             WHERE s.paper_id=%s AND p.section_id IS NOT NULL
+              AND s.source_type=%s
             ORDER BY s.seq LIMIT 1
             """,
-            (paper_id,),
+            (paper_id, args.source_type),
         ).fetchone()
         fts = conn.execute(
             """
             SELECT count(*) FROM sentences
-            WHERE paper_id=%s AND search_vector @@ to_tsquery('english', %s)
+            WHERE paper_id=%s AND source_type=%s
+              AND search_vector @@ to_tsquery('english', %s)
             """,
-            (paper_id, args.term),
+            (paper_id, args.source_type, args.term),
         ).fetchone()[0]
         report.append(
             {
