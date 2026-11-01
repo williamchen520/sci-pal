@@ -1,0 +1,735 @@
+{
+  "domain_labels": "present",
+  "corpus": {
+    "papers": 3310,
+    "journals": 940,
+    "journal_entropy": 8.53,
+    "journal_gini": 0.588,
+    "top_journal_share": 0.081,
+    "top_journals": [
+      [
+        "Frontiers in Immunology",
+        268
+      ],
+      [
+        "Alzheimer's & Dementia",
+        158
+      ],
+      [
+        "Nature Communications",
+        62
+      ],
+      [
+        "PLOS One",
+        40
+      ],
+      [
+        "Frontiers in Endocrinology",
+        36
+      ],
+      [
+        "Frontiers in Cellular and Infection Microbiology",
+        34
+      ],
+      [
+        "Science Advances",
+        29
+      ],
+      [
+        "Endocrinology, Diabetes & Metabolism",
+        29
+      ],
+      [
+        "Cureus",
+        28
+      ],
+      [
+        "International Journal of Molecular Sciences",
+        27
+      ]
+    ],
+    "singleton_journals": 485,
+    "years": [
+      [
+        2026,
+        3123
+      ],
+      [
+        2025,
+        168
+      ],
+      [
+        2027,
+        7
+      ],
+      [
+        2024,
+        5
+      ],
+      [
+        2023,
+        2
+      ],
+      [
+        "(none)",
+        1
+      ],
+      [
+        2021,
+        1
+      ],
+      [
+        2018,
+        1
+      ],
+      [
+        2020,
+        1
+      ],
+      [
+        2022,
+        1
+      ]
+    ],
+    "paper_types": [
+      [
+        "J",
+        3310
+      ]
+    ],
+    "domain_labels": "present",
+    "labelled_papers": 3308,
+    "domain_counts": [
+      [
+        "general",
+        713
+      ],
+      [
+        "microbiology",
+        684
+      ],
+      [
+        "endocrinology",
+        641
+      ],
+      [
+        "oncology_other",
+        623
+      ],
+      [
+        "alzheimers",
+        517
+      ],
+      [
+        "hcc_io",
+        130
+      ]
+    ]
+  },
+  "query_support": [
+    {
+      "case_id": "q001",
+      "source": "seed_100",
+      "terms": [
+        "ici",
+        "rechallenge",
+        "hepatocellular",
+        "carcinoma"
+      ],
+      "available_support": 1708,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 321,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q002",
+      "source": "seed_100",
+      "terms": [
+        "many",
+        "main",
+        "ici",
+        "rechallenge",
+        "strategies",
+        "described",
+        "hcc",
+        "they"
+      ],
+      "available_support": 2538,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 277,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q003",
+      "source": "seed_100",
+      "terms": [
+        "rechallenge",
+        "regimens",
+        "achieved",
+        "relatively",
+        "better",
+        "outcomes",
+        "among",
+        "four"
+      ],
+      "available_support": 1316,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 144,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q004",
+      "source": "seed_100",
+      "terms": [
+        "orr",
+        "ici",
+        "rechallenge",
+        "compared",
+        "initial",
+        "therapy",
+        "cited"
+      ],
+      "available_support": 2329,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 472,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q005",
+      "source": "seed_100",
+      "terms": [
+        "patient",
+        "selection",
+        "important",
+        "ici",
+        "rechallenge",
+        "hcc"
+      ],
+      "available_support": 2247,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 401,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q008",
+      "source": "cross_topic",
+      "terms": [
+        "cargo",
+        "extracellular",
+        "vesicles",
+        "carry",
+        "important",
+        "breast",
+        "cancer"
+      ],
+      "available_support": 1082,
+      "domain_l1": "oncology_other",
+      "domain_l2": "",
+      "domain_available": 623,
+      "domain_ceiling@10": 1.0,
+      "title_support": 385,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q009",
+      "source": "cross_topic",
+      "terms": [
+        "main",
+        "global",
+        "challenges",
+        "colorectal",
+        "cancer",
+        "burden",
+        "despite",
+        "screening"
+      ],
+      "available_support": 2253,
+      "domain_l1": "oncology_other",
+      "domain_l2": "",
+      "domain_available": 623,
+      "domain_ceiling@10": 1.0,
+      "title_support": 469,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q010",
+      "source": "cross_topic",
+      "terms": [
+        "central",
+        "paradox",
+        "immune",
+        "checkpoint",
+        "blockade",
+        "described",
+        "ici",
+        "position"
+      ],
+      "available_support": 2268,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 492,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q014",
+      "source": "cross_topic",
+      "terms": [
+        "ev",
+        "heterogeneity",
+        "barrier",
+        "clinical",
+        "translation",
+        "breast",
+        "cancer"
+      ],
+      "available_support": 3031,
+      "domain_l1": "oncology_other",
+      "domain_l2": "",
+      "domain_available": 623,
+      "domain_ceiling@10": 1.0,
+      "title_support": 1177,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "q015",
+      "source": "cross_topic",
+      "terms": [
+        "did",
+        "screening",
+        "change",
+        "colorectal",
+        "cancer",
+        "incidence",
+        "remains",
+        "unresolved"
+      ],
+      "available_support": 1903,
+      "domain_l1": "oncology_other",
+      "domain_l2": "",
+      "domain_available": 623,
+      "domain_ceiling@10": 1.0,
+      "title_support": 448,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q1",
+      "source": "claim_qualifiers",
+      "terms": [
+        "unresectable",
+        "hcc",
+        "tace",
+        "anti",
+        "vegf",
+        "tki",
+        "pd",
+        "l1"
+      ],
+      "available_support": 1513,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 289,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q2",
+      "source": "claim_qualifiers",
+      "terms": [
+        "tace",
+        "anti",
+        "vegf",
+        "tki",
+        "pd",
+        "l1",
+        "alone",
+        "overall"
+      ],
+      "available_support": 1684,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 284,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q1",
+      "source": "claim_qualifiers",
+      "terms": [
+        "large",
+        "hcc",
+        "ivc",
+        "ra",
+        "tumor",
+        "thrombus",
+        "dtace",
+        "haic"
+      ],
+      "available_support": 3211,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 1967,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q2",
+      "source": "claim_qualifiers",
+      "terms": [
+        "dtace",
+        "haic",
+        "mtt",
+        "pd",
+        "inhibitor",
+        "objective",
+        "response",
+        "survival"
+      ],
+      "available_support": 1486,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 256,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_ici_rechallenge__q1",
+      "source": "claim_qualifiers",
+      "terms": [
+        "hcc",
+        "prior",
+        "ici",
+        "exposure",
+        "rechallenge",
+        "antitumor",
+        "response",
+        "irae"
+      ],
+      "available_support": 2154,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 350,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "title_ab84d6de_xml",
+      "source": "paper_title",
+      "terms": [
+        "efficacy",
+        "pd",
+        "l1",
+        "inhibitors",
+        "combined",
+        "anti",
+        "vegf",
+        "tkis"
+      ],
+      "available_support": 1724,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 355,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "title_d62ab6f2_xml",
+      "source": "paper_title",
+      "terms": [
+        "efficacy",
+        "lenvatinib",
+        "versus",
+        "bevacizumab",
+        "triple",
+        "therapy",
+        "immune",
+        "checkpoint"
+      ],
+      "available_support": 1506,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 508,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "title_3219ab94_xml",
+      "source": "paper_title",
+      "terms": [
+        "drug",
+        "eluting",
+        "bead",
+        "tace",
+        "improves",
+        "efficacy",
+        "haic",
+        "combined"
+      ],
+      "available_support": 800,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 118,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "title_966_ae9a35bd",
+      "source": "paper_title",
+      "terms": [
+        "clinical",
+        "feasibility",
+        "circulating",
+        "tumor",
+        "dna",
+        "patients",
+        "advanced",
+        "hepatocellular"
+      ],
+      "available_support": 2082,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 615,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    },
+    {
+      "case_id": "title_946_2d3bcc67",
+      "source": "paper_title",
+      "terms": [
+        "rechallenge",
+        "immune",
+        "checkpoint",
+        "inhibitors",
+        "patients",
+        "hepatocellular",
+        "carcinoma",
+        "narrative"
+      ],
+      "available_support": 1768,
+      "domain_l1": "hcc_io",
+      "domain_l2": "",
+      "domain_available": 130,
+      "domain_ceiling@10": 1.0,
+      "title_support": 605,
+      "title_ceiling@10": 1.0,
+      "coverage_ceiling@10": 1.0
+    }
+  ],
+  "hubness": {
+    "available": true,
+    "queries": 20,
+    "unique_papers": 59,
+    "hub_papers": 14,
+    "hub_paper_rate": 0.237,
+    "top_hub_papers": [
+      [
+        "paper_PMC12707946_2d3bcc67",
+        9
+      ],
+      [
+        "paper_PMC13625931_70a7768d_xml",
+        4
+      ],
+      [
+        "paper_PMC13616637_ab84d6de_xml",
+        3
+      ],
+      [
+        "paper_PMC13511682_323f2073_xml",
+        3
+      ],
+      [
+        "paper_PMC13627981_63b3e22f_xml",
+        3
+      ],
+      [
+        "paper_PMC13606747_7512581f_xml",
+        3
+      ],
+      [
+        "paper_PMC13604167_414f1449_xml",
+        3
+      ],
+      [
+        "paper_PMC13604421_072a042e_xml",
+        3
+      ],
+      [
+        "paper_PMC13632145_3219ab94_xml",
+        3
+      ],
+      [
+        "paper_PMC12711257_17cc19c1",
+        2
+      ]
+    ],
+    "per_query": [
+      {
+        "case_id": "q001",
+        "distinct_papers@10": 1,
+        "new_papers": 1,
+        "new_paper_rate": 1.0
+      },
+      {
+        "case_id": "q002",
+        "distinct_papers@10": 2,
+        "new_papers": 1,
+        "new_paper_rate": 0.5
+      },
+      {
+        "case_id": "q003",
+        "distinct_papers@10": 8,
+        "new_papers": 6,
+        "new_paper_rate": 0.75
+      },
+      {
+        "case_id": "q004",
+        "distinct_papers@10": 2,
+        "new_papers": 1,
+        "new_paper_rate": 0.5
+      },
+      {
+        "case_id": "q005",
+        "distinct_papers@10": 9,
+        "new_papers": 8,
+        "new_paper_rate": 0.889
+      },
+      {
+        "case_id": "q008",
+        "distinct_papers@10": 7,
+        "new_papers": 7,
+        "new_paper_rate": 1.0
+      },
+      {
+        "case_id": "q009",
+        "distinct_papers@10": 4,
+        "new_papers": 4,
+        "new_paper_rate": 1.0
+      },
+      {
+        "case_id": "q010",
+        "distinct_papers@10": 10,
+        "new_papers": 9,
+        "new_paper_rate": 0.9
+      },
+      {
+        "case_id": "q014",
+        "distinct_papers@10": 5,
+        "new_papers": 3,
+        "new_paper_rate": 0.6
+      },
+      {
+        "case_id": "q015",
+        "distinct_papers@10": 1,
+        "new_papers": 0,
+        "new_paper_rate": 0.0
+      },
+      {
+        "case_id": "claim_hcc_triple_os__q1",
+        "distinct_papers@10": 8,
+        "new_papers": 8,
+        "new_paper_rate": 1.0
+      },
+      {
+        "case_id": "claim_hcc_triple_os__q2",
+        "distinct_papers@10": 7,
+        "new_papers": 1,
+        "new_paper_rate": 0.143
+      },
+      {
+        "case_id": "claim_hcc_dtace_haic__q1",
+        "distinct_papers@10": 1,
+        "new_papers": 1,
+        "new_paper_rate": 1.0
+      },
+      {
+        "case_id": "claim_hcc_dtace_haic__q2",
+        "distinct_papers@10": 1,
+        "new_papers": 0,
+        "new_paper_rate": 0.0
+      },
+      {
+        "case_id": "claim_hcc_ici_rechallenge__q1",
+        "distinct_papers@10": 5,
+        "new_papers": 3,
+        "new_paper_rate": 0.6
+      },
+      {
+        "case_id": "title_ab84d6de_xml",
+        "distinct_papers@10": 7,
+        "new_papers": 1,
+        "new_paper_rate": 0.143
+      },
+      {
+        "case_id": "title_d62ab6f2_xml",
+        "distinct_papers@10": 3,
+        "new_papers": 2,
+        "new_paper_rate": 0.667
+      },
+      {
+        "case_id": "title_3219ab94_xml",
+        "distinct_papers@10": 3,
+        "new_papers": 1,
+        "new_paper_rate": 0.333
+      },
+      {
+        "case_id": "title_966_ae9a35bd",
+        "distinct_papers@10": 4,
+        "new_papers": 2,
+        "new_paper_rate": 0.5
+      },
+      {
+        "case_id": "title_946_2d3bcc67",
+        "distinct_papers@10": 1,
+        "new_papers": 0,
+        "new_paper_rate": 0.0
+      }
+    ],
+    "mean_distinct_papers@10": 4.45,
+    "mean_new_paper_rate": 0.576
+  }
+}

@@ -92,9 +92,16 @@ def query_support(conn, cases, labels) -> list[dict]:
     out = []
     for case in cases:
         terms = terms_for(case["query"])
-        if not terms:
-            support = 0
-        else:
+        gold_id = (case.get("gold_paper_ids") or [""])[0]
+        gold_domain = labels.get(gold_id, {}).get("domain_l1")
+        domain_available = (
+            sum(1 for value in labels.values() if value.get("domain_l1") == gold_domain)
+            if gold_domain
+            else 0
+        )
+        support = 0
+        title_support = 0
+        if terms:
             clause = " OR ".join(
                 "(lower(coalesce(title,'')) LIKE ? OR lower(coalesce(abstract,'')) LIKE ? OR lower(coalesce(keywords,'')) LIKE ?)"
                 for _ in terms
@@ -117,15 +124,16 @@ def query_support(conn, cases, labels) -> list[dict]:
                 "source": case.get("source"),
                 "terms": terms,
                 "available_support": support,
-                "title_support": title_support if terms else 0,
-                "title_ceiling@10": round(min(1.0, title_support / 10.0), 3) if terms else 0.0,
+                "domain_l1": gold_domain,
+                "domain_l2": labels.get(gold_id, {}).get("domain_l2"),
+                "domain_available": domain_available,
+                "domain_ceiling@10": round(min(1.0, domain_available / 10.0), 3) if gold_domain else 0.0,
+                "title_support": title_support,
+                "title_ceiling@10": round(min(1.0, title_support / 10.0), 3),
                 "coverage_ceiling@10": round(min(1.0, support / 10.0), 3),
-                "domain_l1": labels.get((case.get("gold_paper_ids") or [""])[0], {}).get("domain_l1"),
-                "domain_l2": labels.get((case.get("gold_paper_ids") or [""])[0], {}).get("domain_l2"),
             }
         )
     return out
-
 
 def result_hubness(path: Path | None) -> dict:
     if not path or not path.exists():
@@ -209,6 +217,12 @@ def main() -> int:
         "top_journal_share": corpus["top_journal_share"],
         "mean_available_support": round(
             sum(item["available_support"] for item in support) / len(support), 3
+        ) if support else 0,
+        "mean_domain_available": round(
+            sum(item["domain_available"] for item in support) / len(support), 3
+        ) if support else 0,
+        "mean_domain_ceiling": round(
+            sum(item["domain_ceiling@10"] for item in support) / len(support), 3
         ) if support else 0,
         "mean_title_support": round(
             sum(item.get("title_support", 0) for item in support) / len(support), 3

@@ -50,6 +50,8 @@
 
 | 2026-11-01 | OpenAlex DOI coverage probe | 200 random: 199 fetched, 99.5%; 4 domains; 1 missing; labels not yet validated | [OpenAlex coverage](审计-OpenAlex覆盖率.md) |
 
+| 2026-11-01 | Full OpenAlex enrichment | 3,290/3,310 (99.4%); 12 missing; stored paper_domains_openalex; auto L1 labels also found | [Full OpenAlex audit](审计-全量OpenAlex与领域标签.md) |
+
 ## Rules
 
 ```text
