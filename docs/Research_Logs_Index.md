@@ -38,6 +38,8 @@
 
 | 2026-11-01 | Retrieval SLO / redundancy design | 3s p95 online, 1s light path; no hard cap; MMR + soft caps; gates defined | [SLO design](设计-检索SLO与冗余控制.md) |
 
+| 2026-11-01 | Near-duplicate suppression | opt-in `SCIPAL_NEAR_DUP_THRESHOLD`; same-paper n-gram Jaccard; 759 tests OK | [Near-duplicate suppression](检索-近重复抑制.md) |
+
 ## Rules
 
 ```text
