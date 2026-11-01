@@ -10,7 +10,9 @@
 | 目的 | 文档 |
 |------|------|
 | 项目是什么、怎么启动 | [`../README.md`](../README.md) |
+| 项目交接指南 | [`HANDOVER.md`](HANDOVER.md) |
 | Research logs index | [`Research_Logs_Index.md`](Research_Logs_Index.md) |
+| 历史档案（勿参考） | [`archive_legacy/README.md`](archive_legacy/README.md) |
 | English documentation | [`en/README.md`](en/README.md) |
 | 架构、模块、路由与数据流 | [架构与路由图.md](架构与路由图.md) |
 | 文献监控 | [工作计划-自适应与文献情报.md](工作计划-自适应与文献情报.md) |
@@ -69,6 +71,7 @@
 - 历史工单、阶段验收、旧设计放 `docs/archive/`；
 - 新增文档先判断是“当前规范”还是“过程记录”；
 - 根 README 只保留入口，不复制正文。
+
 
 ## 调研档案约定
 

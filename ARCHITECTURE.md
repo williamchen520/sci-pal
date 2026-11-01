@@ -1144,3 +1144,29 @@ TRANSFORMERS_OFFLINE=1 HF_HUB_OFFLINE=1 python3 scripts/self_check.py
 ---
 
 **文档结束。如有遗漏或错误，请及时更新此文档。**
+
+---
+
+## 十四、历史迁移经验（2026-11）
+
+早期 WorkBuddy / CodeBuddy 交接文档已移入
+[`archive_legacy/`](docs/archive_legacy/README.md)，不再作为配置依据。
+
+保留下来、仍然有效的科研与工程要求：
+
+1. **可溯源**：paper → section → paragraph → sentence 必须可回查；
+   PDF 保留 page/bbox，XML 保留 XPath/source_path。
+2. **证据优先**：claim 必须绑定 quote/evidence，没有证据不写断言。
+3. **源特征不强行归一化**：XML 与 PDF 各自保留结构；没有坐标就标
+   `coordinate_source=unavailable`，不伪造。
+4. **本地优先与可审计**：支持离线/本地模型；关键裁决写事件表，不覆盖历史。
+5. **多用户隔离**：users / workspaces / memberships，按 workspace 隔离数据。
+
+工程教训：
+
+```text
+两个写者同时改同一工作树 → 冲突；保持一个活动写者、一个 PR 一个主题。
+PyTorch + Flask 多线程 → 可能死锁；重排放到独立 worker/服务。
+旧 V33.13 SQLite/Windows 安装文档 → 已过时，归档，不复制其路径和配置。
+```
+
