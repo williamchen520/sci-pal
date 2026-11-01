@@ -1,0 +1,254 @@
+{
+  "url": "http://127.0.0.1:8765",
+  "summary": {
+    "queries": 20,
+    "sentence_search": {
+      "mean": 9.236,
+      "median": 9.68,
+      "max": 15.372
+    },
+    "aggregate": {
+      "mean": 0.0009,
+      "median": 0.0007,
+      "max": 0.0029
+    },
+    "text_load": {
+      "mean": 0.2415,
+      "median": 0.2314,
+      "max": 0.3461
+    },
+    "score20": {
+      "mean": 0.388,
+      "median": 0.3749,
+      "max": 1.051
+    },
+    "score50": {
+      "mean": 0.3636,
+      "median": 0.374,
+      "max": 0.4478
+    },
+    "total_mean": 204.601
+  },
+  "rows": [
+    {
+      "case_id": "q001",
+      "query": "What is ICI rechallenge in hepatocellular carcinoma?",
+      "sentence_search": 1.9121616000193171,
+      "aggregate": 0.0005374000174924731,
+      "text_load": 0.22965419996762648,
+      "scores": {
+        "20": 1.05097989999922,
+        "50": 0.32857830001739785
+      }
+    },
+    {
+      "case_id": "q002",
+      "query": "How many main ICI rechallenge strategies are described for HCC, and what are they based on?",
+      "sentence_search": 10.637339699955191,
+      "aggregate": 0.002107200038153678,
+      "text_load": 0.26508350000949576,
+      "scores": {
+        "20": 0.34631130000343546,
+        "50": 0.32279869995545596
+      }
+    },
+    {
+      "case_id": "q003",
+      "query": "Which rechallenge regimens achieved relatively better outcomes among the four strategies?",
+      "sentence_search": 10.557699600001797,
+      "aggregate": 0.0008360000210814178,
+      "text_load": 0.2423276999616064,
+      "scores": {
+        "20": 0.42891570000210777,
+        "50": 0.3157059000222944
+      }
+    },
+    {
+      "case_id": "q004",
+      "query": "What ORR was reported for ICI rechallenge compared with initial ICI therapy in the cited study?",
+      "sentence_search": 9.481449500017334,
+      "aggregate": 0.0005879999953322113,
+      "text_load": 0.21107099996879697,
+      "scores": {
+        "20": 0.46968140004901215,
+        "50": 0.3729055000003427
+      }
+    },
+    {
+      "case_id": "q005",
+      "query": "Why is patient selection important for ICI rechallenge in HCC?",
+      "sentence_search": 9.878458900027908,
+      "aggregate": 0.0006113999988883734,
+      "text_load": 0.19340950000332668,
+      "scores": {
+        "20": 0.2934029999887571,
+        "50": 0.3008377999649383
+      }
+    },
+    {
+      "case_id": "q008",
+      "query": "What cargo do extracellular vesicles carry and why is it important in breast cancer?",
+      "sentence_search": 7.925687100039795,
+      "aggregate": 0.000679299992043525,
+      "text_load": 0.2173682000138797,
+      "scores": {
+        "20": 0.34758989996043965,
+        "50": 0.3240961999981664
+      }
+    },
+    {
+      "case_id": "q009",
+      "query": "What are the main global challenges in colorectal cancer burden despite screening?",
+      "sentence_search": 9.26177420001477,
+      "aggregate": 0.0006486999918706715,
+      "text_load": 0.27720359998056665,
+      "scores": {
+        "20": 0.30694630002835765,
+        "50": 0.27307210001163185
+      }
+    },
+    {
+      "case_id": "q010",
+      "query": "What is the central paradox of immune checkpoint blockade described in the ICI position article?",
+      "sentence_search": 10.319593799998984,
+      "aggregate": 0.0029209000058472157,
+      "text_load": 0.29354699997929856,
+      "scores": {
+        "20": 0.36550699995132163,
+        "50": 0.43659369996748865
+      }
+    },
+    {
+      "case_id": "q014",
+      "query": "Why is EV heterogeneity a barrier to clinical translation in breast cancer?",
+      "sentence_search": 10.177621000038926,
+      "aggregate": 0.0008053999627009034,
+      "text_load": 0.2162042999989353,
+      "scores": {
+        "20": 0.35133269999641925,
+        "50": 0.44777779997093603
+      }
+    },
+    {
+      "case_id": "q015",
+      "query": "How did screening change colorectal cancer incidence and what remains unresolved?",
+      "sentence_search": 11.121933999995235,
+      "aggregate": 0.0006624000379815698,
+      "text_load": 0.3461060999543406,
+      "scores": {
+        "20": 0.473885599989444,
+        "50": 0.2989598999847658
+      }
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q1",
+      "query": "unresectable HCC TACE + anti-VEGF/TKI + PD-1/PD-L1 overall survival",
+      "sentence_search": 7.047920699988026,
+      "aggregate": 0.0006198999471962452,
+      "text_load": 0.2330554000218399,
+      "scores": {
+        "20": 0.44814839999889955,
+        "50": 0.3804893000051379
+      }
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q2",
+      "query": "TACE + anti-VEGF/TKI + PD-1/PD-L1 TACE alone / TACE-TKI / TACE-PD-1/PD-L1 overall survival",
+      "sentence_search": 3.7868120000348426,
+      "aggregate": 0.0005367000121623278,
+      "text_load": 0.20103719999315217,
+      "scores": {
+        "20": 0.38437709998106584,
+        "50": 0.3821072999853641
+      }
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q1",
+      "query": "large HCC with IVC/RA tumor thrombus dTACE + HAIC + MTT + PD-1 inhibitor objective response / survival",
+      "sentence_search": 7.615809499984607,
+      "aggregate": 0.0012275000335648656,
+      "text_load": 0.22161470004357398,
+      "scores": {
+        "20": 0.42348739999579266,
+        "50": 0.3750834999955259
+      }
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q2",
+      "query": "dTACE + HAIC + MTT + PD-1 inhibitor HAIC + MTT + PD-1 inhibitor objective response / survival",
+      "sentence_search": 9.36660980002489,
+      "aggregate": 0.0007672999636270106,
+      "text_load": 0.25524939998285845,
+      "scores": {
+        "20": 0.39381629996933043,
+        "50": 0.42086699994979426
+      }
+    },
+    {
+      "case_id": "claim_hcc_ici_rechallenge__q1",
+      "query": "HCC with prior ICI exposure ICI rechallenge antitumor response / irAE",
+      "sentence_search": 9.429881400021259,
+      "aggregate": 0.000734600005671382,
+      "text_load": 0.242039599979762,
+      "scores": {
+        "20": 0.27158960001543164,
+        "50": 0.30092780000995845
+      }
+    },
+    {
+      "case_id": "title_ab84d6de_xml",
+      "query": "Efficacy of PD-1/PD-L1 inhibitors combined with anti-VEGF/TKIs and TACE in uHCC: a meta-analysis",
+      "sentence_search": 8.414535899995826,
+      "aggregate": 0.0006222999654710293,
+      "text_load": 0.25261050002882257,
+      "scores": {
+        "20": 0.22708289994625375,
+        "50": 0.4089725000085309
+      }
+    },
+    {
+      "case_id": "title_d62ab6f2_xml",
+      "query": "Efficacy of Lenvatinib versus Bevacizumab in Triple Therapy with Immune Checkpoint Inhibitors and Interventional Therapy for Hepatocellular Carcinoma with Macrovascular Invasion: A Multi-Center Real-World Retrospective Study",
+      "sentence_search": 10.460590599977877,
+      "aggregate": 0.0006900000153109431,
+      "text_load": 0.22442889999365434,
+      "scores": {
+        "20": 0.15631250001024455,
+        "50": 0.39800789998844266
+      }
+    },
+    {
+      "case_id": "title_3219ab94_xml",
+      "query": "Drug-eluting bead TACE improves the efficacy of HAIC combined with molecular-targeted therapy and anti-PD-1 immunotherapy in large hepatocellular carcinoma with inferior vena cava and/or right atrium tumor thrombus: a multicenter retrospective cohort study",
+      "sentence_search": 10.82615140004782,
+      "aggregate": 0.0009048000210896134,
+      "text_load": 0.2082801999640651,
+      "scores": {
+        "20": 0.39478589995997027,
+        "50": 0.4244244000292383
+      }
+    },
+    {
+      "case_id": "title_966_ae9a35bd",
+      "query": "Clinical Feasibility of Circulating Tumor DNA in Patients with Advanced Hepatocellular Carcinoma Treated with Atezolizumab plus Bevacizumab",
+      "sentence_search": 15.371991299965885,
+      "aggregate": 0.000730200030375272,
+      "text_load": 0.27827119996072724,
+      "scores": {
+        "20": 0.47624200000427663,
+        "50": 0.4059321999666281
+      }
+    },
+    {
+      "case_id": "title_946_2d3bcc67",
+      "query": "Rechallenge with Immune Checkpoint Inhibitors in Patients with Hepatocellular Carcinoma: A Narrative Review",
+      "sentence_search": 11.126305499987211,
+      "aggregate": 0.001221399987116456,
+      "text_load": 0.2210454999585636,
+      "scores": {
+        "20": 0.15046080003958195,
+        "50": 0.3532281999941915
+      }
+    }
+  ]
+}
