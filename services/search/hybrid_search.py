@@ -16,6 +16,7 @@ from services.search.query_expander import QueryExpander
 from services.search.fts_query_builder import FTSQueryBuilder
 from services.search.mmr_diversifier import MMRDiversifier
 from services.search.retrieval_diagnostics import RetrievalDiagnostics
+from services.search.dedup import suppress_near_duplicates, threshold_from_env
 
 from config.paths import CHROMA_PATH, DB_PATH, EMBEDDING_MODEL
 RRF_K = 60  # RRF constant
@@ -481,6 +482,7 @@ class HybridSearch:
             if hyde_text:
                 all_lists.append(self.vector_search(hyde_text, top_k, paper_id, filters))
             fused = self.rrf_fuse_multi(all_lists, top_k)
+            fused = self._apply_near_dup_suppression(fused)
             return fused, len(variants), len(all_lists)
 
         vector_results = self.vector_search(query, top_k, paper_id, filters)
@@ -494,7 +496,21 @@ class HybridSearch:
 
         fused = self.rrf_fuse(vector_results, fts_results, top_k,
                                vector_weight=vec_w, fts_weight=fts_w)
+        fused = self._apply_near_dup_suppression(fused)
         return fused, 1, 2
+
+    def _apply_near_dup_suppression(self, fused: List[Dict]) -> List[Dict]:
+        """Optional near-duplicate suppression; disabled by default.
+
+        Set SCIPAL_NEAR_DUP_THRESHOLD (e.g. 0.90) to enable. Exact duplicates
+        are removed by the utility even when the threshold is 0.
+        """
+        if not os.environ.get("SCIPAL_NEAR_DUP_THRESHOLD", "").strip():
+            return fused
+        threshold = threshold_from_env(0.0)
+        if not fused:
+            return fused
+        return suppress_near_duplicates(fused, threshold=threshold, score_key="rrf_score")
 
     def search(self, query: str, top_k: int = FINAL_TOP_K,
                paper_id: str = None, rerank: bool = False,
