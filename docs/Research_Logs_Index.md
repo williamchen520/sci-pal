@@ -48,6 +48,8 @@
 
 | 2026-11-01 | Open-source domain labels research | OpenAlex Topics first; Europe PMC/PubMed MeSH validate; Crossref fallback; BERTopic exploratory | [Domain labels research](调研-领域标签与覆盖评估.md) |
 
+| 2026-11-01 | OpenAlex DOI coverage probe | 200 random: 199 fetched, 99.5%; 4 domains; 1 missing; labels not yet validated | [OpenAlex coverage](审计-OpenAlex覆盖率.md) |
+
 ## Rules
 
 ```text
