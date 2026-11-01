@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from scripts.fts_sentence_compare import load_cases, metrics, summarize, terms_for  # noqa: E402
+from scripts.fts_sentence_compare import _dedupe, load_cases, metrics, summarize, terms_for  # noqa: E402
 
 
 def _fts_rows(conn, table: str, terms: list[str], limit: int) -> list[dict]:
@@ -44,6 +44,22 @@ def _order(rows: list[dict]) -> tuple[list[str], Counter]:
 
 def _metrics_for(ranked: list[str], gold: set[str]) -> dict:
     return metrics(ranked, gold)
+
+
+def _cap_rows(rows, *, top_n=10, max_per_paper=2):
+    counts = Counter()
+    selected = []
+    for row in rows:
+        paper = row.get("paper_id")
+        if not paper:
+            continue
+        if counts[paper] >= max_per_paper:
+            continue
+        counts[paper] += 1
+        selected.append(row)
+        if len(selected) >= top_n:
+            break
+    return selected
 
 
 def main() -> int:
@@ -77,9 +93,24 @@ def main() -> int:
                     if row.get("sentence_id") in gold_sentences:
                         gold_sent_rank = i + 1
                         break
-            top10 = para_papers[:10]
+            top10_rows = para_rows[:10]
+            top10 = _dedupe(row.get("paper_id") for row in top10_rows)
             top10_unique = len(set(top10))
-            top10_counts = Counter(pid for pid in para_counts if pid in top10)
+            top10_counts = Counter(row.get("paper_id") for row in top10_rows if row.get("paper_id"))
+            cap_rows = _cap_rows(para_rows, top_n=10, max_per_paper=2)
+            cap_papers = _dedupe(row.get("paper_id") for row in cap_rows)
+            cap_gold_paper_rank = next(
+                (i + 1 for i, pid in enumerate(cap_papers) if pid in gold_papers), None
+            )
+            gold_para = None
+            for row in sent_rows:
+                if row.get("sentence_id") in gold_sentences:
+                    gold_para = row.get("para_id")
+                    break
+            cap_gold_sent_rank = next(
+                (i + 1 for i, row in enumerate(cap_rows) if row.get("para_id") == gold_para),
+                None,
+            )
             rows.append(
                 {
                     "case_id": case["case_id"],
@@ -93,6 +124,12 @@ def main() -> int:
                     "max_hits_per_paper@10": max(top10_counts.values()) if top10_counts else 0,
                     "top10_paper_ids": top10,
                     "gold_paper_rank": gold_paper_rank,
+                    "cap2_unique_papers@10": len(set(cap_papers)),
+                    "cap2_gold_paper_rank": cap_gold_paper_rank,
+                    "cap2_gold_sentence_rank": cap_gold_sent_rank,
+                    "cap2_recall@10": _metrics_for(cap_papers, gold_papers)["recall@10"],
+                    "cap2_mrr": _metrics_for(cap_papers, gold_papers)["mrr"],
+                    "cap2_ndcg@10": _metrics_for(cap_papers, gold_papers)["ndcg@10"],
                     "sentence_candidates": len(sent_rows),
                     "sentence_unique_papers": len(sent_counts),
                     "gold_sentence_rank": gold_sent_rank,
@@ -120,6 +157,21 @@ def main() -> int:
         "gold_sentence_top10": sum(
             1 for r in rows if r["gold_sentence_rank"] and r["gold_sentence_rank"] <= 10
         ),
+        "cap2_mean_unique_papers@10": round(
+            sum(r["cap2_unique_papers@10"] for r in rows) / len(rows), 3
+        ) if rows else 0,
+        "cap2_gold_paper_top10": sum(
+            1 for r in rows if r["cap2_gold_paper_rank"] and r["cap2_gold_paper_rank"] <= 10
+        ),
+        "cap2_gold_sentence_top10": sum(
+            1 for r in rows if r["cap2_gold_sentence_rank"] and r["cap2_gold_sentence_rank"] <= 10
+        ),
+        "cap2_paper_metrics": {
+            "queries": len(rows),
+            "recall@10": round(sum(r["cap2_recall@10"] for r in rows) / len(rows), 4) if rows else 0,
+            "mrr": round(sum(r["cap2_mrr"] for r in rows) / len(rows), 4) if rows else 0,
+            "ndcg@10": round(sum(r["cap2_ndcg@10"] for r in rows) / len(rows), 4) if rows else 0,
+        },
         "paper_metrics": summarize(
             [{"system": "paper_fts", **row} for row in rows], "paper_fts"
         ),

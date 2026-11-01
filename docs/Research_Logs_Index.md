@@ -34,6 +34,8 @@
 
 | 2026-11-01 | Document-bias / redundancy solutions | per-doc cap, MMR, sentence-level gold; ir_measures/ranx/BEIR | [Bias solutions](检索-文档级偏置方案调研.md) |
 
+| 2026-11-01 | max_per_paper=2 audit | unique papers@10 3.85→7.5, but gold sentence top10 9/20→0/20; reject | [Bias audit](检索-文档级偏置审计.md) |
+
 ## Rules
 
 ```text
