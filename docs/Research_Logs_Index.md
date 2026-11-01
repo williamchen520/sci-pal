@@ -46,6 +46,8 @@
 
 | 2026-11-01 | Domain coverage audit | domain labels missing; journals 940, Gini .588; hub_paper_rate .237; lexical proxy weak | [Domain coverage audit](审计-领域覆盖.md) |
 
+| 2026-11-01 | Open-source domain labels research | OpenAlex Topics first; Europe PMC/PubMed MeSH validate; Crossref fallback; BERTopic exploratory | [Domain labels research](调研-领域标签与覆盖评估.md) |
+
 ## Rules
 
 ```text
