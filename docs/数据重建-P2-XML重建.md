@@ -105,23 +105,61 @@ fts_hits           7
 
 ---
 
-## 4. 全量
-
-全量 2,820 篇正在后台重建：
+## 4. 全量完成
 
 ```text
-per-paper commit
-失败只回滚该篇
-失败文件进 failures 列表
+attempted       2,820
+failures            0
 ```
 
-完成后输出：
+总计：
 
 ```text
-totals
-failure_count
-failures
+papers        2,820
+sections     58,395
+paragraphs  123,038
+sentences   653,831
+figures      11,688
+tables        4,770
+source_nodes 854,542
 ```
+
+398 篇 metadata-only 已单独导入。
+
+### 与旧库同源对比
+
+只比较有源文件的 2,820 篇：
+
+| 表 | 旧 SQLite | v2 | 差异 |
+|---|---:|---:|---:|
+| sections | 58,372 | 58,395 | +23 |
+| paragraphs | 123,038 | 123,038 | 0 |
+| sentences | 653,831 | 653,831 | 0 |
+| figures | 11,683 | 11,688 | +5 |
+| tables | 4,767 | 4,770 | +3 |
+
+结论：
+
+```text
+同源 XML 的段落/句子零丢失
+章节/图表少量增加，来自新的父节点采集
+```
+
+差异主要来自 398 篇无源文件论文，旧库有、v2 只能保留元数据。
+
+### 图表绑定
+
+```text
+figures 11,688
+  bound 6,467
+  unresolved 5,221
+
+tables 4,770
+  bound 2,930
+  unresolved 1,840
+```
+
+unresolved 主要是 JATS `<floats-group>` 里的图/表，没有 `<sec>` 父节点；不强行绑定。
 
 ---
 
