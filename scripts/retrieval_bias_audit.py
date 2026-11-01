@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from scripts.fts_sentence_compare import _dedupe, load_cases, metrics, summarize, terms_for  # noqa: E402
+from services.search.dedup import suppress_near_duplicates  # noqa: E402
 
 
 def _fts_rows(conn, table: str, terms: list[str], limit: int) -> list[dict]:
@@ -68,6 +69,7 @@ def main() -> int:
     parser.add_argument("--cases", default=str(ROOT / "eval" / "plugins" / "retriever_queries.json"))
     parser.add_argument("--per-source", type=int, default=5)
     parser.add_argument("--depth", type=int, default=1000)
+    parser.add_argument("--near-dup-threshold", type=float, default=0.0)
     parser.add_argument("--out", default="")
     args = parser.parse_args()
 
@@ -97,16 +99,44 @@ def main() -> int:
             top10 = _dedupe(row.get("paper_id") for row in top10_rows)
             top10_unique = len(set(top10))
             top10_counts = Counter(row.get("paper_id") for row in top10_rows if row.get("paper_id"))
+            near_rows = []
+            if args.near_dup_threshold > 0:
+                near_input = []
+                for row in para_rows:
+                    item = dict(row)
+                    item["score"] = -float(item.get("score") or 0)
+                    near_input.append(item)
+                near_rows = suppress_near_duplicates(
+                    near_input,
+                    threshold=args.near_dup_threshold,
+                    text_key="text",
+                    paper_key="paper_id",
+                    id_keys=("para_id",),
+                    score_key="score",
+                )
+            near_papers, near_counts = _order(near_rows)
+            near_top10 = _dedupe(row.get("paper_id") for row in near_rows[:10])
+            near_gold_paper_rank = next(
+                (i + 1 for i, pid in enumerate(near_papers) if pid in gold_papers), None
+            )
+            gold_para = None
+            if gold_sentences:
+                ids = list(gold_sentences)
+                placeholders = ",".join("?" * len(ids))
+                row = conn.execute(
+                    f"SELECT para_id FROM sentences WHERE sentence_id IN ({placeholders}) LIMIT 1",
+                    ids,
+                ).fetchone()
+                gold_para = row[0] if row else None
+            near_gold_sent_rank = next(
+                (i + 1 for i, row in enumerate(near_rows) if row.get("para_id") == gold_para),
+                None,
+            ) if gold_para else None
             cap_rows = _cap_rows(para_rows, top_n=10, max_per_paper=2)
             cap_papers = _dedupe(row.get("paper_id") for row in cap_rows)
             cap_gold_paper_rank = next(
                 (i + 1 for i, pid in enumerate(cap_papers) if pid in gold_papers), None
             )
-            gold_para = None
-            for row in sent_rows:
-                if row.get("sentence_id") in gold_sentences:
-                    gold_para = row.get("para_id")
-                    break
             cap_gold_sent_rank = next(
                 (i + 1 for i, row in enumerate(cap_rows) if row.get("para_id") == gold_para),
                 None,
@@ -130,6 +160,14 @@ def main() -> int:
                     "cap2_recall@10": _metrics_for(cap_papers, gold_papers)["recall@10"],
                     "cap2_mrr": _metrics_for(cap_papers, gold_papers)["mrr"],
                     "cap2_ndcg@10": _metrics_for(cap_papers, gold_papers)["ndcg@10"],
+                    "near_unique_papers": len(near_counts),
+                    "near_unique_papers@10": len(set(near_top10)),
+                    "near_max_hits_per_paper": max(near_counts.values()) if near_counts else 0,
+                    "near_gold_paper_rank": near_gold_paper_rank,
+                    "near_gold_sentence_rank": near_gold_sent_rank,
+                    "near_recall@10": _metrics_for(near_papers, gold_papers)["recall@10"],
+                    "near_mrr": _metrics_for(near_papers, gold_papers)["mrr"],
+                    "near_ndcg@10": _metrics_for(near_papers, gold_papers)["ndcg@10"],
                     "sentence_candidates": len(sent_rows),
                     "sentence_unique_papers": len(sent_counts),
                     "gold_sentence_rank": gold_sent_rank,
@@ -166,6 +204,22 @@ def main() -> int:
         "cap2_gold_sentence_top10": sum(
             1 for r in rows if r["cap2_gold_sentence_rank"] and r["cap2_gold_sentence_rank"] <= 10
         ),
+        "near_dup_threshold": args.near_dup_threshold,
+        "near_mean_unique_papers@10": round(
+            sum(r["near_unique_papers@10"] for r in rows) / len(rows), 3
+        ) if rows and args.near_dup_threshold > 0 else None,
+        "near_gold_paper_top10": sum(
+            1 for r in rows if r["near_gold_paper_rank"] and r["near_gold_paper_rank"] <= 10
+        ) if args.near_dup_threshold > 0 else None,
+        "near_gold_sentence_top10": sum(
+            1 for r in rows if r["near_gold_sentence_rank"] and r["near_gold_sentence_rank"] <= 10
+        ) if args.near_dup_threshold > 0 else None,
+        "near_paper_metrics": {
+            "queries": len(rows),
+            "recall@10": round(sum(r["near_recall@10"] for r in rows) / len(rows), 4) if rows and args.near_dup_threshold > 0 else None,
+            "mrr": round(sum(r["near_mrr"] for r in rows) / len(rows), 4) if rows and args.near_dup_threshold > 0 else None,
+            "ndcg@10": round(sum(r["near_ndcg@10"] for r in rows) / len(rows), 4) if rows and args.near_dup_threshold > 0 else None,
+        },
         "cap2_paper_metrics": {
             "queries": len(rows),
             "recall@10": round(sum(r["cap2_recall@10"] for r in rows) / len(rows), 4) if rows else 0,
