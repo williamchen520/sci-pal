@@ -61,6 +61,83 @@ def _connect(db_path: str | os.PathLike[str]) -> sqlite3.Connection:
     return conn
 
 
+def _pg_read_enabled() -> bool:
+    backend = os.environ.get("SCIPAL_TENANCY_READ_BACKEND", "").strip().lower()
+    return backend in {"postgres", "postgresql", "pg", "1", "true"} and bool(
+        os.environ.get("SCIPAL_PG_DSN", "").strip()
+    )
+
+
+def _pg_connection():
+    import psycopg
+    from psycopg.rows import dict_row
+
+    return psycopg.connect(os.environ["SCIPAL_PG_DSN"], row_factory=dict_row)
+
+
+def _pg_authenticate(username: str, password: str):
+    with _pg_connection() as pg:
+        row = pg.execute(
+            "SELECT user_id, username, email, display_name, password_hash, status, is_admin "
+            "FROM users WHERE username = %s",
+            ((username or "").strip(),),
+        ).fetchone()
+    if not row or row["status"] != "active":
+        return None
+    if not verify_password(password, row["password_hash"]):
+        return None
+    return {
+        "user_id": row["user_id"],
+        "username": row["username"],
+        "email": row["email"],
+        "display_name": row["display_name"],
+        "is_admin": bool(row["is_admin"]),
+    }
+
+
+def _pg_membership(workspace_id: str, user_id: str):
+    with _pg_connection() as pg:
+        row = pg.execute(
+            "SELECT workspace_id, user_id, role, status FROM memberships "
+            "WHERE workspace_id = %s AND user_id = %s AND status = 'active'",
+            (workspace_id, user_id),
+        ).fetchone()
+    if not row:
+        return None
+    return Membership(row["workspace_id"], row["user_id"], row["role"], row["status"])
+
+
+def _pg_list_workspaces(user_id: str):
+    with _pg_connection() as pg:
+        rows = pg.execute(
+            "SELECT w.workspace_id, w.name, w.owner_user_id, m.role "
+            "FROM workspaces w JOIN memberships m ON m.workspace_id = w.workspace_id "
+            "WHERE m.user_id = %s AND m.status = 'active' "
+            "ORDER BY w.created_at, w.name",
+            (user_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def _pg_get_user(user_id: str):
+    with _pg_connection() as pg:
+        row = pg.execute(
+            "SELECT user_id, username, display_name, email, status, is_admin "
+            "FROM users WHERE user_id = %s",
+            (user_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def _pg_get_user_by_username(username: str):
+    with _pg_connection() as pg:
+        row = pg.execute(
+            "SELECT user_id, username, display_name, status FROM users WHERE username = %s",
+            ((username or "").strip(),),
+        ).fetchone()
+    return dict(row) if row else None
+
+
 def _b64(data: bytes) -> str:
     return base64.b64encode(data).decode("ascii")
 
@@ -147,6 +224,11 @@ def authenticate(
     *,
     db_path: str | os.PathLike[str] = DATABASE_PATH,
 ) -> dict[str, Any] | None:
+    if _pg_read_enabled():
+        try:
+            return _pg_authenticate(username, password)
+        except Exception:  # noqa: BLE001 - fall back to SQLite
+            pass
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -294,6 +376,11 @@ def get_membership(
     *,
     db_path: str | os.PathLike[str] = DATABASE_PATH,
 ) -> Membership | None:
+    if _pg_read_enabled():
+        try:
+            return _pg_membership(workspace_id, user_id)
+        except Exception:  # noqa: BLE001
+            pass
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -333,6 +420,11 @@ def list_workspaces(
     *,
     db_path: str | os.PathLike[str] = DATABASE_PATH,
 ) -> list[dict[str, Any]]:
+    if _pg_read_enabled():
+        try:
+            return _pg_list_workspaces(user_id)
+        except Exception:  # noqa: BLE001
+            pass
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -352,6 +444,11 @@ def get_user_by_username(
     *,
     db_path: str | os.PathLike[str] = DATABASE_PATH,
 ) -> dict[str, Any] | None:
+    if _pg_read_enabled():
+        try:
+            return _pg_get_user_by_username(username)
+        except Exception:  # noqa: BLE001
+            pass
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -369,6 +466,11 @@ def get_user(
     *,
     db_path: str | os.PathLike[str] = DATABASE_PATH,
 ) -> dict[str, Any] | None:
+    if _pg_read_enabled():
+        try:
+            return _pg_get_user(user_id)
+        except Exception:  # noqa: BLE001
+            pass
     conn = _connect(db_path)
     try:
         ensure_schema(conn)

@@ -22,6 +22,7 @@ def ensure_workspace_scoping(conn: sqlite3.Connection) -> None:
         row[0]
         for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
     }
+    changed = False
     for table in SCOPED_TABLES:
         if table not in tables:
             continue
@@ -30,7 +31,9 @@ def ensure_workspace_scoping(conn: sqlite3.Connection) -> None:
             conn.execute(
                 f"ALTER TABLE {table} ADD COLUMN workspace_id TEXT DEFAULT '{DEFAULT_WORKSPACE_ID}'"
             )
-    conn.commit()
+            changed = True
+    if changed:
+        conn.commit()
 
 
 def resolve_workspace(*, default: str | None = None, db_path=DATABASE_PATH) -> str | None:
