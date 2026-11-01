@@ -1,0 +1,131 @@
+{
+  "query": "What is ICI rechallenge in hepatocellular carcinoma?",
+  "results": [
+    {
+      "terms": 5,
+      "top_k": 200,
+      "ranker": "rank",
+      "elapsed": 0.8373,
+      "rows": 200
+    },
+    {
+      "terms": 5,
+      "top_k": 200,
+      "ranker": "rank_cd",
+      "elapsed": 0.1811,
+      "rows": 200
+    },
+    {
+      "terms": 5,
+      "top_k": 500,
+      "ranker": "rank",
+      "elapsed": 0.264,
+      "rows": 500
+    },
+    {
+      "terms": 5,
+      "top_k": 500,
+      "ranker": "rank_cd",
+      "elapsed": 0.2071,
+      "rows": 500
+    },
+    {
+      "terms": 5,
+      "top_k": 1000,
+      "ranker": "rank",
+      "elapsed": 0.2625,
+      "rows": 1000
+    },
+    {
+      "terms": 5,
+      "top_k": 1000,
+      "ranker": "rank_cd",
+      "elapsed": 0.2436,
+      "rows": 1000
+    },
+    {
+      "terms": 8,
+      "top_k": 200,
+      "ranker": "rank",
+      "elapsed": 0.2026,
+      "rows": 200
+    },
+    {
+      "terms": 8,
+      "top_k": 200,
+      "ranker": "rank_cd",
+      "elapsed": 0.2675,
+      "rows": 200
+    },
+    {
+      "terms": 8,
+      "top_k": 500,
+      "ranker": "rank",
+      "elapsed": 0.204,
+      "rows": 500
+    },
+    {
+      "terms": 8,
+      "top_k": 500,
+      "ranker": "rank_cd",
+      "elapsed": 0.1958,
+      "rows": 500
+    },
+    {
+      "terms": 8,
+      "top_k": 1000,
+      "ranker": "rank",
+      "elapsed": 0.214,
+      "rows": 1000
+    },
+    {
+      "terms": 8,
+      "top_k": 1000,
+      "ranker": "rank_cd",
+      "elapsed": 0.2142,
+      "rows": 1000
+    },
+    {
+      "terms": 12,
+      "top_k": 200,
+      "ranker": "rank",
+      "elapsed": 0.1749,
+      "rows": 200
+    },
+    {
+      "terms": 12,
+      "top_k": 200,
+      "ranker": "rank_cd",
+      "elapsed": 0.1665,
+      "rows": 200
+    },
+    {
+      "terms": 12,
+      "top_k": 500,
+      "ranker": "rank",
+      "elapsed": 0.1701,
+      "rows": 500
+    },
+    {
+      "terms": 12,
+      "top_k": 500,
+      "ranker": "rank_cd",
+      "elapsed": 0.1751,
+      "rows": 500
+    },
+    {
+      "terms": 12,
+      "top_k": 1000,
+      "ranker": "rank",
+      "elapsed": 0.1865,
+      "rows": 1000
+    },
+    {
+      "terms": 12,
+      "top_k": 1000,
+      "ranker": "rank_cd",
+      "elapsed": 0.215,
+      "rows": 1000
+    }
+  ]
+}

@@ -65,7 +65,13 @@ class SentenceFTS:
             return []
         operator = " | " if match == "any" else " & "
         ts_query = operator.join(terms[:12])
-        sql = """
+        where = "s.search_vector @@ q.query"
+        params: list = [ts_query]
+        if source_type:
+            where += " AND s.source_type = %s"
+            params.append(source_type)
+        params.append(top_k)
+        sql = f"""
             WITH q AS (SELECT to_tsquery('english', %s) AS query)
             SELECT s.sentence_id, s.paper_id, s.para_id, s.section_id,
                    s.text, s.source_type, s.page, s.bbox,
@@ -75,14 +81,13 @@ class SentenceFTS:
             JOIN papers p ON p.paper_id = s.paper_id
             LEFT JOIN source_nodes sn ON sn.node_id = s.source_node_id
             CROSS JOIN q
-            WHERE s.search_vector @@ q.query
-              AND (%s::text IS NULL OR s.source_type = %s)
+            WHERE {where}
             ORDER BY rank DESC, s.sentence_id
             LIMIT %s
         """
         pg, close = self._connection()
         try:
-            rows = pg.execute(sql, (ts_query, source_type, source_type, top_k)).fetchall()
+            rows = pg.execute(sql, params).fetchall()
         finally:
             if close:
                 pg.close()

@@ -1,0 +1,131 @@
+{
+  "query": "title_966",
+  "results": [
+    {
+      "terms": 5,
+      "top_k": 200,
+      "ranker": "rank",
+      "elapsed": 0.373,
+      "rows": 200
+    },
+    {
+      "terms": 5,
+      "top_k": 200,
+      "ranker": "rank_cd",
+      "elapsed": 0.1555,
+      "rows": 200
+    },
+    {
+      "terms": 5,
+      "top_k": 500,
+      "ranker": "rank",
+      "elapsed": 0.2884,
+      "rows": 397
+    },
+    {
+      "terms": 5,
+      "top_k": 500,
+      "ranker": "rank_cd",
+      "elapsed": 0.171,
+      "rows": 397
+    },
+    {
+      "terms": 5,
+      "top_k": 1000,
+      "ranker": "rank",
+      "elapsed": 0.2447,
+      "rows": 397
+    },
+    {
+      "terms": 5,
+      "top_k": 1000,
+      "ranker": "rank_cd",
+      "elapsed": 0.1655,
+      "rows": 397
+    },
+    {
+      "terms": 8,
+      "top_k": 200,
+      "ranker": "rank",
+      "elapsed": 0.1575,
+      "rows": 200
+    },
+    {
+      "terms": 8,
+      "top_k": 200,
+      "ranker": "rank_cd",
+      "elapsed": 0.1614,
+      "rows": 200
+    },
+    {
+      "terms": 8,
+      "top_k": 500,
+      "ranker": "rank",
+      "elapsed": 0.1701,
+      "rows": 397
+    },
+    {
+      "terms": 8,
+      "top_k": 500,
+      "ranker": "rank_cd",
+      "elapsed": 0.1718,
+      "rows": 397
+    },
+    {
+      "terms": 8,
+      "top_k": 1000,
+      "ranker": "rank",
+      "elapsed": 0.168,
+      "rows": 397
+    },
+    {
+      "terms": 8,
+      "top_k": 1000,
+      "ranker": "rank_cd",
+      "elapsed": 0.1671,
+      "rows": 397
+    },
+    {
+      "terms": 12,
+      "top_k": 200,
+      "ranker": "rank",
+      "elapsed": 0.2871,
+      "rows": 200
+    },
+    {
+      "terms": 12,
+      "top_k": 200,
+      "ranker": "rank_cd",
+      "elapsed": 0.1986,
+      "rows": 200
+    },
+    {
+      "terms": 12,
+      "top_k": 500,
+      "ranker": "rank",
+      "elapsed": 0.1878,
+      "rows": 397
+    },
+    {
+      "terms": 12,
+      "top_k": 500,
+      "ranker": "rank_cd",
+      "elapsed": 0.1797,
+      "rows": 397
+    },
+    {
+      "terms": 12,
+      "top_k": 1000,
+      "ranker": "rank",
+      "elapsed": 0.1749,
+      "rows": 397
+    },
+    {
+      "terms": 12,
+      "top_k": 1000,
+      "ranker": "rank_cd",
+      "elapsed": 0.1743,
+      "rows": 397
+    }
+  ]
+}
