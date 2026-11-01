@@ -718,3 +718,47 @@ If no webhook is configured, it writes `ALERT degraded: ...` to stderr.
 2. set a real webhook if available
 3. continue observing
 ```
+
+## 20. Fail-closed tenancy writes after PG outage (2026-11-02)
+
+During the alert deployment, `scipal-pg` was found exited with code 255 and
+restart policy `no`; health-cron failed to connect.
+
+Immediate fixes:
+
+```text
+docker update --restart unless-stopped scipal-pg
+restart health-cron after PG became ready
+```
+
+This exposed a more serious issue:
+
+```text
+tenancy write path could fall back to SQLite when PG is down
+outbox triggers for tenancy had already been removed
+=> fallback rows could never be replayed
+```
+
+Decision: **fail closed**.
+
+```text
+SCIPAL_TENANCY_WRITE_BACKEND=postgres + PG error
+-> raise TenancyError
+-> do not write SQLite
+```
+
+This avoids silent split-brain; user operations fail rather than diverge.
+
+Tests:
+
+```text
+769 tests OK
+```
+
+Remaining deployment:
+
+```text
+rebuild image with fail-closed + alerting
+recreate app and health-cron
+verify health / login / drift
+```

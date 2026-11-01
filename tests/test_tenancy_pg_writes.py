@@ -7,7 +7,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from services.tenancy import add_member, create_user, create_workspace, list_members
+from services.tenancy import TenancyError, add_member, create_user, create_workspace, list_members
+from services.tenancy.schema import ensure_schema
 from services.tenancy import pg_writes
 
 
@@ -90,6 +91,22 @@ class PGTenancyMirrorTests(unittest.TestCase):
             )
         finally:
             conn.close()
+
+    def test_pg_failure_is_fail_closed(self):
+        import sqlite3
+        conn = sqlite3.connect(self.db)
+        ensure_schema(conn)
+        conn.close()
+        with mock.patch.object(pg_writes, "enabled", return_value=True),              mock.patch.object(pg_writes, "create_user", side_effect=RuntimeError("pg down")):
+            with self.assertRaises(TenancyError):
+                create_user("pgfail", "long-enough-password", db_path=self.db)
+        import sqlite3
+        conn = sqlite3.connect(self.db)
+        try:
+            count = conn.execute("SELECT count(*) FROM users").fetchone()[0]
+        finally:
+            conn.close()
+        self.assertEqual(count, 0)
 
 
 if __name__ == "__main__":
