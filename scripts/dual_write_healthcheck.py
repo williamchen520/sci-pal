@@ -22,6 +22,59 @@ from services.db.dual_write import DEFAULT_TABLES, OUTBOX, discover_tables  # no
 from services.db.etl import quote_ident  # noqa: E402
 
 
+TENANCY_TABLES = {
+    "users": (("user_id",), ("user_id", "username", "email", "display_name", "password_hash", "status", "is_admin")),
+    "workspaces": (("workspace_id",), ("workspace_id", "name", "owner_user_id")),
+    "memberships": (("workspace_id", "user_id"), ("workspace_id", "user_id", "role", "status")),
+}
+
+
+def _sqlite_rows(conn, table, columns):
+    placeholders = ", ".join(quote_ident(column) for column in columns)
+    return [tuple(row) for row in conn.execute(f"SELECT {placeholders} FROM {quote_ident(table)}")]
+
+
+def _pg_rows(pg, table, columns):
+    placeholders = ", ".join(quote_ident(column) for column in columns)
+    rows = pg.execute(f"SELECT {placeholders} FROM {quote_ident(table)}").fetchall()
+    return [tuple(row.values()) if isinstance(row, dict) else tuple(row) for row in rows]
+
+
+def tenancy_drift(conn: sqlite3.Connection, pg) -> dict:
+    """Row-level SQLite/PG comparison for tenancy tables, if present."""
+    available = {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    }
+    report = {}
+    for table, (key, columns) in TENANCY_TABLES.items():
+        if table not in available:
+            report[table] = {"available": False, "drift": False}
+            continue
+        try:
+            sq = _sqlite_rows(conn, table, columns)
+            pg_rows = _pg_rows(pg, table, columns)
+        except Exception as exc:  # noqa: BLE001 - absent PG table is not a drift signal here
+            report[table] = {"available": False, "drift": False, "error": str(exc)}
+            continue
+        key_index = [columns.index(column) for column in key]
+        sq_map = {tuple(row[i] for i in key_index): row for row in sq}
+        pg_map = {tuple(row[i] for i in key_index): row for row in pg_rows}
+        only_sqlite = sorted(set(sq_map) - set(pg_map))
+        only_pg = sorted(set(pg_map) - set(sq_map))
+        changed = [k for k in sorted(set(sq_map) & set(pg_map)) if sq_map[k] != pg_map[k]]
+        report[table] = {
+            "available": True,
+            "sqlite": len(sq),
+            "postgres": len(pg_rows),
+            "only_sqlite": [dict(zip(key, k)) for k in only_sqlite[:20]],
+            "only_pg": [dict(zip(key, k)) for k in only_pg[:20]],
+            "changed": [dict(zip(key, k)) for k in changed[:20]],
+            "drift": bool(only_sqlite or only_pg or changed),
+        }
+    return report
+
+
 def collect(conn: sqlite3.Connection, pg, tables=None) -> dict:
     names = list(tables or DEFAULT_TABLES)
     specs = discover_tables(conn, names)
@@ -64,6 +117,7 @@ def collect(conn: sqlite3.Connection, pg, tables=None) -> dict:
         "triggers": triggers,
         "tables": counts,
         "mismatches": [c["table"] for c in counts if not c["match"]],
+        "tenancy_drift": tenancy_drift(conn, pg),
     }
 
 
@@ -98,6 +152,7 @@ def main() -> int:
         or report["pending"] > args.max_pending
         or (report["pending_age_seconds"] or 0) > args.max_age
         or bool(report["mismatches"])
+        or any(item.get("drift") for item in report.get("tenancy_drift", {}).values())
     )
     report["status"] = "degraded" if bad else "ok"
     text = json.dumps(report, ensure_ascii=False, indent=2)

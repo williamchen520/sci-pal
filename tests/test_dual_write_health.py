@@ -35,6 +35,33 @@ class HealthCheckTests(unittest.TestCase):
             self.assertEqual(report["triggers"], 3)
             self.assertEqual(report["mismatches"], ["papers"])
 
+    def test_reports_tenancy_row_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            left = Path(tmp) / "left.db"
+            right = Path(tmp) / "right.db"
+            ddl = (
+                "CREATE TABLE users (user_id TEXT PRIMARY KEY, username TEXT, email TEXT, "
+                "display_name TEXT, password_hash TEXT, status TEXT, is_admin INTEGER)"
+            )
+            for path, name in ((left, "alice"), (right, "alice2")):
+                conn = sqlite3.connect(path)
+                conn.execute(ddl)
+                conn.execute(
+                    "INSERT INTO users VALUES ('u1', ?, NULL, 'Alice', 'hash', 'active', 0)",
+                    (name,),
+                )
+                conn.commit()
+                conn.close()
+            conn = sqlite3.connect(left)
+            install(conn, ["users"])
+            pg = sqlite3.connect(right)
+            try:
+                report = collect(conn, pg, ["users"])
+            finally:
+                pg.close()
+                conn.close()
+            self.assertTrue(report["tenancy_drift"]["users"]["drift"])
+
 
 if __name__ == "__main__":
     unittest.main()

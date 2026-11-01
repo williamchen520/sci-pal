@@ -586,3 +586,30 @@ Next:
 2. add an automated drift check to the health job
 3. remove tenancy outbox replication
 ```
+
+## 17. Health task integration (2026-11-02)
+
+`scripts/dual_write_healthcheck.py` now checks:
+
+```text
+outbox pending / failed / age
+trigger count
+per-table SQLite/PG counts
+tenancy row-level drift:
+  users
+  workspaces
+  memberships
+```
+
+Any tenancy drift marks the report `degraded` and exits non-zero.
+
+A new compose service runs it every 300 seconds:
+
+```text
+health-cron
+  command: while true; do python scripts/dual_write_healthcheck.py; sleep 300; done
+  depends_on: app healthy
+  volumes: ../data, ../logs
+```
+
+This turns drift from a manual audit into a recurring health task.
