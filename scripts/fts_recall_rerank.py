@@ -33,6 +33,7 @@ def main() -> int:
     parser.add_argument("--recall", type=int, default=200)
     parser.add_argument("--terms", type=int, default=5)
     parser.add_argument("--ranker", default="rank", choices=("rank", "rank_cd"))
+    parser.add_argument("--limit-cases", type=int, default=0)
     parser.add_argument("--out", default="")
     args = parser.parse_args()
     if not args.pg_dsn:
@@ -41,6 +42,8 @@ def main() -> int:
         raise SystemExit(f"reranker service is not healthy: {args.url}")
 
     cases = load_cases(ROOT / "eval" / "plugins" / "retriever_queries.json", args.per_source)
+    if args.limit_cases:
+        cases = cases[: args.limit_cases]
     sentence_fts = SentenceFTS(args.pg_dsn)
     rows = []
     failures = []
