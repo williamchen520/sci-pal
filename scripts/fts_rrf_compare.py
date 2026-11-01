@@ -25,6 +25,7 @@ from scripts.fts_sentence_compare import (  # noqa: E402
     summarize,
     terms_for,
 )
+from services.search.rerank_client import RerankClient  # noqa: E402
 from services.search.rerank_worker import RerankWorker  # noqa: E402
 from services.search.sentence_fts import SentenceFTS  # noqa: E402
 
@@ -76,6 +77,7 @@ def main() -> int:
     parser.add_argument("--rerank-timeout", type=float, default=15.0)
     parser.add_argument("--startup-timeout", type=float, default=60.0)
     parser.add_argument("--max-failures", type=int, default=20)
+    parser.add_argument("--rerank-url", default=os.environ.get("SCIPAL_RERANK_URL", ""))
     args = parser.parse_args()
     if not args.pg_dsn:
         raise SystemExit("--pg-dsn is required")
@@ -83,7 +85,10 @@ def main() -> int:
         raise SystemExit("refusing to read a non-scipal_v2 database")
 
     counts = [int(x) for x in args.candidate_counts.split(",") if x.strip()]
-    reranker = RerankWorker(timeout=args.startup_timeout)
+    if args.rerank_url:
+        reranker = RerankClient(args.rerank_url, timeout=args.rerank_timeout)
+    else:
+        reranker = RerankWorker(timeout=args.startup_timeout)
     sentence_fts = SentenceFTS(args.pg_dsn)
     cases = load_cases(Path(args.cases), args.per_source)
     rows = []
