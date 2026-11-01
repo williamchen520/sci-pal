@@ -101,6 +101,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | PG write-path productionization plan | corrected: prod SQLite vs PG diff {}; earlier 7-table gap was dev-vs-prod | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | PG tenancy write path Phase 1 | PG-first user/workspace/member + SQLite mirror; 762 tests; sequence bug fixed | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text

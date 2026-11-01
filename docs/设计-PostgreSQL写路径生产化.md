@@ -314,3 +314,59 @@ Before changing writes:
 ```
 
 This avoids a big-bang cutover and keeps the search indexes working.
+
+## 11. Phase 1 tenancy implementation (2026-11-02)
+
+Implemented:
+
+```text
+services/tenancy/pg_writes.py
+  create_user
+  create_workspace
+  add_member
+  list_members
+
+services/tenancy/service.py
+  SCIPAL_TENANCY_WRITE_BACKEND=postgres
+  PG-first write
+  SQLite mirror for legacy readers
+  fallback to SQLite on PG failure
+```
+
+Default remains SQLite:
+
+```text
+SCIPAL_TENANCY_WRITE_BACKEND unset -> existing behavior
+```
+
+### Integration proof
+
+A live test against PostgreSQL created a unique user, workspace, and owner
+membership, read them back through `list_members`, and cleaned them up.
+
+### Found production bug
+
+`tenancy_audit.id` is an identity column, but the copied data left its sequence
+behind. The first PG write failed with:
+
+```text
+duplicate key value violates unique constraint "tenancy_audit_pkey"
+```
+
+`pg_writes._ensure_audit_sequence()` now aligns the sequence to `max(id)+1`
+before audit inserts.
+
+### Tests
+
+```text
+762 tests OK
+```
+
+### Next
+
+```text
+1. enable SCIPAL_TENANCY_WRITE_BACKEND=postgres in a canary
+2. verify no direct SQLite tenancy read is stale
+3. migrate projects/experiments membership reads to tenancy service
+4. then remove tenancy from outbox replication
+```

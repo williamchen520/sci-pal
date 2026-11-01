@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import logging
 import os
 import re
 import secrets
@@ -17,8 +18,10 @@ from typing import Any
 from config.settings import DATABASE_PATH
 
 from .schema import ROLES, ensure_schema
+from . import pg_writes
 
 DEFAULT_WORKSPACE_ID = "ws_default"
+LOGGER = logging.getLogger(__name__)
 USERNAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{2,63}$")
 ROLE_SET = set(ROLES)
 
@@ -180,6 +183,42 @@ def _audit(conn: sqlite3.Connection, workspace_id: str | None, actor: str | None
     )
 
 
+def _mirror_user(conn, user: dict, password_hash: str) -> None:
+    ensure_schema(conn)
+    conn.execute(
+        "INSERT OR REPLACE INTO users (user_id, username, email, display_name, password_hash, status, is_admin) "
+        "VALUES (?, ?, ?, ?, ?, 'active', ?)",
+        (user["user_id"], user["username"], user["email"], user["display_name"], password_hash, int(user["is_admin"])),
+    )
+    _audit(conn, None, user["user_id"], "user.create", user["user_id"])
+    conn.commit()
+
+
+def _mirror_workspace(conn, workspace: dict) -> None:
+    ensure_schema(conn)
+    conn.execute(
+        "INSERT OR REPLACE INTO workspaces (workspace_id, name, owner_user_id) VALUES (?, ?, ?)",
+        (workspace["workspace_id"], workspace["name"], workspace["owner_user_id"]),
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO memberships (workspace_id, user_id, role) VALUES (?, ?, 'owner')",
+        (workspace["workspace_id"], workspace["owner_user_id"]),
+    )
+    _audit(conn, workspace["workspace_id"], workspace["owner_user_id"], "workspace.create", workspace["workspace_id"])
+    conn.commit()
+
+
+def _mirror_member(conn, membership: dict, actor_user_id: str | None) -> None:
+    ensure_schema(conn)
+    conn.execute(
+        "INSERT INTO memberships (workspace_id, user_id, role) VALUES (?, ?, ?) "
+        "ON CONFLICT(workspace_id, user_id) DO UPDATE SET role = excluded.role",
+        (membership["workspace_id"], membership["user_id"], membership["role"]),
+    )
+    _audit(conn, membership["workspace_id"], actor_user_id, "membership.upsert", f"{membership['workspace_id']}/{membership['user_id']}", membership["role"])
+    conn.commit()
+
+
 def create_user(
     username: str,
     password: str,
@@ -194,6 +233,27 @@ def create_user(
         raise TenancyError("username must be 3-64 characters: letters, digits, _ . -")
     if email and "@" not in email:
         raise TenancyError("invalid email")
+    password_hash = hash_password(password)
+    if pg_writes.enabled():
+        try:
+            result = pg_writes.create_user(
+                username=username,
+                password_hash=password_hash,
+                email=email,
+                display_name=display_name or username,
+                is_admin=is_admin,
+            )
+            try:
+                conn = _connect(db_path)
+                try:
+                    _mirror_user(conn, result, password_hash)
+                finally:
+                    conn.close()
+            except Exception as mirror_exc:  # noqa: BLE001
+                LOGGER.warning("tenancy mirror failed for %s: %s", result["user_id"], mirror_exc)
+            return result
+        except Exception as exc:  # noqa: BLE001 - fall back to SQLite/outbox
+            LOGGER.warning("PG tenancy create_user failed; falling back to SQLite: %s", exc)
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -203,7 +263,7 @@ def create_user(
         conn.execute(
             "INSERT INTO users (user_id, username, email, display_name, password_hash, status, is_admin) "
             "VALUES (?, ?, ?, ?, ?, 'active', ?)",
-            (user_id, username, email, display_name or username, hash_password(password), int(is_admin)),
+            (user_id, username, email, display_name or username, password_hash, int(is_admin)),
         )
         _audit(conn, None, user_id, "user.create", user_id)
         conn.commit()
@@ -318,6 +378,23 @@ def create_workspace(
     name = (name or "").strip()
     if not name:
         raise TenancyError("workspace name is required")
+    pg_wid = workspace_id or f"ws_{uuid.uuid4().hex}"
+    if pg_writes.enabled():
+        try:
+            result = pg_writes.create_workspace(
+                name=name, owner_user_id=owner_user_id, workspace_id=pg_wid
+            )
+            try:
+                conn = _connect(db_path)
+                try:
+                    _mirror_workspace(conn, result)
+                finally:
+                    conn.close()
+            except Exception as mirror_exc:  # noqa: BLE001
+                LOGGER.warning("tenancy mirror failed for %s: %s", result["workspace_id"], mirror_exc)
+            return result
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning("PG tenancy create_workspace failed; falling back to SQLite: %s", exc)
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -351,6 +428,25 @@ def add_member(
 ) -> Membership:
     if role not in ROLE_SET:
         raise TenancyError(f"invalid role: {role}")
+    if pg_writes.enabled():
+        try:
+            result = pg_writes.add_member(
+                workspace_id=workspace_id,
+                user_id=user_id,
+                role=role,
+                actor_user_id=actor_user_id,
+            )
+            try:
+                conn = _connect(db_path)
+                try:
+                    _mirror_member(conn, result, actor_user_id)
+                finally:
+                    conn.close()
+            except Exception as mirror_exc:  # noqa: BLE001
+                LOGGER.warning("tenancy mirror failed for %s/%s: %s", workspace_id, user_id, mirror_exc)
+            return Membership(result["workspace_id"], result["user_id"], result["role"], result["status"])
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning("PG tenancy add_member failed; falling back to SQLite: %s", exc)
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -401,6 +497,11 @@ def list_members(
     *,
     db_path: str | os.PathLike[str] = DATABASE_PATH,
 ) -> list[dict[str, Any]]:
+    if pg_writes.enabled() or _pg_read_enabled():
+        try:
+            return pg_writes.list_members(workspace_id)
+        except Exception:  # noqa: BLE001 - fall back to SQLite mirror
+            pass
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
