@@ -32,6 +32,8 @@
 
 | 2026-11-01 | HybridSearch document-bias audit | paper recall 0.9000; unique papers@10 4.45; gold sentence 6/20; max hits/paper 5.5 | [HybridSearch bias audit](检索-HybridSearch偏置审计.md) |
 
+| 2026-11-01 | Document-bias / redundancy solutions | per-doc cap, MMR, sentence-level gold; ir_measures/ranx/BEIR | [Bias solutions](检索-文档级偏置方案调研.md) |
+
 ## Rules
 
 ```text
