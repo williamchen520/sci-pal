@@ -265,6 +265,7 @@ sci-pal/
 - [数据重建 schema v2（按源类型建模）](docs/数据重建-schema-v2-按源类型建模.md)
 - [P2 XML 重建](docs/数据重建-P2-XML重建.md)
 - [P3 PDF 重建](docs/数据重建-P3-PDF重建.md)
+- [P4 句子级 FTS](docs/数据重建-P4-句子级FTS.md)
 - [Windows 开发警示与跨平台规范](docs/Windows开发警示与跨平台规范.md)
 - [PostgreSQL 迁移基线](docs/PostgreSQL迁移-基线.md)
 - [PostgreSQL FTS 对齐实验](docs/PostgreSQL迁移-FTS对齐实验.md)
