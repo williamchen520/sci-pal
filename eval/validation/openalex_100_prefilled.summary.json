@@ -1,0 +1,15 @@
+{
+  "rows": 100,
+  "topic_match": {
+    "yes": 72,
+    "no": 12,
+    "partial": 16
+  },
+  "confidence": {
+    "medium": 35,
+    "low": 28,
+    "high": 37
+  },
+  "europepmc_hits": 61,
+  "out": "D:\\sciPal\\eval\\validation\\openalex_100_prefilled.csv"
+}

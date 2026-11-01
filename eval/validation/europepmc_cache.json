@@ -1,0 +1,1343 @@
+{
+  "10.1002/alz.70915": {
+    "ok": true,
+    "mesh": [
+      "Locus Coeruleus",
+      "Entorhinal Cortex",
+      "Neural Pathways",
+      "Humans",
+      "Alzheimer Disease",
+      "Glial Fibrillary Acidic Protein",
+      "tau Proteins",
+      "Diffusion Magnetic Resonance Imaging",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Biomarkers"
+    ],
+    "pmid": "41319161",
+    "url": "https://europepmc.org/article/MED/41319161"
+  },
+  "10.1002/alz70860_098974": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1002/alz70861_108352": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1002/alz70862_109777": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1002/alz70861_108349": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1002/alz70856_102894": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1212/WNL.0000000000214675": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Alzheimer Disease",
+      "Proteomics",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Diffusion Tensor Imaging",
+      "Amyloid beta-Peptides",
+      "White Matter",
+      "Biomarkers"
+    ],
+    "pmid": "41771010",
+    "url": "https://europepmc.org/article/MED/41771010"
+  },
+  "10.1002/alz.71204": {
+    "ok": true,
+    "mesh": [
+      "Brain",
+      "Humans",
+      "Alzheimer Disease",
+      "Disease Progression",
+      "tau Proteins",
+      "Positron-Emission Tomography",
+      "Magnetic Resonance Imaging",
+      "Electroencephalography",
+      "Risk Factors",
+      "Neuropsychological Tests",
+      "Aged",
+      "Aged, 80 and over",
+      "Female",
+      "Male",
+      "Amyloid beta-Peptides",
+      "Biomarkers",
+      "Cognitive Dysfunction"
+    ],
+    "pmid": "41949058",
+    "url": "https://europepmc.org/article/MED/41949058"
+  },
+  "10.1093/braincomms/fcag074": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "41978790",
+    "url": "https://europepmc.org/article/MED/41978790"
+  },
+  "10.14814/phy2.70880": {
+    "ok": true,
+    "mesh": [
+      "Brain",
+      "Humans",
+      "Magnetic Resonance Imaging",
+      "Exercise",
+      "Sex Characteristics",
+      "Cerebrovascular Circulation",
+      "Aged",
+      "Female",
+      "Male"
+    ],
+    "pmid": "41999060",
+    "url": "https://europepmc.org/article/MED/41999060"
+  },
+  "10.1212/WNL.0000000000214953": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Alzheimer Disease",
+      "Disease Progression",
+      "Biomarkers",
+      "Cognitive Dysfunction"
+    ],
+    "pmid": "42081782",
+    "url": "https://europepmc.org/article/MED/42081782"
+  },
+  "10.1016/j.tjpad.2026.100580": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Alzheimer Disease",
+      "Cohort Studies",
+      "Sex Factors",
+      "Patient Selection",
+      "Aged",
+      "Aged, 80 and over",
+      "Eligibility Determination",
+      "Female",
+      "Male",
+      "Clinical Trials as Topic",
+      "Cognitive Dysfunction"
+    ],
+    "pmid": "42102518",
+    "url": "https://europepmc.org/article/MED/42102518"
+  },
+  "10.3390/nu18122032": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Autoimmune Diseases",
+      "Dysbiosis",
+      "Gastrointestinal Microbiome",
+      "COVID-19",
+      "SARS-CoV-2",
+      "Virome"
+    ],
+    "pmid": "42356418",
+    "url": "https://europepmc.org/article/MED/42356418"
+  },
+  "10.1038/s43587-026-01143-w": {
+    "ok": true,
+    "mesh": [
+      "Brain",
+      "Humans",
+      "Alzheimer Disease",
+      "Disease Progression",
+      "tau Proteins",
+      "Positron-Emission Tomography",
+      "Longitudinal Studies",
+      "Aged",
+      "Aged, 80 and over",
+      "Female",
+      "Male"
+    ],
+    "pmid": "42449130",
+    "url": "https://europepmc.org/article/MED/42449130"
+  },
+  "10.1080/17582024.2026.2666332": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42159155",
+    "url": "https://europepmc.org/article/MED/42159155"
+  },
+  "10.1128/msphere.00797-25": {
+    "ok": true,
+    "mesh": [
+      "Skin",
+      "Animals",
+      "Humans",
+      "Staphylococcus aureus",
+      "Dermatitis, Atopic",
+      "Host Microbial Interactions",
+      "Skin Microbiome"
+    ],
+    "pmid": "42429381",
+    "url": "https://europepmc.org/article/MED/42429381"
+  },
+  "10.1093/brain/awaf443": {
+    "ok": true,
+    "mesh": [
+      "Brain",
+      "Humans",
+      "Atrophy",
+      "Magnetic Resonance Imaging",
+      "Cognition",
+      "Adult",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Frontotemporal Dementia",
+      "Prodromal Symptoms",
+      "Connectome"
+    ],
+    "pmid": "41277710",
+    "url": "https://europepmc.org/article/MED/41277710"
+  },
+  "10.2147/DMSO.S604906": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42553782",
+    "url": "https://europepmc.org/article/MED/42553782"
+  },
+  "10.1002/advs.76886": {
+    "ok": true,
+    "mesh": [
+      "Macrophages",
+      "Animals",
+      "Humans",
+      "Mice",
+      "Mycobacterium bovis",
+      "Prostatic Neoplasms",
+      "Cancer Vaccines",
+      "Immunotherapy",
+      "Male",
+      "HSP70 Heat-Shock Proteins",
+      "Tumor Microenvironment",
+      "Trained Immunity"
+    ],
+    "pmid": "42555294",
+    "url": "https://europepmc.org/article/MED/42555294"
+  },
+  "10.3389/fimmu.2026.1900845": {
+    "ok": true,
+    "mesh": [
+      "Animals",
+      "Humans",
+      "Anemia",
+      "Iron",
+      "Vitamin B 12",
+      "Vitamins",
+      "Immunomodulation",
+      "Dysbiosis",
+      "Gastrointestinal Microbiome"
+    ],
+    "pmid": "42564065",
+    "url": "https://europepmc.org/article/MED/42564065"
+  },
+  "10.1210/clinem/dgag124": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Insulin Resistance",
+      "Body Weight",
+      "Benzhydryl Compounds",
+      "Phenols",
+      "Insulin",
+      "Blood Glucose",
+      "Glucose Clamp Technique",
+      "Double-Blind Method",
+      "Adult",
+      "Female",
+      "Male",
+      "Young Adult",
+      "Bisphenol A Compounds"
+    ],
+    "pmid": "41866316",
+    "url": "https://europepmc.org/article/MED/41866316"
+  },
+  "10.3390/ijms27156873": {
+    "ok": true,
+    "mesh": [
+      "Saliva",
+      "Humans",
+      "Bacteria",
+      "Carcinoma, Squamous Cell",
+      "Mouth Neoplasms",
+      "Longitudinal Studies",
+      "Pilot Projects",
+      "Adult",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Metagenome",
+      "Metagenomics",
+      "Microbiota"
+    ],
+    "pmid": "42589527",
+    "url": "https://europepmc.org/article/MED/42589527"
+  },
+  "10.1080/19490976.2026.2719125": {
+    "ok": true,
+    "mesh": [
+      "Feces",
+      "Humans",
+      "Bacteria",
+      "Irritable Bowel Syndrome",
+      "RNA, Ribosomal, 16S",
+      "Treatment Outcome",
+      "Follow-Up Studies",
+      "Quality of Life",
+      "Adult",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Gastrointestinal Microbiome",
+      "Precision Medicine",
+      "FODMAP Diet"
+    ],
+    "pmid": "42623122",
+    "url": "https://europepmc.org/article/MED/42623122"
+  },
+  "10.1111/jdi.70428": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42635468",
+    "url": "https://europepmc.org/article/MED/42635468"
+  },
+  "10.3389/fcimb.2026.1887961": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Tuberculosis, Pulmonary",
+      "Diabetes Mellitus, Type 2",
+      "Antitubercular Agents",
+      "Adult",
+      "Middle Aged",
+      "China",
+      "Female",
+      "Male",
+      "Metabolomics",
+      "Metabolome"
+    ],
+    "pmid": "42643247",
+    "url": "https://europepmc.org/article/MED/42643247"
+  },
+  "10.3389/fnagi.2026.1944416": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42643443",
+    "url": "https://europepmc.org/article/MED/42643443"
+  },
+  "10.1158/1055-9965.EPI-25-1553": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1038/s12276-026-01810-3": {
+    "ok": true,
+    "mesh": [
+      "Gastrointestinal Tract",
+      "Liver",
+      "Animals",
+      "Humans",
+      "Inflammation",
+      "Inflammation Mediators",
+      "Signal Transduction",
+      "Gastrointestinal Microbiome",
+      "Intestinal Barrier Function"
+    ],
+    "pmid": "42562890",
+    "url": "https://europepmc.org/article/MED/42562890"
+  },
+  "10.1039/d6na00472e": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42713177",
+    "url": "https://europepmc.org/article/MED/42713177"
+  },
+  "10.1212/WNL.0000000000218494": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1039/d6md00379f": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42741423",
+    "url": "https://europepmc.org/article/MED/42741423"
+  },
+  "10.3389/fcimb.2026.1922369": {
+    "ok": true,
+    "mesh": [
+      "Nasal Cavity",
+      "Humans",
+      "Bacteria",
+      "DNA, Bacterial",
+      "DNA, Ribosomal",
+      "RNA, Ribosomal, 16S",
+      "Sequence Analysis, DNA",
+      "Mothers",
+      "Biodiversity",
+      "Phylogeny",
+      "Pregnancy",
+      "Infant, Newborn",
+      "Female",
+      "Microbiota"
+    ],
+    "pmid": "42745753",
+    "url": "https://europepmc.org/article/MED/42745753"
+  },
+  "10.1007/s11882-026-01294-1": {
+    "ok": true,
+    "mesh": [
+      "Eosinophils",
+      "Humans",
+      "Asthma",
+      "Nitric Oxide",
+      "Anti-Asthmatic Agents",
+      "Biomarkers",
+      "Multiomics"
+    ],
+    "pmid": "42747714",
+    "url": "https://europepmc.org/article/MED/42747714"
+  },
+  "10.1111/cob.70115": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Insulin Resistance",
+      "Obesity",
+      "Body Mass Index",
+      "Risk Factors",
+      "Phenotype",
+      "Female",
+      "Lipedema",
+      "Cardiometabolic Risk Factors"
+    ],
+    "pmid": "42767624",
+    "url": "https://europepmc.org/article/MED/42767624"
+  },
+  "10.3390/cancers18182989": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42794955",
+    "url": "https://europepmc.org/article/MED/42794955"
+  },
+  "10.3390/cells15181654": {
+    "ok": true,
+    "mesh": [
+      "Microglia",
+      "Animals",
+      "Humans",
+      "Signal Transduction",
+      "Phenotype",
+      "TOR Serine-Threonine Kinases",
+      "Mechanistic Target of Rapamycin Complex 1",
+      "Mechanistic Target of Rapamycin Complex 2"
+    ],
+    "pmid": "42782754",
+    "url": "https://europepmc.org/article/MED/42782754"
+  },
+  "10.3390/metabo16090687": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42783812",
+    "url": "https://europepmc.org/article/MED/42783812"
+  },
+  "10.3390/v18090955": {
+    "ok": true,
+    "mesh": [
+      "Animals",
+      "Humans",
+      "Prion Diseases",
+      "2',5'-Oligoadenylate Synthetase",
+      "Interferon Type I",
+      "Prions",
+      "Interferon Regulatory Factor-3",
+      "Immunity, Innate"
+    ],
+    "pmid": "42797788",
+    "url": "https://europepmc.org/article/MED/42797788"
+  },
+  "10.3389/fimmu.2026.1934057": {
+    "ok": true,
+    "mesh": [
+      "Animals",
+      "Humans",
+      "Mice",
+      "Autoimmune Diseases",
+      "Disease Models, Animal",
+      "Leucine",
+      "Risk Factors",
+      "Polymorphism, Single Nucleotide",
+      "Female",
+      "Genome-Wide Association Study",
+      "Mendelian Randomization Analysis"
+    ],
+    "pmid": "42798608",
+    "url": "https://europepmc.org/article/MED/42798608"
+  },
+  "10.1007/s00467-026-07362-y": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Treatment Outcome",
+      "Kidney Transplantation",
+      "Donor Selection",
+      "Registries",
+      "Graft Rejection",
+      "Graft Survival",
+      "Adolescent",
+      "Child",
+      "Child, Preschool",
+      "Infant",
+      "Tissue Donors",
+      "Female",
+      "Male",
+      "COVID-19",
+      "SARS-CoV-2"
+    ],
+    "pmid": "42250098",
+    "url": "https://europepmc.org/article/MED/42250098"
+  },
+  "10.3389/fphar.2026.1901815": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42799075",
+    "url": "https://europepmc.org/article/MED/42799075"
+  },
+  "10.3389/fnut.2026.1831803": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42799394",
+    "url": "https://europepmc.org/article/MED/42799394"
+  },
+  "10.18502/jthc.v21i1.21286": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42800934",
+    "url": "https://europepmc.org/article/MED/42800934"
+  },
+  "10.1016/j.crmeth.2026.101537": {
+    "ok": true,
+    "mesh": [
+      "Mitochondria",
+      "Animals",
+      "Humans",
+      "Adenosine Triphosphate",
+      "Flow Cytometry",
+      "Energy Metabolism",
+      "Glycolysis",
+      "Phenotype",
+      "Single-Cell Analysis"
+    ],
+    "pmid": "42532047",
+    "url": "https://europepmc.org/article/MED/42532047"
+  },
+  "10.1186/s13058-026-02387-5": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Breast Neoplasms",
+      "Ovarian Neoplasms",
+      "Genetic Predisposition to Disease",
+      "BRCA1 Protein",
+      "BRCA2 Protein",
+      "DNA, Ribosomal",
+      "Case-Control Studies",
+      "DNA Methylation",
+      "Germ-Line Mutation",
+      "Adult",
+      "Middle Aged",
+      "Female",
+      "Promoter Regions, Genetic",
+      "DNA Copy Number Variations"
+    ],
+    "pmid": "42791527",
+    "url": "https://europepmc.org/article/MED/42791527"
+  },
+  "10.1016/j.pld.2026.05.008": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42801221",
+    "url": "https://europepmc.org/article/MED/42801221"
+  },
+  "10.2147/IJN.S639907": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.2147/IJGM.S597398": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.3389/fimmu.2026.1897468": {
+    "ok": true,
+    "mesh": [
+      "Dendritic Cells",
+      "Animals",
+      "Mice, Inbred C57BL",
+      "Humans",
+      "Mice",
+      "Imidazoles",
+      "Ovalbumin",
+      "Immune Tolerance",
+      "Female",
+      "T-Lymphocytes, Regulatory",
+      "Immunomodulation",
+      "Toll-Like Receptor Agonists"
+    ],
+    "pmid": "42807017",
+    "url": "https://europepmc.org/article/MED/42807017"
+  },
+  "10.3389/fimmu.2026.1947786": {
+    "ok": true,
+    "mesh": [
+      "Dendritic Cells",
+      "Cell Line, Tumor",
+      "Animals",
+      "Mice, Inbred C57BL",
+      "Mice",
+      "Astragalus Plant",
+      "Melanoma, Experimental",
+      "Polysaccharides",
+      "NF-kappa B",
+      "Signal Transduction",
+      "STAT1 Transcription Factor",
+      "Toll-Like Receptors",
+      "Janus Kinases",
+      "Tumor Microenvironment",
+      "Programmed Cell Death 1 Receptor",
+      "Immune Checkpoint Inhibitors"
+    ],
+    "pmid": "42807196",
+    "url": "https://europepmc.org/article/MED/42807196"
+  },
+  "10.1186/s12916-026-05032-2": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Carcinoma, Hepatocellular",
+      "Liver Neoplasms",
+      "alpha-Fetoproteins",
+      "Sensitivity and Specificity",
+      "Prospective Studies",
+      "DNA Methylation",
+      "Mutation",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Early Detection of Cancer",
+      "Biomarkers, Tumor",
+      "Cell-Free Nucleic Acids",
+      "Liquid Biopsy",
+      "Multiomics"
+    ],
+    "pmid": "42410425",
+    "url": "https://europepmc.org/article/MED/42410425"
+  },
+  "10.1128/msphere.00366-26": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Symbiosis",
+      "New Jersey",
+      "Host-Pathogen Interactions",
+      "Microbiota"
+    ],
+    "pmid": "42599078",
+    "url": "https://europepmc.org/article/MED/42599078"
+  },
+  "10.1002/mco2.70949": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42819416",
+    "url": "https://europepmc.org/article/MED/42819416"
+  },
+  "10.3389/fimmu.2026.1935435": {
+    "ok": true,
+    "mesh": [
+      "Killer Cells, Natural",
+      "Animals",
+      "Humans",
+      "Neoplasms",
+      "Energy Metabolism",
+      "Immunity, Innate",
+      "Tumor Microenvironment",
+      "Metabolic Reprogramming"
+    ],
+    "pmid": "42820105",
+    "url": "https://europepmc.org/article/MED/42820105"
+  },
+  "10.1371/journal.ppat.1014645": {
+    "ok": true,
+    "mesh": [
+      "Cell Line",
+      "Animals",
+      "Humans",
+      "Interferon-beta",
+      "Viral Nonstructural Proteins",
+      "Virus Replication",
+      "Interferon Regulatory Factor-3",
+      "Immunity, Innate",
+      "Picornavirales"
+    ],
+    "pmid": "42784634",
+    "url": "https://europepmc.org/article/MED/42784634"
+  },
+  "10.1172/JCI205415": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1002/cmdc.70494": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "HIV-1",
+      "Thiazoles",
+      "Reverse Transcriptase Inhibitors",
+      "Anti-HIV Agents",
+      "Structure-Activity Relationship",
+      "Drug Design",
+      "Chemistry, Pharmaceutical",
+      "Thiazolidines",
+      "HIV Reverse Transcriptase"
+    ],
+    "pmid": "42816789",
+    "url": "https://europepmc.org/article/MED/42816789"
+  },
+  "10.3389/fimmu.2026.1935261": {
+    "ok": true,
+    "mesh": [
+      "Intestinal Mucosa",
+      "Neutrophils",
+      "Animals",
+      "Humans",
+      "Inflammatory Bowel Diseases",
+      "Extracellular Traps",
+      "Biomarkers",
+      "Intestinal Barrier Function"
+    ],
+    "pmid": "42824291",
+    "url": "https://europepmc.org/article/MED/42824291"
+  },
+  "10.1186/s11671-026-04944-5": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42814260",
+    "url": "https://europepmc.org/article/MED/42814260"
+  },
+  "10.1038/s41467-026-77149-0": {
+    "ok": true,
+    "mesh": [
+      "Cell Line, Tumor",
+      "Cell Nucleus",
+      "Animals",
+      "Humans",
+      "Mice",
+      "Neoplasm Metastasis",
+      "Ketoglutaric Acids",
+      "Glutamate Dehydrogenase",
+      "Cell Movement",
+      "Protein Binding",
+      "Snail Family Transcription Factors"
+    ],
+    "pmid": "42816486",
+    "url": "https://europepmc.org/article/MED/42816486"
+  },
+  "10.1111/rda.70269": {
+    "ok": true,
+    "mesh": [
+      "Animals",
+      "Horses",
+      "Cryoprotective Agents",
+      "Cryopreservation",
+      "Embryo, Mammalian",
+      "Livestock",
+      "Vitrification"
+    ],
+    "pmid": "42817019",
+    "url": "https://europepmc.org/article/MED/42817019"
+  },
+  "10.5114/ait/226448": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Cytomegalovirus",
+      "Herpesvirus 6, Human",
+      "Cytomegalovirus Infections",
+      "Roseolovirus Infections",
+      "Critical Illness",
+      "Virus Activation",
+      "Immunocompetence",
+      "Adult",
+      "Aged",
+      "Middle Aged",
+      "Intensive Care Units",
+      "Female",
+      "Male"
+    ],
+    "pmid": "42638594",
+    "url": "https://europepmc.org/article/MED/42638594"
+  },
+  "10.5114/ait/222713": {
+    "ok": true,
+    "mesh": [
+      "Lymphocytes",
+      "Mitochondria",
+      "Humans",
+      "Sepsis",
+      "Inflammation",
+      "Electron Transport Complex I",
+      "Lymphocyte Count",
+      "Cohort Studies",
+      "Prospective Studies",
+      "Immune Tolerance",
+      "Aged",
+      "Middle Aged",
+      "Intensive Care Units",
+      "Female",
+      "Male"
+    ],
+    "pmid": "42638597",
+    "url": "https://europepmc.org/article/MED/42638597"
+  },
+  "10.1002/jpr3.70233": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1186/s12880-026-02543-5": {
+    "ok": true,
+    "mesh": [
+      "Adipose Tissue",
+      "Humans",
+      "Carcinoma, Hepatocellular",
+      "Liver Neoplasms",
+      "Magnetic Resonance Imaging",
+      "Retrospective Studies",
+      "Adult",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Neoplasm Grading"
+    ],
+    "pmid": "42393558",
+    "url": "https://europepmc.org/article/MED/42393558"
+  },
+  "10.1186/s12981-026-00907-z": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "HIV Infections",
+      "Anti-HIV Agents",
+      "Administration, Oral",
+      "Health Knowledge, Attitudes, Practice",
+      "Qualitative Research",
+      "Adolescent",
+      "Uganda",
+      "Female",
+      "Medication Adherence",
+      "Young Adult",
+      "Pre-Exposure Prophylaxis"
+    ],
+    "pmid": "42415148",
+    "url": "https://europepmc.org/article/MED/42415148"
+  },
+  "10.1002/ctm2.70850": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42820786",
+    "url": "https://europepmc.org/article/MED/42820786"
+  },
+  "10.1080/16549716.2026.2734701": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Diabetes, Gestational",
+      "Prevalence",
+      "Risk Factors",
+      "Health Knowledge, Attitudes, Practice",
+      "Pregnancy",
+      "Vietnam",
+      "Female",
+      "Emigrants and Immigrants",
+      "Evidence Gaps",
+      "Southeast Asian People"
+    ],
+    "pmid": "42802976",
+    "url": "https://europepmc.org/article/MED/42802976"
+  },
+  "10.1371/journal.pdig.0001753": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42821592",
+    "url": "https://europepmc.org/article/MED/42821592"
+  },
+  "10.1371/journal.pone.0359659": {
+    "ok": true,
+    "mesh": [
+      "Muscle, Skeletal",
+      "Animals",
+      "Mice",
+      "Muscular Atrophy",
+      "Transcription Factors",
+      "Gene Expression Profiling",
+      "Hindlimb Suspension",
+      "Gene Expression Regulation",
+      "Aging",
+      "Space Flight",
+      "Male",
+      "Sarcopenia",
+      "Transcriptome"
+    ],
+    "pmid": "42821571",
+    "url": "https://europepmc.org/article/MED/42821571"
+  },
+  "10.3389/fneur.2026.1841730": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Pneumonia",
+      "Prospective Studies",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Stroke",
+      "Machine Learning",
+      "Ischemic Stroke",
+      "Random Forest",
+      "Boosting Machine Learning Algorithms",
+      "Ensemble Learning",
+      "Predictive Learning Models",
+      "Prediction Algorithms"
+    ],
+    "pmid": "42827455",
+    "url": "https://europepmc.org/article/MED/42827455"
+  },
+  "10.3389/fonc.2026.1896160": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42827478",
+    "url": "https://europepmc.org/article/MED/42827478"
+  },
+  "10.3389/fimmu.2026.1894178": {
+    "ok": true,
+    "mesh": [
+      "Cell Line, Tumor",
+      "Animals",
+      "Humans",
+      "Mice",
+      "Vaccinia virus",
+      "Carcinoma, Hepatocellular",
+      "Liver Neoplasms",
+      "Antigens, Neoplasm",
+      "Immunotherapy",
+      "Xenograft Model Antitumor Assays",
+      "Oncolytic Virotherapy",
+      "Oncolytic Viruses",
+      "Glypicans",
+      "Hep G2 Cells"
+    ],
+    "pmid": "42827492",
+    "url": "https://europepmc.org/article/MED/42827492"
+  },
+  "10.1245/s10434-026-20128-y": {
+    "ok": true,
+    "mesh": [
+      "Lymph Nodes",
+      "Humans",
+      "Breast Neoplasms",
+      "Lymphatic Metastasis",
+      "Antineoplastic Combined Chemotherapy Protocols",
+      "Neoplasm Staging",
+      "Prognosis",
+      "Neoadjuvant Therapy",
+      "Survival Rate",
+      "Retrospective Studies",
+      "Follow-Up Studies",
+      "Adult",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Pathologic Complete Response"
+    ],
+    "pmid": "42461556",
+    "url": "https://europepmc.org/article/MED/42461556"
+  },
+  "10.3389/fmicb.2026.1943856": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42827522",
+    "url": "https://europepmc.org/article/MED/42827522"
+  },
+  "10.1007/s11523-026-01241-0": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Breast Neoplasms",
+      "Neoplasm Recurrence, Local",
+      "Risk Factors",
+      "Female",
+      "Erb-b2 Receptor Tyrosine Kinases"
+    ],
+    "pmid": "42669744",
+    "url": "https://europepmc.org/article/MED/42669744"
+  },
+  "10.3389/fimmu.2026.1921818": {
+    "ok": true,
+    "mesh": [
+      "T-Lymphocytes, Cytotoxic",
+      "Humans",
+      "Dermatomyositis",
+      "Transcription Factors",
+      "Autoantibodies",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "T-Lymphocytes, Regulatory"
+    ],
+    "pmid": "42827555",
+    "url": "https://europepmc.org/article/MED/42827555"
+  },
+  "10.1111/cge.70224": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Hearing Loss",
+      "Genetic Predisposition to Disease",
+      "Adolescent",
+      "Child",
+      "Child, Preschool",
+      "Infant",
+      "Infant, Newborn",
+      "Mexico",
+      "Texas",
+      "Female",
+      "Male",
+      "Genetic Testing",
+      "Hispanic or Latino"
+    ],
+    "pmid": "42644240",
+    "url": "https://europepmc.org/article/MED/42644240"
+  },
+  "10.1111/cge.70227": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Genetic Predisposition to Disease",
+      "Phenotype",
+      "Mutation",
+      "Infant",
+      "Infant, Newborn",
+      "Female",
+      "Male",
+      "Matrix Metalloproteinases, Secreted",
+      "Growth Differentiation Factor 1",
+      "Axonemal Dyneins",
+      "Genetic Association Studies",
+      "High-Throughput Nucleotide Sequencing",
+      "Heterotaxy Syndrome",
+      "Whole Genome Sequencing",
+      "Exome Sequencing"
+    ],
+    "pmid": "42630107",
+    "url": "https://europepmc.org/article/MED/42630107"
+  },
+  "10.1007/s44313-026-00163-0": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42821196",
+    "url": "https://europepmc.org/article/MED/42821196"
+  },
+  "10.3389/fcvm.2026.1860391": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42827608",
+    "url": "https://europepmc.org/article/MED/42827608"
+  },
+  "10.1158/1535-7163.MCT-26-0088": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1111/avj.70129": {
+    "ok": true,
+    "mesh": [
+      "Animals",
+      "Animals, Wild",
+      "Turtles",
+      "Bacteria",
+      "Zoonoses",
+      "Prevalence",
+      "Fresh Water",
+      "Australia",
+      "Bacterial Zoonoses"
+    ],
+    "pmid": "42562019",
+    "url": "https://europepmc.org/article/MED/42562019"
+  },
+  "10.1016/j.jbc.2026.113511": {
+    "ok": true,
+    "mesh": [
+      "Lysosomes",
+      "Fibroblasts",
+      "Animals",
+      "Humans",
+      "Mice",
+      "Mucolipidoses",
+      "Mannosephosphates",
+      "Receptor, IGF Type 2",
+      "Vesicular Transport Proteins",
+      "Niemann-Pick Disease, Type C",
+      "Gene Knockout Techniques"
+    ],
+    "pmid": "42665096",
+    "url": "https://europepmc.org/article/MED/42665096"
+  },
+  "10.1111/iwj.71055": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Pyoderma Gangrenosum",
+      "Polyesters",
+      "Treatment Outcome",
+      "Wound Healing",
+      "Adult",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male"
+    ],
+    "pmid": "42823925",
+    "url": "https://europepmc.org/article/MED/42823925"
+  },
+  "10.3389/fcimb.2026.1939337": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Hepatitis Viruses",
+      "Hepatitis, Viral, Human",
+      "Antiviral Agents"
+    ],
+    "pmid": "42828159",
+    "url": "https://europepmc.org/article/MED/42828159"
+  },
+  "10.1016/j.bbrep.2026.102805": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42828180",
+    "url": "https://europepmc.org/article/MED/42828180"
+  },
+  "10.1186/s12964-026-03054-0": {
+    "ok": true,
+    "mesh": [
+      "Kidney",
+      "Epithelial Cells",
+      "Animals",
+      "Humans",
+      "Mice",
+      "Cysts",
+      "Polycystic Kidney, Autosomal Dominant",
+      "Disease Models, Animal",
+      "Cell Proliferation",
+      "Autophagy",
+      "Male",
+      "Hypoxia-Inducible Factor 1, alpha Subunit",
+      "Myofibroblasts",
+      "Autophagy-Related Protein 5"
+    ],
+    "pmid": "42426887",
+    "url": "https://europepmc.org/article/MED/42426887"
+  },
+  "10.1186/s13028-026-00880-7": {
+    "ok": true,
+    "mesh": [
+      "Milk",
+      "Animals",
+      "Goats",
+      "Mastitis",
+      "Goat Diseases",
+      "Inflammation",
+      "Cell Count",
+      "Lactation",
+      "Female"
+    ],
+    "pmid": "42823734",
+    "url": "https://europepmc.org/article/MED/42823734"
+  },
+  "10.1186/s12885-026-16224-7": {
+    "ok": true,
+    "mesh": [
+      "Extremities",
+      "Humans",
+      "Sarcoma",
+      "Retrospective Studies",
+      "Socioeconomic Factors",
+      "Adult",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Kaplan-Meier Estimate",
+      "Neighborhood Characteristics",
+      "Low Socioeconomic Status",
+      "Socioeconomic Disparities in Health"
+    ],
+    "pmid": "42426696",
+    "url": "https://europepmc.org/article/MED/42426696"
+  },
+  "10.1186/s12920-026-02412-8": {
+    "ok": true,
+    "mesh": [
+      "Cell Line, Tumor",
+      "Animals",
+      "Humans",
+      "Mice",
+      "Lung Neoplasms",
+      "Acetylcholine",
+      "Acetylcholinesterase",
+      "Cholinesterase Inhibitors",
+      "Antineoplastic Agents",
+      "Apoptosis",
+      "Cell Proliferation",
+      "Adenocarcinoma of Lung"
+    ],
+    "pmid": "42399905",
+    "url": "https://europepmc.org/article/MED/42399905"
+  },
+  "10.1186/s12879-026-13977-1": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Hemorrhagic Fever, Ebola",
+      "Public Health",
+      "Disease Outbreaks",
+      "Democratic Republic of the Congo",
+      "Ebolavirus",
+      "Global Health",
+      "Evidence Gaps"
+    ],
+    "pmid": "42426656",
+    "url": "https://europepmc.org/article/MED/42426656"
+  },
+  "10.3389/fmed.2026.1840269": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42851305",
+    "url": "https://europepmc.org/article/MED/42851305"
+  },
+  "10.1590/1980-5764-DN-2025-0467": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1016/j.nbd.2026.107605": {
+    "ok": true,
+    "mesh": [
+      "Humans",
+      "Alzheimer Disease",
+      "Peptide Fragments",
+      "tau Proteins",
+      "Heterozygote",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male",
+      "Matrix Metalloproteinase 9",
+      "Apolipoprotein E4",
+      "Chemokine CX3CL1",
+      "Amyloid beta-Peptides",
+      "Biomarkers"
+    ],
+    "pmid": "42732855",
+    "url": "https://europepmc.org/article/MED/42732855"
+  },
+  "10.1002/prca.70060": {
+    "ok": true,
+    "mesh": [
+      "Muscle, Skeletal",
+      "Humans",
+      "Diabetic Neuropathies",
+      "Diabetes Mellitus, Type 2",
+      "Proteome",
+      "Proteomics",
+      "Phenotype",
+      "Aged",
+      "Middle Aged",
+      "Female",
+      "Male"
+    ],
+    "pmid": "42894376",
+    "url": "https://europepmc.org/article/MED/42894376"
+  },
+  "10.2147/OTT.S641857": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "",
+    "url": ""
+  },
+  "10.1186/s12951-026-04826-z": {
+    "ok": true,
+    "mesh": [
+      "Animals",
+      "Humans",
+      "Bacteria",
+      "Metabolic Diseases",
+      "Extracellular Vesicles",
+      "Gastrointestinal Microbiome",
+      "Intestinal Barrier Function"
+    ],
+    "pmid": "42908011",
+    "url": "https://europepmc.org/article/MED/42908011"
+  },
+  "10.1016/j.bioactmat.2026.10.018": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42927026",
+    "url": "https://europepmc.org/article/MED/42927026"
+  },
+  "10.1016/j.psj.2026.107811": {
+    "ok": true,
+    "mesh": [],
+    "pmid": "42893657",
+    "url": "https://europepmc.org/article/MED/42893657"
+  }
+}
