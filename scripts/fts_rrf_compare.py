@@ -73,7 +73,9 @@ def main() -> int:
     parser.add_argument("--per-source", type=int, default=5)
     parser.add_argument("--candidate-counts", default="20,50")
     parser.add_argument("--out", default="")
-    parser.add_argument("--rerank-timeout", type=float, default=60.0)
+    parser.add_argument("--rerank-timeout", type=float, default=15.0)
+    parser.add_argument("--startup-timeout", type=float, default=60.0)
+    parser.add_argument("--max-failures", type=int, default=20)
     args = parser.parse_args()
     if not args.pg_dsn:
         raise SystemExit("--pg-dsn is required")
@@ -81,13 +83,16 @@ def main() -> int:
         raise SystemExit("refusing to read a non-scipal_v2 database")
 
     counts = [int(x) for x in args.candidate_counts.split(",") if x.strip()]
-    reranker = RerankWorker(timeout=max(60.0, args.rerank_timeout))
+    reranker = RerankWorker(timeout=args.startup_timeout)
     sentence_fts = SentenceFTS(args.pg_dsn)
     cases = load_cases(Path(args.cases), args.per_source)
     rows = []
     failures = []
 
+    stopped_early = False
     for case in cases:
+        if stopped_early:
+            break
         gold = set(case.get("gold_paper_ids") or [])
         terms = terms_for(case["query"])
         if not gold:
@@ -116,8 +121,17 @@ def main() -> int:
                     batch_size=8,
                     timeout=args.rerank_timeout,
                 )
-            except TimeoutError as exc:
-                failures.append({"case_id": case["case_id"], "error": str(exc)})
+            except (TimeoutError, RuntimeError) as exc:
+                failures.append(
+                    {
+                        "case_id": case["case_id"],
+                        "candidates": count,
+                        "error": str(exc)[:300],
+                    }
+                )
+                if len(failures) >= args.max_failures:
+                    stopped_early = True
+                    break
                 continue
             for candidate, score in zip(candidates, scores):
                 candidate["rerank_score"] = score
@@ -147,6 +161,8 @@ def main() -> int:
         "cases": len(cases),
         "candidate_counts": counts,
         "failures": failures,
+        "failure_count": len(failures),
+        "partial": bool(failures) or stopped_early,
         "summary": [summarize(rows, name) for name in names],
         "rows": rows,
     }
