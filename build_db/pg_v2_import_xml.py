@@ -367,6 +367,13 @@ def main() -> int:
                 failures.append({"file": path.name, "error": str(exc)[:300]})
         if args.dry_run:
             conn.rollback()
+    with psycopg.connect(args.pg_dsn) as conn:
+        conn.execute(
+            "UPDATE papers SET fulltext_status='fulltext' "
+            "WHERE fulltext_status='unknown' AND EXISTS "
+            "(SELECT 1 FROM sentences s WHERE s.paper_id=papers.paper_id)"
+        )
+        conn.commit()
     print(
         json.dumps(
             {"totals": totals, "attempted": len(files), "failures": failures[:10], "failure_count": len(failures)},

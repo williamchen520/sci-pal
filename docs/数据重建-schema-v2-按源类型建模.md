@@ -90,6 +90,7 @@ CREATE TABLE papers (
     doi             TEXT,
     abstract        TEXT,
     parse_status    TEXT,
+    fulltext_status TEXT NOT NULL DEFAULT 'unknown', -- fulltext/metadata_only
     source_flags    JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()

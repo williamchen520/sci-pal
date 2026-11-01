@@ -137,10 +137,32 @@ page/bbox 全 NULL 且标注 xml-unavailable
 
 ---
 
-## 6. 已知缺口
+## 6. 398 篇只有元数据
+
+这 398 篇没有全文源文件，不能重建结构。
+
+处理：
 
 ```text
-1. 398 篇 XML 源文件缺失
+papers 表保留
+fulltext_status = 'metadata_only'
+source_flags = {"fulltext": "missing", "has_xml": false}
+不创建 documents / source_nodes / sections / sentences
+不伪造全文
+```
+
+查询：
+
+```sql
+SELECT paper_id, title, fulltext_status
+FROM papers
+WHERE fulltext_status = 'metadata_only';
+```
+
+## 7. 已知缺口
+
+```text
+1. 398 篇只有元数据，没有全文
 2. 部分 fig/table 在 <sec> 外，placement_source=unresolved
 3. XML 无 PDF 坐标，coordinate_source=xml-unavailable
 ```
