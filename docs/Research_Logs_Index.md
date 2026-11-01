@@ -24,6 +24,8 @@
 
 | 2026-11-01 | Existing HybridSearch 20-query baseline | .7000/.6417/.6565; worse than paragraph FTS 1.0000/.8806/.9097; not switched | [HybridSearch baseline](检索评估-HybridSearch-20query.md) |
 
+| 2026-11-01 | HybridSearch recall loss | vector hits had top-level `paper_id=None`; fixed; q009 gold now rank 2; 20-query rerun pending | [HybridSearch paper_id fix](检索-修复HybridSearch丢失paper_id.md) |
+
 ## Rules
 
 ```text

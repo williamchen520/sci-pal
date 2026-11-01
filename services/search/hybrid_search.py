@@ -195,6 +195,9 @@ class HybridSearch:
                     continue
             hits.append({
                 "para_id": results["ids"][0][i],
+                "paper_id": meta.get("paper_id"),
+                "section_l1": meta.get("section_l1"),
+                "section_l2": meta.get("section_l2"),
                 "text": text,
                 "metadata": meta,
                 "score": 1.0 - results["distances"][0][i],
