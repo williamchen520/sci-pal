@@ -206,7 +206,7 @@ sci-pal/
 ├─ eval/                     retrieval, QA, and plugin benchmark scripts
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     architecture, data, and design documents
-├─ tests/                    747 tests
+├─ tests/                    750 tests
 ├─ documents/                PDFs
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db, Chroma
@@ -235,7 +235,7 @@ The source of truth is `routes/` and `api_server.py`. See [API Reference](docs/e
 ## Tests
 
 ```text
-747 tests, ~65s
+750 tests, ~65s
 ```
 
 Coverage includes retrieval, routing, guard, structure, JATS import, watch, domain packs, claim pilot, multi-user isolation, projects/experiments/runs, and plugin ports.
@@ -261,6 +261,7 @@ Chinese:
 
 - [架构与路由图](docs/架构与路由图.md)
 - [PDF 三引擎联合解析](docs/PDF解析-三引擎联合.md)
+- [P4 sentence-level FTS](docs/数据重建-P4-句子级FTS.md)
 - [文献源与 JATS 导入](docs/文献源-JATS与外部源.md)
 - [多用户与数据隔离计划](docs/工作计划-多用户与数据隔离.md)
 - [去学科化与领域包分发计划](docs/工作计划-去学科化与领域包分发.md)
