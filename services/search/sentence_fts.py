@@ -52,6 +52,7 @@ class SentenceFTS:
         top_k: int = 20,
         source_type: Optional[str] = None,
         match: str = "any",
+        term_limit: int = 12,
     ) -> List[SentenceHit]:
         query = (query or "").strip()
         if not query:
@@ -64,7 +65,7 @@ class SentenceFTS:
         if not terms:
             return []
         operator = " | " if match == "any" else " & "
-        ts_query = operator.join(terms[:12])
+        ts_query = operator.join(terms[: max(1, min(term_limit, 12))])
         where = "s.search_vector @@ q.query"
         params: list = [ts_query]
         if source_type:
@@ -83,6 +84,49 @@ class SentenceFTS:
             CROSS JOIN q
             WHERE {where}
             ORDER BY rank DESC, s.sentence_id
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [SentenceHit(**row) for row in rows]
+
+    def recall(
+        self,
+        query: str,
+        *,
+        top_k: int = 200,
+        source_type: Optional[str] = None,
+    ) -> List[SentenceHit]:
+        """Cheap GIN recall without database-side ranking."""
+        query = (query or "").strip()
+        if not query:
+            return []
+        if source_type not in (None, "xml", "pdf"):
+            raise ValueError("source_type must be xml, pdf or None")
+        terms = _extract_keywords(query)
+        if not terms:
+            return []
+        ts_query = " | ".join(terms[:12])
+        where = "s.search_vector @@ q.query"
+        params: list = [ts_query]
+        if source_type:
+            where += " AND s.source_type = %s"
+            params.append(source_type)
+        params.append(top_k)
+        sql = f"""
+            WITH q AS (SELECT to_tsquery('english', %s) AS query)
+            SELECT s.sentence_id, s.paper_id, s.para_id, s.section_id,
+                   s.text, s.source_type, s.page, s.bbox,
+                   sn.source_path, p.title, 0.0::float8 AS rank
+            FROM sentences s
+            JOIN papers p ON p.paper_id = s.paper_id
+            LEFT JOIN source_nodes sn ON sn.node_id = s.source_node_id
+            CROSS JOIN q
+            WHERE {where}
             LIMIT %s
         """
         pg, close = self._connection()
