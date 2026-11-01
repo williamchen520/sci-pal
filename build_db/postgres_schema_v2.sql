@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS papers (
     abstract        TEXT,
     parse_status    TEXT,
     source_flags    JSONB NOT NULL DEFAULT '{}'::jsonb,
+    fulltext_status TEXT NOT NULL DEFAULT 'unknown',
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
