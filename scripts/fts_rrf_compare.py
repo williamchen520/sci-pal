@@ -7,8 +7,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -88,7 +92,7 @@ def main() -> int:
         if not gold:
             continue
         paragraph_order = sqlite_paper_order(Path(args.sqlite_db), terms)
-        hits = sentence_fts.search(case["query"], top_k=5000)
+        hits = sentence_fts.search(case["query"], top_k=1000)
         rows.append(
             {
                 "case_id": case["case_id"],
@@ -104,7 +108,7 @@ def main() -> int:
             texts = load_paragraph_texts(args.pg_dsn, [c["para_id"] for c in candidates])
             for candidate in candidates:
                 candidate["text"] = (texts.get(candidate["para_id"]) or candidate["text"])[:1500]
-            reranked = reranker.rerank(case["query"], candidates, top_k=len(candidates))
+            reranked = reranker.rerank(case["query"], candidates, top_k=len(candidates), batch_size=8)
             sentence_order = _dedupe(item["paper_id"] for item in reranked)
             fused_order = rrf([paragraph_order, sentence_order])
             for system, ranked in (
