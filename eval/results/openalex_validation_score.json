@@ -1,0 +1,13 @@
+{
+  "rows": 100,
+  "filled": 0,
+  "completed_rate": 0.0,
+  "domain_agreement": null,
+  "topic_yes": 0,
+  "topic_partial": 0,
+  "topic_no": 0,
+  "topic_exact_rate": null,
+  "topic_partial_rate": null,
+  "topic_wrong_rate": null,
+  "by_domain": {}
+}
