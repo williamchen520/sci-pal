@@ -44,6 +44,8 @@
 
 | 2026-11-01 | Domain coverage / routing discussion | coverage ceiling vs hubness; domain boost + topic penalty; audit required first | [Domain discussion](讨论-领域覆盖与领域感知路由.md) |
 
+| 2026-11-01 | Domain coverage audit | domain labels missing; journals 940, Gini .588; hub_paper_rate .237; lexical proxy weak | [Domain coverage audit](审计-领域覆盖.md) |
+
 ## Rules
 
 ```text
