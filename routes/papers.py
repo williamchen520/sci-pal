@@ -40,6 +40,11 @@ def build_papers_blueprint(
         pg_dsn=os.environ.get("SCIPAL_PG_DSN", ""),
         canary_percent=int(os.environ.get("SCIPAL_READ_CANARY_PERCENT", "0") or 0),
     )
+    detail_router = ReadRouter(
+        db_path,
+        pg_dsn=os.environ.get("SCIPAL_PG_DSN", ""),
+        canary_percent=int(os.environ.get("SCIPAL_READ_DETAIL_PERCENT", "0") or 0),
+    )
 
     @bp.get("/papers")
     def list_papers():
@@ -83,6 +88,21 @@ def build_papers_blueprint(
         workspace_id = resolve_workspace(db_path=db_path)
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 401
+        canary_key = (
+            request.headers.get("X-Request-ID")
+            or request.args.get("canary_key")
+            or secrets.token_hex(8)
+        )
+        if detail_router.should_use_pg(canary_key):
+            result = detail_router.paper_detail(
+                paper_id, workspace_id, canary_key=canary_key
+            )
+            if result.backend == "postgres" and result.payload:
+                response = jsonify(result.payload)
+                response.headers["X-SciPal-Read-Backend"] = "postgres"
+                return response
+            if result.error:
+                _log(f"paper detail canary fell back to SQLite: {result.error}")
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
@@ -130,7 +150,7 @@ def build_papers_blueprint(
         finally:
             conn.close()
 
-        return jsonify(
+        response = jsonify(
             {
                 "paper": dict(paper),
                 "cites": [dict(row) for row in cites],
@@ -138,6 +158,8 @@ def build_papers_blueprint(
                 "similar": [dict(row) for row in similar],
             }
         )
+        response.headers["X-SciPal-Read-Backend"] = "sqlite"
+        return response
 
     @bp.get("/papers/<paper_id>/graph")
     def paper_graph(paper_id):

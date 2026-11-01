@@ -77,5 +77,41 @@ class ReadRouterTests(unittest.TestCase):
         self.assertIn("down", result.error)
 
 
+class DetailFakePG:
+    def __init__(self):
+        self.calls = 0
+
+    def execute(self, sql, params=None):
+        self.calls += 1
+        return self
+
+    def fetchone(self):
+        return {"paper_id": "p1", "title": "PG detail", "workspace_id": "ws"}
+
+    def fetchall(self):
+        return [{"paper_id": "p2", "title": "Neighbor", "year": 2024, "confidence": 0.9}]
+
+    def close(self):
+        pass
+
+
+class ReadRouterDetailTests(unittest.TestCase):
+    def test_detail_uses_postgres(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "t.db"
+            conn = sqlite3.connect(db)
+            conn.execute("CREATE TABLE papers (paper_id TEXT PRIMARY KEY, title TEXT)")
+            conn.commit()
+            conn.close()
+            router = ReadRouter(
+                db, pg_dsn="x", canary_percent=100,
+                connector=lambda: DetailFakePG(),
+            )
+            result = router.paper_detail("p1", "ws", canary_key="k")
+            self.assertEqual(result.backend, "postgres")
+            self.assertEqual(result.payload["paper"]["paper_id"], "p1")
+            self.assertEqual(len(result.payload["cites"]), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

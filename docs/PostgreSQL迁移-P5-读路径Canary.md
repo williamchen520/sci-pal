@@ -37,11 +37,18 @@ GET /api/papers
 未切：
 
 ```text
-GET /api/papers/<id>
 GET /api/papers/<id>/graph
 所有写接口
 FTS / 检索
 ```
+
+detail 新开关（开发中）：
+
+```text
+SCIPAL_READ_DETAIL_PERCENT=0..100
+```
+
+已用 test client 验证 detail PG 与 SQLite 返回相同 key 结构；生产未开启。
 
 原因：
 
