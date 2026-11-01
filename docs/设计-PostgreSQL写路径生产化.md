@@ -446,3 +446,54 @@ Next:
 3. verify SQLite mirror and PG
 4. remove tenancy outbox replication
 ```
+
+## 14. Production tenancy write flag enabled (2026-11-02)
+
+Deployment:
+
+```text
+image built from clean git archive 110 MB
+new image tag        scipal-app:tenancy-write
+promoted to          scipal-app:latest
+rollback image       scipal-app:pre-tenancy-write
+production app       deploy-app-1
+```
+
+Production `.env`:
+
+```text
+SCIPAL_TENANCY_READ_BACKEND=postgres
+SCIPAL_TENANCY_WRITE_BACKEND=postgres
+```
+
+Backup:
+
+```text
+G:\sciPal_deploy\deploy\.env.bak-before-tenancy-write
+```
+
+Verification:
+
+```text
+/api/health                 200
+container status            healthy
+TENANCY_WRITE_BACKEND       postgres
+prod canary create user     pass
+prod canary create ws       pass
+prod canary add member      pass
+prod canary list members    pass
+prod canary cleanup         pass
+```
+
+The canary used a throw-away SQLite DB inside the container and production PG;
+created rows were deleted afterwards.
+
+Rollback:
+
+```text
+docker tag scipal-app:pre-tenancy-write scipal-app:latest
+remove SCIPAL_TENANCY_WRITE_BACKEND from deploy/.env
+docker compose -f deploy/docker-compose.yml up -d app
+```
+
+Production code is now the latest merged branch; the write flag is on.
