@@ -762,3 +762,54 @@ rebuild image with fail-closed + alerting
 recreate app and health-cron
 verify health / login / drift
 ```
+
+## 21. Fail-closed deployment (2026-11-02)
+
+Merged and deployed:
+
+```text
+PR #203  fix: fail closed when PG tenancy write fails
+merge    2cef237
+```
+
+Deployment:
+
+```text
+image built from clean git archive
+new latest image
+rollback tag scipal-app:pre-failclosed
+app + health-cron recreated
+startup ~3 minutes (model load)
+```
+
+Verification:
+
+```text
+/api/health                 200
+app                         healthy
+health-cron                 running
+health-cron status          ok
+tenancy drift               false
+TENANCY_WRITE_BACKEND       postgres
+```
+
+Fail-closed probe (invalid PG DSN):
+
+```text
+create_user -> TenancyError: tenancy write backend unavailable
+SQLite DB created: False
+```
+
+This proves PG failure no longer writes SQLite silently.
+
+Production PG restart policy:
+
+```text
+unless-stopped
+```
+
+Tests:
+
+```text
+769 tests OK
+```
