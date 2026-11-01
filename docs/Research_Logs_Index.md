@@ -119,6 +119,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Soft cap / MMR audit | cap2 unique 3.85→7.5 but sentence 12→10; MMR λ=.75 sentence 5; reject | [Soft cap/MMR](检索-SoftCap-MMR审计.md) |
 
+| 2026-11-02 | Work summary / next steps | 766 tests; PG tenancy live; retrieval experiments; backlog prioritized | [Work summary](工作总结-2026-11-02.md) |
+
 ## Rules
 
 ```text
