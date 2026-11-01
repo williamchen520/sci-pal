@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 
 ROLES = ("owner", "pi", "member", "viewer")
 
@@ -54,11 +55,33 @@ def _columns(conn: sqlite3.Connection, table: str) -> set[str]:
     return {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
 
 
+_SCHEMA_READY: set[str] = set()
+_SCHEMA_LOCK = threading.Lock()
+
+
+def _db_key(conn: sqlite3.Connection) -> str:
+    try:
+        row = conn.execute("PRAGMA database_list").fetchone()
+        return str(row[2]) if row and row[2] else f"memory:{id(conn)}"
+    except sqlite3.DatabaseError:
+        return f"memory:{id(conn)}"
+
+
 def ensure_schema(conn: sqlite3.Connection) -> None:
     """Create tenancy tables and add missing user columns.
 
-    Idempotent: safe to call on the existing single-user database.
+    Idempotent and cached per database path: a request must not run DDL every
+    time it resolves a workspace or checks membership.
     """
+    key = _db_key(conn)
+    with _SCHEMA_LOCK:
+        if key in _SCHEMA_READY:
+            return
+        _ensure_schema_uncached(conn)
+        _SCHEMA_READY.add(key)
+
+
+def _ensure_schema_uncached(conn: sqlite3.Connection) -> None:
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
