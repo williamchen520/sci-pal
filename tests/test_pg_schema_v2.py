@@ -37,6 +37,7 @@ class SchemaV2Tests(unittest.TestCase):
             "section_id      TEXT REFERENCES sections(section_id)",
             "para_id         TEXT NOT NULL REFERENCES paragraphs(para_id)",
             "source_path     TEXT",
+            "fulltext_status TEXT NOT NULL DEFAULT 'unknown'",
             "native_json     JSONB",
             "pdf_blocks",
             "bbox            TEXT NOT NULL",
