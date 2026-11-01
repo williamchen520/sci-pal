@@ -613,3 +613,44 @@ health-cron
 ```
 
 This turns drift from a manual audit into a recurring health task.
+
+## 18. Health-cron deployed (2026-11-02)
+
+Deployment:
+
+```text
+image              scipal-app:latest (rebuilt from clean git archive)
+rollback image     scipal-app:pre-health-cron
+compose backup     G:\sciPal_deploy\deploy\docker-compose.yml.bak-before-health-cron
+new service        deploy-health-cron-1
+schedule           every 300s
+```
+
+First run:
+
+```text
+status             ok
+mismatches         []
+tenancy drift      false
+users              2/2
+workspaces         1/1
+memberships        2/2
+```
+
+Service state:
+
+```text
+health-cron        running, restart count 0
+app                healthy, /api/health 200
+```
+
+The production app container was not restarted; it keeps the tenancy-write
+image. Health-cron uses the rebuilt latest image, which contains the drift check.
+
+Next:
+
+```text
+1. inspect health-cron logs after a few cycles
+2. add alerting on status=degraded
+3. move to removing tenancy outbox replication
+```
