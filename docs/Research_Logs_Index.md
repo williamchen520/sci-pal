@@ -40,6 +40,8 @@
 
 | 2026-11-01 | Near-duplicate suppression | opt-in `SCIPAL_NEAR_DUP_THRESHOLD`; audit gold sentence 9→12; 759 tests OK | [Near-duplicate suppression](检索-近重复抑制.md) |
 
+| 2026-11-01 | HybridSearch + near-dup audit | no effect: 0.9000/0.8500/0.8631; unique@10 4.45; gold sentence 6/20 | [HybridSearch near-dup](检索-HybridSearch近重复审计.md) |
+
 ## Rules
 
 ```text
