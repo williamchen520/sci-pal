@@ -42,6 +42,8 @@
 
 | 2026-11-01 | HybridSearch + near-dup audit | no effect: 0.9000/0.8500/0.8631; unique@10 4.45; gold sentence 6/20 | [HybridSearch near-dup](检索-HybridSearch近重复审计.md) |
 
+| 2026-11-01 | Domain coverage / routing discussion | coverage ceiling vs hubness; domain boost + topic penalty; audit required first | [Domain discussion](讨论-领域覆盖与领域感知路由.md) |
+
 ## Rules
 
 ```text
