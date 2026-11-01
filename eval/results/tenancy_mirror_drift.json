@@ -1,0 +1,30 @@
+{
+  "db": "G:\\sciPal_deploy\\data\\research.db",
+  "tables": {
+    "users": {
+      "sqlite_count": 2,
+      "pg_count": 2,
+      "only_sqlite": [],
+      "only_pg": [],
+      "changed": [],
+      "drift": false
+    },
+    "workspaces": {
+      "sqlite_count": 1,
+      "pg_count": 1,
+      "only_sqlite": [],
+      "only_pg": [],
+      "changed": [],
+      "drift": false
+    },
+    "memberships": {
+      "sqlite_count": 2,
+      "pg_count": 2,
+      "only_sqlite": [],
+      "only_pg": [],
+      "changed": [],
+      "drift": false
+    }
+  },
+  "drift": false
+}
