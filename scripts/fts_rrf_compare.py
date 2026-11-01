@@ -25,6 +25,7 @@ from scripts.fts_sentence_compare import (  # noqa: E402
     summarize,
     terms_for,
 )
+from services.search.rerank_worker import RerankWorker  # noqa: E402
 from services.search.sentence_fts import SentenceFTS  # noqa: E402
 
 
@@ -72,6 +73,9 @@ def main() -> int:
     parser.add_argument("--per-source", type=int, default=5)
     parser.add_argument("--candidate-counts", default="20,50")
     parser.add_argument("--out", default="")
+    parser.add_argument("--rerank-timeout", type=float, default=15.0)
+    parser.add_argument("--startup-timeout", type=float, default=60.0)
+    parser.add_argument("--max-failures", type=int, default=20)
     args = parser.parse_args()
     if not args.pg_dsn:
         raise SystemExit("--pg-dsn is required")
@@ -79,14 +83,16 @@ def main() -> int:
         raise SystemExit("refusing to read a non-scipal_v2 database")
 
     counts = [int(x) for x in args.candidate_counts.split(",") if x.strip()]
-    from services.search.reranker import Reranker
-
-    reranker = Reranker()
+    reranker = RerankWorker(timeout=args.startup_timeout)
     sentence_fts = SentenceFTS(args.pg_dsn)
     cases = load_cases(Path(args.cases), args.per_source)
     rows = []
+    failures = []
 
+    stopped_early = False
     for case in cases:
+        if stopped_early:
+            break
         gold = set(case.get("gold_paper_ids") or [])
         terms = terms_for(case["query"])
         if not gold:
@@ -107,8 +113,29 @@ def main() -> int:
             candidates = paragraph_candidates(hits, count)
             texts = load_paragraph_texts(args.pg_dsn, [c["para_id"] for c in candidates])
             for candidate in candidates:
-                candidate["text"] = (texts.get(candidate["para_id"]) or candidate["text"])[:1500]
-            reranked = reranker.rerank(case["query"], candidates, top_k=len(candidates), batch_size=8)
+                candidate["text"] = (texts.get(candidate["para_id"]) or candidate["text"])[:512]
+            try:
+                scores = reranker.score(
+                    case["query"],
+                    [candidate["text"] for candidate in candidates],
+                    batch_size=8,
+                    timeout=args.rerank_timeout,
+                )
+            except (TimeoutError, RuntimeError) as exc:
+                failures.append(
+                    {
+                        "case_id": case["case_id"],
+                        "candidates": count,
+                        "error": str(exc)[:300],
+                    }
+                )
+                if len(failures) >= args.max_failures:
+                    stopped_early = True
+                    break
+                continue
+            for candidate, score in zip(candidates, scores):
+                candidate["rerank_score"] = score
+            reranked = sorted(candidates, key=lambda item: -item["rerank_score"])
             sentence_order = _dedupe(item["paper_id"] for item in reranked)
             fused_order = rrf([paragraph_order, sentence_order])
             for system, ranked in (
@@ -129,9 +156,13 @@ def main() -> int:
     names = ["paragraph_fts"]
     for count in counts:
         names.extend([f"multistage_{count}", f"rrf_{count}"])
+    reranker.close()
     report = {
         "cases": len(cases),
         "candidate_counts": counts,
+        "failures": failures,
+        "failure_count": len(failures),
+        "partial": bool(failures) or stopped_early,
         "summary": [summarize(rows, name) for name in names],
         "rows": rows,
     }

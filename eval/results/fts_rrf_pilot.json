@@ -4,10 +4,11 @@
     20,
     50
   ],
+  "failures": [],
   "summary": [
     {
       "system": "paragraph_fts",
-      "queries": 8,
+      "queries": 4,
       "recall@10": 1.0,
       "mrr": 0.75,
       "ndcg@10": 0.8155
@@ -16,29 +17,29 @@
       "system": "multistage_20",
       "queries": 4,
       "recall@10": 1.0,
-      "mrr": 0.7083,
-      "ndcg@10": 0.7827
+      "mrr": 1.0,
+      "ndcg@10": 1.0
     },
     {
       "system": "rrf_20",
       "queries": 4,
       "recall@10": 1.0,
-      "mrr": 0.8333,
-      "ndcg@10": 0.875
+      "mrr": 0.875,
+      "ndcg@10": 0.9077
     },
     {
       "system": "multistage_50",
       "queries": 4,
       "recall@10": 1.0,
-      "mrr": 0.7083,
-      "ndcg@10": 0.7827
+      "mrr": 1.0,
+      "ndcg@10": 1.0
     },
     {
       "system": "rrf_50",
       "queries": 4,
       "recall@10": 1.0,
-      "mrr": 0.8333,
-      "ndcg@10": 0.875
+      "mrr": 0.75,
+      "ndcg@10": 0.8155
     }
   ],
   "rows": [
@@ -46,7 +47,7 @@
       "case_id": "q001",
       "source": "seed_100",
       "system": "paragraph_fts",
-      "candidates": 20,
+      "candidates": null,
       "gold_count": 1,
       "recall@10": 1.0,
       "mrr": 1.0,
@@ -67,16 +68,6 @@
       "source": "seed_100",
       "system": "rrf_20",
       "candidates": 20,
-      "gold_count": 1,
-      "recall@10": 1.0,
-      "mrr": 1.0,
-      "ndcg@10": 1.0
-    },
-    {
-      "case_id": "q001",
-      "source": "seed_100",
-      "system": "paragraph_fts",
-      "candidates": 50,
       "gold_count": 1,
       "recall@10": 1.0,
       "mrr": 1.0,
@@ -106,7 +97,7 @@
       "case_id": "q008",
       "source": "cross_topic",
       "system": "paragraph_fts",
-      "candidates": 20,
+      "candidates": null,
       "gold_count": 1,
       "recall@10": 1.0,
       "mrr": 0.5,
@@ -119,24 +110,14 @@
       "candidates": 20,
       "gold_count": 1,
       "recall@10": 1.0,
-      "mrr": 0.3333333333333333,
-      "ndcg@10": 0.5
+      "mrr": 1.0,
+      "ndcg@10": 1.0
     },
     {
       "case_id": "q008",
       "source": "cross_topic",
       "system": "rrf_20",
       "candidates": 20,
-      "gold_count": 1,
-      "recall@10": 1.0,
-      "mrr": 0.3333333333333333,
-      "ndcg@10": 0.5
-    },
-    {
-      "case_id": "q008",
-      "source": "cross_topic",
-      "system": "paragraph_fts",
-      "candidates": 50,
       "gold_count": 1,
       "recall@10": 1.0,
       "mrr": 0.5,
@@ -149,8 +130,8 @@
       "candidates": 50,
       "gold_count": 1,
       "recall@10": 1.0,
-      "mrr": 0.3333333333333333,
-      "ndcg@10": 0.5
+      "mrr": 1.0,
+      "ndcg@10": 1.0
     },
     {
       "case_id": "q008",
@@ -159,14 +140,14 @@
       "candidates": 50,
       "gold_count": 1,
       "recall@10": 1.0,
-      "mrr": 0.3333333333333333,
-      "ndcg@10": 0.5
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
     },
     {
       "case_id": "claim_hcc_triple_os__q1",
       "source": "claim_qualifiers",
       "system": "paragraph_fts",
-      "candidates": 20,
+      "candidates": null,
       "gold_count": 1,
       "recall@10": 1.0,
       "mrr": 0.5,
@@ -179,8 +160,8 @@
       "candidates": 20,
       "gold_count": 1,
       "recall@10": 1.0,
-      "mrr": 0.5,
-      "ndcg@10": 0.6309297535714575
+      "mrr": 1.0,
+      "ndcg@10": 1.0
     },
     {
       "case_id": "claim_hcc_triple_os__q1",
@@ -191,16 +172,6 @@
       "recall@10": 1.0,
       "mrr": 1.0,
       "ndcg@10": 1.0
-    },
-    {
-      "case_id": "claim_hcc_triple_os__q1",
-      "source": "claim_qualifiers",
-      "system": "paragraph_fts",
-      "candidates": 50,
-      "gold_count": 1,
-      "recall@10": 1.0,
-      "mrr": 0.5,
-      "ndcg@10": 0.6309297535714575
     },
     {
       "case_id": "claim_hcc_triple_os__q1",
@@ -209,8 +180,8 @@
       "candidates": 50,
       "gold_count": 1,
       "recall@10": 1.0,
-      "mrr": 0.5,
-      "ndcg@10": 0.6309297535714575
+      "mrr": 1.0,
+      "ndcg@10": 1.0
     },
     {
       "case_id": "claim_hcc_triple_os__q1",
@@ -219,14 +190,14 @@
       "candidates": 50,
       "gold_count": 1,
       "recall@10": 1.0,
-      "mrr": 1.0,
-      "ndcg@10": 1.0
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
     },
     {
       "case_id": "title_ab84d6de_xml",
       "source": "paper_title",
       "system": "paragraph_fts",
-      "candidates": 20,
+      "candidates": null,
       "gold_count": 1,
       "recall@10": 1.0,
       "mrr": 1.0,
@@ -247,16 +218,6 @@
       "source": "paper_title",
       "system": "rrf_20",
       "candidates": 20,
-      "gold_count": 1,
-      "recall@10": 1.0,
-      "mrr": 1.0,
-      "ndcg@10": 1.0
-    },
-    {
-      "case_id": "title_ab84d6de_xml",
-      "source": "paper_title",
-      "system": "paragraph_fts",
-      "candidates": 50,
       "gold_count": 1,
       "recall@10": 1.0,
       "mrr": 1.0,
