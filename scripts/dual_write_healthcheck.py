@@ -12,6 +12,8 @@ import json
 import os
 import sqlite3
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -121,12 +123,41 @@ def collect(conn: sqlite3.Connection, pg, tables=None) -> dict:
     }
 
 
+def _send_alert(webhook: str, report: dict) -> None:
+    payload = {
+        "status": report.get("status"),
+        "pending": report.get("pending"),
+        "failed": report.get("failed"),
+        "mismatches": report.get("mismatches", []),
+        "tenancy_drift": {
+            table: item.get("drift")
+            for table, item in (report.get("tenancy_drift") or {}).items()
+        },
+    }
+    text = json.dumps(payload, ensure_ascii=False)
+    if not webhook:
+        print(f"ALERT degraded: {text}", file=sys.stderr, flush=True)
+        return
+    request = urllib.request.Request(
+        webhook,
+        data=text.encode("utf-8"),
+        headers={"Content-Type": "application/json", "User-Agent": "SciPal/0.1"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=5) as response:
+            print(f"alert sent: {response.status}", file=sys.stderr, flush=True)
+    except Exception as exc:  # noqa: BLE001 - alerting must not mask health result
+        print(f"alert failed: {exc}", file=sys.stderr, flush=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", default=str(DB_PATH))
     parser.add_argument("--max-pending", type=int, default=100)
     parser.add_argument("--max-age", type=float, default=300.0)
     parser.add_argument("--out", default="")
+    parser.add_argument("--alert-webhook", default=os.environ.get("SCIPAL_HEALTH_ALERT_WEBHOOK", ""))
     args = parser.parse_args()
 
     dsn = os.environ.get("SCIPAL_PG_DSN", "").strip()
@@ -155,6 +186,8 @@ def main() -> int:
         or any(item.get("drift") for item in report.get("tenancy_drift", {}).values())
     )
     report["status"] = "degraded" if bad else "ok"
+    if bad:
+        _send_alert(args.alert_webhook, report)
     text = json.dumps(report, ensure_ascii=False, indent=2)
     if args.out:
         Path(args.out).write_text(text + "\n", encoding="utf-8")

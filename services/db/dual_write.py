@@ -37,9 +37,8 @@ DEFAULT_TABLES = (
     "watch_profiles",
     "watch_runs",
     "watch_seen",
-    "users",
-    "workspaces",
-    "memberships",
+    # Tenancy is PG-primary since 2026-11-02 and deliberately excluded from
+    # outbox replication; SQLite is a mirror, not a source of truth.
     "review_projects",
     "review_events",
 )

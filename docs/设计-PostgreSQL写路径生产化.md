@@ -654,3 +654,67 @@ Next:
 2. add alerting on status=degraded
 3. move to removing tenancy outbox replication
 ```
+
+## 19. Tenancy outbox removal and health alerting (2026-11-02)
+
+### Removed
+
+`DEFAULT_TABLES` no longer includes:
+
+```text
+users
+workspaces
+memberships
+```
+
+Script:
+
+```text
+scripts/remove_tenancy_outbox.py
+```
+
+Production apply:
+
+```text
+backup  G:\sciPal_deploy\backups\research-before-tenancy-outbox-20261102.db
+dropped 9 triggers:
+  dualwrite_users_ai/au/ad
+  dualwrite_workspaces_ai/au/ad
+  dualwrite_memberships_ai/au/ad
+pending tenancy outbox rows: 0
+remaining tenancy triggers: 0
+```
+
+### Health alerting
+
+`dual_write_healthcheck.py` now supports:
+
+```text
+SCIPAL_HEALTH_ALERT_WEBHOOK
+```
+
+On `degraded`, it POSTs a JSON payload with:
+
+```text
+status
+pending
+failed
+mismatches
+tenancy_drift
+```
+
+If no webhook is configured, it writes `ALERT degraded: ...` to stderr.
+
+### Tests
+
+```text
+768 tests OK
+```
+
+### Next
+
+```text
+1. rebuild/deploy health-cron image with alerting
+2. set a real webhook if available
+3. continue observing
+```
