@@ -123,6 +123,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Tenancy outbox removed + alerts | 9 triggers dropped; 0 pending; health webhook/stderr alert; 768 tests | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Tenancy fail-closed on PG outage | PG exited 255; restart policy fixed; fallback removed; 769 tests | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text

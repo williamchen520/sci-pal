@@ -253,7 +253,8 @@ def create_user(
                 LOGGER.warning("tenancy mirror failed for %s: %s", result["user_id"], mirror_exc)
             return result
         except Exception as exc:  # noqa: BLE001 - fall back to SQLite/outbox
-            LOGGER.warning("PG tenancy create_user failed; falling back to SQLite: %s", exc)
+            LOGGER.error("PG tenancy create_user failed; refusing SQLite fallback: %s", exc)
+            raise TenancyError("tenancy write backend unavailable") from exc
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -394,7 +395,8 @@ def create_workspace(
                 LOGGER.warning("tenancy mirror failed for %s: %s", result["workspace_id"], mirror_exc)
             return result
         except Exception as exc:  # noqa: BLE001
-            LOGGER.warning("PG tenancy create_workspace failed; falling back to SQLite: %s", exc)
+            LOGGER.error("PG tenancy create_workspace failed; refusing SQLite fallback: %s", exc)
+            raise TenancyError("tenancy write backend unavailable") from exc
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
@@ -446,7 +448,8 @@ def add_member(
                 LOGGER.warning("tenancy mirror failed for %s/%s: %s", workspace_id, user_id, mirror_exc)
             return Membership(result["workspace_id"], result["user_id"], result["role"], result["status"])
         except Exception as exc:  # noqa: BLE001
-            LOGGER.warning("PG tenancy add_member failed; falling back to SQLite: %s", exc)
+            LOGGER.error("PG tenancy add_member failed; refusing SQLite fallback: %s", exc)
+            raise TenancyError("tenancy write backend unavailable") from exc
     conn = _connect(db_path)
     try:
         ensure_schema(conn)
