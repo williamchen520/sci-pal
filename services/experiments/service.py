@@ -11,7 +11,7 @@ from pathlib import Path
 
 from config.settings import DATABASE_PATH
 from services.tenancy.permissions import audit
-from services.tenancy.service import verify_password
+from services.tenancy.service import get_membership, get_password_hash, verify_password
 
 
 class ProtocolNotFound(ValueError):
@@ -122,6 +122,11 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _conn_db_path(conn: sqlite3.Connection) -> str:
+    row = conn.execute("PRAGMA database_list").fetchone()
+    return row[2] if row and row[2] else DATABASE_PATH
+
+
 def _project_access(conn: sqlite3.Connection, project_id: str, workspace_id: str, user_id: str) -> bool:
     project = conn.execute(
         "SELECT 1 FROM projects WHERE project_id = ? AND workspace_id = ?",
@@ -129,11 +134,7 @@ def _project_access(conn: sqlite3.Connection, project_id: str, workspace_id: str
     ).fetchone()
     if not project:
         return False
-    member = conn.execute(
-        "SELECT 1 FROM memberships WHERE workspace_id = ? AND user_id = ? AND status = 'active'",
-        (workspace_id, user_id),
-    ).fetchone()
-    if not member:
+    if not _workspace_role(conn, workspace_id, user_id):
         return False
     return bool(
         conn.execute(
@@ -144,6 +145,12 @@ def _project_access(conn: sqlite3.Connection, project_id: str, workspace_id: str
 
 
 def _workspace_role(conn: sqlite3.Connection, workspace_id: str, user_id: str) -> str | None:
+    try:
+        membership = get_membership(workspace_id, user_id, db_path=_conn_db_path(conn))
+    except Exception:  # noqa: BLE001 - fall back to the SQLite mirror
+        membership = None
+    if membership:
+        return membership.role
     row = conn.execute(
         "SELECT role FROM memberships WHERE workspace_id = ? AND user_id = ? AND status = 'active'",
         (workspace_id, user_id),
@@ -593,10 +600,8 @@ def sign_experiment(
         ).fetchone()
         if not experiment:
             return None
-        user = conn.execute(
-            "SELECT password_hash FROM users WHERE user_id = ?", (user_id,)
-        ).fetchone()
-        if not user or not verify_password(password, user["password_hash"]):
+        password_hash = get_password_hash(user_id, db_path=_conn_db_path(conn))
+        if not verify_password(password, password_hash):
             raise PermissionError("re-authentication failed")
         revision = int(experiment["current_revision"] or 1)
         rev = conn.execute(
