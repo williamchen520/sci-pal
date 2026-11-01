@@ -1,0 +1,17 @@
+{
+  "db": "G:\\sciPal_deploy\\data\\research.db",
+  "dry_run": false,
+  "dropped": [
+    "dualwrite_users_ai",
+    "dualwrite_users_au",
+    "dualwrite_users_ad",
+    "dualwrite_workspaces_ai",
+    "dualwrite_workspaces_au",
+    "dualwrite_workspaces_ad",
+    "dualwrite_memberships_ai",
+    "dualwrite_memberships_au",
+    "dualwrite_memberships_ad"
+  ],
+  "pending_tenancy_rows": 0,
+  "remaining_tenancy_triggers": []
+}
