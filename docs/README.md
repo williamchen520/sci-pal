@@ -18,6 +18,7 @@
 | Benchmark PostgreSQL 策略 | [benchmark-PostgreSQL策略.md](benchmark-PostgreSQL策略.md) |
 | PostgreSQL 迁移计划 | [工作计划-PostgreSQL迁移.md](工作计划-PostgreSQL迁移.md) |
 | 跨平台路径体检 | [跨平台路径体检报告.md](跨平台路径体检报告.md) |
+| 数据重建 schema v2 | [数据重建-schema-v2-按源类型建模.md](数据重建-schema-v2-按源类型建模.md) |
 | Windows 开发警示 | [Windows开发警示与跨平台规范.md](Windows开发警示与跨平台规范.md) |
 | PostgreSQL 迁移基线 | [PostgreSQL迁移-基线.md](PostgreSQL迁移-基线.md) |
 | PostgreSQL FTS 对齐 | [PostgreSQL迁移-FTS对齐实验.md](PostgreSQL迁移-FTS对齐实验.md) |
