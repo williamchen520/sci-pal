@@ -18,7 +18,7 @@ class Reranker:
         self.model = CrossEncoder(model_name)
 
     def rerank(self, query: str, results: List[Dict],
-               top_k: int = 5) -> List[Dict]:
+               top_k: int = 5, batch_size: int = 32) -> List[Dict]:
         """
         Re-rank hybrid search results with the cross-encoder.
 
@@ -34,7 +34,7 @@ class Reranker:
         pairs = [(query, r["text"]) for r in results]
 
         # Cross-encoder scores (higher = more relevant)
-        scores = self.model.predict(pairs)
+        scores = self.model.predict(pairs, batch_size=batch_size)
 
         for r, score in zip(results, scores):
             r["rerank_score"] = float(score)

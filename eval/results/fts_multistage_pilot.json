@@ -1,0 +1,94 @@
+{
+  "cases": 4,
+  "candidate_paragraphs": 5,
+  "summary": [
+    {
+      "system": "paragraph_fts",
+      "queries": 4,
+      "recall@10": 1.0,
+      "mrr": 0.75,
+      "ndcg@10": 0.8155
+    },
+    {
+      "system": "sentence_multistage",
+      "queries": 4,
+      "recall@10": 1.0,
+      "mrr": 0.6875,
+      "ndcg@10": 0.7654
+    }
+  ],
+  "rows": [
+    {
+      "case_id": "q001",
+      "source": "seed_100",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q001",
+      "source": "seed_100",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q008",
+      "source": "cross_topic",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "q008",
+      "source": "cross_topic",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q1",
+      "source": "claim_qualifiers",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q1",
+      "source": "claim_qualifiers",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.25,
+      "ndcg@10": 0.43067655807339306
+    },
+    {
+      "case_id": "title_ab84d6de_xml",
+      "source": "paper_title",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_ab84d6de_xml",
+      "source": "paper_title",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    }
+  ]
+}
