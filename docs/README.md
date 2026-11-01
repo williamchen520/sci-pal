@@ -10,6 +10,10 @@
 | 目的 | 文档 |
 |------|------|
 | 项目是什么、怎么启动 | [`../README.md`](../README.md) |
+<<<<<<< Updated upstream
+=======
+| 历史档案（勿参考） | [`archive_legacy/README.md`](archive_legacy/README.md) |
+>>>>>>> Stashed changes
 | English documentation | [`en/README.md`](en/README.md) |
 | 架构、模块、路由与数据流 | [架构与路由图.md](架构与路由图.md) |
 | 文献监控 | [工作计划-自适应与文献情报.md](工作计划-自适应与文献情报.md) |
