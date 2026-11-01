@@ -131,7 +131,39 @@ def parse_jats(xml_text: str) -> Dict[str, Any]:
     body = article.find(".//body")
     para_seq = 0
 
-    def walk_sec(sec: ET.Element, path: List[str], parent_id: str | None) -> None:
+    seen_figs: set[int] = set()
+    seen_tables: set[int] = set()
+
+    def add_figure(fig: ET.Element, section_id: str | None, xpath: str) -> None:
+        seen_figs.add(id(fig))
+        result["figures"].append(
+            {
+                "id": fig.get("id", ""),
+                "section_id": section_id,
+                "xpath": xpath,
+                "label": _text(fig.find("label")),
+                "caption": _text(fig.find("caption")),
+                "graphic": (fig.find(".//graphic").get("xlink:href", "")
+                            if fig.find(".//graphic") is not None else ""),
+            }
+        )
+
+    def add_table(table: ET.Element, section_id: str | None, xpath: str) -> None:
+        seen_tables.add(id(table))
+        result["tables"].append(
+            {
+                "id": table.get("id", ""),
+                "section_id": section_id,
+                "xpath": xpath,
+                "label": _text(table.find("label")),
+                "caption": _text(table.find("caption")),
+                "markdown": _text(table),
+            }
+        )
+
+    def walk_sec(
+        sec: ET.Element, path: List[str], parent_id: str | None, xpath: str
+    ) -> None:
         nonlocal para_seq
         title_elem = sec.find("title")
         title = _text(title_elem)
@@ -147,38 +179,55 @@ def parse_jats(xml_text: str) -> Dict[str, Any]:
                     "level": len(current_path),
                     "title": title,
                     "path": current_path,
+                    "xpath": xpath,
                 }
             )
+        para_index = 0
+        asset_index = 0
         for child in sec:
             local = _local(child.tag)
             if local == "sec":
-                walk_sec(child, current_path, section_id or parent_id)
+                child_index = sum(1 for c in sec if _local(c.tag) == "sec" and list(sec).index(c) <= list(sec).index(child))
+                walk_sec(child, current_path, section_id or parent_id, f"{xpath}/sec[{child_index}]")
             elif local in ("p", "list", "disp-quote", "statement"):
+                para_index += 1
                 text, xrefs = _text_with_xrefs(child)
                 if text:
                     result["paragraphs"].append(
                         {
                             "section_id": section_id,
                             "path": current_path,
+                            "xpath": f"{xpath}/p[{para_index}]",
                             "sequence": para_seq,
                             "text": text,
                             "xrefs": xrefs,
                         }
                     )
                     para_seq += 1
+            elif local == "fig":
+                asset_index += 1
+                add_figure(child, section_id, f"{xpath}/fig[{asset_index}]")
+            elif local == "table-wrap":
+                asset_index += 1
+                add_table(child, section_id, f"{xpath}/table-wrap[{asset_index}]")
 
     if body is not None:
+        sec_index = 0
+        para_index = 0
         for child in body:
             local = _local(child.tag)
             if local == "sec":
-                walk_sec(child, [], None)
+                sec_index += 1
+                walk_sec(child, [], None, f"/article/body/sec[{sec_index}]")
             elif local in ("p", "list", "disp-quote", "statement"):
+                para_index += 1
                 text, xrefs = _text_with_xrefs(child)
                 if text:
                     result["paragraphs"].append(
                         {
                             "section_id": None,
                             "path": [],
+                            "xpath": f"/article/body/p[{para_index}]",
                             "sequence": para_seq,
                             "text": text,
                             "xrefs": xrefs,
@@ -186,28 +235,13 @@ def parse_jats(xml_text: str) -> Dict[str, Any]:
                     )
                     para_seq += 1
 
-    # figures / tables
-    for fig in article.findall(".//fig"):
-        fid = fig.get("id", "")
-        result["figures"].append(
-            {
-                "id": fid,
-                "label": _text(fig.find("label")),
-                "caption": _text(fig.find("caption")),
-                "graphic": (fig.find(".//graphic").get("xlink:href", "")
-                            if fig.find(".//graphic") is not None else ""),
-            }
-        )
-    for table in article.findall(".//table-wrap"):
-        tid = table.get("id", "")
-        result["tables"].append(
-            {
-                "id": tid,
-                "label": _text(table.find("label")),
-                "caption": _text(table.find("caption")),
-                "markdown": _text(table),
-            }
-        )
+    # figures/tables not nested under a <sec> stay paper-level
+    for index, fig in enumerate(article.findall(".//fig"), 1):
+        if id(fig) not in seen_figs:
+            add_figure(fig, None, f"/article/body/fig[{index}]")
+    for index, table in enumerate(article.findall(".//table-wrap"), 1):
+        if id(table) not in seen_tables:
+            add_table(table, None, f"/article/body/table-wrap[{index}]")
 
     # references
     for ref in article.findall(".//ref-list/ref"):
