@@ -1,0 +1,12 @@
+{
+  "fts_init": 1.0000017937272787e-05,
+  "sentence_search": 1.6035605000215583,
+  "sentence_hits": 1000,
+  "paragraph_aggregate": 0.0008668999653309584,
+  "paragraphs": 20,
+  "paragraph_text_load": 0.3907496000174433,
+  "worker_start": 40.572046599991154,
+  "rerank_score": 0.666950499988161,
+  "scores": 20,
+  "total": 43.23419380001724
+}

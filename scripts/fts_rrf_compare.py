@@ -97,6 +97,7 @@ def main() -> int:
         terms = terms_for(case["query"])
         if not gold:
             continue
+        print(f"[case] {case['case_id']}", file=sys.stderr, flush=True)
         paragraph_order = sqlite_paper_order(Path(args.sqlite_db), terms)
         hits = sentence_fts.search(case["query"], top_k=1000)
         rows.append(
@@ -110,6 +111,7 @@ def main() -> int:
             }
         )
         for count in counts:
+            print(f"[case] {case['case_id']} candidates={count}", file=sys.stderr, flush=True)
             candidates = paragraph_candidates(hits, count)
             texts = load_paragraph_texts(args.pg_dsn, [c["para_id"] for c in candidates])
             for candidate in candidates:
