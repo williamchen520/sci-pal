@@ -273,6 +273,8 @@ Chinese:
 
 ## Contributing
 
+Start with [HANDOVER.md](docs/HANDOVER.md) if you are taking over the project.
+
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. **Open an issue first**, and make sure the unit tests pass.
 
 ## Security

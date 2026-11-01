@@ -23,7 +23,6 @@ test_workflow.sh           V33.4 legacy shell test
 | Architecture overview | [Architecture Overview](../en/Architecture-Overview.md) |
 | Architecture and routes | [Architecture and Routes](../en/Architecture-and-Routes.md) |
 | Source-aware data model | [Schema v2](../数据重建-schema-v2-按源类型建模.md) |
-| Research logs | [Research Logs Index](../Research_Logs_Index.md) |
 | Contributing | [CONTRIBUTING](../../CONTRIBUTING.md) |
 | Security | [SECURITY](../../SECURITY.md) |
 

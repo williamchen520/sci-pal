@@ -10,6 +10,7 @@
 | 目的 | 文档 |
 |------|------|
 | 项目是什么、怎么启动 | [`../README.md`](../README.md) |
+| 项目交接指南 | [`HANDOVER.md`](HANDOVER.md) |
 <<<<<<< Updated upstream
 =======
 | 历史档案（勿参考） | [`archive_legacy/README.md`](archive_legacy/README.md) |
