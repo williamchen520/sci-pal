@@ -1,0 +1,448 @@
+{
+  "summary": {
+    "cases": 20,
+    "gold_papers_total": 20,
+    "queries_with_multiple_gold_papers": 0,
+    "mean_unique_papers@10": 4.45,
+    "mean_max_hits_per_paper": 5.5,
+    "gold_paper_top10": 18,
+    "gold_sentence_top10": 6,
+    "paper_metrics": {
+      "queries": 20,
+      "recall@10": 0.9,
+      "mrr": 0.85,
+      "ndcg@10": 0.8631
+    }
+  },
+  "rows": [
+    {
+      "case_id": "q001",
+      "source": "seed_100",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 1,
+      "unique_papers@10": 1,
+      "max_hits_per_paper": 10,
+      "top10_paper_ids": [
+        "paper_PMC12707946_2d3bcc67"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q002",
+      "source": "seed_100",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 2,
+      "unique_papers@10": 2,
+      "max_hits_per_paper": 7,
+      "top10_paper_ids": [
+        "paper_PMC12707946_2d3bcc67",
+        "paper_PMC13625931_70a7768d_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q003",
+      "source": "seed_100",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 8,
+      "unique_papers@10": 8,
+      "max_hits_per_paper": 2,
+      "top10_paper_ids": [
+        "paper_PMC12707946_2d3bcc67",
+        "paper_PMC13625931_70a7768d_xml",
+        "paper_PMC13627064_60051009_xml",
+        "paper_PMC13616637_ab84d6de_xml",
+        "paper_PMC13627273_09aa9e42_xml",
+        "paper_PMC13628067_7e2e3d38_xml",
+        "paper_PMC13614934_99230ccd_xml",
+        "paper_PMC13694287_347fd025_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q004",
+      "source": "seed_100",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 2,
+      "unique_papers@10": 2,
+      "max_hits_per_paper": 9,
+      "top10_paper_ids": [
+        "paper_PMC12707946_2d3bcc67",
+        "paper_PMC13626995_99897554_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": 2,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q005",
+      "source": "seed_100",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 9,
+      "unique_papers@10": 9,
+      "max_hits_per_paper": 2,
+      "top10_paper_ids": [
+        "paper_PMC12707946_2d3bcc67",
+        "paper_PMC13617812_3a19d573_xml",
+        "paper_PMC13625503_13520df0_xml",
+        "paper_PMC13614988_ad75941e_xml",
+        "paper_PMC13632267_5cb6b349_xml",
+        "paper_PMC12807518_6dfefde2",
+        "paper_PMC13630821_d3d5a3c6_xml",
+        "paper_PMC12711257_17cc19c1",
+        "paper_PMC13628716_d9c0f155_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q008",
+      "source": "cross_topic",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 7,
+      "unique_papers@10": 7,
+      "max_hits_per_paper": 3,
+      "top10_paper_ids": [
+        "paper_PMC13612676_5962339f",
+        "paper_PMC13599371_c03778d5_mineru",
+        "paper_PMC13630567_bf978b32_xml",
+        "paper_PMC13628420_012696fb_xml",
+        "paper_PMC13613266_52223319_xml",
+        "paper_PMC13612941_ba1df9d6",
+        "paper_PMC13694330_8c276fe4_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q009",
+      "source": "cross_topic",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 4,
+      "unique_papers@10": 4,
+      "max_hits_per_paper": 4,
+      "top10_paper_ids": [
+        "paper_PMC13630772_2fd56d48_xml",
+        "paper_PMC13631563_4e18eb11_xml",
+        "paper_PMC13619546_01a099c9_xml",
+        "paper_PMC13630036_f13548e3_xml"
+      ],
+      "gold_paper_rank": 2,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "q010",
+      "source": "cross_topic",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 10,
+      "unique_papers@10": 10,
+      "max_hits_per_paper": 1,
+      "top10_paper_ids": [
+        "paper_PMC13625931_70a7768d_xml",
+        "paper_PMC13615423_f9cdbe83_xml",
+        "paper_PMC13464150_6c601366_xml",
+        "paper_PMC13629053_0f3caa4c_xml",
+        "paper_PMC13627995_431d5b6a_xml",
+        "paper_PMC13614125_a4401104_xml",
+        "paper_PMC13612323_d70c8d00_xml",
+        "paper_PMC13408408_8927b463_xml",
+        "paper_PMC13624744_e16d64dc_xml",
+        "paper_PMC13602476_363524a1_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q014",
+      "source": "cross_topic",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 5,
+      "unique_papers@10": 5,
+      "max_hits_per_paper": 4,
+      "top10_paper_ids": [
+        "paper_PMC13612676_5962339f",
+        "paper_PMC13613017_98f5f2e4_xml",
+        "paper_PMC13612941_ba1df9d6",
+        "paper_PMC13607229_3a1e296e_xml",
+        "paper_PMC13631538_d8657b95_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q015",
+      "source": "cross_topic",
+      "gold_papers": 1,
+      "gold_sentences": 2,
+      "returned_paragraphs": 10,
+      "unique_papers": 1,
+      "unique_papers@10": 1,
+      "max_hits_per_paper": 10,
+      "top10_paper_ids": [
+        "paper_PMC13631563_4e18eb11_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q1",
+      "source": "claim_qualifiers",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 8,
+      "unique_papers@10": 8,
+      "max_hits_per_paper": 2,
+      "top10_paper_ids": [
+        "paper_PMC13511682_323f2073_xml",
+        "paper_PMC13627981_63b3e22f_xml",
+        "paper_PMC13606747_7512581f_xml",
+        "paper_PMC13604167_414f1449_xml",
+        "paper_PMC13623383_99ff76bf_xml",
+        "paper_PMC13604421_072a042e_xml",
+        "paper_PMC13626788_82c7332e_xml",
+        "paper_PMC13613317_00c6512e_mineru"
+      ],
+      "gold_paper_rank": null,
+      "gold_sentence_rank": null,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q2",
+      "source": "claim_qualifiers",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 7,
+      "unique_papers@10": 7,
+      "max_hits_per_paper": 2,
+      "top10_paper_ids": [
+        "paper_PMC13511682_323f2073_xml",
+        "paper_PMC13627981_63b3e22f_xml",
+        "paper_PMC13606747_7512581f_xml",
+        "paper_PMC13604167_414f1449_xml",
+        "paper_PMC13604421_072a042e_xml",
+        "paper_PMC12771288_fca97ed9_xml",
+        "paper_PMC13613317_00c6512e_mineru"
+      ],
+      "gold_paper_rank": null,
+      "gold_sentence_rank": null,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q1",
+      "source": "claim_qualifiers",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 1,
+      "unique_papers@10": 1,
+      "max_hits_per_paper": 10,
+      "top10_paper_ids": [
+        "paper_PMC13632145_3219ab94_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": 7,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q2",
+      "source": "claim_qualifiers",
+      "gold_papers": 1,
+      "gold_sentences": 1,
+      "returned_paragraphs": 10,
+      "unique_papers": 1,
+      "unique_papers@10": 1,
+      "max_hits_per_paper": 10,
+      "top10_paper_ids": [
+        "paper_PMC13632145_3219ab94_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": 4,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_ici_rechallenge__q1",
+      "source": "claim_qualifiers",
+      "gold_papers": 1,
+      "gold_sentences": 2,
+      "returned_paragraphs": 10,
+      "unique_papers": 5,
+      "unique_papers@10": 5,
+      "max_hits_per_paper": 4,
+      "top10_paper_ids": [
+        "paper_PMC13625931_70a7768d_xml",
+        "paper_PMC12707946_2d3bcc67",
+        "paper_PMC13659581_dea0bef7_xml",
+        "paper_PMC13694692_f7e8b1bc_xml",
+        "paper_PMC13610758_c64db9c3_xml"
+      ],
+      "gold_paper_rank": 2,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "title_ab84d6de_xml",
+      "source": "paper_title",
+      "gold_papers": 1,
+      "gold_sentences": 0,
+      "returned_paragraphs": 10,
+      "unique_papers": 7,
+      "unique_papers@10": 7,
+      "max_hits_per_paper": 2,
+      "top10_paper_ids": [
+        "paper_PMC13616637_ab84d6de_xml",
+        "paper_PMC13604421_072a042e_xml",
+        "paper_PMC13511682_323f2073_xml",
+        "paper_PMC13604167_414f1449_xml",
+        "paper_PMC13606747_7512581f_xml",
+        "paper_PMC13627981_63b3e22f_xml",
+        "paper_PMC13605973_28dbe7dd_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_d62ab6f2_xml",
+      "source": "paper_title",
+      "gold_papers": 1,
+      "gold_sentences": 0,
+      "returned_paragraphs": 10,
+      "unique_papers": 3,
+      "unique_papers@10": 3,
+      "max_hits_per_paper": 6,
+      "top10_paper_ids": [
+        "paper_PMC13615806_d62ab6f2_xml",
+        "paper_PMC13631205_25292a50_xml",
+        "paper_PMC12707946_2d3bcc67"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_3219ab94_xml",
+      "source": "paper_title",
+      "gold_papers": 1,
+      "gold_sentences": 0,
+      "returned_paragraphs": 10,
+      "unique_papers": 3,
+      "unique_papers@10": 3,
+      "max_hits_per_paper": 8,
+      "top10_paper_ids": [
+        "paper_PMC13632145_3219ab94_xml",
+        "paper_PMC13625843_9a608ecd_xml",
+        "paper_PMC13616637_ab84d6de_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_966_ae9a35bd",
+      "source": "paper_title",
+      "gold_papers": 1,
+      "gold_sentences": 0,
+      "returned_paragraphs": 10,
+      "unique_papers": 4,
+      "unique_papers@10": 4,
+      "max_hits_per_paper": 4,
+      "top10_paper_ids": [
+        "paper_PMC12707966_ae9a35bd",
+        "paper_PMC12707946_2d3bcc67",
+        "paper_PMC12711257_17cc19c1",
+        "paper_PMC13621873_801b0f7d_xml"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_946_2d3bcc67",
+      "source": "paper_title",
+      "gold_papers": 1,
+      "gold_sentences": 0,
+      "returned_paragraphs": 10,
+      "unique_papers": 1,
+      "unique_papers@10": 1,
+      "max_hits_per_paper": 10,
+      "top10_paper_ids": [
+        "paper_PMC12707946_2d3bcc67"
+      ],
+      "gold_paper_rank": 1,
+      "gold_sentence_rank": null,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    }
+  ]
+}

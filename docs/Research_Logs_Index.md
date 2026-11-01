@@ -30,6 +30,8 @@
 
 | 2026-11-01 | Retrieval document-bias audit | paper recall 1.0000; gold sentence top10 only 9/20; mean max hits/paper 118.4 | [Bias audit](检索-文档级偏置审计.md) |
 
+| 2026-11-01 | HybridSearch document-bias audit | paper recall 0.9000; unique papers@10 4.45; gold sentence 6/20; max hits/paper 5.5 | [HybridSearch bias audit](检索-HybridSearch偏置审计.md) |
+
 ## Rules
 
 ```text
