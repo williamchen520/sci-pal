@@ -76,16 +76,20 @@ This keeps the door open for future dedicated low-latency research.
 
 ### D3. Do not use hard `max_per_paper=2`
 
-The cap experiment was negative:
+The corrected cap experiment:
 
 ```text
 unique_papers@10:    3.85 -> 7.50
-gold_sentence_top10: 9/20 -> 0/20
+gold_sentence_top10: 9/20 -> 10/20
 ```
 
-A hard per-document cap improves diversity but removes the answering evidence.
-The final design uses **soft constraints after evidence scoring**, not a hard
-candidate-stage cap.
+An earlier audit reported 0/20 because `sentences_fts` rows lacked `para_id`;
+that was a measurement bug, now fixed by resolving `sentence_id -> para_id`
+through the `sentences` table.
+
+The result is a small positive, not a production mandate: +1 sentence hit, no
+HybridSearch or rerank validation. The design still prefers **soft constraints
+after evidence scoring**, with cap2 kept as a candidate to test.
 
 ### D4. Redundancy is controlled at selection time, not recall time
 
@@ -277,7 +281,7 @@ paragraph FTS: paper 1.0000 / 0.8806 / 0.9097
 ```
 
 If a change improves `unique_papers` but reduces `gold_sentence_recall`, it is
-rejected. The `max_per_paper=2` experiment is the reference negative case.
+rejected. The `max_per_paper=2` experiment is a candidate, not a proven rule.
 
 ---
 

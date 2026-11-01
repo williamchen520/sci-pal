@@ -34,11 +34,11 @@
 
 | 2026-11-01 | Document-bias / redundancy solutions | per-doc cap, MMR, sentence-level gold; ir_measures/ranx/BEIR | [Bias solutions](检索-文档级偏置方案调研.md) |
 
-| 2026-11-01 | max_per_paper=2 audit | unique papers@10 3.85→7.5, but gold sentence top10 9/20→0/20; reject | [Bias audit](检索-文档级偏置审计.md) |
+| 2026-11-01 | max_per_paper=2 audit | corrected: unique@10 3.85→7.5, gold sentence 9→10; candidate, not shipped | [Bias audit](检索-文档级偏置审计.md) |
 
 | 2026-11-01 | Retrieval SLO / redundancy design | 3s p95 online, 1s light path; no hard cap; MMR + soft caps; gates defined | [SLO design](设计-检索SLO与冗余控制.md) |
 
-| 2026-11-01 | Near-duplicate suppression | opt-in `SCIPAL_NEAR_DUP_THRESHOLD`; same-paper n-gram Jaccard; 759 tests OK | [Near-duplicate suppression](检索-近重复抑制.md) |
+| 2026-11-01 | Near-duplicate suppression | opt-in `SCIPAL_NEAR_DUP_THRESHOLD`; audit gold sentence 9→12; 759 tests OK | [Near-duplicate suppression](检索-近重复抑制.md) |
 
 ## Rules
 
