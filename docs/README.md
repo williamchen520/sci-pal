@@ -1,3 +1,5 @@
+[English](en/README.md) | **简体中文**
+
 # SciPal 文档索引（docs/）
 
 > 项目总说明以仓库根目录的 [`../README.md`](../README.md) 为准。
@@ -8,6 +10,7 @@
 | 目的 | 文档 |
 |------|------|
 | 项目是什么、怎么启动 | [`../README.md`](../README.md) |
+| English documentation | [`en/README.md`](en/README.md) |
 | 架构、模块、路由与数据流 | [架构与路由图.md](架构与路由图.md) |
 | 文献监控 | [工作计划-自适应与文献情报.md](工作计划-自适应与文献情报.md) |
 | 领域包 | [肿瘤免疫领域包](../packs/biomed-oncoimmuno/README.md) |
