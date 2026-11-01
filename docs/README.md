@@ -10,6 +10,7 @@
 | 目的 | 文档 |
 |------|------|
 | 项目是什么、怎么启动 | [`../README.md`](../README.md) |
+| Research logs index | [`Research_Logs_Index.md`](Research_Logs_Index.md) |
 | English documentation | [`en/README.md`](en/README.md) |
 | 架构、模块、路由与数据流 | [架构与路由图.md](架构与路由图.md) |
 | 文献监控 | [工作计划-自适应与文献情报.md](工作计划-自适应与文献情报.md) |
@@ -68,3 +69,7 @@
 - 历史工单、阶段验收、旧设计放 `docs/archive/`；
 - 新增文档先判断是“当前规范”还是“过程记录”；
 - 根 README 只保留入口，不复制正文。
+
+## 调研档案约定
+
+新增调研/实验档案时，必须在 [`Research_Logs_Index.md`](Research_Logs_Index.md) 加一行，并在同一 PR 中提交。
