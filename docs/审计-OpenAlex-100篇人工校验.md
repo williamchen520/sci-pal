@@ -146,3 +146,78 @@ Fill the 100 rows first; then decide.
 - [Full OpenAlex audit](审计-全量OpenAlex与领域标签.md)
 - [Domain discussion](讨论-领域覆盖与领域感知路由.md)
 - [Research Logs Index](Research_Logs_Index.md)
+
+## 11. AI-assisted prefill (2026-11-01)
+
+Status:
+
+```text
+AI prelabels      100/100
+human labels        0/100
+```
+
+Prelabel distribution:
+
+| topic_match | rows |
+|---|---:|
+| yes | 72 |
+| partial | 16 |
+| no | 12 |
+
+Confidence:
+
+| confidence | rows |
+|---|---:|
+| high | 37 |
+| medium | 35 |
+| low | 28 |
+
+Europe PMC MeSH hits: 61/100.
+
+Prefilled file:
+
+[eval/validation/openalex_100_prefilled.csv](../eval/validation/openalex_100_prefilled.csv)
+
+Each row carries:
+
+```text
+ai_prelabel_domain
+ai_prelabel_topic_match
+ai_prelabel_confidence
+ai_evidence
+ai_notes
+```
+
+Evidence sources in `ai_evidence`:
+
+```text
+OpenAlex work URL
+OpenAlex primary_topic / field
+DOI
+Europe PMC MeSH (when available)
+Europe PMC article URL
+existing auto_domain_l1
+basis for the match decision
+```
+
+### Important limitation
+
+This is an **AI-assisted heuristic**, not human validation:
+
+```text
+title/abstract token overlap
++ MeSH token overlap
++ auto label corroboration
+```
+
+It can be wrong. The `human_*` columns are still blank.
+
+### How to review efficiently
+
+```text
+1. Review low-confidence rows first
+2. Then all rows with ai_prelabel_topic_match = no
+3. Then partial
+4. Fill human_domain / human_topic_match / human_notes
+5. Run scripts/score_openalex_validation.py
+```

@@ -76,6 +76,12 @@ def main() -> int:
                 "journal": paper["journal"],
                 "year": paper["year"],
                 "paper_type": paper["paper_type"],
+                "openalex_id": row.get("openalex_id"),
+                "openalex_url": (
+                    row.get("openalex_id")
+                    if str(row.get("openalex_id") or "").startswith("http")
+                    else (f"https://openalex.org/{row.get('openalex_id')}" if row.get("openalex_id") else "")
+                ),
                 "openalex_domain": row.get("domain_name"),
                 "openalex_field": row.get("field_name"),
                 "openalex_subfield": row.get("subfield_name"),
