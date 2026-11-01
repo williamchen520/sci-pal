@@ -83,8 +83,6 @@ sci-pal/
 ├── download_*.py              # 数据下载脚本
 ├── requirements.txt
 ├── .env.example
-├── WORK_LOG.md                # 版本工作日志（重要！每次更新）
-├── test_workflow.sh           # 测试工作流
 ├── self_check.py              # 自检脚本
 └── AGENTS.md                  # 本文件
 ```
@@ -171,8 +169,8 @@ data/protocols_io_cache/       # Protocols.io API 缓存
 ## 开发约定（重要！）
 
 ### 每次修改代码后必须同步更新：
-1. **WORK_LOG.md** — 追加版本记录（修改了什么、为什么、影响范围）
-2. **test_workflow.sh** — 增加对应测试项
+1. **docs/Research_Logs_Index.md** — 新增调研/实验档案时加一行
+2. **tests/** — 增加或更新对应测试，并运行 `python -m unittest discover -s tests -p "test_*.py"`
 3. **self_check.py** — 增加对应检查项
 
 ### 不能做的事：

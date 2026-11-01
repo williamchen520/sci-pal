@@ -149,3 +149,30 @@ user input → routing layer → service layer (retrieval/review/Q&A) → data l
 ```
 
 For function-by-function details, see [API Reference](API-Reference.md).
+
+---
+
+## 14. Legacy Migration Lessons (2026-11)
+
+Early WorkBuddy / CodeBuddy handoff documents now live in
+[`archive_legacy/`](../archive_legacy/README.md) and are not configuration references.
+
+Research and engineering requirements retained from that period:
+
+1. **Traceability**: paper → section → paragraph → sentence must be recoverable;
+   PDF keeps page/bbox, XML keeps XPath/source_path.
+2. **Evidence first**: every claim is bound to a quote/evidence; no evidence, no assertion.
+3. **Do not force source normalization**: XML and PDF keep their native structure;
+   missing coordinates are marked `coordinate_source=unavailable`, never fabricated.
+4. **Local-first and auditable**: support offline/local models; record adjudication
+   events instead of overwriting history.
+5. **Multi-user isolation**: users / workspaces / memberships; scope data by workspace.
+
+Engineering lessons:
+
+```text
+Two writers on one working tree → conflicts; keep one active writer and one theme per PR.
+PyTorch + Flask multithreading → possible deadlock; isolate reranking in a worker/service.
+Old V33.13 SQLite/Windows setup docs → obsolete; archived; do not copy their paths/config.
+```
+
