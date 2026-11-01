@@ -36,6 +36,8 @@
 
 | 2026-11-01 | max_per_paper=2 audit | unique papers@10 3.85→7.5, but gold sentence top10 9/20→0/20; reject | [Bias audit](检索-文档级偏置审计.md) |
 
+| 2026-11-01 | Retrieval SLO / redundancy design | 3s p95 online, 1s light path; no hard cap; MMR + soft caps; gates defined | [SLO design](设计-检索SLO与冗余控制.md) |
+
 ## Rules
 
 ```text
