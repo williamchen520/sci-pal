@@ -32,6 +32,7 @@ def main() -> int:
     parser.add_argument("--per-source", type=int, default=5)
     parser.add_argument("--recall", type=int, default=200)
     parser.add_argument("--terms", type=int, default=5)
+    parser.add_argument("--ranker", default="rank", choices=("rank", "rank_cd"))
     parser.add_argument("--out", default="")
     args = parser.parse_args()
     if not args.pg_dsn:
@@ -48,7 +49,7 @@ def main() -> int:
         if not gold:
             continue
         paragraph_order = sqlite_paper_order(Path(args.sqlite_db), terms_for(case["query"]))
-        hits = sentence_fts.search(case["query"], top_k=args.recall, term_limit=args.terms)
+        hits = sentence_fts.search(case["query"], top_k=args.recall, term_limit=args.terms, ranker=args.ranker)
         candidates = paragraph_candidates(hits, args.recall)
         texts = load_paragraph_texts(args.pg_dsn, [c["para_id"] for c in candidates])
         for candidate in candidates:
@@ -81,6 +82,7 @@ def main() -> int:
     report = {
         "cases": len(cases),
         "recall": args.recall,
+        "ranker": args.ranker,
         "failures": failures,
         "summary": [summarize(rows, name) for name in ("paragraph_fts", "recall_rerank")],
         "rows": rows,

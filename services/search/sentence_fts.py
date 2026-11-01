@@ -53,6 +53,7 @@ class SentenceFTS:
         source_type: Optional[str] = None,
         match: str = "any",
         term_limit: int = 12,
+        ranker: str = "rank",
     ) -> List[SentenceHit]:
         query = (query or "").strip()
         if not query:
@@ -64,7 +65,10 @@ class SentenceFTS:
         terms = _extract_keywords(query)
         if not terms:
             return []
+        if ranker not in ("rank", "rank_cd"):
+            raise ValueError("ranker must be rank or rank_cd")
         operator = " | " if match == "any" else " & "
+        rank_expr = "ts_rank_cd" if ranker == "rank_cd" else "ts_rank"
         ts_query = operator.join(terms[: max(1, min(term_limit, 12))])
         where = "s.search_vector @@ q.query"
         params: list = [ts_query]
@@ -77,7 +81,7 @@ class SentenceFTS:
             SELECT s.sentence_id, s.paper_id, s.para_id, s.section_id,
                    s.text, s.source_type, s.page, s.bbox,
                    sn.source_path, p.title,
-                   ts_rank(s.search_vector, q.query) AS rank
+                   {rank_expr}(s.search_vector, q.query) AS rank
             FROM sentences s
             JOIN papers p ON p.paper_id = s.paper_id
             LEFT JOIN source_nodes sn ON sn.node_id = s.source_node_id
