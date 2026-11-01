@@ -48,6 +48,26 @@ services:
       disable: true
     restart: unless-stopped
 
+  health-cron:
+    image: scipal-app:latest
+    command:
+      - sh
+      - -c
+      - "while true; do python scripts/dual_write_healthcheck.py; sleep 300; done"
+    env_file:
+      - .env
+    environment:
+      SCIPAL_AUTH_REQUIRED: "1"
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
   caddy:
     image: caddy:2
     depends_on:
