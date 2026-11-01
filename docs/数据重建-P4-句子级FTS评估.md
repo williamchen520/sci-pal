@@ -71,3 +71,26 @@ sentence FTS for candidate recall
 ```
 
 That is a multi-stage retrieval change, not a tokenizer change, and needs its own evaluation.
+
+## 6. Multi-stage experiment
+
+Pipeline:
+
+```text
+sentence FTS (top 5,000)
+→ best sentence per paragraph
+→ top 5 paragraphs
+→ bge-reranker-base cross-encoder
+→ deduplicate to papers in rerank order
+```
+
+Cross-encoder input text was capped at 1,500 characters for bounded, reproducible latency.
+
+| System | Queries | Recall@10 | MRR | nDCG@10 |
+|---|---:|---:|---:|---:|
+| paragraph_fts | 20 | 1.0000 | 0.8806 | 0.9097 |
+| sentence_multistage | 20 | 0.9000 | 0.8375 | 0.8531 |
+
+Raw report: `eval/results/fts_multistage_compare.json`.
+
+The multi-stage path recovers most of the ranking quality lost by direct sentence ranking, but it still does not beat paragraph FTS. It remains an experimental path.

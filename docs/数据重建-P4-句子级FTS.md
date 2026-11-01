@@ -132,3 +132,22 @@ Full report: [P4 sentence-level FTS evaluation](数据重建-P4-句子级FTS评�
 | sentence_fts | 0.9000 | 0.6250 | 0.6943 |
 
 Decision: do not switch the production paper ranker to sentence FTS yet. Keep it for sentence traceability and evidence; keep paragraph FTS for paper-level ranking.
+
+### Multi-stage experiment
+
+```text
+sentence FTS top 5,000
+→ paragraph aggregation
+→ top 5 paragraphs
+→ bge-reranker-base
+→ paper aggregation
+```
+
+Result (20 queries):
+
+| System | Recall@10 | MRR | nDCG@10 |
+|---|---:|---:|---:|
+| paragraph_fts | 1.0000 | 0.8806 | 0.9097 |
+| sentence_multistage | 0.9000 | 0.8375 | 0.8531 |
+
+Still not better than paragraph FTS; do not switch.

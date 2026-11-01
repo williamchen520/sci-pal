@@ -1,0 +1,382 @@
+{
+  "cases": 20,
+  "candidate_paragraphs": 5,
+  "summary": [
+    {
+      "system": "paragraph_fts",
+      "queries": 20,
+      "recall@10": 1.0,
+      "mrr": 0.8806,
+      "ndcg@10": 0.9097
+    },
+    {
+      "system": "sentence_multistage",
+      "queries": 20,
+      "recall@10": 0.9,
+      "mrr": 0.8375,
+      "ndcg@10": 0.8531
+    }
+  ],
+  "rows": [
+    {
+      "case_id": "q001",
+      "source": "seed_100",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q001",
+      "source": "seed_100",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q002",
+      "source": "seed_100",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q002",
+      "source": "seed_100",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q003",
+      "source": "seed_100",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q003",
+      "source": "seed_100",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q004",
+      "source": "seed_100",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q004",
+      "source": "seed_100",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q005",
+      "source": "seed_100",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q005",
+      "source": "seed_100",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q008",
+      "source": "cross_topic",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "q008",
+      "source": "cross_topic",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "q009",
+      "source": "cross_topic",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.1111111111111111,
+      "ndcg@10": 0.3010299956639812
+    },
+    {
+      "case_id": "q009",
+      "source": "cross_topic",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0
+    },
+    {
+      "case_id": "q010",
+      "source": "cross_topic",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q010",
+      "source": "cross_topic",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q014",
+      "source": "cross_topic",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q014",
+      "source": "cross_topic",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "q015",
+      "source": "cross_topic",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "q015",
+      "source": "cross_topic",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q1",
+      "source": "claim_qualifiers",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q1",
+      "source": "claim_qualifiers",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 0.25,
+      "ndcg@10": 0.43067655807339306
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q2",
+      "source": "claim_qualifiers",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_triple_os__q2",
+      "source": "claim_qualifiers",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q1",
+      "source": "claim_qualifiers",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q1",
+      "source": "claim_qualifiers",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q2",
+      "source": "claim_qualifiers",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_dtace_haic__q2",
+      "source": "claim_qualifiers",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_ici_rechallenge__q1",
+      "source": "claim_qualifiers",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "claim_hcc_ici_rechallenge__q1",
+      "source": "claim_qualifiers",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_ab84d6de_xml",
+      "source": "paper_title",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_ab84d6de_xml",
+      "source": "paper_title",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_d62ab6f2_xml",
+      "source": "paper_title",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_d62ab6f2_xml",
+      "source": "paper_title",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0
+    },
+    {
+      "case_id": "title_3219ab94_xml",
+      "source": "paper_title",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_3219ab94_xml",
+      "source": "paper_title",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_966_ae9a35bd",
+      "source": "paper_title",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_966_ae9a35bd",
+      "source": "paper_title",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_946_2d3bcc67",
+      "source": "paper_title",
+      "system": "paragraph_fts",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    },
+    {
+      "case_id": "title_946_2d3bcc67",
+      "source": "paper_title",
+      "system": "sentence_multistage",
+      "gold_count": 1,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0
+    }
+  ]
+}
