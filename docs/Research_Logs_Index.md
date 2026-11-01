@@ -99,6 +99,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-01 | OpenAlex low-confidence 28 | exported low-confidence review list; human fields blank | [Low-confidence 28](审计-OpenAlex-低置信度28条.md) |
 
+| 2026-11-02 | PG write-path productionization plan | health: 0 pending but PG ahead in 7 tables; strangler by tenancy→papers→watch | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text
