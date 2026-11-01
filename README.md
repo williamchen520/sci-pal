@@ -250,8 +250,12 @@ English:
 - [API reference](docs/en/API-Reference.md)
 - [PostgreSQL migration plan](docs/en/plans/PostgreSQL-Migration.md)
 - [Multi-user and data isolation plan](docs/en/plans/Multi-User-and-Data-Isolation.md)
+- [Domain packs and distribution](docs/en/plans/Domain-Packs-and-Distribution.md)
 - [Plugin ports and benchmarks](docs/en/plans/Plugin-Ports-and-Benchmarks.md)
 - [Argument workbench plan](docs/en/plans/Argument-Workbench.md)
+- [Adaptive retrieval and literature intelligence](docs/en/plans/Adaptive-Retrieval-and-Literature-Intelligence.md)
+- [DSH integration and plugins](docs/en/plans/DSH-Integration-and-Plugins.md)
+- [Project tracking and ELN](docs/en/plans/Project-Tracking-and-ELN.md)
 
 Chinese:
 
