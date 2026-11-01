@@ -11,6 +11,8 @@ import os
 from dataclasses import dataclass, asdict
 from typing import Iterable, List, Optional
 
+from services.search.fts_query_builder import _extract_keywords
+
 
 @dataclass
 class SentenceHit:
@@ -49,14 +51,22 @@ class SentenceFTS:
         *,
         top_k: int = 20,
         source_type: Optional[str] = None,
+        match: str = "any",
     ) -> List[SentenceHit]:
         query = (query or "").strip()
         if not query:
             return []
+        if match not in ("any", "all"):
+            raise ValueError("match must be any or all")
         if source_type not in (None, "xml", "pdf"):
             raise ValueError("source_type must be xml, pdf or None")
+        terms = _extract_keywords(query)
+        if not terms:
+            return []
+        operator = " | " if match == "any" else " & "
+        ts_query = operator.join(terms[:12])
         sql = """
-            WITH q AS (SELECT websearch_to_tsquery('english', %s) AS query)
+            WITH q AS (SELECT to_tsquery('english', %s) AS query)
             SELECT s.sentence_id, s.paper_id, s.para_id, s.section_id,
                    s.text, s.source_type, s.page, s.bbox,
                    sn.source_path, p.title,
@@ -72,7 +82,7 @@ class SentenceFTS:
         """
         pg, close = self._connection()
         try:
-            rows = pg.execute(sql, (query, source_type, source_type, top_k)).fetchall()
+            rows = pg.execute(sql, (ts_query, source_type, source_type, top_k)).fetchall()
         finally:
             if close:
                 pg.close()

@@ -45,7 +45,7 @@ def _row(**overrides):
 class SentenceFTSTests(unittest.TestCase):
     def test_xml_hit_keeps_xpath_and_null_coords(self) -> None:
         fake = _FakePG([_row()])
-        hits = SentenceFTS(connector=lambda: fake).search("x", source_type="xml")
+        hits = SentenceFTS(connector=lambda: fake).search("diabetes", source_type="xml")
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0].source_path, "/article/body/sec[1]/p[1]#sentence-1")
         self.assertIsNone(hits[0].page)
@@ -54,7 +54,7 @@ class SentenceFTSTests(unittest.TestCase):
 
     def test_pdf_hit_keeps_page_bbox(self) -> None:
         fake = _FakePG([_row(source_type="pdf", page=5, bbox="1,2,3,4", source_path="/paragraphs/34")])
-        hit = SentenceFTS(connector=lambda: fake).search("x", source_type="pdf")[0]
+        hit = SentenceFTS(connector=lambda: fake).search("diabetes", source_type="pdf")[0]
         self.assertEqual(hit.page, 5)
         self.assertEqual(hit.bbox, "1,2,3,4")
 

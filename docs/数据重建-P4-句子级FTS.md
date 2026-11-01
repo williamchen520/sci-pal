@@ -121,3 +121,14 @@ metadata_only 不出现
 句子级 rank
 段落聚合
 ```
+
+## 7. 20-query evaluation
+
+Full report: [P4 sentence-level FTS evaluation](数据重建-P4-句子级FTS评估.md)
+
+| System | Recall@10 | MRR | nDCG@10 |
+|---|---:|---:|---:|
+| paragraph_fts | 1.0000 | 0.8806 | 0.9097 |
+| sentence_fts | 0.9000 | 0.6250 | 0.6943 |
+
+Decision: do not switch the production paper ranker to sentence FTS yet. Keep it for sentence traceability and evidence; keep paragraph FTS for paper-level ranking.
