@@ -28,6 +28,8 @@
 
 | 2026-11-01 | HybridSearch paper_id fix rerun | no-rerank 1.0000/.9250/.9446; None bucket gone; rerank pass pending | [HybridSearch fix](检索-修复HybridSearch丢失paper_id.md) |
 
+| 2026-11-01 | Retrieval document-bias audit | paper recall 1.0000; gold sentence top10 only 9/20; mean max hits/paper 118.4 | [Bias audit](检索-文档级偏置审计.md) |
+
 ## Rules
 
 ```text
