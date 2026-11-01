@@ -445,7 +445,25 @@ sentence 上 source_node_id 指向主来源
 
 ---
 
-## 15. 结论
+## 15. P1 实施状态
+
+```text
+scipal_v2 已创建（空库）
+10 张表
+28 个外键
+sentences.search_vector = tsvector
+所有表 0 行
+旧库未动
+```
+
+建库脚本：
+
+```text
+build_db/postgres_schema_v2.sql
+scripts/create_pg_v2.py
+```
+
+## 16. 结论
 
 ```text
 XML 按树重建
