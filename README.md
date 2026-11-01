@@ -4,8 +4,8 @@
 
 SciPal is a locally deployable system for searching scientific literature, parsing papers into structured evidence, and producing traceable literature reviews. Its core is a **deterministic retrieval layer** — vector search, FTS5/BM25, reciprocal-rank fusion (RRF), cross-encoder reranking, query routing, and adaptive context expansion. For generation, we recommend a **small local model for orchestration plus a cloud or DSH model for reasoning**.
 
-> Current version: **V33.96** (2026-10-31)  
-> Python 3.12 · Flask · ChromaDB · SQLite · OpenAI-compatible cloud APIs / Ollama  
+> Current version: **V33.96** (2026-11-02)  
+> Python 3.12 · Flask · PostgreSQL 16 (read/tenancy writes) · SQLite FTS mirror · ChromaDB · OpenAI-compatible cloud APIs / Ollama  
 > Vanilla HTML/CSS/JS frontend (no framework); DSH can serve as an optional reasoning layer.
 
 ---
@@ -16,6 +16,27 @@ SciPal is a locally deployable system for searching scientific literature, parsi
 2. The main branch contains known bugs, unstable APIs, and code paths that have not been fully tested.
 3. **Do not deploy the current code in production**, in clinical or regulated research workflows, or anywhere data loss would matter.
 4. If you ignore this warning and use development code in production, you are responsible for any resulting data loss, service failure, or other damage. The authors accept no liability.
+
+---
+
+## Current Engineering Status (2026-11-02)
+
+```text
+Paper read path / detail / graph / tenancy reads   PostgreSQL
+Tenancy writes                                    PostgreSQL primary + SQLite mirror
+Other writes                                      SQLite + P4 outbox
+FTS / Chroma                                      SQLite / Chroma
+Production paper ranking                          paragraph FTS
+Domain routing / topic penalty                    disabled
+Tests                                             766
+```
+
+Operational notes:
+
+- `deploy-health-cron-1` checks outbox and tenancy SQLite/PG drift every 300s.
+- OpenAlex/AI domain labels are **provisional**; no production routing yet.
+- HybridSearch, sentence FTS, near-duplicate suppression, soft cap, and MMR remain experimental.
+- Remaining work is tracked in [Work summary and backlog](docs/工作总结-2026-11-02.md).
 
 ---
 
@@ -46,7 +67,8 @@ $env:SCIPAL_BENCH_ALLOW_SQLITE = "1"
 
 Notes:
 
-- The operational database is still SQLite; the PostgreSQL business backend is not complete yet.
+- Production paper reads, detail, graph, and tenancy reads run on PostgreSQL.
+- Tenancy writes are PostgreSQL-primary with a SQLite mirror; other writes still use SQLite plus the P4 outbox.
 - The policy is **fail-fast**: large or concurrent benchmarks fail instead of silently falling back to SQLite.
 - See [docs/benchmark-PostgreSQL策略.md](docs/benchmark-PostgreSQL策略.md) (Chinese) for details.
 
@@ -81,7 +103,8 @@ Notes:
 | Claim pilot | Claim cards, qualifiers, supporting/opposing evidence, FTS/semantic retrieval, NLI, verdict events, writing briefs |
 | Plugin ports M0/M1/M2 | `services/plugins` + `plugins/` manifest/port schema/adapter; JSONL provenance; ClaimVerifier and Retriever ports |
 | Benchmark DB policy | PostgreSQL by default; SQLite disabled above 100 papers or under concurrency; explicit opt-in for small runs |
-| DB adapter P1 | SQLite default; PostgreSQL schema and adapter opt-in; no data migration and no read-path switch |
+| PostgreSQL migration | Paper/detail/graph/tenancy reads on PG; tenancy writes PG-primary + SQLite mirror; P4 outbox for remaining writes |
+| Health and drift | `/api/health`; `dual_write_healthcheck.py`; `health-cron` every 300s; tenancy row-level SQLite/PG drift |
 | Deployment | Docker Compose (app + watch-cron + Caddy), backups, offline bundle |
 | Experimental protocols | Protocols.io search/import; Dockstore / bio.tools / nf-core |
 
@@ -97,11 +120,12 @@ DSH desktop / browser
    ▼
 Flask API (26 blueprints under routes/*, ~180 routes)
    │
-services/* (retrieval, QA, reviews, guard, source adapters)
+services/* (retrieval, QA, reviews, guard, tenancy, source adapters)
    │
-build_db/* (parsing, JATS import, structure rebuild, database writes)
-   │
-SQLite research.db + ChromaDB + documents/ + documents_xml/
+   ├─ PostgreSQL: paper read path + tenancy writes
+   ├─ SQLite mirror + FTS5 + ChromaDB
+   ├─ watch-cron / health-cron
+   └─ build_db/* (parsing, JATS/PDF rebuild, database writes)
 ```
 
 ## Technology Stack
@@ -132,7 +156,7 @@ SQLite research.db + ChromaDB + documents/ + documents_xml/
 
 | Table | Rows |
 |---|---:|
-| papers | 3,310 (JATS XML 3,218 + PDF 83 + others) |
+| papers | 3,312 (production; JATS XML 3,218 + PDF 83 + others) |
 | paragraphs | 167,388 |
 | sentences | 862,677 (PDF sentence bbox: 61,739) |
 | sections | 69,128 |
@@ -160,6 +184,19 @@ venv_sciPal_py312\Scripts\python.exe scripts\run_tests_guarded.py
 # Equivalent standard command (no stop-loss)
 venv_sciPal_py312\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"
 ```
+
+Production-like Docker stack:
+
+```bash
+cp deploy/.env.example deploy/.env
+# Edit deploy/.env: SCIPAL_SECRET_KEY, LLM, and SCIPAL_PG_DSN
+docker compose -f deploy/docker-compose.yml up -d --build
+docker compose -f deploy/docker-compose.yml ps
+curl -fsS http://127.0.0.1/api/health
+```
+
+The stack starts `app`, `watch-cron`, `health-cron`, and `caddy`.
+PostgreSQL 16 is an external dependency; point `SCIPAL_PG_DSN` at it.
 
 Common environment variables:
 
@@ -206,7 +243,8 @@ sci-pal/
 ├─ eval/                     retrieval, QA, and plugin benchmark scripts
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     architecture, data, and design documents
-├─ tests/                    750 tests
+├─ deploy/                   Dockerfile, compose, health-cron
+├─ tests/                    766 tests
 ├─ documents/                PDFs
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db, Chroma
@@ -235,12 +273,18 @@ The source of truth is `routes/` and `api_server.py`. See [API Reference](docs/e
 ## Tests
 
 ```text
-750 tests, ~65s
+766 tests, ~70s
 ```
 
 Coverage includes retrieval, routing, guard, structure, JATS import, watch, domain packs, claim pilot, multi-user isolation, projects/experiments/runs, and plugin ports.
 
 ## Documentation
+
+- [Work summary and backlog (2026-11-02)](docs/工作总结-2026-11-02.md)
+- [Handover guide](docs/HANDOVER.md)
+- [Research logs index](docs/Research_Logs_Index.md)
+- [PostgreSQL write-path design](docs/设计-PostgreSQL写路径生产化.md)
+- [Retrieval SLO design](docs/设计-检索SLO与冗余控制.md)
 
 English:
 
