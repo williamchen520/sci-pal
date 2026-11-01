@@ -1,0 +1,27 @@
+{
+  "url": "http://127.0.0.1:8765",
+  "query": "What is ICI rechallenge in hepatocellular carcinoma?",
+  "sentence_hits": 1000,
+  "results": [
+    {
+      "paragraphs": 20,
+      "runs": [
+        0.3831,
+        0.1199
+      ],
+      "mean": 0.2515,
+      "min": 0.1199,
+      "max": 0.3831
+    },
+    {
+      "paragraphs": 50,
+      "runs": [
+        0.3049,
+        0.3213
+      ],
+      "mean": 0.3131,
+      "min": 0.3049,
+      "max": 0.3213
+    }
+  ]
+}
