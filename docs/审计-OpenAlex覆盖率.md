@@ -176,5 +176,30 @@ Full run:
 
 ```bash
 python scripts/openalex_coverage.py \
-  --out eval/results/openalex_coverage.json
+  --out eval/results/openalex_coverage_summary.json
 ```
+
+## 12. Full run (2026-11-01)
+
+```text
+papers      3,310
+fetched     3,290
+missing        12
+coverage    99.4%
+errors          0
+```
+
+Domains:
+
+```text
+Health Sciences    1,931
+Life Sciences      1,156
+Physical Sciences    145
+Social Sciences       56
+unknown                2
+```
+
+Stored in `paper_domains_openalex` (3,290 rows) and
+`eval/results/openalex_paper_domains.csv`.
+
+Full details: [Full OpenAlex audit](审计-全量OpenAlex与领域标签.md).

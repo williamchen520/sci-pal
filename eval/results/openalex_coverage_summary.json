@@ -1,0 +1,125 @@
+{
+  "papers": 3310,
+  "fetched": 3290,
+  "missing": 12,
+  "coverage_rate": 0.994,
+  "errors": [],
+  "top_domains": [
+    [
+      "Health Sciences",
+      1931
+    ],
+    [
+      "Life Sciences",
+      1156
+    ],
+    [
+      "Physical Sciences",
+      145
+    ],
+    [
+      "Social Sciences",
+      56
+    ],
+    [
+      "(unknown)",
+      2
+    ]
+  ],
+  "top_topics": [
+    [
+      "Dementia and Cognitive Impairment Research",
+      224
+    ],
+    [
+      "Gut microbiota and health",
+      194
+    ],
+    [
+      "Cancer Immunotherapy and Biomarkers",
+      99
+    ],
+    [
+      "Alzheimer's disease research and treatments",
+      84
+    ],
+    [
+      "Oral microbiology and periodontitis research",
+      44
+    ],
+    [
+      "Liver Disease Diagnosis and Treatment",
+      42
+    ],
+    [
+      "Hepatocellular Carcinoma Treatment and Prognosis",
+      36
+    ],
+    [
+      "CAR-T cell therapy research",
+      27
+    ],
+    [
+      "Diabetes Treatment and Management",
+      25
+    ],
+    [
+      "Extracellular vesicles in disease",
+      25
+    ],
+    [
+      "Diabetes, Cardiovascular Risks, and Lipoproteins",
+      22
+    ],
+    [
+      "T-cell and B-cell Immunology",
+      22
+    ],
+    [
+      "Asthma and respiratory diseases",
+      21
+    ],
+    [
+      "Hepatitis B Virus Studies",
+      21
+    ],
+    [
+      "Inflammatory Bowel Disease",
+      19
+    ],
+    [
+      "Systemic Lupus Erythematosus Research",
+      19
+    ],
+    [
+      "Chronic Kidney Disease and Diabetes",
+      19
+    ],
+    [
+      "Neuroinflammation and Neurodegeneration Mechanisms",
+      18
+    ],
+    [
+      "Diabetes and associated disorders",
+      18
+    ],
+    [
+      "Ferroptosis and cancer prognosis",
+      18
+    ]
+  ],
+  "missing_sample": [
+    "10.1002/alz70860_102927",
+    "10.1192/j.eurpsy.2026.10736",
+    "10.1371/journal.pone.0353968",
+    "10.4093/dmj.2024.0579.e1",
+    "10.21203/rs.3.rs-8921143/v1",
+    "10.1183/13993003.02224-2025].",
+    "10.2196/preprints.88794",
+    "10.21203/rs.3.rs-8920893/v1",
+    "10.21203/rs.3.rs-9209934/v1",
+    "10.1002/wrna.70057",
+    "10.1186/s12947-026-00383-5",
+    "10.1002/mgg3.70308"
+  ]
+}
