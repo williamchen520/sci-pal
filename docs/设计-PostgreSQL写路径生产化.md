@@ -370,3 +370,44 @@ before audit inserts.
 3. migrate projects/experiments membership reads to tenancy service
 4. then remove tenancy from outbox replication
 ```
+
+## 12. Tenancy canary (2026-11-02)
+
+Run against production PostgreSQL from a throw-away container using the
+current repository code mounted at `/app`:
+
+```text
+image          scipal-app:latest
+code           D:\sciPal mounted read/write at /app
+PG             production scipal_bench
+flag           SCIPAL_TENANCY_WRITE_BACKEND=postgres
+SQLite mirror  /tmp/canary.db (throw-away)
+```
+
+Result:
+
+```text
+create_user        pass
+create_workspace   pass
+add_member         pass
+list_members       pass
+PG read-back       pass
+cleanup            pass
+```
+
+The test user/workspace/membership/audit rows were removed after verification.
+
+First attempt failed because the container DSN resolved to `127.0.0.1:5433`;
+using `host.docker.internal` fixed it. The failure was connectivity, not the
+write logic.
+
+Production app was **not restarted** and the production flag remains off.
+
+Next:
+
+```text
+1. migrate projects/experiments direct membership reads
+2. enable the flag in production
+3. verify registration/login/workspace/member flows
+4. then remove tenancy outbox replication
+```

@@ -103,6 +103,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | PG tenancy write path Phase 1 | PG-first user/workspace/member + SQLite mirror; 762 tests; sequence bug fixed | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Tenancy PG canary | create user/workspace/member + list + read-back + cleanup passed in production PG; flag still off | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text
