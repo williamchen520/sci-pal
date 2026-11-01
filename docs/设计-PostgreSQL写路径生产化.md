@@ -497,3 +497,47 @@ docker compose -f deploy/docker-compose.yml up -d app
 ```
 
 Production code is now the latest merged branch; the write flag is on.
+
+## 15. Production registration/login verification (2026-11-02)
+
+Observation window: ~30 minutes after enabling the flag.
+
+```text
+production app        healthy
+logs                  no ERROR/Traceback
+```
+
+HTTP flow with a temporary user created through the tenancy service:
+
+| step | status |
+|---|---|
+| `POST /api/auth/login` | 200 |
+| `GET /api/auth/me` | 200 |
+| `GET /api/workspaces` | 200 |
+| `GET /api/workspaces/<id>/members` | 200 |
+| `POST /api/auth/logout` | 200 |
+| login after cleanup | 401 |
+
+Post-cleanup counts:
+
+```text
+users         2
+workspaces    1
+```
+
+No test rows remain.
+
+### Important: there is no public registration route
+
+`routes/tenancy.py` exposes login/logout/me/workspace/member APIs, but no
+`/api/auth/register`. New users are created by the admin CLI or a future
+registration endpoint. This verification covers login and workspace access,
+not self-service registration.
+
+### Decision
+
+```text
+PG tenancy write path is live for admin-created users.
+Self-service registration is a separate product decision.
+Keep observing write errors and mirror drift.
+```
