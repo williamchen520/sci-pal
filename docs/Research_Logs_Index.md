@@ -26,6 +26,8 @@
 
 | 2026-11-01 | HybridSearch recall loss | vector hits had top-level `paper_id=None`; fixed; q009 gold now rank 2; 20-query rerun pending | [HybridSearch paper_id fix](检索-修复HybridSearch丢失paper_id.md) |
 
+| 2026-11-01 | HybridSearch paper_id fix rerun | no-rerank 1.0000/.9250/.9446; None bucket gone; rerank pass pending | [HybridSearch fix](检索-修复HybridSearch丢失paper_id.md) |
+
 ## Rules
 
 ```text

@@ -80,3 +80,22 @@ Do not claim the hybrid path is fixed end-to-end yet.
 2. Then run with --rerank.
 3. Compare per-case gold ranks; verify the None bucket is gone.
 ```
+
+## 7. Fixed HybridSearch rerun (no rerank)
+
+```text
+paragraph_fts       1.0000 / 0.8806 / 0.9097
+hybrid (fixed)      1.0000 / 0.9250 / 0.9446
+```
+
+Raw:
+
+```text
+eval/results/hybrid_20_query_fixed_norerank.json
+```
+
+The `None` bucket is gone. Gold paper is now present for all 20 queries.
+The hybrid path beats paragraph FTS on MRR and nDCG at the same Recall@10.
+
+The cross-encoder pass is still slow on the local CPU and has not been rerun.
+Do not switch until that pass completes.
