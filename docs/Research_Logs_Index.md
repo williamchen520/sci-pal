@@ -111,6 +111,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Production tenancy login verification | login/me/workspaces/members/logout 200; cleanup 401; no public register route | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Tenancy mirror drift check | prod write -> SQLite/PG 3/3, drift false; cleanup 2/2, outbox 0 | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text

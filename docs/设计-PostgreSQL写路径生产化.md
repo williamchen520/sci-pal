@@ -541,3 +541,48 @@ PG tenancy write path is live for admin-created users.
 Self-service registration is a separate product decision.
 Keep observing write errors and mirror drift.
 ```
+
+## 16. Mirror drift check (2026-11-02)
+
+Script: `scripts/tenancy_mirror_drift.py`
+
+Baseline after enabling the flag:
+
+```text
+users          SQLite 2 / PG 2
+workspaces     SQLite 1 / PG 1
+memberships    SQLite 2 / PG 2
+drift          false
+```
+
+Then created one temporary user through the production app with the **production
+SQLite path** (`/app/data/research.db`) and re-ran the check:
+
+```text
+users          SQLite 3 / PG 3
+rows only in SQLite  0
+rows only in PG      0
+changed rows         0
+drift                false
+```
+
+The test user was removed from both stores and its outbox rows deleted. Final:
+
+```text
+users          SQLite 2 / PG 2
+drift          false
+outbox pending 0
+outbox failed  0
+app health     200
+logs           no ERROR / Traceback / mirror failed
+```
+
+This verifies the SQLite mirror path for tenancy writes, not just PG.
+
+Next:
+
+```text
+1. keep observing for a longer window
+2. add an automated drift check to the health job
+3. remove tenancy outbox replication
+```
