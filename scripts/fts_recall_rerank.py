@@ -34,6 +34,7 @@ def main() -> int:
     parser.add_argument("--terms", type=int, default=5)
     parser.add_argument("--ranker", default="rank", choices=("rank", "rank_cd"))
     parser.add_argument("--limit-cases", type=int, default=0)
+    parser.add_argument("--spread", action="store_true")
     parser.add_argument("--out", default="")
     args = parser.parse_args()
     if not args.pg_dsn:
@@ -42,7 +43,25 @@ def main() -> int:
         raise SystemExit(f"reranker service is not healthy: {args.url}")
 
     cases = load_cases(ROOT / "eval" / "plugins" / "retriever_queries.json", args.per_source)
-    if args.limit_cases:
+    if args.spread:
+        buckets = {}
+        for case in cases:
+            buckets.setdefault(case.get("source"), []).append(case)
+        spread = []
+        index = 0
+        while len(spread) < (args.limit_cases or len(cases)):
+            added = False
+            for source in buckets:
+                if index < len(buckets[source]):
+                    spread.append(buckets[source][index])
+                    added = True
+                    if args.limit_cases and len(spread) >= args.limit_cases:
+                        break
+            if not added:
+                break
+            index += 1
+        cases = spread
+    elif args.limit_cases:
         cases = cases[: args.limit_cases]
     sentence_fts = SentenceFTS(args.pg_dsn)
     rows = []

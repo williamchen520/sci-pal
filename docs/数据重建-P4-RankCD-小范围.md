@@ -68,3 +68,30 @@ Expand to 5 queries per source, then 20 queries, before any decision.
 3. record cold and warm FTS latency
 4. quality gate: Recall@10 must stay >= 0.95
 ```
+
+## 6. Sample-bias check
+
+The first 5 cases were all `seed_100` and all pointed to the same paper
+(`paper_PMC12707946_2d3bcc67`). That is why every metric was exactly 1.0:
+
+```text
+5 queries
+1 gold paper per query
+same easy paper
+```
+
+Re-ran with one query per source plus a second seed query:
+
+| System | Queries | Recall@10 | MRR | nDCG@10 |
+|---|---:|---:|---:|---:|
+| paragraph_fts | 5 | 1.0000 | 0.8000 | 0.8524 |
+| rank_cd 100 + rerank | 5 | 1.0000 | 0.8000 | 0.8524 |
+
+Raw:
+
+```text
+eval/results/fts_recall_rerank_cd_100_5q_spread.json
+```
+
+This is more credible, but still only 5 queries. It does not justify a
+production switch.
