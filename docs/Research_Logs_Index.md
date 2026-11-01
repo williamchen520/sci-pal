@@ -54,6 +54,8 @@
 
 | 2026-11-01 | OpenAlex 100-paper validation kit | AI prefill 100/100 (72/16/12); human 0/100; OpenAlex+DOI+MeSH evidence | [Human validation kit](审计-OpenAlex-100篇人工校验.md) |
 
+| 2026-11-01 | OpenAlex low-confidence 28 | exported low-confidence review list; human fields blank | [Low-confidence 28](审计-OpenAlex-低置信度28条.md) |
+
 ## Rules
 
 ```text
