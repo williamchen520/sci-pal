@@ -161,7 +161,7 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Phase 1 projects write path | PG-first create/update/member/copy; flag off; experiments pending | [Phase 1 projects](架构-Phase1-Projects写路径.md) |
 
-| 2026-11-02 | Phase 1 experiments core writes | create/update + revisions/audit PG-first; access/sign pending | [Phase 1 experiments](架构-Phase1-Experiments写路径.md) |
+| 2026-11-02 | Phase 1 experiments core writes | create/update/access/sign PG-first; canary pending | [Phase 1 experiments](架构-Phase1-Experiments写路径.md) |
 
 ## Rules
 
