@@ -173,7 +173,7 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Phase 2 watch canary | profile/journal/run/item/seen PG+SQLite 1/1; serial sequence repaired | [Watch canary](架构-Phase2-WatchCanary.md) |
 
-| 2026-11-02 | Phase 2 papers ingest slice | paper + paragraph/sentence batch writes PG; figures/outbox pending | [Phase 2 papers](架构-Phase2-PapersIngest写路径.md) |
+| 2026-11-02 | Phase 2 papers ingest slice | paper + children fail-closed PG transaction; figures/outbox pending | [Phase 2 papers](架构-Phase2-PapersIngest写路径.md) |
 
 | 2026-11-02 | Figures/tables not runtime writes | ingest only carries; build_db writes; PG/SQLite counts match | [Figures/tables](架构-Phase2-FiguresTables说明.md) |
 

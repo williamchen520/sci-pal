@@ -1,7 +1,7 @@
 # Phase 2：Papers Ingest 写路径（第一片）
 
 > 日期：2026-11-02  
-> 状态：paper row + paragraph/sentence batch 已写 PG；figures/tables/outbox 未收口。
+> 状态：paper + children 已 fail-closed；online 仍 best-effort；outbox 未收口。
 
 ## 1. 已迁移
 
@@ -46,7 +46,16 @@ services/papers/pg_writes.py  replace_children
 services/search/ingest.py     children collection
 ```
 
-这是 best-effort：PG 失败会 warning，SQLite 结果保留，outbox 仍是修复路径。
+现在是 fail-closed：
+
+```text
+SQLite transaction 仍打开
+-> PG 同一事务写 papers + paragraphs + sentences
+-> 任一 PG 失败 -> PaperWriteError
+-> SQLite context rollback
+```
+
+只有 SQLite commit 本身失败时才可能留下 PG orphan；这是剩余窗口。
 
 ## 4. 仍未迁移
 
@@ -69,11 +78,12 @@ outbox 不能删
 ## 5. 风险
 
 ```text
-PG upsert 成功后 SQLite batch 失败
--> PG 可能留下无 children 的 paper
+PG 事务成功
+-> SQLite commit 失败
+-> PG 可能留下已提交的 paper/children
 ```
 
-这是当前切片的已知窗口；默认 flag 关闭，生产不触发。
+这是分布式提交无法完全消除的窗口；默认 flag 关闭，生产不触发。
 
 ## 6. 测试
 

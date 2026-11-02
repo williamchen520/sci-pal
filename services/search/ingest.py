@@ -266,6 +266,7 @@ class IngestService:
         written = 0
         metadata_updates: list[tuple[str, object, object, object]] = []
         children: list[tuple[str, list[dict], list[dict]]] = []
+        paper_rows: list[dict] = []
         # `paragraphs_ad` deletes from FTS5 with `WHERE para_id = ?`, which is a
         # full scan per deleted row (para_id is UNINDEXED). Dropping it for the
         # batch and deleting by a single set-based join keeps re-ingest fast.
@@ -290,19 +291,18 @@ class IngestService:
                             "DELETE FROM papers_fts WHERE paper_id = ?", (paper_id,)
                         )
                     filename = f"{item['pmc_id']}.xml"
-                    if paper_pg_writes.enabled():
-                        paper_pg_writes.upsert_paper(
-                            {
-                                "paper_id": paper_id,
-                                "filename": filename,
-                                "title": data.get("title"),
-                                "abstract": data.get("abstract") or "",
-                                "authors": data.get("authors") or "",
-                                "journal": data.get("journal") or "",
-                                "year": data.get("year"),
-                                "doi": data.get("doi") or "",
-                            }
-                        )
+                    paper_rows.append(
+                        {
+                            "paper_id": paper_id,
+                            "filename": filename,
+                            "title": data.get("title"),
+                            "abstract": data.get("abstract") or "",
+                            "authors": data.get("authors") or "",
+                            "journal": data.get("journal") or "",
+                            "year": data.get("year"),
+                            "doi": data.get("doi") or "",
+                        }
+                    )
                     conn.execute(
                         """
                         INSERT OR REPLACE INTO papers
@@ -390,6 +390,8 @@ class IngestService:
                             )
                     children.append((paper_id, paper_paragraphs, paper_sentences))
                     written += 1
+                if paper_pg_writes.enabled():
+                    paper_pg_writes.write_papers_batch(paper_rows, children)
         finally:
             if has_fts:
                 conn.execute(
@@ -406,9 +408,6 @@ class IngestService:
             update_metadata_if_exists(
                 paper_id, journal=journal, year=year, doi=doi, db_path=self.db_path
             )
-        if paper_pg_writes.enabled():
-            for paper_id, paragraphs, sentences in children:
-                paper_pg_writes.replace_children(paper_id, paragraphs, sentences)
         return written
 
     def _embed_batch(self, parsed: Sequence[Mapping[str, Any]]) -> int:
