@@ -27,6 +27,7 @@ from build_db.jats_parser import parse_file
 from build_db.mention_patterns import figure_mentions, table_mentions
 from build_db.sentence_geometry import split_sentences
 from build_db.structure_v3 import refresh_for_paper
+from services.papers import pg_writes
 
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 DEFAULT_DIR = Path(__file__).resolve().parent.parent / "documents_xml"
@@ -341,6 +342,9 @@ def import_file(
                     )
                     linked.add(key)
                     stats["links"] += 1
+
+    if pg_writes.enabled():
+        pg_writes.sync_paper_graph(conn, paper_id)
 
     return stats
 

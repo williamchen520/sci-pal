@@ -382,3 +382,91 @@ def replace_all_sentences(rows: list[tuple]) -> bool:
         LOGGER.error("PG full sentence rebuild failed; refusing SQLite fallback: %s", exc)
         raise PaperWriteError("paper write backend unavailable") from exc
     return True
+
+
+def sync_paper_graph(conn, paper_id: str) -> bool:
+    """Mirror an imported JATS paper graph from SQLite into PG.
+
+    Called while the SQLite transaction is still open. If PG fails, the caller
+    can roll back the SQLite transaction.
+    """
+    if not enabled():
+        return False
+    paper = conn.execute("SELECT * FROM papers WHERE paper_id=?", (paper_id,)).fetchone()
+    if not paper:
+        return False
+    p = dict(paper)
+    sections = [dict(r) for r in conn.execute("SELECT * FROM sections WHERE paper_id=?", (paper_id,))]
+    paragraphs = [dict(r) for r in conn.execute("SELECT * FROM paragraphs WHERE paper_id=?", (paper_id,))]
+    sentences = [dict(r) for r in conn.execute("SELECT * FROM sentences WHERE paper_id=?", (paper_id,))]
+    figures = [dict(r) for r in conn.execute("SELECT * FROM figures WHERE paper_id=?", (paper_id,))]
+    tables = [dict(r) for r in conn.execute('SELECT * FROM "tables" WHERE paper_id=?', (paper_id,))]
+    citations = [dict(r) for r in conn.execute("SELECT * FROM citations WHERE paper_id=?", (paper_id,))]
+    links = [dict(r) for r in conn.execute("SELECT * FROM sentence_links WHERE paper_id=?", (paper_id,))]
+    try:
+        with _pg_connection() as pg:
+            for table in ("sentence_links", "sentences", "citations", "figures", "tables", "sections", "paragraphs"):
+                pg.execute(f'DELETE FROM "{table}" WHERE paper_id=%s', (paper_id,))
+            _upsert_paper_row(
+                pg,
+                {
+                    "paper_id": paper_id,
+                    "filename": p.get("filename") or "",
+                    "title": p.get("title") or "Untitled",
+                    "abstract": p.get("abstract") or "",
+                    "authors": p.get("authors") or "",
+                    "journal": p.get("journal") or "",
+                    "year": p.get("year"),
+                    "doi": p.get("doi") or "",
+                },
+            )
+            for row in sections:
+                pg.execute(
+                    "INSERT INTO sections (section_id,paper_id,parent_id,level,title,seq,page,bbox,source) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (section_id) DO NOTHING",
+                    (row["section_id"], paper_id, row.get("parent_id"), row.get("level"), row.get("title"),
+                     row.get("seq"), row.get("page"), row.get("bbox"), row.get("source")),
+                )
+            for row in paragraphs:
+                pg.execute(
+                    "INSERT INTO paragraphs (para_id,paper_id,section_level1,section_level2,section_level3,text,sequence,page,bbox,parse_engine,section_path,section_id,search_vector) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,to_tsvector('english',%s))",
+                    (row["para_id"], paper_id, row.get("section_level1"), row.get("section_level2"),
+                     row.get("section_level3"), row["text"], row.get("sequence"), row.get("page"),
+                     row.get("bbox"), row.get("parse_engine"), row.get("section_path"), row.get("section_id"), row["text"]),
+                )
+            for row in sentences:
+                pg.execute(
+                    "INSERT INTO sentences (sentence_id,para_id,paper_id,text,sequence,page,bbox,section_id,char_start,char_end,search_vector) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,to_tsvector('english',%s))",
+                    (row["sentence_id"], row["para_id"], paper_id, row["text"], row["sequence"],
+                     row.get("page"), row.get("bbox"), row.get("section_id"), row.get("char_start"), row.get("char_end"), row["text"]),
+                )
+            for row in figures:
+                pg.execute(
+                    "INSERT INTO figures (fig_id,paper_id,fig_number,caption,file_path,page,bbox) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                    (row["fig_id"], paper_id, row.get("fig_number"), row.get("caption"), row.get("file_path"), row.get("page"), row.get("bbox")),
+                )
+            for row in tables:
+                pg.execute(
+                    'INSERT INTO "tables" (table_id,paper_id,table_number,caption,markdown,page) VALUES (%s,%s,%s,%s,%s,%s)',
+                    (row["table_id"], paper_id, row.get("table_number"), row.get("caption"), row.get("markdown"), row.get("page")),
+                )
+            for row in citations:
+                pg.execute(
+                    "INSERT INTO citations (citation_id,paper_id,ref_number,raw_text,doi,title,authors,journal,year) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    (row["citation_id"], paper_id, row.get("ref_number"), row.get("raw_text"), row.get("doi"),
+                     row.get("title"), row.get("authors"), row.get("journal"), row.get("year")),
+                )
+            for row in links:
+                pg.execute(
+                    "INSERT INTO sentence_links (link_id,sentence_id,para_id,paper_id,source_type,target_type,target_id,relation,page,bbox,source,confidence) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (link_id) DO NOTHING",
+                    (row["link_id"], row["sentence_id"], row["para_id"], paper_id, row.get("source_type"),
+                     row.get("target_type"), row.get("target_id"), row.get("relation"), row.get("page"),
+                     row.get("bbox"), row.get("source"), row.get("confidence")),
+                )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG imported graph sync failed; refusing SQLite fallback: %s", exc)
+        raise PaperWriteError("paper write backend unavailable") from exc
+    return True
