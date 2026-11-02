@@ -8,7 +8,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
 
-from services.watch import repo
+from services.watch import pg_writes, repo
 
 USER_AGENT = "SciPal-Watch/1.0 (mailto:scipal@example.org)"
 OPENALEX = "https://api.openalex.org"
@@ -144,6 +144,8 @@ def discover_journals(conn, profile: Dict[str, Any]) -> List[Dict[str, Any]]:
         # drop previously auto-added ISSNs that no longer make the cut
         for issn in list(existing):
             if existing[issn].get("source") == "auto" and issn not in allowed:
+                if pg_writes.enabled():
+                    pg_writes.delete_journal(profile_id, issn)
                 conn.execute(
                     "DELETE FROM watch_profile_journals WHERE profile_id = ? AND issn_l = ?",
                     (profile_id, issn),
