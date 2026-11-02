@@ -127,6 +127,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Fail-closed tenancy deployed | health 200; health-cron ok; invalid PG -> TenancyError, no SQLite; 769 tests | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Papers write path Phase 2 (workspace) | opt-in PG workspace assignment + SQLite mirror; fail closed; 771 tests | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text
