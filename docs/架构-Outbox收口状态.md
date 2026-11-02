@@ -79,9 +79,12 @@ paper_links
 papers 相关 trigger 暂不能删：
 
 ```text
-PDF/preprint 仍走 DatabaseWriter（SQLite-only）
-watch delete 仍是 best-effort
+build_sections_tree / build_sentences 仍 SQLite
 ```
+
+决策：build 脚本也 PG-only，再删 trigger。
+
+详见：[Build 时 Outbox 决策](决策-Build时Outbox策略.md)
 
 详见：[Papers outbox 阻塞](架构-Outbox-Papers阻塞.md)
 
