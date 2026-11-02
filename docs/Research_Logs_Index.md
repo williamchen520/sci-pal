@@ -151,6 +151,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Sentence ID mismatch SQLite/PG | 0/17 same ID; 17/17 text match; eval corrected 0/20 -> 9/20 | [Data issue](数据-句子ID不一致.md) |
 
+| 2026-11-02 | SQLite retirement conditions | current authority matrix; Phase A-E exit criteria; SQLite not retired | [Architecture](架构-SQLite退役条件.md) |
+
 ## Rules
 
 ```text
