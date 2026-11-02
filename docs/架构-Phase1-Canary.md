@@ -57,16 +57,50 @@ SQLite projects  1
 SQLite experiments 0
 ```
 
-## 5. 未覆盖
+## 5. Access / Sign Canary
+
+使用临时用户与 workspace：
 
 ```text
-access request
-approve/deny
-sign
-add_member / copy
+create owner + PI user
+create workspace
+add PI membership
+create project + experiment
+PI request access
+owner approve
+owner sign (password re-auth)
 ```
 
-这些代码已 PG-first，但未在本次 canary 中执行。
+结果：
+
+```text
+request_status  approved
+signature       1
+sign audit      1
+```
+
+PG / SQLite 一致：
+
+```text
+PG request approved, signature 1, sign audit 1
+SQLite request approved, signature 1
+```
+
+清理后：
+
+```text
+PG users 2, workspaces 1, experiments 0, signatures 0
+SQLite users 2, workspaces 1, experiments 0
+```
+
+## 5.1 仍未覆盖
+
+```text
+project add_member
+copy_project
+```
+
+这些代码已 PG-first，但未在 canary 中执行。
 
 ## 6. 当前生产
 
