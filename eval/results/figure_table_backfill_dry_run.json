@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-11-02T22:54:36.836763+00:00",
+  "figures_missing": 12879,
+  "tables_missing": 4805,
+  "dry_run": true,
+  "figure_sample": [
+    "paper_PMC12846323_c1b8e8f4_xml_xmlfig_4",
+    "paper_PMC12846323_c1b8e8f4_xml_xmlfig_1",
+    "paper_PMC12846323_c1b8e8f4_xml_xmlfig_2",
+    "paper_PMC12846323_c1b8e8f4_xml_xmlfig_3",
+    "paper_PMC13037933_7fbbf045_xml_xmlfig_01"
+  ],
+  "table_sample": [
+    "table_paper_PMC12707946_2d3bcc67_0002",
+    "table_paper_PMC12807518_6dfefde2_0002",
+    "table_paper_PMC13069283_90be962c_0001",
+    "table_paper_PMC13598940_e4c38ff5_0001",
+    "table_paper_PMC13598940_e4c38ff5_0002"
+  ]
+}
