@@ -195,3 +195,51 @@ paragraphs 剩余 918 条未向量化，因文本长度 < 10，被建索引脚�
 paragraph 向量契约已恢复
 下一步是补 papers / sections / figures / tables 覆盖
 ```
+
+
+---
+
+## 11. papers / section_summaries 补全（2026-11-03）
+
+执行：
+
+```text
+scripts/backfill_paper_summary_vectors.py
+```
+
+结果：
+
+```text
+papers vectors             3,313 / 3,313   100%
+section_summaries vectors 69,128 / 69,128 100%
+PG summaries              69,128
+```
+
+处理：
+
+```text
+papers 缺失向量      1,237
+sections 缺失 summary 7,196
+```
+
+审计复核：
+
+```text
+verdict   WARN
+warnings  figures coverage < 90%
+          tables  coverage < 90%
+```
+
+剩余：
+
+```text
+figures 219 / 13,471   1.63%
+tables  114 / 4,922    2.32%
+```
+
+结论：
+
+```text
+papers / section_summaries 契约已补齐
+只剩 figures / tables 覆盖问题
+```

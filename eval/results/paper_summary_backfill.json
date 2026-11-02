@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-11-02T18:16:00.402923+00:00",
+  "papers_missing": 0,
+  "sections_missing": 7196,
+  "dry_run": false,
+  "summaries_inserted": 7196,
+  "papers_upserted": 0,
+  "vectors_after": {
+    "papers": 3313,
+    "section_summaries": 69128
+  }
+}
