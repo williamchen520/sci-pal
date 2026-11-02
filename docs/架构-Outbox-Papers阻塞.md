@@ -47,11 +47,17 @@ services/papers/pg_writes.py  write_parsed_paper
 build_db/db_writer.py         insert_paper
 ```
 
+已同时 PG-first：
+
+```text
+citations
+citation_mentions
+parse_provenance
+```
+
 仍未 PG-first：
 
 ```text
-citations / citation_mentions
-parse_provenance
 supplementary_files
 ```
 

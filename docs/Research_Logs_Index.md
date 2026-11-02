@@ -185,7 +185,7 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Base image strategy | app rebuilt from clean git on scipal-base snapshot; base clean build pending | [Base strategy](架构-Base镜像策略.md) |
 
-| 2026-11-02 | Papers outbox blocker | DatabaseWriter papers/paragraphs/figures/tables PG-first; citations/provenance pending | [Papers blocker](架构-Outbox-Papers阻塞.md) |
+| 2026-11-02 | Papers outbox blocker | DatabaseWriter papers/paragraphs/figures/tables/citations/provenance PG-first | [Papers blocker](架构-Outbox-Papers阻塞.md) |
 
 ## Rules
 
