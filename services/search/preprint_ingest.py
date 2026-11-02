@@ -12,6 +12,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List
 
+from services.papers.pg_writes import update_metadata_if_exists
 from services.search.preprint_sources import (
     download_pdf,
     fetch_biorxiv,
@@ -43,6 +44,13 @@ def _patch_metadata(db_path: Path | str, paper_id: str, meta: Dict[str, Any]) ->
             [*fields.values(), paper_id],
         )
         conn.commit()
+        update_metadata_if_exists(
+            paper_id,
+            journal=None,
+            year=fields.get("year"),
+            doi=fields.get("doi"),
+            db_path=db_path,
+        )
     finally:
         conn.close()
 
