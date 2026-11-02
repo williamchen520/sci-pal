@@ -248,10 +248,15 @@ watch profile
 watch runs / items / seen
 ```
 
-待完成：
+已完成：
 
 ```text
 watch_profile_journals
+```
+
+待完成：
+
+```text
 papers 写路径
 outbox 收口
 ```

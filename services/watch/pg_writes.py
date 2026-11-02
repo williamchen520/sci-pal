@@ -183,3 +183,30 @@ def mark_seen(row: dict) -> None:
     except Exception as exc:  # noqa: BLE001
         LOGGER.error("PG watch seen write failed; refusing SQLite fallback: %s", exc)
         raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def replace_journals(profile_id: int, entries: list[dict], added_at: str) -> None:
+    try:
+        with _pg() as pg:
+            pg.execute("DELETE FROM watch_profile_journals WHERE profile_id=%s", (profile_id,))
+            for entry in entries:
+                pg.execute(
+                    "INSERT INTO watch_profile_journals (profile_id, issn_l, name, source, added_at) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (profile_id, entry.get("issn_l"), entry.get("name"), entry.get("source", "auto"), added_at),
+                )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch journals replace failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def delete_journal(profile_id: int, issn_l: str) -> None:
+    try:
+        with _pg() as pg:
+            pg.execute(
+                "DELETE FROM watch_profile_journals WHERE profile_id=%s AND issn_l=%s",
+                (profile_id, issn_l),
+            )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch journal delete failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc

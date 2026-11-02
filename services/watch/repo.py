@@ -127,6 +127,9 @@ def list_journals(conn: sqlite3.Connection, profile_id: int) -> List[Dict]:
 
 
 def set_journals(conn: sqlite3.Connection, profile_id: int, entries: List[Dict]) -> None:
+    added_at = now_iso()
+    if pg_writes.enabled():
+        pg_writes.replace_journals(profile_id, entries, added_at)
     conn.execute("DELETE FROM watch_profile_journals WHERE profile_id = ?", (profile_id,))
     for entry in entries:
         conn.execute(
@@ -137,7 +140,7 @@ def set_journals(conn: sqlite3.Connection, profile_id: int, entries: List[Dict])
                 entry.get("issn_l"),
                 entry.get("name"),
                 entry.get("source", "auto"),
-                now_iso(),
+                added_at,
             ),
         )
     conn.commit()
