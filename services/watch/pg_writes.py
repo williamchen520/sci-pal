@@ -33,6 +33,22 @@ def _pg_connection():
     return psycopg.connect(os.environ["SCIPAL_PG_DSN"], row_factory=dict_row)
 
 
+def _pg():
+    return _pg_connection()
+
+
+def _ensure_id_sequence(pg, table: str) -> None:
+    """Repair a serial sequence left behind by explicit-id outbox inserts."""
+    if table not in {"watch_profiles", "watch_runs", "watch_items"}:
+        raise ValueError("unsupported sequence table")
+    seq_row = pg.execute("SELECT pg_get_serial_sequence(%s, 'id')", (table,)).fetchone()
+    seq = seq_row["pg_get_serial_sequence"] if isinstance(seq_row, dict) else seq_row[0]
+    pg.execute(
+        f"SELECT setval(%s, COALESCE((SELECT max(id) FROM {table}), 0) + 1, false)",
+        (seq,),
+    )
+
+
 def delete_paper_best_effort(paper_id: str, *, db_path: str | Path) -> bool:
     """Delete a watch placeholder in PG, then SQLite; return False if disabled.
 
@@ -63,6 +79,7 @@ def delete_paper_best_effort(paper_id: str, *, db_path: str | Path) -> bool:
 def create_profile(data: dict) -> int:
     try:
         with _pg() as pg:
+            _ensure_id_sequence(pg, "watch_profiles")
             row = pg.execute(
                 "INSERT INTO watch_profiles "
                 "(owner,name,field_text,keywords,openalex_topic_ids,interval_days,window_days,"
@@ -114,6 +131,7 @@ def delete_profile(profile_id: int) -> None:
 def create_run(row: dict) -> int:
     try:
         with _pg() as pg:
+            _ensure_id_sequence(pg, "watch_runs")
             out = pg.execute(
                 "INSERT INTO watch_runs (owner, profile_id, window_start, window_end, status, started_at) "
                 "VALUES (%(owner)s, %(profile_id)s, %(window_start)s, %(window_end)s, 'running', %(started_at)s) "
@@ -146,6 +164,7 @@ def update_run(run_id: int, updates: dict) -> None:
 def create_item(row: dict) -> int:
     try:
         with _pg() as pg:
+            _ensure_id_sequence(pg, "watch_items")
             out = pg.execute(
                 "INSERT INTO watch_items "
                 "(owner, run_id, profile_id, paper_id, doi, title, journal, abstract, published, "

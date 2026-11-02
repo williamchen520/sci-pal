@@ -254,6 +254,14 @@ watch runs / items / seen
 watch_profile_journals
 ```
 
+Canary 已完成：
+
+```text
+watch profile/journal/run/item/seen
+PG + SQLite 一致
+serial sequence 已修复
+```
+
 待完成：
 
 ```text
