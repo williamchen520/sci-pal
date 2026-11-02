@@ -190,7 +190,22 @@ schema_parity: sqlite_only 只剩 FTS/outbox
 SQLite -> PG 回填脚本 dry-run 可重复
 ```
 
-### Phase 1：实验/项目写路径 PG-primary
+### Phase 1：实验/项目写路径 PG-primary（进行中）
+
+已完成：
+
+```text
+projects 写路径 PG-first：
+create / update / add_member / copy
+flag: SCIPAL_PROJECT_WRITE_BACKEND=postgres
+默认关闭
+```
+
+待完成：
+
+```text
+experiments / revisions / signatures / audit / access requests
+```
 
 交付：
 
