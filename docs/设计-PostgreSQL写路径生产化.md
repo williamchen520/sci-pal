@@ -995,3 +995,65 @@ watch_seen insert
 ```
 
 Production flag remains off.
+
+## 26. Watch production canary (2026-11-02)
+
+Enabled:
+
+```text
+SCIPAL_WATCH_WRITE_BACKEND=postgres
+```
+
+Production deployment:
+
+```text
+image rebuilt from clean archive
+app + watch-cron + health-cron recreated
+app healthcheck start_period 60s -> 180s
+```
+
+Startup note:
+
+```text
+compose dependency timed out while the app loaded models
+watch-cron/health-cron were started manually after /api/health returned 200
+start_period increased to 180s to avoid recurrence
+```
+
+Canary write test (no network):
+
+```text
+create watch_profile
+create watch_run
+add watch_item
+mark watch_seen
+sync_pending via outbox
+```
+
+Result:
+
+```text
+PG profile/run/item/seen   1/1/1/1
+sync selected/applied      4/4
+failed                     0
+cleanup PG rows            0
+outbox pending             0
+```
+
+The test rows were removed from both SQLite and PG.
+
+Current status:
+
+```text
+watch_cron         up
+health_cron         up
+app                 healthy
+watch flag          postgres
+watch outbox sync   active after run
+```
+
+Still not PG-primary:
+
+```text
+watch_profiles/runs/items/seen write SQLite first
+```
