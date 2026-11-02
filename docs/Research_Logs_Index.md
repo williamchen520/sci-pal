@@ -155,6 +155,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | PG purification roadmap + schema diff | 60 common, 12 SQLite-only; FTS indexes exist; experiments/projects gap | [Roadmap](架构-PG纯净化路线.md) |
 
+| 2026-11-02 | Paragraph+sentence dual-weight design | design only; parked until PG purification; gates defined | [Dual-weight design](检索-段句双权重实验设计.md) |
+
 ## Rules
 
 ```text

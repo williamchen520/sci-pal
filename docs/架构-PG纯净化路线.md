@@ -307,3 +307,19 @@ outbox/drift 清零
 ```
 
 在 Phase 0 完成前，不应开启“停 SQLite”或“删除 outbox”。
+
+## 9. 暂缓的检索实验
+
+段落-句子双权重重排已有设计，但**暂缓到纯净化完成之后**：
+
+```text
+ docs/检索-段句双权重实验设计.md
+```
+
+原因：
+
+```text
+1. 需要同一数据库内同时取 paragraph 和 sentence
+2. sentence_id 必须先稳定
+3. PG FTS 切换会改变基线，提前调参没有意义
+```
