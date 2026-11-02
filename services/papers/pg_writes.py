@@ -103,3 +103,28 @@ def update_metadata_if_exists(
     finally:
         conn.close()
     return True
+
+
+def upsert_paper(row: dict) -> bool:
+    """PG-first paper metadata upsert for ingest.
+
+    Paragraph/sentence rows still follow the SQLite/outbox path for now.
+    """
+    if not enabled():
+        return False
+    try:
+        with _pg_connection() as pg:
+            pg.execute(
+                "INSERT INTO papers (paper_id, filename, title, abstract, authors, parse_engine, journal, year, doi) "
+                "VALUES (%(paper_id)s, %(filename)s, %(title)s, %(abstract)s, %(authors)s, "
+                "'xml', %(journal)s, %(year)s, %(doi)s) "
+                "ON CONFLICT (paper_id) DO UPDATE SET "
+                "filename = EXCLUDED.filename, title = EXCLUDED.title, abstract = EXCLUDED.abstract, "
+                "authors = EXCLUDED.authors, parse_engine = EXCLUDED.parse_engine, "
+                "journal = EXCLUDED.journal, year = EXCLUDED.year, doi = EXCLUDED.doi",
+                row,
+            )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG paper upsert failed; refusing SQLite fallback: %s", exc)
+        raise PaperWriteError("paper write backend unavailable") from exc
+    return True
