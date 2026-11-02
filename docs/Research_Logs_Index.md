@@ -131,6 +131,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Ingest metadata sync | best-effort PG update after SQLite batch; outbox remains for new rows | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Watch write path first slice | opt-in PG delete for watch placeholder papers; profiles/runs/items/seen still SQLite | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text

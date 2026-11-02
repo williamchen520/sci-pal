@@ -907,3 +907,47 @@ watch profiles / runs / seen writes
 ```
 
 Production flag remains off.
+
+## 24. Watch write path first slice (2026-11-02)
+
+Migrated:
+
+```text
+watch placeholder paper deletes
+  try_fulltext
+  try_oa_pdf
+```
+
+Flag:
+
+```text
+SCIPAL_WATCH_WRITE_BACKEND=postgres
+(default off)
+```
+
+Behavior:
+
+```text
+PG DELETE paper
+-> SQLite DELETE mirror
+-> outbox remains as repair path
+```
+
+If PG is unavailable:
+
+```text
+log warning
+continue SQLite delete
+outbox carries the delete later
+```
+
+Not migrated:
+
+```text
+watch_profiles insert/update/delete
+watch_runs insert/update
+watch_items insert/status/feedback
+watch_seen insert
+```
+
+Production flag remains off.

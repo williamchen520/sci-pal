@@ -128,8 +128,11 @@ def try_fulltext(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: st
         result = client.download_and_import(pmcid, db_path=db_path)
         if result.get("status") != "imported":
             return None
-        conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_paper_id,))
-        conn.commit()
+        if watch_pg_enabled():
+            delete_paper_best_effort(abstract_paper_id, db_path=db_path)
+        else:
+            conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_paper_id,))
+            conn.commit()
         return full_id
     except Exception:  # noqa: BLE001 - OA lookup must never break a watch run
         return None
@@ -175,8 +178,11 @@ def try_oa_pdf(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: str)
         paper_id = result.get("paper_id") or (result.get("stats") or {}).get("paper_id")
         if not paper_id:
             return None
-        conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_paper_id,))
-        conn.commit()
+        if watch_pg_enabled():
+            delete_paper_best_effort(abstract_paper_id, db_path=db_path)
+        else:
+            conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_paper_id,))
+            conn.commit()
         return paper_id
     except Exception:  # noqa: BLE001
         return None
