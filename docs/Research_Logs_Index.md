@@ -153,6 +153,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | SQLite retirement conditions | current authority matrix; Phase A-E exit criteria; SQLite not retired | [Architecture](架构-SQLite退役条件.md) |
 
+| 2026-11-02 | PG purification roadmap + schema diff | 60 common, 12 SQLite-only; FTS indexes exist; experiments/projects gap | [Roadmap](架构-PG纯净化路线.md) |
+
 ## Rules
 
 ```text

@@ -282,6 +282,7 @@ Coverage includes retrieval, routing, guard, structure, JATS import, watch, doma
 
 - [Work summary and backlog (2026-11-02)](docs/工作总结-2026-11-02.md)
 - [SQLite retirement conditions](docs/架构-SQLite退役条件.md)
+- [PG purification roadmap](docs/架构-PG纯净化路线.md)
 - [Handover guide](docs/HANDOVER.md)
 - [Research logs index](docs/Research_Logs_Index.md)
 - [PostgreSQL write-path design](docs/设计-PostgreSQL写路径生产化.md)
