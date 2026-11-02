@@ -187,7 +187,7 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Papers outbox blocker | DatabaseWriter/supplementary PG-first; build scripts are offline; papers triggers remain | [Papers blocker](架构-Outbox-Papers阻塞.md) |
 
-| 2026-11-02 | Decision: build-time outbox | choose A; build_sections PG-first; build_sentences pending | [Decision](决策-Build时Outbox策略.md) |
+| 2026-11-02 | Decision: build-time outbox | choose A; build_sections/sentences PG-first; triggers remain for other build scripts | [Decision](决策-Build时Outbox策略.md) |
 
 ## Rules
 
