@@ -1101,3 +1101,31 @@ This is a real external watch run, not the synthetic canary.
 
 Current boundary: watch still writes SQLite first; the PG catch-up ran at the
 end of the run and completed with zero pending outbox.
+
+## 28. Second real watch run (dedup path, 2026-11-02)
+
+Profile 1, immediate second run:
+
+```text
+run_id       10
+status       empty
+found        1
+selected     0
+skipped      1
+heartbeat    false
+```
+
+This exercises the dedup/skip path, not the import path.
+
+Checks:
+
+```text
+PG watch_runs id=10     empty / 1 / 0 / 1
+PG watch_items          0
+SQLite watch_runs       same
+outbox pending          0
+health-cron drift       false
+```
+
+Conclusion: repeated watch runs deduplicate correctly and still leave PG/SQLite
+consistent.
