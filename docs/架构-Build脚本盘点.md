@@ -89,11 +89,14 @@ build_db/build_sentences.py
 ## 2. 纯离线 / legacy
 
 ```text
-build_db/build_database.py   全库重跑
-build_db/build_xml_db.py     XML 全库重跑
-build_db/build_fts.py        FTS 重建
+build_db/build_database.py   LEGACY，禁止生产运行
+build_db/build_xml_db.py     LEGACY
+build_db/build_fts.py        FTS 运维重建
+build_db/build_embeddings.py Chroma 重建
 build_db/import_jats.py      import_file 运行时；其余部分可复用
 ```
+
+详见：[Legacy Build 脚本处置](架构-Legacy-Build脚本处置.md)。
 
 ## 3. 对 trigger 的影响
 

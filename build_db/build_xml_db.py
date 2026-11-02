@@ -1,3 +1,8 @@
+"""LEGACY full-rebuild script. Do not run on production.
+
+Superseded by import_jats / parse_service / DatabaseWriter.
+"""
+
 #!/usr/bin/env python3
 """
 批量解析 PMC 全文 XML，建独立数据库 V1.0
