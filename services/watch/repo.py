@@ -179,13 +179,32 @@ def create_run(
     end: str,
     owner: str = "default",
 ) -> int:
-    cur = conn.execute(
-        "INSERT INTO watch_runs (owner, profile_id, window_start, window_end, status, started_at) "
-        "VALUES (?, ?, ?, ?, 'running', ?)",
-        (owner, profile_id, start, end, now_iso()),
-    )
+    started_at = now_iso()
+    pg_id = None
+    if pg_writes.enabled():
+        pg_id = pg_writes.create_run(
+            {
+                "owner": owner,
+                "profile_id": profile_id,
+                "window_start": start,
+                "window_end": end,
+                "started_at": started_at,
+            }
+        )
+    if pg_id is not None:
+        cur = conn.execute(
+            "INSERT INTO watch_runs (id, owner, profile_id, window_start, window_end, status, started_at) "
+            "VALUES (?, ?, ?, ?, ?, 'running', ?)",
+            (pg_id, owner, profile_id, start, end, started_at),
+        )
+    else:
+        cur = conn.execute(
+            "INSERT INTO watch_runs (owner, profile_id, window_start, window_end, status, started_at) "
+            "VALUES (?, ?, ?, ?, 'running', ?)",
+            (owner, profile_id, start, end, started_at),
+        )
     conn.commit()
-    return int(cur.lastrowid)
+    return int(cur.lastrowid or pg_id)
 
 
 def finish_run(conn: sqlite3.Connection, run_id: int, **stats) -> None:
@@ -193,6 +212,8 @@ def finish_run(conn: sqlite3.Connection, run_id: int, **stats) -> None:
               "skipped", "digest_md", "heartbeat", "error"]
     updates = {k: stats[k] for k in fields if k in stats}
     updates["finished_at"] = now_iso()
+    if pg_writes.enabled():
+        pg_writes.update_run(run_id, updates)
     conn.execute(
         f"UPDATE watch_runs SET {', '.join(f'{k} = ?' for k in updates)} WHERE id = ?",
         list(updates.values()) + [run_id],
@@ -201,19 +222,37 @@ def finish_run(conn: sqlite3.Connection, run_id: int, **stats) -> None:
 
 
 def add_item(conn: sqlite3.Connection, run_id: int, profile_id: int, item: Dict) -> int:
-    cur = conn.execute(
-        "INSERT INTO watch_items (owner, run_id, profile_id, paper_id, doi, title, journal, "
-        "abstract, published, score, reason, acquisition, status) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')",
-        (
-            item.get("owner") or "default",
-            run_id, profile_id, item.get("paper_id"), item.get("doi"), item.get("title"),
-            item.get("journal"), item.get("abstract"), item.get("published"),
-            item.get("score"), item.get("reason"), item.get("acquisition"),
-        ),
-    )
+    row = {
+        "owner": item.get("owner") or "default",
+        "run_id": run_id,
+        "profile_id": profile_id,
+        "paper_id": item.get("paper_id"),
+        "doi": item.get("doi"),
+        "title": item.get("title"),
+        "journal": item.get("journal"),
+        "abstract": item.get("abstract"),
+        "published": item.get("published"),
+        "score": item.get("score"),
+        "reason": item.get("reason"),
+        "acquisition": item.get("acquisition"),
+    }
+    pg_id = pg_writes.create_item(row) if pg_writes.enabled() else None
+    if pg_id is not None:
+        cur = conn.execute(
+            "INSERT INTO watch_items (id, owner, run_id, profile_id, paper_id, doi, title, journal, "
+            "abstract, published, score, reason, acquisition, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')",
+            (pg_id, *row.values()),
+        )
+    else:
+        cur = conn.execute(
+            "INSERT INTO watch_items (owner, run_id, profile_id, paper_id, doi, title, journal, "
+            "abstract, published, score, reason, acquisition, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')",
+            tuple(row.values()),
+        )
     conn.commit()
-    return int(cur.lastrowid)
+    return int(cur.lastrowid or pg_id)
 
 
 def list_runs(conn: sqlite3.Connection, profile_id: int, limit: int = 20) -> List[Dict]:
@@ -240,17 +279,23 @@ def list_items(conn: sqlite3.Connection, run_id: int) -> List[Dict]:
 
 
 def mark_item_read(conn: sqlite3.Connection, item_id: int) -> None:
+    now = now_iso()
+    if pg_writes.enabled():
+        pg_writes.update_item(item_id, {"status": "read", "read_at": now})
     conn.execute(
         "UPDATE watch_items SET status = 'read', read_at = ? WHERE id = ?",
-        (now_iso(), item_id),
+        (now, item_id),
     )
     conn.commit()
 
 
 def set_item_feedback(conn: sqlite3.Connection, item_id: int, feedback: str) -> None:
+    now = now_iso()
+    if pg_writes.enabled():
+        pg_writes.update_item(item_id, {"feedback": feedback, "feedback_at": now})
     conn.execute(
         "UPDATE watch_items SET feedback = ?, feedback_at = ? WHERE id = ?",
-        (feedback, now_iso(), item_id),
+        (feedback, now, item_id),
     )
     conn.commit()
 
@@ -271,10 +316,15 @@ def seen(conn: sqlite3.Connection, profile_id: int, key: str) -> bool:
 
 
 def mark_seen(conn: sqlite3.Connection, profile_id: int, key: str, paper_id: Optional[str]) -> None:
+    now = now_iso()
+    if pg_writes.enabled():
+        pg_writes.mark_seen(
+            {"profile_id": profile_id, "dedup_key": key, "paper_id": paper_id, "first_seen_at": now}
+        )
     conn.execute(
         "INSERT OR IGNORE INTO watch_seen (profile_id, dedup_key, paper_id, first_seen_at, status) "
         "VALUES (?, ?, ?, ?, 'new')",
-        (profile_id, key, paper_id, now_iso()),
+        (profile_id, key, paper_id, now),
     )
 
 

@@ -167,6 +167,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Phase 2 watch profile writes | create/update/delete PG-first; runs/items/seen still SQLite | [Phase 2 watch profile](架构-Phase2-WatchProfile写路径.md) |
 
+| 2026-11-02 | Phase 2 watch data writes | runs/items/seen PG-first with same ids; journals/outbox pending | [Phase 2 watch data](架构-Phase2-WatchData写路径.md) |
+
 ## Rules
 
 ```text
