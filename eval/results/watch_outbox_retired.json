@@ -1,0 +1,20 @@
+{
+  "db": "G:\\sciPal_deploy\\data\\research.db",
+  "dry_run": false,
+  "dropped": [
+    "dualwrite_watch_profiles_ai",
+    "dualwrite_watch_profiles_au",
+    "dualwrite_watch_profiles_ad",
+    "dualwrite_watch_items_ai",
+    "dualwrite_watch_items_au",
+    "dualwrite_watch_items_ad",
+    "dualwrite_watch_runs_ai",
+    "dualwrite_watch_runs_au",
+    "dualwrite_watch_runs_ad",
+    "dualwrite_watch_seen_ai",
+    "dualwrite_watch_seen_au",
+    "dualwrite_watch_seen_ad"
+  ],
+  "pending_removed": 4,
+  "remaining_watch_triggers": []
+}
