@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from services.watch import pg_writes
+
 DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
 
 
@@ -63,13 +65,26 @@ def create_profile(conn: sqlite3.Connection, data: Dict[str, Any]) -> int:
     if not data.get("name"):
         raise ValueError("name required")
     values[0] = data.get("owner") or "default"
-    cur = conn.execute(
-        f"INSERT INTO watch_profiles ({', '.join(fields)}, created_at) "
-        f"VALUES ({', '.join('?' * len(fields))}, ?)",
-        values + [now_iso()],
-    )
+    created_at = now_iso()
+    pg_id = None
+    if pg_writes.enabled():
+        pg_data = {field: values[index] for index, field in enumerate(fields)}
+        pg_data["created_at"] = created_at
+        pg_id = pg_writes.create_profile(pg_data)
+    if pg_id is not None:
+        cur = conn.execute(
+            f"INSERT INTO watch_profiles (id, {', '.join(fields)}, created_at) "
+            f"VALUES (?, {', '.join('?' * len(fields))}, ?)",
+            [pg_id, *values, created_at],
+        )
+    else:
+        cur = conn.execute(
+            f"INSERT INTO watch_profiles ({', '.join(fields)}, created_at) "
+            f"VALUES ({', '.join('?' * len(fields))}, ?)",
+            values + [created_at],
+        )
     conn.commit()
-    return int(cur.lastrowid)
+    return int(cur.lastrowid or pg_id)
 
 
 def update_profile(conn: sqlite3.Connection, profile_id: int, data: Dict[str, Any]) -> None:
@@ -83,6 +98,8 @@ def update_profile(conn: sqlite3.Connection, profile_id: int, data: Dict[str, An
         updates["openalex_topic_ids"] = json.dumps(list(updates["openalex_topic_ids"]))
     if not updates:
         return
+    if pg_writes.enabled():
+        pg_writes.update_profile(profile_id, updates)
     conn.execute(
         f"UPDATE watch_profiles SET {', '.join(f'{k} = ?' for k in updates)} WHERE id = ?",
         list(updates.values()) + [profile_id],
@@ -91,6 +108,8 @@ def update_profile(conn: sqlite3.Connection, profile_id: int, data: Dict[str, An
 
 
 def delete_profile(conn: sqlite3.Connection, profile_id: int) -> None:
+    if pg_writes.enabled():
+        pg_writes.delete_profile(profile_id)
     conn.execute("DELETE FROM watch_profile_journals WHERE profile_id = ?", (profile_id,))
     conn.execute("DELETE FROM watch_profiles WHERE id = ?", (profile_id,))
     conn.commit()
