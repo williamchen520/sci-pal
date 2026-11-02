@@ -139,6 +139,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Real watch run | run 9 success; 1 selected abstract; PG/SQLite match; outbox 0 | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Second real watch run | run 10 empty; found 1 / skipped 1 dedup; PG/SQLite match; outbox 0 | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text
