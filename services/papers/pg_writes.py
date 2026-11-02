@@ -64,3 +64,42 @@ def update_workspace(paper_id: str, workspace_id: str, *, db_path: str | Path) -
     finally:
         conn.close()
     return True
+
+
+def update_metadata_if_exists(
+    paper_id: str,
+    *,
+    journal: str | None,
+    year: object,
+    doi: str | None,
+    db_path: str | Path,
+) -> bool:
+    """Best-effort immediate metadata sync for a paper already in PG.
+
+    Bulk ingest inserts new rows through SQLite + outbox; those rows may not be
+    in PG yet, so a missing row returns False instead of failing the batch.
+    """
+    if not enabled():
+        return False
+    try:
+        with _pg_connection() as pg:
+            row = pg.execute(
+                "UPDATE papers SET journal = %s, year = %s, doi = %s "
+                "WHERE paper_id = %s RETURNING paper_id",
+                (journal or "", year, doi or "", paper_id),
+            ).fetchone()
+        if not row:
+            return False
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.warning("PG metadata sync skipped for %s: %s", paper_id, exc)
+        return False
+    conn = sqlite3.connect(str(db_path), timeout=30)
+    try:
+        conn.execute(
+            "UPDATE papers SET journal = ?, year = ?, doi = ? WHERE paper_id = ?",
+            (journal or "", year, doi or "", paper_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return True

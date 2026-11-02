@@ -25,6 +25,7 @@ import uuid
 from pathlib import Path
 
 from config.paths import EMBEDDING_MODEL
+from services.papers.pg_writes import update_metadata_if_exists
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 DEFAULT_BATCH_SIZE = 5
@@ -262,6 +263,7 @@ class IngestService:
 
     def _write_batch(self, conn: sqlite3.Connection, parsed: Sequence[Mapping[str, Any]]) -> int:
         written = 0
+        metadata_updates: list[tuple[str, object, object, object]] = []
         # `paragraphs_ad` deletes from FTS5 with `WHERE para_id = ?`, which is a
         # full scan per deleted row (para_id is UNINDEXED). Dropping it for the
         # batch and deleting by a single set-based join keeps re-ingest fast.
@@ -308,6 +310,9 @@ class IngestService:
                                 data.get("doi") or "",
                                 paper_id,
                             ),
+                        )
+                        metadata_updates.append(
+                            (paper_id, data.get("journal"), data.get("year"), data.get("doi"))
                         )
                     if has_fts:
                         conn.execute(
@@ -362,6 +367,12 @@ class IngestService:
                     """
                 )
                 conn.commit()
+        # Best-effort immediate PG metadata sync for rows already present in PG.
+        # New rows still rely on the outbox; a missing PG row is not a failure.
+        for paper_id, journal, year, doi in metadata_updates:
+            update_metadata_if_exists(
+                paper_id, journal=journal, year=year, doi=doi, db_path=self.db_path
+            )
         return written
 
     def _embed_batch(self, parsed: Sequence[Mapping[str, Any]]) -> int:

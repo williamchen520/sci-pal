@@ -25,6 +25,11 @@ class PaperPGWritesTests(unittest.TestCase):
             db = Path(tmp) / "r.db"
             with mock.patch.object(pg_writes, "enabled", return_value=False):
                 self.assertFalse(pg_writes.update_workspace("p1", "ws1", db_path=db))
+                self.assertFalse(
+                    pg_writes.update_metadata_if_exists(
+                        "p1", journal="J", year=2026, doi="10/x", db_path=db
+                    )
+                )
 
 
 if __name__ == "__main__":
