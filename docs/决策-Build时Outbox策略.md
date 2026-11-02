@@ -152,5 +152,8 @@ papers trigger：保留
 仍保留 trigger：
 
 ```text
-import_jats / build_database 等更强 build 脚本仍 SQLite
+import_jats.import_file 在 Europe PMC 运行时被调用
+sentence_links / citations 仍 SQLite
 ```
+
+详见：[Build/Ingest 脚本盘点](架构-Build脚本盘点.md)。

@@ -189,6 +189,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Decision: build-time outbox | choose A; build_sections/sentences PG-first; triggers remain for other build scripts | [Decision](决策-Build时Outbox策略.md) |
 
+| 2026-11-02 | Build/ingest script inventory | import_jats is runtime via Europe PMC; triggers retained | [Inventory](架构-Build脚本盘点.md) |
+
 ## Rules
 
 ```text
