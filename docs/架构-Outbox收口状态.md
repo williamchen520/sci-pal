@@ -76,6 +76,15 @@ sentence_links
 paper_links
 ```
 
+papers 相关 trigger 暂不能删：
+
+```text
+PDF/preprint 仍走 DatabaseWriter（SQLite-only）
+watch delete 仍是 best-effort
+```
+
+详见：[Papers outbox 阻塞](架构-Outbox-Papers阻塞.md)
+
 ## 3. 为什么不能继续删
 
 ### papers / paragraphs / sentences
