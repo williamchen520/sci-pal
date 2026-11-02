@@ -25,6 +25,7 @@ import uuid
 from pathlib import Path
 
 from config.paths import EMBEDDING_MODEL
+from services.papers import pg_writes as paper_pg_writes
 from services.papers.pg_writes import update_metadata_if_exists
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
@@ -287,6 +288,20 @@ class IngestService:
                         conn.execute(
                             "DELETE FROM papers_fts WHERE paper_id = ?", (paper_id,)
                         )
+                    filename = f"{item['pmc_id']}.xml"
+                    if paper_pg_writes.enabled():
+                        paper_pg_writes.upsert_paper(
+                            {
+                                "paper_id": paper_id,
+                                "filename": filename,
+                                "title": data.get("title"),
+                                "abstract": data.get("abstract") or "",
+                                "authors": data.get("authors") or "",
+                                "journal": data.get("journal") or "",
+                                "year": data.get("year"),
+                                "doi": data.get("doi") or "",
+                            }
+                        )
                     conn.execute(
                         """
                         INSERT OR REPLACE INTO papers
@@ -295,7 +310,7 @@ class IngestService:
                         """,
                         (
                             paper_id,
-                            f"{item['pmc_id']}.xml",
+                            filename,
                             data.get("title"),
                             data.get("abstract") or "",
                             data.get("authors") or "",

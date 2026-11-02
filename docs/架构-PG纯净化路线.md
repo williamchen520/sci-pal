@@ -262,11 +262,11 @@ PG + SQLite 一致
 serial sequence 已修复
 ```
 
-待完成：
+进行中：
 
 ```text
-papers 写路径
-outbox 收口
+papers row PG-first（ingest）
+paragraphs/sentences 仍 outbox
 ```
 
 交付：
