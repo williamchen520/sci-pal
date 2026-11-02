@@ -109,3 +109,77 @@ def delete_profile(profile_id: int) -> None:
     except Exception as exc:  # noqa: BLE001
         LOGGER.error("PG watch profile delete failed; refusing SQLite fallback: %s", exc)
         raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def create_run(row: dict) -> int:
+    try:
+        with _pg() as pg:
+            out = pg.execute(
+                "INSERT INTO watch_runs (owner, profile_id, window_start, window_end, status, started_at) "
+                "VALUES (%(owner)s, %(profile_id)s, %(window_start)s, %(window_end)s, 'running', %(started_at)s) "
+                "RETURNING id",
+                row,
+            ).fetchone()
+            return int(out["id"])
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch run create failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def update_run(run_id: int, updates: dict) -> None:
+    assignments = ", ".join(f"{key} = %s" for key in updates)
+    try:
+        with _pg() as pg:
+            row = pg.execute(
+                f"UPDATE watch_runs SET {assignments} WHERE id = %s RETURNING id",
+                [*updates.values(), run_id],
+            ).fetchone()
+        if not row:
+            raise WatchWriteError("watch run not found in PostgreSQL")
+    except WatchWriteError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch run update failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def create_item(row: dict) -> int:
+    try:
+        with _pg() as pg:
+            out = pg.execute(
+                "INSERT INTO watch_items "
+                "(owner, run_id, profile_id, paper_id, doi, title, journal, abstract, published, "
+                "score, reason, acquisition, status) "
+                "VALUES (%(owner)s, %(run_id)s, %(profile_id)s, %(paper_id)s, %(doi)s, %(title)s, "
+                "%(journal)s, %(abstract)s, %(published)s, %(score)s, %(reason)s, %(acquisition)s, 'new') "
+                "RETURNING id",
+                row,
+            ).fetchone()
+            return int(out["id"])
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch item create failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def update_item(item_id: int, updates: dict) -> None:
+    assignments = ", ".join(f"{key} = %s" for key in updates)
+    try:
+        with _pg() as pg:
+            pg.execute(f"UPDATE watch_items SET {assignments} WHERE id = %s", [*updates.values(), item_id])
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch item update failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def mark_seen(row: dict) -> None:
+    try:
+        with _pg() as pg:
+            pg.execute(
+                "INSERT INTO watch_seen (profile_id, dedup_key, paper_id, first_seen_at, status) "
+                "VALUES (%(profile_id)s, %(dedup_key)s, %(paper_id)s, %(first_seen_at)s, 'new') "
+                "ON CONFLICT DO NOTHING",
+                row,
+            )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch seen write failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc

@@ -241,11 +241,19 @@ SQLite/PG row count 一致
 watch profile create/update/delete PG-first
 ```
 
+已完成：
+
+```text
+watch profile
+watch runs / items / seen
+```
+
 待完成：
 
 ```text
-watch runs/items/seen
+watch_profile_journals
 papers 写路径
+outbox 收口
 ```
 
 交付：
