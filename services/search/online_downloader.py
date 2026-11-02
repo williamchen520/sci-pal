@@ -545,6 +545,7 @@ class OnlineDownloader:
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         children: list[tuple[str, list[dict]]] = []
+        paper_rows: list[dict] = []
 
         for i, pmc_id in enumerate(task.new_paper_ids, 1):
             xml_file = Path(XML_OUTPUT_DIR) / f"{pmc_id}.xml"
@@ -567,6 +568,18 @@ class OnlineDownloader:
                 paper_id = f"paper_{pmc_id}_{paper_hash}_xml"
 
                 # INSERT OR REPLACE：如果已存在就更新，不存在就插入
+                paper_rows.append(
+                    {
+                        "paper_id": paper_id,
+                        "filename": f"{pmc_id}.xml",
+                        "title": data["title"],
+                        "abstract": data["abstract"] or "",
+                        "authors": data["authors"] or "",
+                        "journal": data.get("journal") or "",
+                        "year": data.get("year"),
+                        "doi": data.get("doi") or "",
+                    }
+                )
                 c.execute("""
                     INSERT OR REPLACE INTO papers
                     (paper_id, filename, title, abstract, authors, parse_engine)
@@ -577,8 +590,17 @@ class OnlineDownloader:
                 c.execute("DELETE FROM paragraphs WHERE paper_id = ?", (paper_id,))
 
                 # 插入段落
+                paper_paragraphs: list[dict] = []
                 for j, para in enumerate(data["paragraphs"]):
                     para_id = f"{paper_id}_para_{j:05d}"
+                    paper_paragraphs.append(
+                        {
+                            "para_id": para_id,
+                            "section_level1": para["section"],
+                            "text": para["text"],
+                            "sequence": para["sequence"],
+                        }
+                    )
                     c.execute("""
                         INSERT OR REPLACE INTO paragraphs
                         (para_id, paper_id, section_level1, text, sequence, parse_engine)
@@ -595,8 +617,12 @@ class OnlineDownloader:
                 if self.verbose:
                     print(f"  ❌ [{i}/{len(task.new_paper_ids)}] {pmc_id}: {str(e)[:100]}")
 
-        conn.commit()
-        conn.close()
+        try:
+            if paper_pg_writes.enabled():
+                paper_pg_writes.write_papers_batch(paper_rows, children)
+            conn.commit()
+        finally:
+            conn.close()
 
         if self.verbose:
             print(f"  ✅ 增量导入完成: {task.imported} 篇")

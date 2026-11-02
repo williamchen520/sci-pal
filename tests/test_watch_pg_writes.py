@@ -37,6 +37,24 @@ class WatchPGWritesTests(unittest.TestCase):
             finally:
                 conn.close()
 
+    def test_pg_failure_does_not_delete_sqlite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "r.db"
+            conn = sqlite3.connect(db)
+            conn.execute("CREATE TABLE papers (paper_id TEXT PRIMARY KEY)")
+            conn.execute("INSERT INTO papers VALUES ('p1')")
+            conn.commit()
+            conn.close()
+            with mock.patch.object(pg_writes, "enabled", return_value=True), \
+                 mock.patch.object(pg_writes, "_pg_connection", side_effect=RuntimeError("down")):
+                with self.assertRaises(pg_writes.WatchWriteError):
+                    pg_writes.delete_paper_best_effort("p1", db_path=db)
+            conn = sqlite3.connect(db)
+            try:
+                self.assertEqual(conn.execute("SELECT count(*) FROM papers").fetchone()[0], 1)
+            finally:
+                conn.close()
+
 
 if __name__ == "__main__":
     unittest.main()

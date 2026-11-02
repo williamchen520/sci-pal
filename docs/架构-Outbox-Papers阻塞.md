@@ -63,9 +63,18 @@ supplementary_files
 
 ### Watch delete / online
 
+已收口：
+
 ```text
-watch placeholder delete 仍是 best-effort
-online children 仍是 commit 后 best-effort
+watch placeholder delete -> PG 失败即抛错，不删 SQLite
+online paper + paragraphs -> 同一 PG 事务，失败回滚 SQLite
+```
+
+仍未收口：
+
+```text
+supplementary_files 仍 SQLite
+build_db 的 sections/sentences 构建脚本仍 SQLite
 ```
 
 ### watch placeholder delete
@@ -108,11 +117,13 @@ sections/paragraphs/sentences 也不会进 PG
 ## 5. 退役前置条件
 
 ```text
-1. DatabaseWriter 增加 PG 写路径
-2. parse_service 走 PG 事务
-3. online downloader children fail-closed
-4. watch delete fail-closed
-5. 连续 7 天 outbox pending=0 / drift=0
+1. DatabaseWriter 增加 PG 写路径（已完成）
+2. parse_service 走 PG 事务（已完成）
+3. online downloader children fail-closed（已完成）
+4. watch delete fail-closed（已完成）
+5. supplementary_files PG-first
+6. build_db sections/sentences 构建路径
+7. 连续 7 天 outbox pending=0 / drift=0
 ```
 
 ## 6. 当前决定
