@@ -1,9 +1,23 @@
 # Data Issue: Sentence IDs Differ Between SQLite and PostgreSQL
 
 > Date: 2026-11-02  
-> Status: confirmed; not fixed.
+> Status: historical; current DB is consistent (2026-11-03).
 
-## Evidence
+## 2026-11-03 recheck
+
+```text
+gold sentence total 65
+same_id            65
+text_match_only     0
+missing             0
+
+SQLite/PG sentences: 862,677 / 862,677
+consistency: 100%
+```
+
+The old 17-sample mismatch was a historical build state, not the current DB.
+
+## Evidence (historical)
 
 All 17 gold sentences from the 20-query set:
 

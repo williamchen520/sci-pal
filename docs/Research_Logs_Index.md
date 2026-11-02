@@ -199,6 +199,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | ID/vector contract audit design | read-only checks: resolution, coverage, ID consistency, hierarchy | [Audit design](审计-ID与向量契约设计.md) |
 
+| 2026-11-03 | ID/vector audit result | verdict FAIL; paragraph vector resolution 82.86%; IDs 100% consistent | [Audit result](审计-ID与向量契约结果.md) |
+
 ## Rules
 
 ```text

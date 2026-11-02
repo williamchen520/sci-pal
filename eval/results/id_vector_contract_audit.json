@@ -1,0 +1,213 @@
+{
+  "generated_at": "2026-11-02T16:41:23.213027+00:00",
+  "sqlite": "G:/sciPal_deploy/data/research.db",
+  "pg": "scipal_bench",
+  "chroma": "G:/sciPal_deploy/data/chroma",
+  "collections": {
+    "paragraphs": {
+      "vector_total": 147910,
+      "vector_unique_ids": 147910,
+      "vector_resolved": 122564,
+      "vector_orphan": 25346,
+      "vector_duplicate_ids": 0,
+      "db_total": 167388,
+      "db_with_vector": 122564,
+      "db_coverage": 0.7322,
+      "resolution_rate": 0.8286,
+      "metadata_sample": 5000,
+      "metadata_complete_rate": 1.0
+    },
+    "paragraphs_contextual": {
+      "vector_total": 164654,
+      "vector_unique_ids": 164654,
+      "vector_resolved": 164654,
+      "vector_orphan": 0,
+      "vector_duplicate_ids": 0,
+      "db_total": 167388,
+      "db_with_vector": 164654,
+      "db_coverage": 0.9837,
+      "resolution_rate": 1.0,
+      "metadata_sample": 5000,
+      "metadata_complete_rate": 1.0
+    },
+    "papers": {
+      "vector_total": 2076,
+      "vector_unique_ids": 2076,
+      "vector_resolved": 2076,
+      "vector_orphan": 0,
+      "vector_duplicate_ids": 0,
+      "db_total": 3313,
+      "db_with_vector": 2076,
+      "db_coverage": 0.6266,
+      "resolution_rate": 1.0,
+      "metadata_sample": 2076,
+      "metadata_complete_rate": 1.0
+    },
+    "figures": {
+      "vector_total": 219,
+      "vector_unique_ids": 219,
+      "vector_resolved": 219,
+      "vector_orphan": 0,
+      "vector_duplicate_ids": 0,
+      "db_total": 13471,
+      "db_with_vector": 219,
+      "db_coverage": 0.0163,
+      "resolution_rate": 1.0,
+      "metadata_sample": 219,
+      "metadata_complete_rate": 1.0
+    },
+    "tables": {
+      "vector_total": 114,
+      "vector_unique_ids": 114,
+      "vector_resolved": 114,
+      "vector_orphan": 0,
+      "vector_duplicate_ids": 0,
+      "db_total": 4922,
+      "db_with_vector": 114,
+      "db_coverage": 0.0232,
+      "resolution_rate": 1.0,
+      "metadata_sample": 114,
+      "metadata_complete_rate": 1.0
+    },
+    "section_summaries": {
+      "vector_total": 61932,
+      "vector_unique_ids": 61932,
+      "vector_resolved": 61932,
+      "vector_orphan": 0,
+      "db_total": 69128,
+      "db_with_vector": 61932,
+      "db_coverage": 0.8959,
+      "resolution_rate": 1.0
+    }
+  },
+  "ids": {
+    "papers": {
+      "sqlite": 3313,
+      "pg": 3313,
+      "same": 3313,
+      "sqlite_only": 0,
+      "pg_only": 0,
+      "consistency": 1.0
+    },
+    "sections": {
+      "sqlite": 69128,
+      "pg": 69128,
+      "same": 69128,
+      "sqlite_only": 0,
+      "pg_only": 0,
+      "consistency": 1.0
+    },
+    "paragraphs": {
+      "sqlite": 167388,
+      "pg": 167388,
+      "same": 167388,
+      "sqlite_only": 0,
+      "pg_only": 0,
+      "consistency": 1.0
+    },
+    "sentences": {
+      "sqlite": 862677,
+      "pg": 862677,
+      "same": 862677,
+      "sqlite_only": 0,
+      "pg_only": 0,
+      "consistency": 1.0
+    },
+    "figures": {
+      "sqlite": 13471,
+      "pg": 13471,
+      "same": 13471,
+      "sqlite_only": 0,
+      "pg_only": 0,
+      "consistency": 1.0
+    },
+    "tables": {
+      "sqlite": 4922,
+      "pg": 4922,
+      "same": 4922,
+      "sqlite_only": 0,
+      "pg_only": 0,
+      "consistency": 1.0
+    }
+  },
+  "id_formats": {
+    "papers": {
+      "sqlite": {
+        "other": 3313
+      },
+      "pg": {
+        "other": 3313
+      }
+    },
+    "sections": {
+      "sqlite": {
+        "paper_*_sec_*": 58372,
+        "sec_paper_*": 10756
+      },
+      "pg": {
+        "paper_*_sec_*": 58372,
+        "sec_paper_*": 10756
+      }
+    },
+    "paragraphs": {
+      "sqlite": {
+        "paper_*_para_*": 158681,
+        "para_paper_*": 8613,
+        "other": 94
+      },
+      "pg": {
+        "paper_*_para_*": 158681,
+        "para_paper_*": 8613,
+        "other": 94
+      }
+    },
+    "sentences": {
+      "sqlite": {
+        "*_sent_*": 862677
+      },
+      "pg": {
+        "*_sent_*": 862677
+      }
+    },
+    "figures": {
+      "sqlite": {
+        "other": 13471
+      },
+      "pg": {
+        "other": 13471
+      }
+    },
+    "tables": {
+      "sqlite": {
+        "other": 4922
+      },
+      "pg": {
+        "other": 4922
+      }
+    }
+  },
+  "hierarchy": {
+    "orphan_sections": 0,
+    "orphan_paragraphs": 0,
+    "orphan_sentences": 0
+  },
+  "sentence_evidence": {
+    "total": 65,
+    "same_id": 65,
+    "text_match_only": 0,
+    "missing": 0,
+    "text_match_rate": 1.0
+  },
+  "verdict": "fail",
+  "failures": [
+    "vector resolution < 99.9%"
+  ],
+  "warnings": [
+    "paragraphs db coverage < 90%",
+    "papers db coverage < 90%",
+    "figures db coverage < 90%",
+    "tables db coverage < 90%",
+    "section_summaries db coverage < 90%"
+  ],
+  "vector_resolution_rate": 0.9328
+}
