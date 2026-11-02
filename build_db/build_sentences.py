@@ -14,6 +14,8 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
 
+from services.papers import pg_writes
+
 # 路径配置
 RESEARCH_DB = PROJECT_ROOT / "data" / "research.db"
 ABSTRACTS_DB = PROJECT_ROOT / "data" / "abstracts.db"
@@ -96,6 +98,9 @@ def build_sentences_for_research_db():
     print(f"✂️  切成了 {len(all_sentences)} 个句子")
     
     # 批量插入
+    if pg_writes.enabled():
+        pg_writes.replace_all_sentences(all_sentences)
+
     batch_size = 1000
     for i in range(0, len(all_sentences), batch_size):
         batch = all_sentences[i:i+batch_size]

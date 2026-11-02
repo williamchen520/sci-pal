@@ -364,3 +364,21 @@ def replace_sections(paper_id: str, rows: list[tuple], para_map: list[tuple[str,
         LOGGER.error("PG sections write failed; refusing SQLite fallback: %s", exc)
         raise PaperWriteError("paper write backend unavailable") from exc
     return True
+
+
+def replace_all_sentences(rows: list[tuple]) -> bool:
+    """PG mirror for build_sentences_for_research_db (full rebuild)."""
+    if not enabled():
+        return False
+    try:
+        with _pg_connection() as pg:
+            pg.execute("DELETE FROM sentences")
+            pg.executemany(
+                "INSERT INTO sentences (sentence_id,para_id,paper_id,text,sequence,search_vector) "
+                "VALUES (%s,%s,%s,%s,%s,to_tsvector('english',%s))",
+                [(sid, para, paper, text, seq, text) for sid, para, paper, text, seq in rows],
+            )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG full sentence rebuild failed; refusing SQLite fallback: %s", exc)
+        raise PaperWriteError("paper write backend unavailable") from exc
+    return True

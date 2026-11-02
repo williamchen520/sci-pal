@@ -141,11 +141,16 @@ papers trigger 删除后 watch/ingest 正常
 ```text
 决策：A
 build_sections_tree：已 PG-first
-build_sentences：未开始
+build_sentences：已 PG-first
 papers trigger：保留
 ```
 
-`build_sections_tree.py` 现在先写 PG sections 并更新 PG paragraphs.section_id，
-再写 SQLite mirror。
+`build_sections_tree.py` 先写 PG sections，再写 SQLite mirror。
 
-下一步：`build_sentences.py`。
+`build_sentences.py` 先 replace PG sentences，再重建 SQLite sentences。
+
+仍保留 trigger：
+
+```text
+import_jats / build_database 等更强 build 脚本仍 SQLite
+```
