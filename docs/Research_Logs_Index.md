@@ -147,6 +147,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Evidence-preserving selection audit | reserve1 gold sentence 5/20; reserve2 10/20 but recall .95; reject | [Evidence preserving](检索-Evidence-Preserving-审计.md) |
 
+| 2026-11-02 | Sentence-level retrieval evaluation | sentence FTS MRR .625, gold sentence 0/20, p95 34.4s; reject | [Sentence eval](检索-Sentence-Level-评估.md) |
+
 ## Rules
 
 ```text
