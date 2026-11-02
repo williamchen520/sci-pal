@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-11-02T17:29:10.331440+00:00",
+  "sqlite": "G:\\sciPal_deploy\\data\\research.db",
+  "chroma": "G:\\sciPal_deploy\\data\\chroma",
+  "collection": "paragraphs",
+  "db_paragraphs": 166470,
+  "vectors_before": 137940,
+  "orphans": 0,
+  "missing": 28530,
+  "dry_run": false,
+  "deleted": 0,
+  "inserted": 28530,
+  "vectors_after": 166470,
+  "resolved_after": 166470,
+  "orphans_after": 0,
+  "missing_after": 0,
+  "coverage_after": 1.0
+}

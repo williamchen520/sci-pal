@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-11-02T16:41:23.213027+00:00",
+  "generated_at": "2026-11-02T17:47:38.081965+00:00",
   "sqlite": "G:/sciPal_deploy/data/research.db",
   "pg": "scipal_bench",
   "chroma": "G:/sciPal_deploy/data/chroma",
   "collections": {
     "paragraphs": {
-      "vector_total": 147910,
-      "vector_unique_ids": 147910,
-      "vector_resolved": 122564,
-      "vector_orphan": 25346,
+      "vector_total": 166470,
+      "vector_unique_ids": 166470,
+      "vector_resolved": 166470,
+      "vector_orphan": 0,
       "vector_duplicate_ids": 0,
       "db_total": 167388,
-      "db_with_vector": 122564,
-      "db_coverage": 0.7322,
-      "resolution_rate": 0.8286,
+      "db_with_vector": 166470,
+      "db_coverage": 0.9945,
+      "resolution_rate": 1.0,
       "metadata_sample": 5000,
       "metadata_complete_rate": 1.0
     },
@@ -198,16 +198,13 @@
     "missing": 0,
     "text_match_rate": 1.0
   },
-  "verdict": "fail",
-  "failures": [
-    "vector resolution < 99.9%"
-  ],
+  "verdict": "warn",
+  "failures": [],
   "warnings": [
-    "paragraphs db coverage < 90%",
     "papers db coverage < 90%",
     "figures db coverage < 90%",
     "tables db coverage < 90%",
     "section_summaries db coverage < 90%"
   ],
-  "vector_resolution_rate": 0.9328
+  "vector_resolution_rate": 1.0
 }

@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-11-02T16:57:40.803827+00:00",
+  "sqlite": "G:\\sciPal_deploy\\data\\research.db",
+  "chroma": "G:\\sciPal_deploy\\data\\chroma",
+  "collection": "paragraphs",
+  "db_paragraphs": 166470,
+  "vectors_before": 147910,
+  "orphans": 26226,
+  "missing": 44786,
+  "dry_run": true,
+  "orphan_sample": [
+    "paper_PMC12493300_06b5d034_xml_para_00054",
+    "paper_PMC12493300_06b5d034_xml_para_00055",
+    "paper_PMC12493300_06b5d034_xml_para_00056",
+    "paper_PMC12493300_06b5d034_xml_para_00057",
+    "paper_PMC12493300_06b5d034_xml_para_00058",
+    "paper_PMC12493300_06b5d034_xml_para_00059",
+    "paper_PMC12493300_06b5d034_xml_para_00060",
+    "paper_PMC12493300_06b5d034_xml_para_00061",
+    "paper_PMC12493300_06b5d034_xml_para_00062",
+    "paper_PMC12493300_06b5d034_xml_para_00063"
+  ],
+  "missing_sample": [
+    "paper_PMC10360191_f3949d7c_xml_para_00000",
+    "paper_PMC10360191_f3949d7c_xml_para_00001",
+    "paper_PMC10360191_f3949d7c_xml_para_00002",
+    "paper_PMC10360191_f3949d7c_xml_para_00003",
+    "paper_PMC10360191_f3949d7c_xml_para_00004",
+    "paper_PMC10360191_f3949d7c_xml_para_00005",
+    "paper_PMC10360191_f3949d7c_xml_para_00006",
+    "paper_PMC10360191_f3949d7c_xml_para_00007",
+    "paper_PMC10360191_f3949d7c_xml_para_00008",
+    "paper_PMC10360191_f3949d7c_xml_para_00009"
+  ]
+}
