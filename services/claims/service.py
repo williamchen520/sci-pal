@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from services.claims import pg_writes
+
 import hashlib
 import json
 import re
@@ -90,6 +92,36 @@ def create_claim(conn: sqlite3.Connection, data: Dict[str, Any], actor: str = "h
     claim_id = data.get("claim_id") or "claim_" + hashlib.sha1(
         (data.get("claim_text") or "").encode("utf-8")
     ).hexdigest()[:12]
+    now = _now()
+    card = {
+        "claim_id": claim_id,
+        "workspace_id": data.get("workspace_id") or "ws_default",
+        "title": data.get("title") or data.get("claim_text", "")[:80],
+        "claim_text": data.get("claim_text") or "",
+        "claim_type": data.get("claim_type") or "empirical",
+        "status": data.get("status") or "draft",
+        "confidence": float(data.get("confidence") or 0.0),
+        "qualifiers_json": json.dumps(data.get("qualifiers") or {}, ensure_ascii=False),
+        "corpus_json": json.dumps(data.get("corpus") or [], ensure_ascii=False),
+        "warrant": data.get("warrant") or "",
+        "backing": data.get("backing") or "",
+        "rebuttal": data.get("rebuttal") or "",
+        "strongest_counter": data.get("strongest_counter") or "",
+        "writing_brief": json.dumps(data.get("writing_brief") or {}, ensure_ascii=False),
+        "decision": data.get("decision") or "pending",
+        "created_at": data.get("created_at") or now,
+        "updated_at": now,
+    }
+    event = {
+        "event_id": f"evt_{hashlib.sha1((claim_id+'create'+now).encode()).hexdigest()[:12]}",
+        "claim_id": claim_id,
+        "action": "create",
+        "actor": actor,
+        "note": "",
+        "created_at": now,
+    }
+    if pg_writes.enabled():
+        pg_writes.create_claim(card, event)
     conn.execute(
         "INSERT OR REPLACE INTO claim_cards "
         "(claim_id, workspace_id, title, claim_text, claim_type, status, confidence, "
@@ -97,26 +129,18 @@ def create_claim(conn: sqlite3.Connection, data: Dict[str, Any], actor: str = "h
         "writing_brief, decision, created_at, updated_at) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
-            claim_id,
-            data.get("workspace_id") or "ws_default",
-            data.get("title") or data.get("claim_text", "")[:80],
-            data.get("claim_text") or "",
-            data.get("claim_type") or "empirical",
-            data.get("status") or "draft",
-            float(data.get("confidence") or 0.0),
-            json.dumps(data.get("qualifiers") or {}, ensure_ascii=False),
-            json.dumps(data.get("corpus") or [], ensure_ascii=False),
-            data.get("warrant") or "",
-            data.get("backing") or "",
-            data.get("rebuttal") or "",
-            data.get("strongest_counter") or "",
-            json.dumps(data.get("writing_brief") or {}, ensure_ascii=False),
-            data.get("decision") or "pending",
-            data.get("created_at") or _now(),
-            _now(),
+            card["claim_id"], card["workspace_id"], card["title"], card["claim_text"],
+            card["claim_type"], card["status"], card["confidence"], card["qualifiers_json"],
+            card["corpus_json"], card["warrant"], card["backing"], card["rebuttal"],
+            card["strongest_counter"], card["writing_brief"], card["decision"],
+            card["created_at"], card["updated_at"],
         ),
     )
-    _event(conn, claim_id, "create", actor, "")
+    conn.execute(
+        "INSERT INTO claim_card_events (event_id, claim_id, action, actor, note, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (event["event_id"], claim_id, event["action"], event["actor"], event["note"], event["created_at"]),
+    )
     conn.commit()
     return claim_id
 
@@ -157,16 +181,44 @@ def add_evidence(
     evidence_id = "cev_" + hashlib.sha1(
         f"{claim_id}:{sentence_id}:{relation}".encode()
     ).hexdigest()[:14]
+    now = _now()
+    evidence_row = {
+        "evidence_id": evidence_id,
+        "claim_id": claim_id,
+        "paper_id": sentence["paper_id"],
+        "node_type": "sentence",
+        "node_id": sentence_id,
+        "relation": relation,
+        "strength": float(strength),
+        "quote": sentence["text"],
+        "rationale": rationale,
+        "source_type": "literature",
+        "created_at": now,
+    }
+    event = {
+        "event_id": f"evt_{hashlib.sha1((claim_id+f'evidence:{relation}'+now).encode()).hexdigest()[:12]}",
+        "claim_id": claim_id,
+        "action": f"evidence:{relation}",
+        "actor": actor,
+        "note": sentence_id,
+        "created_at": now,
+    }
+    if pg_writes.enabled():
+        pg_writes.add_evidence(evidence_row, event)
     conn.execute(
         "INSERT OR REPLACE INTO claim_card_evidence "
-        "(evidence_id, claim_id, paper_id, node_type, node_id, relation, strength, quote, rationale, source_type) "
-        "VALUES (?, ?, ?, 'sentence', ?, ?, ?, ?, ?, 'literature')",
+        "(evidence_id, claim_id, paper_id, node_type, node_id, relation, strength, quote, rationale, source_type, created_at) "
+        "VALUES (?, ?, ?, 'sentence', ?, ?, ?, ?, ?, 'literature', ?)",
         (
             evidence_id, claim_id, sentence["paper_id"], sentence_id, relation,
-            float(strength), sentence["text"], rationale,
+            float(strength), sentence["text"], rationale, now,
         ),
     )
-    _event(conn, claim_id, f"evidence:{relation}", actor, sentence_id)
+    conn.execute(
+        "INSERT INTO claim_card_events (event_id, claim_id, action, actor, note, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (event["event_id"], claim_id, event["action"], event["actor"], event["note"], event["created_at"]),
+    )
     conn.commit()
     return {
         "evidence_id": evidence_id,
