@@ -1057,3 +1057,47 @@ Still not PG-primary:
 ```text
 watch_profiles/runs/items/seen write SQLite first
 ```
+
+## 27. Real watch run (2026-11-02)
+
+Profile:
+
+```text
+id=1  HCC 免疫治疗
+```
+
+Result:
+
+```text
+run_id          9
+status          success
+found           1
+selected        1
+imported_full   0
+imported_abstract 1
+```
+
+Selected paper:
+
+```text
+Histotripsy for Hepatocellular Carcinoma in Asia-Pacific
+DOI 10.2147/jhc.s630056
+Journal of Hepatocellular Carcinoma, 2026-11
+abstract only
+```
+
+Post-run checks:
+
+```text
+PG watch_runs id=9     success / 1 / 1 / 1
+PG watch_items          1
+PG watch_seen           1
+SQLite watch_runs        same
+outbox pending          0
+health-cron drift       false
+```
+
+This is a real external watch run, not the synthetic canary.
+
+Current boundary: watch still writes SQLite first; the PG catch-up ran at the
+end of the run and completed with zero pending outbox.
