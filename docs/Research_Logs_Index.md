@@ -157,6 +157,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Paragraph+sentence dual-weight design | design only; parked until PG purification; gates defined | [Dual-weight design](检索-段句双权重实验设计.md) |
 
+| 2026-11-02 | Phase 0 schema parity | PG 67 tables; projects/members backfilled 1/2; only FTS+outbox left | [Phase 0](架构-Phase0-完成记录.md) |
+
 ## Rules
 
 ```text

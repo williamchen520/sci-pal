@@ -1,0 +1,39 @@
+{
+  "sqlite_tables": 72,
+  "pg_tables": 67,
+  "common_tables": 67,
+  "sqlite_only": [
+    "dual_write_outbox",
+    "papers_fts",
+    "paragraphs_fts",
+    "sentences_fts",
+    "summaries_fts"
+  ],
+  "pg_only": [],
+  "column_diffs": {
+    "papers": {
+      "missing_in_pg": [],
+      "missing_in_sqlite": [
+        "search_vector"
+      ]
+    },
+    "paragraphs": {
+      "missing_in_pg": [],
+      "missing_in_sqlite": [
+        "search_vector"
+      ]
+    },
+    "sentences": {
+      "missing_in_pg": [],
+      "missing_in_sqlite": [
+        "search_vector"
+      ]
+    },
+    "summaries": {
+      "missing_in_pg": [],
+      "missing_in_sqlite": [
+        "search_vector"
+      ]
+    }
+  }
+}
