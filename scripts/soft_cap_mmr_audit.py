@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from scripts.fts_sentence_compare import _dedupe, load_cases, metrics, terms_for  # noqa: E402
-from services.search.diversity import select_diverse, diversity_report  # noqa: E402
+from services.search.diversity import select_diverse, select_evidence_preserving, diversity_report  # noqa: E402
 
 
 def _rows(conn, terms, limit):
@@ -78,6 +78,8 @@ def main() -> int:
                 "cap2": select_diverse(candidates, top_k=10, max_per_paper=2, lambda_=1.0),
                 "cap3": select_diverse(candidates, top_k=10, max_per_paper=3, lambda_=1.0),
                 "mmr_cap3": select_diverse(candidates, top_k=10, max_per_paper=3, lambda_=0.75),
+                "preserve": select_evidence_preserving(candidates, top_k=10, max_per_paper=3, lambda_=0.75),
+                "preserve2": select_evidence_preserving(candidates, top_k=10, max_per_paper=3, lambda_=0.75, reserve_per_paper=2),
             }
             row = {"case_id": case["case_id"], "source": case.get("source")}
             for name, selected in variants.items():
@@ -88,7 +90,7 @@ def main() -> int:
         conn.close()
 
     summary = {}
-    for name in ("raw", "cap2", "cap3", "mmr_cap3"):
+    for name in ("raw", "cap2", "cap3", "mmr_cap3", "preserve", "preserve2"):
         summary[name] = {
             "recall@10": round(sum(r[name]["recall@10"] for r in rows_out) / len(rows_out), 4),
             "mrr": round(sum(r[name]["mrr"] for r in rows_out) / len(rows_out), 4),
