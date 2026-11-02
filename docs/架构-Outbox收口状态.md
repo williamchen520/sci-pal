@@ -1,7 +1,7 @@
 # Outbox 收口状态
 
 > 日期：2026-11-02  
-> 结果：watch outbox 已退役；其余表仍有阻塞项。
+> 结果：watch + claims/reviews outbox 已退役；其余表仍有阻塞项。
 
 ## 1. 已完成
 
@@ -39,7 +39,30 @@ outbox pending 0
 scripts/retire_watch_outbox.py
 ```
 
-## 2. 仍保留的 trigger
+## 2. Claims / Reviews 退役
+
+已删除 15 个 trigger：
+
+```text
+claim_cards
+claim_card_evidence
+claim_card_events
+review_projects
+review_events
+```
+
+其中 `review_projects.pico_json` 更新也已 PG-first。
+
+当前：
+
+```text
+watch triggers          0
+claims/reviews triggers 0
+outbox pending          0
+剩余 dualwrite triggers 27
+```
+
+## 2.1 仍保留的 trigger
 
 ```text
 papers
@@ -51,11 +74,6 @@ tables
 citations
 sentence_links
 paper_links
-claim_cards
-claim_card_evidence
-claim_card_events
-review_projects
-review_events
 ```
 
 ## 3. 为什么不能继续删

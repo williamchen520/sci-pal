@@ -1,0 +1,23 @@
+{
+  "db": "G:\\sciPal_deploy\\data\\research.db",
+  "dry_run": false,
+  "dropped": [
+    "dualwrite_claim_cards_ai",
+    "dualwrite_claim_cards_au",
+    "dualwrite_claim_cards_ad",
+    "dualwrite_claim_card_evidence_ai",
+    "dualwrite_claim_card_evidence_au",
+    "dualwrite_claim_card_evidence_ad",
+    "dualwrite_claim_card_events_ai",
+    "dualwrite_claim_card_events_au",
+    "dualwrite_claim_card_events_ad",
+    "dualwrite_review_projects_ai",
+    "dualwrite_review_projects_au",
+    "dualwrite_review_projects_ad",
+    "dualwrite_review_events_ai",
+    "dualwrite_review_events_au",
+    "dualwrite_review_events_ad"
+  ],
+  "pending_removed": 0,
+  "remaining_triggers": []
+}

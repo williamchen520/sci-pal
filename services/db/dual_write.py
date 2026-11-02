@@ -30,13 +30,8 @@ DEFAULT_TABLES = (
     "citations",
     "sentence_links",
     "paper_links",
-    "claim_cards",
-    "claim_card_evidence",
-    "claim_card_events",
     # Tenancy is PG-primary since 2026-11-02 and deliberately excluded from
     # outbox replication; SQLite is a mirror, not a source of truth.
-    "review_projects",
-    "review_events",
 )
 
 # SQLite type/value coercion for columns whose PostgreSQL type differs.

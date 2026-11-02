@@ -50,3 +50,19 @@ def log_event(row: dict) -> None:
     except Exception as exc:  # noqa: BLE001
         LOGGER.error("PG review event failed; refusing SQLite fallback: %s", exc)
         raise ReviewWriteError("review write backend unavailable") from exc
+
+
+def update_pico(project_id: str, pico_json: str) -> None:
+    try:
+        with _pg() as pg:
+            row = pg.execute(
+                "UPDATE review_projects SET pico_json=%s WHERE project_id=%s RETURNING project_id",
+                (pico_json, project_id),
+            ).fetchone()
+        if not row:
+            raise ReviewWriteError("review project not found in PostgreSQL")
+    except ReviewWriteError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG review pico update failed; refusing SQLite fallback: %s", exc)
+        raise ReviewWriteError("review write backend unavailable") from exc

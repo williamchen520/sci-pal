@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from services.review import pg_writes
+
 import json
 import re
 import sqlite3
