@@ -265,6 +265,7 @@ class IngestService:
     def _write_batch(self, conn: sqlite3.Connection, parsed: Sequence[Mapping[str, Any]]) -> int:
         written = 0
         metadata_updates: list[tuple[str, object, object, object]] = []
+        children: list[tuple[str, list[dict], list[dict]]] = []
         # `paragraphs_ad` deletes from FTS5 with `WHERE para_id = ?`, which is a
         # full scan per deleted row (para_id is UNINDEXED). Dropping it for the
         # batch and deleting by a single set-based join keeps re-ingest fast.
@@ -339,9 +340,18 @@ class IngestService:
                     conn.execute("DELETE FROM paragraphs WHERE paper_id = ?", (paper_id,))
                     from build_db.sentence_geometry import split_sentences
 
+                    paper_paragraphs: list[dict] = []
+                    paper_sentences: list[dict] = []
                     for index, para in enumerate(data.get("paragraphs") or []):
                         para_id = f"{paper_id}_para_{index:05d}"
                         path = para.get("path") or []
+                        paragraph_row = {
+                            "para_id": para_id,
+                            "section_level1": (path[0] if path else para.get("section")) or "",
+                            "text": para.get("text") or "",
+                            "sequence": para.get("sequence") or index,
+                        }
+                        paper_paragraphs.append(paragraph_row)
                         conn.execute(
                             """
                             INSERT OR REPLACE INTO paragraphs
@@ -351,26 +361,34 @@ class IngestService:
                             (
                                 para_id,
                                 paper_id,
-                                (path[0] if path else para.get("section")) or "",
-                                para.get("text") or "",
-                                para.get("sequence") or index,
+                                paragraph_row["section_level1"],
+                                paragraph_row["text"],
+                                paragraph_row["sequence"],
                             ),
                         )
                         for sent_index, text in enumerate(split_sentences(para.get("text") or "")):
                             if not has_sentences:
                                 break
+                            sentence_row = {
+                                "sentence_id": f"{para_id}_sent_{sent_index:03d}",
+                                "para_id": para_id,
+                                "text": text,
+                                "sequence": sent_index,
+                            }
+                            paper_sentences.append(sentence_row)
                             conn.execute(
                                 "INSERT OR REPLACE INTO sentences "
                                 "(sentence_id, para_id, paper_id, text, sequence, section_id) "
                                 "VALUES (?, ?, ?, ?, ?, NULL)",
                                 (
-                                    f"{para_id}_sent_{sent_index:03d}",
+                                    sentence_row["sentence_id"],
                                     para_id,
                                     paper_id,
                                     text,
                                     sent_index,
                                 ),
                             )
+                    children.append((paper_id, paper_paragraphs, paper_sentences))
                     written += 1
         finally:
             if has_fts:
@@ -388,6 +406,9 @@ class IngestService:
             update_metadata_if_exists(
                 paper_id, journal=journal, year=year, doi=doi, db_path=self.db_path
             )
+        if paper_pg_writes.enabled():
+            for paper_id, paragraphs, sentences in children:
+                paper_pg_writes.replace_children(paper_id, paragraphs, sentences)
         return written
 
     def _embed_batch(self, parsed: Sequence[Mapping[str, Any]]) -> int:

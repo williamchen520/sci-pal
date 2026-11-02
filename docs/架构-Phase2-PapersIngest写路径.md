@@ -1,7 +1,7 @@
 # Phase 2：Papers Ingest 写路径（第一片）
 
 > 日期：2026-11-02  
-> 状态：paper row PG-first；paragraphs/sentences 仍 SQLite+outbox。
+> 状态：paper row + paragraph/sentence batch 已写 PG；figures/tables/outbox 未收口。
 
 ## 1. 已迁移
 
@@ -27,11 +27,30 @@ services/papers/pg_writes.py    upsert_paper
 services/search/ingest.py       _write_batch
 ```
 
-## 3. 仍未迁移
+## 3. Paragraph / Sentence batch
+
+SQLite batch commit 后：
 
 ```text
-paragraphs
-sentences
+if SCIPAL_PAPER_WRITE_BACKEND=postgres
+  -> DELETE PG sentences/paragraphs for paper
+  -> INSERT paragraphs
+  -> INSERT sentences
+  -> to_tsvector('english', text)
+```
+
+代码：
+
+```text
+services/papers/pg_writes.py  replace_children
+services/search/ingest.py     children collection
+```
+
+这是 best-effort：PG 失败会 warning，SQLite 结果保留，outbox 仍是修复路径。
+
+## 4. 仍未迁移
+
+```text
 figures / tables
 online_downloader paper inserts
 preprint_ingest metadata updates
@@ -42,12 +61,12 @@ preprint_ingest metadata updates
 因此：
 
 ```text
-paper row 已 PG-first
+paper + paragraph + sentence 已写 PG
 完整 ingest 仍不是 PG-primary
 outbox 不能删
 ```
 
-## 4. 风险
+## 5. 风险
 
 ```text
 PG upsert 成功后 SQLite batch 失败
@@ -56,19 +75,19 @@ PG upsert 成功后 SQLite batch 失败
 
 这是当前切片的已知窗口；默认 flag 关闭，生产不触发。
 
-## 5. 测试
+## 6. 测试
 
 ```text
 tests.test_ingest  11 tests OK
 ```
 
-## 6. 当前生产
+## 7. 当前生产
 
 ```text
 SCIPAL_PAPER_WRITE_BACKEND 未设置
 ```
 
-## 7. 下一步
+## 8. 下一步
 
 ```text
 1. paragraphs/sentences PG batch writer
