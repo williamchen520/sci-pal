@@ -208,3 +208,74 @@ def replace_children(paper_id: str, paragraphs: list[dict], sentences: list[dict
         LOGGER.warning("PG child batch skipped for %s: %s", paper_id, exc)
         return False
     return True
+
+
+def write_parsed_paper(parsed_result: dict) -> bool:
+    """PG-first write for DatabaseWriter (PDF/preprint parse path)."""
+    if not enabled():
+        return False
+    metadata = parsed_result.get("metadata", {}) or {}
+    paper_id = parsed_result["paper_id"]
+    paragraphs = parsed_result.get("paragraphs", []) or []
+    figures = parsed_result.get("figures", []) or []
+    tables = parsed_result.get("tables", []) or []
+    paper = {
+        "paper_id": paper_id,
+        "filename": metadata.get("file_name") or metadata.get("filename") or "",
+        "title": metadata.get("title", "Untitled"),
+        "abstract": metadata.get("abstract", ""),
+        "authors": ", ".join(metadata.get("authors", [])) if isinstance(metadata.get("authors"), list) else metadata.get("authors", ""),
+        "journal": metadata.get("journal", ""),
+        "year": metadata.get("year"),
+        "doi": metadata.get("doi", ""),
+    }
+    try:
+        with _pg_connection() as pg:
+            _upsert_paper_row(pg, paper)
+            for para in paragraphs:
+                pg.execute(
+                    "INSERT INTO paragraphs "
+                    "(para_id, paper_id, section_level1, section_level2, section_level3, text, sequence, page, bbox, parse_engine, search_vector) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'pdf',to_tsvector('english',%s)) "
+                    "ON CONFLICT (para_id) DO UPDATE SET text=EXCLUDED.text, sequence=EXCLUDED.sequence, "
+                    "page=EXCLUDED.page, bbox=EXCLUDED.bbox, search_vector=EXCLUDED.search_vector",
+                    (
+                        para.get("para_id"), paper_id,
+                        para.get("section_type") or para.get("section_level1"),
+                        para.get("section_title") or para.get("section_level2"),
+                        para.get("section_level3"),
+                        para.get("text_content") or para.get("text") or "",
+                        para.get("para_index") or para.get("sequence") or 0,
+                        para.get("page_number") or para.get("page"),
+                        str(para.get("bbox", "")) if para.get("bbox") else None,
+                        para.get("text_content") or para.get("text") or "",
+                    ),
+                )
+            for fig in figures:
+                pg.execute(
+                    "INSERT INTO figures (fig_id,paper_id,fig_number,caption,file_path,page,bbox) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (fig_id) DO UPDATE SET "
+                    "caption=EXCLUDED.caption, file_path=EXCLUDED.file_path, page=EXCLUDED.page, bbox=EXCLUDED.bbox",
+                    (
+                        fig.get("figure_id") or fig.get("fig_id"), paper_id,
+                        fig.get("figure_number") or fig.get("fig_number"),
+                        fig.get("caption"), fig.get("image_path") or fig.get("file_path"),
+                        fig.get("page_number") or fig.get("page"),
+                        str(fig.get("bbox", "")) if fig.get("bbox") else None,
+                    ),
+                )
+            for table in tables:
+                pg.execute(
+                    'INSERT INTO "tables" (table_id,paper_id,table_number,caption,markdown,page) '
+                    "VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT (table_id) DO UPDATE SET "
+                    "caption=EXCLUDED.caption, markdown=EXCLUDED.markdown, page=EXCLUDED.page",
+                    (
+                        table.get("table_id"), paper_id, table.get("table_number"),
+                        table.get("caption"), table.get("markdown") or table.get("table_data"),
+                        table.get("page_number") or table.get("page"),
+                    ),
+                )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG parsed paper write failed; refusing SQLite fallback: %s", exc)
+        raise PaperWriteError("paper write backend unavailable") from exc
+    return True
