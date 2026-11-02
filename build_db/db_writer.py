@@ -344,6 +344,18 @@ class DatabaseWriter:
             supp_data: dict with supp_id, paper_id, filename, file_type, 
                        file_path, file_size, description
         """
+        if paper_pg_writes.enabled():
+            paper_pg_writes.upsert_supplementary(
+                {
+                    "supp_id": supp_data.get("supp_id"),
+                    "paper_id": supp_data.get("paper_id"),
+                    "filename": supp_data.get("filename"),
+                    "file_type": supp_data.get("file_type"),
+                    "file_path": supp_data.get("file_path"),
+                    "file_size": supp_data.get("file_size"),
+                    "description": supp_data.get("description", ""),
+                }
+            )
         conn = self._get_connection()
         cursor = conn.cursor()
         try:

@@ -321,3 +321,21 @@ def write_parsed_paper(parsed_result: dict) -> bool:
         LOGGER.error("PG parsed paper write failed; refusing SQLite fallback: %s", exc)
         raise PaperWriteError("paper write backend unavailable") from exc
     return True
+
+
+def upsert_supplementary(row: dict) -> bool:
+    if not enabled():
+        return False
+    try:
+        with _pg_connection() as pg:
+            pg.execute(
+                "INSERT INTO supplementary_files (supp_id,paper_id,filename,file_type,file_path,file_size,description) "
+                "VALUES (%(supp_id)s,%(paper_id)s,%(filename)s,%(file_type)s,%(file_path)s,%(file_size)s,%(description)s) "
+                "ON CONFLICT (supp_id) DO UPDATE SET filename=EXCLUDED.filename, file_type=EXCLUDED.file_type, "
+                "file_path=EXCLUDED.file_path, file_size=EXCLUDED.file_size, description=EXCLUDED.description",
+                row,
+            )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG supplementary write failed; refusing SQLite fallback: %s", exc)
+        raise PaperWriteError("paper write backend unavailable") from exc
+    return True
