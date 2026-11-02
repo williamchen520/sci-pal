@@ -159,6 +159,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Phase 0 schema parity | PG 67 tables; projects/members backfilled 1/2; only FTS+outbox left | [Phase 0](架构-Phase0-完成记录.md) |
 
+| 2026-11-02 | Phase 1 projects write path | PG-first create/update/member/copy; flag off; experiments pending | [Phase 1 projects](架构-Phase1-Projects写路径.md) |
+
 ## Rules
 
 ```text

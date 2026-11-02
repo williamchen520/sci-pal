@@ -9,6 +9,7 @@ from pathlib import Path
 from config.settings import DATABASE_PATH
 from services.tenancy.permissions import audit, pi_can_copy
 from services.tenancy.service import get_membership
+from services.projects import pg_writes
 
 STATUSES = ("planning", "active", "paused", "completed", "archived")
 
@@ -163,6 +164,10 @@ def create_project(
         if not _workspace_role(conn, workspace_id, owner_user_id):
             raise PermissionError("workspace access denied")
         project_id = f"project_{uuid.uuid4().hex}"
+        if pg_writes.enabled():
+            pg_writes.create_project(
+                project_id, workspace_id, owner_user_id, name, description, status
+            )
         conn.execute(
             "INSERT INTO projects (project_id, workspace_id, owner_user_id, name, description, status) "
             "VALUES (?, ?, ?, ?, ?, ?)",
@@ -212,6 +217,8 @@ def update_project(
                 raise ValueError("invalid status")
             fields["status"] = status
         if fields:
+            if pg_writes.enabled():
+                pg_writes.update_project(project_id, workspace_id, fields)
             assignments = ", ".join(f"{key} = ?" for key in fields)
             conn.execute(
                 f"UPDATE projects SET {assignments}, updated_at = CURRENT_TIMESTAMP "
@@ -247,6 +254,8 @@ def add_member(
             return None
         if not _workspace_role(conn, workspace_id, target_user_id):
             raise ValueError("target user is not in workspace")
+        if pg_writes.enabled():
+            pg_writes.add_member(project_id, target_user_id, role)
         conn.execute(
             "INSERT INTO project_members (project_id, user_id, role) VALUES (?, ?, ?) "
             "ON CONFLICT(project_id, user_id) DO UPDATE SET role = excluded.role",
@@ -284,6 +293,16 @@ def copy_project(
         if role == "pi" and not pi_can_copy(source["data_class"]):
             return None
         new_id = f"project_{uuid.uuid4().hex}"
+        if pg_writes.enabled():
+            pg_writes.copy_project(
+                new_id,
+                workspace_id,
+                actor_user_id,
+                f"Copy of {source['name']}",
+                source["description"] or "",
+                source["data_class"],
+                project_id,
+            )
         conn.execute(
             "INSERT INTO projects "
             "(project_id, workspace_id, owner_user_id, name, description, status, data_class, copied_from) "
