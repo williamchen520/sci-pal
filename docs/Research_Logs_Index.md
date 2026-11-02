@@ -137,6 +137,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Watch production canary | watch flag on; synthetic profile/run/item/seen synced 4/4; cleanup 0; 775 tests | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Real watch run | run 9 success; 1 selected abstract; PG/SQLite match; outbox 0 | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text
