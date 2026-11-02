@@ -22,6 +22,8 @@ import threading
 import time
 import uuid
 from pathlib import Path
+
+from services.papers import pg_writes as paper_pg_writes
 from typing import Dict, List, Optional
 
 # Windows 控制台编码修复
@@ -542,6 +544,7 @@ class OnlineDownloader:
 
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
+        children: list[tuple[str, list[dict]]] = []
 
         for i, pmc_id in enumerate(task.new_paper_ids, 1):
             xml_file = Path(XML_OUTPUT_DIR) / f"{pmc_id}.xml"
@@ -582,6 +585,7 @@ class OnlineDownloader:
                         VALUES (?, ?, ?, ?, ?, 'xml')
                     """, (para_id, paper_id, para["section"], para["text"], para["sequence"]))
 
+                children.append((paper_id, paper_paragraphs))
                 task.imported += 1
 
                 if self.verbose:

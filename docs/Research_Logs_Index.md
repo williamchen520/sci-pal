@@ -177,6 +177,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Figures/tables not runtime writes | ingest only carries; build_db writes; PG/SQLite counts match | [Figures/tables](架构-Phase2-FiguresTables说明.md) |
 
+| 2026-11-02 | Phase 2 online/preprint writes | online paper/paragraph PG; preprint year/doi PG; outbox pending | [Online/preprint](架构-Phase2-OnlinePreprint写路径.md) |
+
 ## Rules
 
 ```text
