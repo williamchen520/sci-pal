@@ -135,6 +135,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Watch synchronous PG catch-up | run end replays outbox to PG; 775 tests; not PG-primary yet | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Watch production canary | watch flag on; synthetic profile/run/item/seen synced 4/4; cleanup 0; 775 tests | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text
