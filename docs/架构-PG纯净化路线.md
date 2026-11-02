@@ -201,10 +201,11 @@ flag: SCIPAL_PROJECT_WRITE_BACKEND=postgres
 默认关闭
 ```
 
-待完成：
+进行中：
 
 ```text
-experiments / revisions / signatures / audit / access requests
+experiments create/update + revisions/audit 已 PG-first
+access requests / signatures 待迁移
 ```
 
 交付：

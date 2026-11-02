@@ -12,6 +12,7 @@ from pathlib import Path
 from config.settings import DATABASE_PATH
 from services.tenancy.permissions import audit
 from services.tenancy.service import get_membership, get_password_hash, verify_password
+from services.experiments import pg_writes
 
 
 class ProtocolNotFound(ValueError):
@@ -286,10 +287,54 @@ def create_experiment(
         if not _protocol_exists(conn, protocol_id):
             raise ProtocolNotFound("protocol not found")
         experiment_id = f"exp_{uuid.uuid4().hex}"
+        now = _now().isoformat()
+        snapshot = {
+            "title": title,
+            "status": status,
+            "protocol_id": protocol_id,
+            "protocol_version": protocol_version,
+            "content": content,
+        }
+        revision_id = f"rev_{uuid.uuid4().hex}"
+        experiment_row = {
+            "experiment_id": experiment_id,
+            "project_id": project_id,
+            "workspace_id": workspace_id,
+            "owner_user_id": user_id,
+            "title": title,
+            "status": status,
+            "protocol_id": protocol_id,
+            "protocol_version": protocol_version,
+            "content": content,
+            "created_at": now,
+            "updated_at": now,
+        }
+        revision_row = {
+            "revision_id": revision_id,
+            "experiment_id": experiment_id,
+            "workspace_id": workspace_id,
+            "revision": 1,
+            "content": json.dumps(snapshot, ensure_ascii=False, sort_keys=True),
+            "hash": _revision_hash(snapshot),
+            "created_by": user_id,
+            "created_at": now,
+        }
+        audit_row = {
+            "experiment_id": experiment_id,
+            "workspace_id": workspace_id,
+            "actor_user_id": user_id,
+            "action": "create",
+            "revision": 1,
+            "detail": None,
+            "created_at": now,
+        }
+        if pg_writes.enabled():
+            pg_writes.create_experiment(experiment_row, revision_row, audit_row)
         conn.execute(
             "INSERT INTO experiments "
             "(experiment_id, project_id, workspace_id, owner_user_id, title, status, "
-            "protocol_id, protocol_version, content, current_revision) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
+            "protocol_id, protocol_version, content, current_revision, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)",
             (
                 experiment_id,
                 project_id,
@@ -300,17 +345,31 @@ def create_experiment(
                 protocol_id,
                 protocol_version,
                 content,
+                now,
+                now,
             ),
         )
-        snapshot = {
-            "title": title,
-            "status": status,
-            "protocol_id": protocol_id,
-            "protocol_version": protocol_version,
-            "content": content,
-        }
-        _write_revision(conn, experiment_id, workspace_id, 1, snapshot, user_id)
-        _write_audit(conn, experiment_id, workspace_id, user_id, "create", 1)
+        conn.execute(
+            "INSERT INTO experiment_revisions "
+            "(revision_id, experiment_id, workspace_id, revision, content, hash, created_by, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                revision_id,
+                experiment_id,
+                workspace_id,
+                1,
+                revision_row["content"],
+                revision_row["hash"],
+                user_id,
+                now,
+            ),
+        )
+        conn.execute(
+            "INSERT INTO experiment_audit "
+            "(experiment_id, workspace_id, actor_user_id, action, revision, detail, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (experiment_id, workspace_id, user_id, "create", 1, None, now),
+        )
         conn.commit()
         row = conn.execute(
             "SELECT * FROM experiments WHERE experiment_id = ?", (experiment_id,)
@@ -378,23 +437,58 @@ def update_experiment(
         if fields:
             assignments = ", ".join(f"{key} = ?" for key in fields)
             revision = int(current["current_revision"] or 1) + 1
-            conn.execute(
-                f"UPDATE experiments SET {assignments}, current_revision = ?, "
-                "updated_at = CURRENT_TIMESTAMP "
-                "WHERE experiment_id = ? AND workspace_id = ? AND owner_user_id = ?",
-                [*fields.values(), revision, experiment_id, workspace_id, user_id],
-            )
+            now = _now().isoformat()
             snapshot = _snapshot(current)
             snapshot.update(fields)
-            _write_revision(conn, experiment_id, workspace_id, revision, snapshot, user_id)
-            _write_audit(
-                conn,
-                experiment_id,
-                workspace_id,
-                user_id,
-                "update",
-                revision,
-                ",".join(sorted(fields)),
+            revision_row = {
+                "revision_id": f"rev_{uuid.uuid4().hex}",
+                "experiment_id": experiment_id,
+                "workspace_id": workspace_id,
+                "revision": revision,
+                "content": json.dumps(snapshot, ensure_ascii=False, sort_keys=True),
+                "hash": _revision_hash(snapshot),
+                "created_by": user_id,
+                "created_at": now,
+            }
+            audit_row = {
+                "experiment_id": experiment_id,
+                "workspace_id": workspace_id,
+                "actor_user_id": user_id,
+                "action": "update",
+                "revision": revision,
+                "detail": ",".join(sorted(fields)),
+                "created_at": now,
+            }
+            if pg_writes.enabled():
+                pg_writes.update_experiment(
+                    experiment_id, workspace_id, fields, revision_row, audit_row
+                )
+            conn.execute(
+                f"UPDATE experiments SET {assignments}, current_revision = ?, "
+                "updated_at = ? "
+                "WHERE experiment_id = ? AND workspace_id = ? AND owner_user_id = ?",
+                [*fields.values(), revision, now, experiment_id, workspace_id, user_id],
+            )
+            conn.execute(
+                "INSERT INTO experiment_revisions "
+                "(revision_id, experiment_id, workspace_id, revision, content, hash, created_by, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    revision_row["revision_id"],
+                    experiment_id,
+                    workspace_id,
+                    revision,
+                    revision_row["content"],
+                    revision_row["hash"],
+                    user_id,
+                    now,
+                ),
+            )
+            conn.execute(
+                "INSERT INTO experiment_audit "
+                "(experiment_id, workspace_id, actor_user_id, action, revision, detail, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (experiment_id, workspace_id, user_id, "update", revision, audit_row["detail"], now),
             )
             conn.commit()
         return get_experiment(experiment_id, workspace_id, user_id, db_path=db_path)
