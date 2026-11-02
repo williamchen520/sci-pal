@@ -66,7 +66,7 @@ def add_evidence(evidence: dict, event: dict) -> None:
                 "rationale, source_type, created_at) "
                 "VALUES (%(evidence_id)s, %(claim_id)s, %(paper_id)s, %(node_type)s, %(node_id)s, "
                 "%(relation)s, %(strength)s, %(quote)s, %(rationale)s, %(source_type)s, %(created_at)s) "
-                "ON CONFLICT (claim_id, node_id, relation) DO UPDATE SET "
+                "ON CONFLICT (evidence_id) DO UPDATE SET "
                 "strength=EXCLUDED.strength, quote=EXCLUDED.quote, rationale=EXCLUDED.rationale",
                 evidence,
             )
