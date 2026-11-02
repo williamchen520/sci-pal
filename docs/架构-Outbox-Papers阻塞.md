@@ -27,23 +27,40 @@ preprint metadata
   year/doi best-effort
 ```
 
-## 3. 仍 SQLite-only 的路径
+## 3. PDF / preprint 解析
 
-### PDF / preprint 解析
+`DatabaseWriter.insert_paper` 现在在 flag 开启时先写 PG：
 
 ```text
-build_db/parse_service.py
-  -> DatabaseWriter.insert_paper(...)
-  -> build_db/db_writer.py
-       papers
-       paragraphs
-       figures
-       tables
+papers
+paragraphs
+figures
+tables
 ```
 
-没有 PG 写入。
+然后才写 SQLite。
 
-`preprint_ingest.ingest_pdf` 也走这条。
+代码：
+
+```text
+services/papers/pg_writes.py  write_parsed_paper
+build_db/db_writer.py         insert_paper
+```
+
+仍未 PG-first：
+
+```text
+citations / citation_mentions
+parse_provenance
+supplementary_files
+```
+
+### Watch delete / online
+
+```text
+watch placeholder delete 仍是 best-effort
+online children 仍是 commit 后 best-effort
+```
 
 ### watch placeholder delete
 
