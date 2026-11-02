@@ -951,3 +951,47 @@ watch_seen insert
 ```
 
 Production flag remains off.
+
+## 25. Watch remaining writes: synchronous PG catch-up (2026-11-02)
+
+Watch profiles / runs / items / seen still write SQLite primary. Added:
+
+```text
+services/watch/pg_sync.py
+```
+
+When `SCIPAL_WATCH_WRITE_BACKEND=postgres`:
+
+```text
+watch run completes
+-> replay pending outbox to PG
+-> return
+```
+
+This closes the visible PG lag for all watch tables without pretending they are
+PG-primary yet.
+
+Behavior on failure:
+
+```text
+PG sync warning logged
+watch run still returns its SQLite result
+background replay remains available
+```
+
+Tests:
+
+```text
+775 tests OK
+```
+
+Still not PG-primary:
+
+```text
+watch_profiles insert/update/delete
+watch_runs insert/update
+watch_items insert/status/feedback
+watch_seen insert
+```
+
+Production flag remains off.
