@@ -813,3 +813,48 @@ Tests:
 ```text
 769 tests OK
 ```
+
+## 22. Papers write path Phase 2 (2026-11-02)
+
+First slice implemented:
+
+```text
+papers.workspace_id assignment
+```
+
+Feature flag:
+
+```text
+SCIPAL_PAPER_WRITE_BACKEND=postgres   (default off)
+```
+
+Behavior:
+
+```text
+PG UPDATE papers SET workspace_id
+-> SQLite mirror UPDATE
+-> fail closed on PG error
+```
+
+Code:
+
+```text
+services/papers/pg_writes.py
+routes/papers_actions.py
+```
+
+Tests:
+
+```text
+771 tests OK
+```
+
+Not migrated yet:
+
+```text
+ingest metadata update (journal/year/doi)
+watch.py paper deletes
+watch profiles / runs / seen writes
+```
+
+Production flag remains off; no deployment yet.

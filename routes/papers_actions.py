@@ -16,6 +16,7 @@ from typing import Any, Callable
 from flask import Blueprint, Response, jsonify, request, send_from_directory
 
 from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
+from services.papers.pg_writes import enabled as paper_pg_enabled, update_workspace as pg_update_workspace
 
 from build_db.parse_service import (
     PARSE_MAX_CONCURRENT,
@@ -83,6 +84,9 @@ def build_papers_actions_blueprint(
     def assign_paper_workspace(paper_id: str, workspace_id: str | None = None) -> None:
         workspace_id = workspace_id or resolve_workspace(db_path=db_path)
         if not workspace_id:
+            return
+        if paper_pg_enabled():
+            pg_update_workspace(paper_id, workspace_id, db_path=db_path)
             return
         conn = sqlite3.connect(str(db_path))
         try:
