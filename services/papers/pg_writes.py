@@ -339,3 +339,28 @@ def upsert_supplementary(row: dict) -> bool:
         LOGGER.error("PG supplementary write failed; refusing SQLite fallback: %s", exc)
         raise PaperWriteError("paper write backend unavailable") from exc
     return True
+
+
+def replace_sections(paper_id: str, rows: list[tuple], para_map: list[tuple[str, str | None]]) -> bool:
+    """PG mirror for build_sections_tree before SQLite mirror."""
+    if not enabled():
+        return False
+    try:
+        with _pg_connection() as pg:
+            pg.execute("DELETE FROM sections WHERE paper_id = %s", (paper_id,))
+            for row in rows:
+                pg.execute(
+                    "INSERT INTO sections "
+                    "(section_id,paper_id,parent_id,level,title,seq,page,bbox,source) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                    row,
+                )
+            for para_id, section_id in para_map:
+                pg.execute(
+                    "UPDATE paragraphs SET section_id=%s WHERE para_id=%s",
+                    (section_id, para_id),
+                )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG sections write failed; refusing SQLite fallback: %s", exc)
+        raise PaperWriteError("paper write backend unavailable") from exc
+    return True

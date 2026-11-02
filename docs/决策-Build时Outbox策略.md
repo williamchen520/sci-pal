@@ -140,8 +140,12 @@ papers trigger 删除后 watch/ingest 正常
 
 ```text
 决策：A
-实现：未开始
+build_sections_tree：已 PG-first
+build_sentences：未开始
 papers trigger：保留
 ```
 
-下一步先改 `build_sections_tree.py`，再改 `build_sentences.py`。
+`build_sections_tree.py` 现在先写 PG sections 并更新 PG paragraphs.section_id，
+再写 SQLite mirror。
+
+下一步：`build_sentences.py`。

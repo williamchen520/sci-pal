@@ -17,6 +17,8 @@ from typing import Any, Dict, List, Tuple
 
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 
+from services.papers import pg_writes
+
 
 def _heading_path(row: sqlite3.Row) -> List[str]:
     raw = row["section_path"]
@@ -85,6 +87,8 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
             if section_id:
                 stats["bound"] += 1
 
+        if pg_writes.enabled():
+            pg_writes.replace_sections(paper_id, section_rows, para_map)
         if section_rows:
             conn.executemany(
                 "INSERT INTO sections "
