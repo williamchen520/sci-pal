@@ -858,3 +858,52 @@ watch profiles / runs / seen writes
 ```
 
 Production flag remains off; no deployment yet.
+
+## 23. Ingest metadata sync (2026-11-02)
+
+Added:
+
+```text
+services/papers/pg_writes.update_metadata_if_exists
+```
+
+Integration:
+
+```text
+services/search/ingest.py _write_batch
+  after SQLite batch commit
+  -> best-effort PG metadata update for rows already in PG
+```
+
+Why best effort, not fail closed:
+
+```text
+ingest inserts new papers through SQLite + outbox
+new rows may not exist in PG yet
+outbox remains the authoritative path for those rows
+```
+
+If PG has the row:
+
+```text
+journal / year / doi updated immediately in PG
+SQLite mirror updated
+```
+
+If PG does not have the row:
+
+```text
+skip; outbox will carry the insert
+```
+
+This removes the common re-ingest metadata lag without pretending ingest is
+PG-primary.
+
+Not migrated:
+
+```text
+watch paper deletes
+watch profiles / runs / seen writes
+```
+
+Production flag remains off.

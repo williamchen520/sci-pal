@@ -129,6 +129,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Papers write path Phase 2 (workspace) | opt-in PG workspace assignment + SQLite mirror; fail closed; 771 tests | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Ingest metadata sync | best-effort PG update after SQLite batch; outbox remains for new rows | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text
