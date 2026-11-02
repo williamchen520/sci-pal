@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import os
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
@@ -273,6 +274,47 @@ def write_parsed_paper(parsed_result: dict) -> bool:
                         table.get("table_id"), paper_id, table.get("table_number"),
                         table.get("caption"), table.get("markdown") or table.get("table_data"),
                         table.get("page_number") or table.get("page"),
+                    ),
+                )
+            for cit in parsed_result.get("citations", []) or []:
+                pg.execute(
+                    "INSERT INTO citations (citation_id,paper_id,ref_number,raw_text,doi,title,authors,journal,year,page,bbox) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (citation_id) DO UPDATE SET "
+                    "raw_text=EXCLUDED.raw_text, doi=EXCLUDED.doi, title=EXCLUDED.title, "
+                    "authors=EXCLUDED.authors, journal=EXCLUDED.journal, year=EXCLUDED.year",
+                    (
+                        cit.get("citation_id"), cit.get("paper_id") or paper_id,
+                        cit.get("ref_index") or cit.get("ref_number"), cit.get("raw_text"),
+                        cit.get("doi"), cit.get("title"), cit.get("author") or cit.get("authors"),
+                        cit.get("journal"), cit.get("year"), cit.get("page"), cit.get("bbox"),
+                    ),
+                )
+            for index, mention in enumerate(parsed_result.get("intext_citations") or [], 1):
+                pg.execute(
+                    "INSERT INTO citation_mentions (mention_id,paper_id,ref_number,page,bbox,context,source,created_at) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (mention_id) DO UPDATE SET "
+                    "ref_number=EXCLUDED.ref_number, page=EXCLUDED.page, bbox=EXCLUDED.bbox, context=EXCLUDED.context",
+                    (
+                        f"mention_{paper_id}_{index:04d}", paper_id, mention.get("ref_number"),
+                        mention.get("page"), mention.get("bbox"), mention.get("context"),
+                        mention.get("source") or "grobid", datetime.now(timezone.utc).isoformat(),
+                    ),
+                )
+            provenance = parsed_result.get("provenance")
+            if provenance:
+                pg.execute(
+                    "INSERT INTO parse_provenance "
+                    "(paper_id,text_engine,meta_engine,refs_engine,tables_engine,decision,metrics_json,created_at) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (paper_id) DO UPDATE SET "
+                    "text_engine=EXCLUDED.text_engine, meta_engine=EXCLUDED.meta_engine, "
+                    "refs_engine=EXCLUDED.refs_engine, tables_engine=EXCLUDED.tables_engine, "
+                    "decision=EXCLUDED.decision, metrics_json=EXCLUDED.metrics_json",
+                    (
+                        paper_id, provenance.get("text_engine", ""), provenance.get("meta_engine", ""),
+                        provenance.get("refs_engine", ""), provenance.get("tables_engine", ""),
+                        provenance.get("decision", ""),
+                        __import__("json").dumps(provenance.get("metrics") or {}, ensure_ascii=False),
+                        datetime.now(timezone.utc).isoformat(),
                     ),
                 )
     except Exception as exc:  # noqa: BLE001
