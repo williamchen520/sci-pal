@@ -195,6 +195,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Final outbox scope decision | keep 27 triggers; freeze retirement; legacy bridge | [Final scope](决策-Outbox最终范围.md) |
 
+| 2026-11-03 | Status, IDs, vector coverage, audit thresholds | migration frozen; para IDs in vectors, sentence IDs not; 3-tier thresholds | [Status & thresholds](状态与阈值-2026-11-03.md) |
+
 ## Rules
 
 ```text
