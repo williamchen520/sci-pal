@@ -183,6 +183,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Phase 2 review project writes | review/claim canary pass; evidence conflict fixed; reproducible image rebuild pending | [Claims/reviews](架构-Phase2-ClaimsReviews写路径.md) |
 
+| 2026-11-02 | Base image strategy | app rebuilt from clean git on scipal-base snapshot; base clean build pending | [Base strategy](架构-Base镜像策略.md) |
+
 ## Rules
 
 ```text
