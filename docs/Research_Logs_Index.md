@@ -193,6 +193,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Legacy build scripts disposition | build_database/build_xml_db marked LEGACY; FTS/embeddings kept | [Legacy disposal](架构-Legacy-Build脚本处置.md) |
 
+| 2026-11-03 | Final outbox scope decision | keep 27 triggers; freeze retirement; legacy bridge | [Final scope](决策-Outbox最终范围.md) |
+
 ## Rules
 
 ```text

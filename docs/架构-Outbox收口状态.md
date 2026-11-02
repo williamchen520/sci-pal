@@ -79,12 +79,18 @@ paper_links
 papers 相关 trigger 暂不能删：
 
 ```text
-build_sections_tree / build_sentences 仍 SQLite
+legacy build / import_jats SQLite 事务仍存在
 ```
 
-决策：build 脚本也 PG-only，再删 trigger。
+最终决策：
 
-详见：[Build 时 Outbox 决策](决策-Build时Outbox策略.md)
+```text
+保留 27 个 trigger
+冻结退役
+outbox 作为 legacy/build 兼容桥
+```
+
+详见：[Outbox 最终范围](决策-Outbox最终范围.md)。
 
 详见：[Papers outbox 阻塞](架构-Outbox-Papers阻塞.md)
 
