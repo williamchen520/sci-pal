@@ -57,7 +57,6 @@ def delete_paper_best_effort(paper_id: str, *, db_path: str | Path) -> bool:
     """
     if not enabled():
         return False
-    pg_deleted = False
     try:
         with _pg_connection() as pg:
             row = pg.execute(
@@ -65,7 +64,8 @@ def delete_paper_best_effort(paper_id: str, *, db_path: str | Path) -> bool:
             ).fetchone()
             pg_deleted = bool(row)
     except Exception as exc:  # noqa: BLE001
-        LOGGER.warning("PG watch paper delete skipped for %s: %s", paper_id, exc)
+        LOGGER.error("PG watch paper delete failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc
 
     conn = sqlite3.connect(str(db_path), timeout=30)
     try:
