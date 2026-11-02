@@ -88,3 +88,47 @@ Next gate: gold_sentence_recall + p95 latency on the same 20 queries.
 3. compare with 3s SLO
 4. only then consider canary
 ```
+
+## 8. Gold sentence + latency (2026-11-02)
+
+Same 20 queries, warm reranker service:
+
+| Metric | Hybrid + rerank |
+|---|---:|
+| Recall@10 | 1.0000 |
+| MRR | 0.8583 |
+| nDCG@10 | 0.8946 |
+| gold sentence top10 | **7/20** |
+| latency mean | **3.0511s** |
+| latency p50 | **1.9539s** |
+| latency p95 | **3.2612s** |
+
+Raw:
+
+```text
+eval/results/hybrid_20_query_rerank_sentence.json
+```
+
+### What this means
+
+```text
+paper-level recall is 1.0
+gold sentence is only 7/20
+p95 is 3.26s, above the 3s SLO
+```
+
+So the hybrid rerank path is **not** production-ready:
+
+```text
+it finds the paper more reliably than no-rerank
+but it does not find the answering sentence
+and it misses the p95 latency budget
+```
+
+### Decision
+
+```text
+Keep paragraph FTS production.
+Do not canary HybridSearch + rerank yet.
+Next: evidence-preserving candidate selection + latency reduction.
+```

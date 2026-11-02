@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -22,6 +24,7 @@ def main() -> int:
     parser.add_argument("--no-rerank", action="store_true")
     parser.add_argument("--out", default="")
     parser.add_argument("--rerank-url", default="http://127.0.0.1:8765")
+    parser.add_argument("--db", default=str(ROOT / "data" / "research.db"))
     args = parser.parse_args()
 
     from services.search.hybrid_search import HybridSearch
@@ -49,17 +52,30 @@ def main() -> int:
         if not RerankClient(args.rerank_url).health():
             raise SystemExit(f"reranker service is not healthy: {args.rerank_url}")
         search._reranker = ServiceReranker(args.rerank_url)
+    db = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
     rows = []
     for case in cases:
         gold = set(case.get("gold_paper_ids") or [])
         if not gold:
             continue
+        gold_sentences = set(case.get("gold_sentence_ids") or [])
+        gold_para = None
+        if gold_sentences:
+            marks = ",".join("?" * len(gold_sentences))
+            row = db.execute(
+                f"SELECT para_id FROM sentences WHERE sentence_id IN ({marks}) LIMIT 1",
+                list(gold_sentences),
+            ).fetchone()
+            gold_para = row[0] if row else None
+        started = time.perf_counter()
         result = search.search(
             case["query"],
             top_k=args.top_k,
             rerank=not args.no_rerank,
         )
-        ordered = _dedupe(item.get("paper_id") for item in result.get("results") or [])
+        latency = time.perf_counter() - started
+        hits = result.get("results") or []
+        ordered = _dedupe(item.get("paper_id") for item in hits)
         rows.append(
             {
                 "case_id": case["case_id"],
@@ -67,17 +83,40 @@ def main() -> int:
                 "query": case["query"],
                 "system": "hybrid_rerank" if not args.no_rerank else "hybrid",
                 "gold_count": len(gold),
+                "gold_paper_rank": next(
+                    (i + 1 for i, paper in enumerate(ordered) if paper in gold), None
+                ),
+                "gold_sentence_rank": next(
+                    (i + 1 for i, hit in enumerate(hits) if hit.get("para_id") == gold_para),
+                    None,
+                ) if gold_para else None,
+                "latency_s": round(latency, 4),
                 **metrics(ordered, gold),
             }
         )
         print(f"[{case['case_id']}] {rows[-1]}", file=sys.stderr, flush=True)
 
+    db.close()
+    system = "hybrid_rerank" if not args.no_rerank else "hybrid"
+    summary = summarize(rows, system)
+    latencies = sorted(row["latency_s"] for row in rows)
+    def percentile(values, pct):
+        if not values:
+            return None
+        index = min(len(values) - 1, int(round((pct / 100.0) * (len(values) - 1))))
+        return values[index]
+    summary["gold_sentence_top10"] = sum(
+        1 for row in rows if row.get("gold_sentence_rank") and row["gold_sentence_rank"] <= 10
+    )
+    summary["latency_mean_s"] = round(sum(latencies) / len(latencies), 4) if latencies else None
+    summary["latency_p50_s"] = percentile(latencies, 50)
+    summary["latency_p95_s"] = percentile(latencies, 95)
     report = {
         "cases": len(cases),
         "per_source": args.per_source,
         "top_k": args.top_k,
         "rerank": not args.no_rerank,
-        "summary": [summarize(rows, "hybrid_rerank" if not args.no_rerank else "hybrid")],
+        "summary": [summary],
         "rows": rows,
     }
     text = json.dumps(report, ensure_ascii=False, indent=2)
