@@ -210,10 +210,12 @@ access requests
 signatures
 ```
 
-待做：
+Canary 已完成：
 
 ```text
-生产 flag canary
+project/experiment create/update 通过
+access/sign 未覆盖
+flags 已开启
 ```
 
 交付：
