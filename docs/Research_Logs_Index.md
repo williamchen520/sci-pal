@@ -181,7 +181,7 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Outbox watch retirement | 12 watch triggers dropped; pending 4 -> 0; papers/reviews remain | [Outbox status](架构-Outbox收口状态.md) |
 
-| 2026-11-02 | Phase 2 review project writes | review project + claim create/evidence PG-first; updates/events pending | [Claims/reviews](架构-Phase2-ClaimsReviews写路径.md) |
+| 2026-11-02 | Phase 2 review project writes | review project/event + claim create/evidence/update PG-first; outbox pending | [Claims/reviews](架构-Phase2-ClaimsReviews写路径.md) |
 
 ## Rules
 

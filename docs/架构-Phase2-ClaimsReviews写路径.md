@@ -1,7 +1,7 @@
 # Phase 2：Claims / Reviews 写路径（第一片）
 
 > 日期：2026-11-02  
-> 状态：review project create + claims create/evidence 已 PG-first。
+> 状态：review project/event + claims create/evidence/update 已 PG-first。
 
 ## 1. 已迁移
 
@@ -50,21 +50,21 @@ add_evidence
 SCIPAL_CLAIM_WRITE_BACKEND=postgres
 ```
 
-仍未迁移：
+已迁移：
 
 ```text
-claim status / decision updates
-writing_brief update
+claim review_note
+claim writing_brief
+claim decision
 review_events
 ```
 
 因此：
 
 ```text
-claims create/evidence 已 PG-first
-claim 更新仍 SQLite
-review_events 仍 SQLite
-outbox 仍保留
+claims create/evidence/update 已 PG-first
+review project/event 已 PG-first
+claims/reviews outbox 可进入退役评估
 ```
 
 ## 4. 当前生产

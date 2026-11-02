@@ -344,10 +344,21 @@ def log_event(
     target: str = "",
     detail: str = "",
 ) -> None:
+    created_at = now()
+    row = {
+        "project_id": project_id,
+        "actor": actor,
+        "action": action,
+        "target": target,
+        "detail": detail,
+        "created_at": created_at,
+    }
+    if pg_writes.enabled():
+        pg_writes.log_event(row)
     conn.execute(
         "INSERT INTO review_events (project_id, actor, action, target, detail, created_at) "
         "VALUES (?, ?, ?, ?, ?, ?)",
-        (project_id, actor, action, target, detail, now()),
+        (project_id, actor, action, target, detail, created_at),
     )
     conn.commit()
 

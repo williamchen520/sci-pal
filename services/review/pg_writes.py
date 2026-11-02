@@ -37,3 +37,16 @@ def create_project(row: dict) -> None:
     except Exception as exc:  # noqa: BLE001
         LOGGER.error("PG review project create failed; refusing SQLite fallback: %s", exc)
         raise ReviewWriteError("review write backend unavailable") from exc
+
+
+def log_event(row: dict) -> None:
+    try:
+        with _pg() as pg:
+            pg.execute(
+                "INSERT INTO review_events (project_id, actor, action, target, detail, created_at) "
+                "VALUES (%(project_id)s, %(actor)s, %(action)s, %(target)s, %(detail)s, %(created_at)s)",
+                row,
+            )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG review event failed; refusing SQLite fallback: %s", exc)
+        raise ReviewWriteError("review write backend unavailable") from exc
