@@ -33,10 +33,6 @@ DEFAULT_TABLES = (
     "claim_cards",
     "claim_card_evidence",
     "claim_card_events",
-    "watch_items",
-    "watch_profiles",
-    "watch_runs",
-    "watch_seen",
     # Tenancy is PG-primary since 2026-11-02 and deliberately excluded from
     # outbox replication; SQLite is a mirror, not a source of truth.
     "review_projects",

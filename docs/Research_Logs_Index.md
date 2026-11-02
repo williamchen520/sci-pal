@@ -179,6 +179,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Phase 2 online/preprint writes | online paper/paragraph PG; preprint year/doi PG; outbox pending | [Online/preprint](架构-Phase2-OnlinePreprint写路径.md) |
 
+| 2026-11-02 | Outbox watch retirement | 12 watch triggers dropped; pending 4 -> 0; papers/reviews remain | [Outbox status](架构-Outbox收口状态.md) |
+
 ## Rules
 
 ```text
