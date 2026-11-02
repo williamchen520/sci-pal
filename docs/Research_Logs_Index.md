@@ -143,6 +143,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | HybridSearch + rerank 20-query | R@10 1.0, MRR .8583, nDCG .8946; still below paragraph FTS on MRR/nDCG | [Rerank 20-query](检索-HybridSearch-Rerank-20query.md) |
 
+| 2026-11-02 | HybridSearch rerank: sentence + latency | gold sentence 7/20; p95 3.26s > 3s; not production | [Rerank 20-query](检索-HybridSearch-Rerank-20query.md) |
+
 ## Rules
 
 ```text
