@@ -201,11 +201,19 @@ flag: SCIPAL_PROJECT_WRITE_BACKEND=postgres
 默认关闭
 ```
 
-进行中：
+已完成代码：
 
 ```text
-experiments create/update + revisions/audit 已 PG-first
-access requests / signatures 待迁移
+projects create/update/member/copy
+experiments create/update/revision/audit
+access requests
+signatures
+```
+
+待做：
+
+```text
+生产 flag canary
 ```
 
 交付：

@@ -93,3 +93,58 @@ def update_experiment(
     except Exception as exc:  # noqa: BLE001
         LOGGER.error("PG experiment update failed; refusing SQLite fallback: %s", exc)
         raise ExperimentWriteError("experiment write backend unavailable") from exc
+
+
+def create_access_request(request: dict) -> None:
+    try:
+        with _pg() as pg:
+            pg.execute(
+                "INSERT INTO experiment_access_requests "
+                "(request_id, experiment_id, workspace_id, requester_user_id, owner_user_id, status, scope, created_at) "
+                "VALUES (%(request_id)s, %(experiment_id)s, %(workspace_id)s, %(requester_user_id)s, "
+                "%(owner_user_id)s, 'pending', 'read', %(created_at)s)",
+                request,
+            )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG access request create failed; refusing SQLite fallback: %s", exc)
+        raise ExperimentWriteError("experiment write backend unavailable") from exc
+
+
+def decide_access_request(request_id: str, status: str, decided_at: str, expires_at: str | None) -> None:
+    try:
+        with _pg() as pg:
+            row = pg.execute(
+                "UPDATE experiment_access_requests SET status=%s, decided_at=%s, expires_at=%s "
+                "WHERE request_id=%s RETURNING request_id",
+                (status, decided_at, expires_at, request_id),
+            ).fetchone()
+        if not row:
+            raise ExperimentWriteError("access request not found in PostgreSQL")
+    except ExperimentWriteError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG access request decision failed; refusing SQLite fallback: %s", exc)
+        raise ExperimentWriteError("experiment write backend unavailable") from exc
+
+
+def create_signature(signature: dict, audit: dict) -> None:
+    try:
+        with _pg() as pg:
+            pg.execute(
+                "INSERT INTO experiment_signatures "
+                "(signature_id, experiment_id, workspace_id, revision, signer_user_id, meaning, "
+                "record_hash, signature_hash, created_at) "
+                "VALUES (%(signature_id)s, %(experiment_id)s, %(workspace_id)s, %(revision)s, "
+                "%(signer_user_id)s, %(meaning)s, %(record_hash)s, %(signature_hash)s, %(created_at)s)",
+                signature,
+            )
+            pg.execute(
+                "INSERT INTO experiment_audit "
+                "(experiment_id, workspace_id, actor_user_id, action, revision, detail, created_at) "
+                "VALUES (%(experiment_id)s, %(workspace_id)s, %(actor_user_id)s, %(action)s, "
+                "%(revision)s, %(detail)s, %(created_at)s)",
+                audit,
+            )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG signature create failed; refusing SQLite fallback: %s", exc)
+        raise ExperimentWriteError("experiment write backend unavailable") from exc

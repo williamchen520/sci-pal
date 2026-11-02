@@ -46,7 +46,7 @@ services/experiments/pg_writes.py
 services/experiments/service.py
 ```
 
-## 4. 未迁移
+## 4. 已迁移的扩展写
 
 ```text
 create_access_request
@@ -54,14 +54,15 @@ decide_access_request
 sign_experiment
 ```
 
-这些仍只写 SQLite。
-
-因此：
+开启时：
 
 ```text
-experiments 核心 CRUD 已 PG-first
-授权/签名尚未
+access request / decision -> PG 先写
+signature + sign audit     -> PG 事务
+SQLite 再写 mirror
 ```
+
+因此 experiments 的 create/update/access/sign 已全部 PG-first。
 
 ## 5. 当前生产
 
@@ -69,7 +70,7 @@ experiments 核心 CRUD 已 PG-first
 SCIPAL_EXPERIMENT_WRITE_BACKEND 未设置
 ```
 
-生产仍走 SQLite。
+生产仍走 SQLite；PG 路径尚未做真实数据 canary。
 
 ## 6. 测试
 
@@ -99,8 +100,8 @@ access/sign 仍可能在 SQLite/PG 分叉
 ## 8. 下一步
 
 ```text
-1. access requests PG-first
-2. signatures PG-first
-3. 生产 canary
+1. 开 flag 做 experiments canary
+2. 验证 revisions/audit/signatures 在 PG
+3. 对账 SQLite/PG
 4. 再开 Phase 2（papers/watch）
 ```

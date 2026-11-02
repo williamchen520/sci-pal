@@ -565,6 +565,17 @@ def create_access_request(
         if existing:
             return None
         request_id = f"req_{uuid.uuid4().hex}"
+        now = _now().isoformat()
+        request_row = {
+            "request_id": request_id,
+            "experiment_id": experiment_id,
+            "workspace_id": workspace_id,
+            "requester_user_id": requester_user_id,
+            "owner_user_id": experiment["owner_user_id"],
+            "created_at": now,
+        }
+        if pg_writes.enabled():
+            pg_writes.create_access_request(request_row)
         conn.execute(
             "INSERT INTO experiment_access_requests "
             "(request_id, experiment_id, workspace_id, requester_user_id, owner_user_id, created_at) "
@@ -575,7 +586,7 @@ def create_access_request(
                 workspace_id,
                 requester_user_id,
                 experiment["owner_user_id"],
-                _now().isoformat(),
+                now,
             ),
         )
         conn.commit()
@@ -651,6 +662,8 @@ def decide_access_request(
         now = _now()
         status = "approved" if approve else "denied"
         expires_at = (now + timedelta(hours=max(1, hours))).isoformat() if approve else None
+        if pg_writes.enabled():
+            pg_writes.decide_access_request(request_id, status, now.isoformat(), expires_at)
         conn.execute(
             "UPDATE experiment_access_requests SET status = ?, decided_at = ?, expires_at = ? "
             "WHERE request_id = ?",
@@ -709,6 +722,28 @@ def sign_experiment(
         signature_hash = hashlib.sha256(
             f"{rev['hash']}|{user_id}|{meaning}|{now}".encode("utf-8")
         ).hexdigest()
+        signature_row = {
+            "signature_id": signature_id,
+            "experiment_id": experiment_id,
+            "workspace_id": workspace_id,
+            "revision": revision,
+            "signer_user_id": user_id,
+            "meaning": meaning,
+            "record_hash": rev["hash"],
+            "signature_hash": signature_hash,
+            "created_at": now,
+        }
+        audit_row = {
+            "experiment_id": experiment_id,
+            "workspace_id": workspace_id,
+            "actor_user_id": user_id,
+            "action": "sign",
+            "revision": revision,
+            "detail": meaning,
+            "created_at": now,
+        }
+        if pg_writes.enabled():
+            pg_writes.create_signature(signature_row, audit_row)
         conn.execute(
             "INSERT INTO experiment_signatures "
             "(signature_id, experiment_id, workspace_id, revision, signer_user_id, "
@@ -726,7 +761,12 @@ def sign_experiment(
                 now,
             ),
         )
-        _write_audit(conn, experiment_id, workspace_id, user_id, "sign", revision, meaning)
+        conn.execute(
+            "INSERT INTO experiment_audit "
+            "(experiment_id, workspace_id, actor_user_id, action, revision, detail, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (experiment_id, workspace_id, user_id, "sign", revision, meaning, now),
+        )
         conn.commit()
         row = conn.execute(
             "SELECT * FROM experiment_signatures WHERE signature_id = ?", (signature_id,)
