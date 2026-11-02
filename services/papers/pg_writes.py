@@ -105,27 +105,69 @@ def update_metadata_if_exists(
     return True
 
 
-def upsert_paper(row: dict) -> bool:
-    """PG-first paper metadata upsert for ingest.
+def _upsert_paper_row(pg, row: dict) -> None:
+    pg.execute(
+        "INSERT INTO papers (paper_id, filename, title, abstract, authors, parse_engine, journal, year, doi) "
+        "VALUES (%(paper_id)s, %(filename)s, %(title)s, %(abstract)s, %(authors)s, "
+        "'xml', %(journal)s, %(year)s, %(doi)s) "
+        "ON CONFLICT (paper_id) DO UPDATE SET "
+        "filename = EXCLUDED.filename, title = EXCLUDED.title, abstract = EXCLUDED.abstract, "
+        "authors = EXCLUDED.authors, parse_engine = EXCLUDED.parse_engine, "
+        "journal = EXCLUDED.journal, year = EXCLUDED.year, doi = EXCLUDED.doi",
+        row,
+    )
 
-    Paragraph/sentence rows still follow the SQLite/outbox path for now.
+
+def upsert_paper(row: dict) -> bool:
+    """PG-first paper metadata upsert for ingest."""
+    if not enabled():
+        return False
+    try:
+        with _pg_connection() as pg:
+            _upsert_paper_row(pg, row)
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG paper upsert failed; refusing SQLite fallback: %s", exc)
+        raise PaperWriteError("paper write backend unavailable") from exc
+    return True
+
+
+def write_papers_batch(papers: list[dict], children: list[tuple[str, list[dict], list[dict]]]) -> bool:
+    """PG transaction for papers + paragraphs/sentences.
+
+    Called while the SQLite transaction is still open: any PG failure rolls the
+    SQLite batch back instead of leaving a half-ingested paper.
     """
     if not enabled():
         return False
     try:
         with _pg_connection() as pg:
-            pg.execute(
-                "INSERT INTO papers (paper_id, filename, title, abstract, authors, parse_engine, journal, year, doi) "
-                "VALUES (%(paper_id)s, %(filename)s, %(title)s, %(abstract)s, %(authors)s, "
-                "'xml', %(journal)s, %(year)s, %(doi)s) "
-                "ON CONFLICT (paper_id) DO UPDATE SET "
-                "filename = EXCLUDED.filename, title = EXCLUDED.title, abstract = EXCLUDED.abstract, "
-                "authors = EXCLUDED.authors, parse_engine = EXCLUDED.parse_engine, "
-                "journal = EXCLUDED.journal, year = EXCLUDED.year, doi = EXCLUDED.doi",
-                row,
-            )
+            for paper in papers:
+                _upsert_paper_row(pg, paper)
+            for paper_id, paragraphs, sentences in children:
+                pg.execute("DELETE FROM sentences WHERE paper_id = %s", (paper_id,))
+                pg.execute("DELETE FROM paragraphs WHERE paper_id = %s", (paper_id,))
+                for row in paragraphs:
+                    pg.execute(
+                        "INSERT INTO paragraphs "
+                        "(para_id, paper_id, section_level1, text, sequence, parse_engine, search_vector) "
+                        "VALUES (%s, %s, %s, %s, %s, 'xml', to_tsvector('english', %s))",
+                        (
+                            row["para_id"], paper_id, row.get("section_level1"), row["text"],
+                            row["sequence"], row["text"],
+                        ),
+                    )
+                for row in sentences:
+                    pg.execute(
+                        "INSERT INTO sentences "
+                        "(sentence_id, para_id, paper_id, text, sequence, search_vector) "
+                        "VALUES (%s, %s, %s, %s, %s, to_tsvector('english', %s))",
+                        (
+                            row["sentence_id"], row["para_id"], paper_id, row["text"],
+                            row["sequence"], row["text"],
+                        ),
+                    )
     except Exception as exc:  # noqa: BLE001
-        LOGGER.error("PG paper upsert failed; refusing SQLite fallback: %s", exc)
+        LOGGER.error("PG paper batch failed; rolling back SQLite batch: %s", exc)
         raise PaperWriteError("paper write backend unavailable") from exc
     return True
 
