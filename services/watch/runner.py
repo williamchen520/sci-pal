@@ -9,6 +9,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from services.watch import discovery, repo
+from services.watch.pg_writes import enabled as watch_pg_enabled, delete_paper_best_effort
+from services.watch.pg_sync import sync_pending as sync_watch_pending
 
 _TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fff]")
 _STOP = {
@@ -363,6 +365,7 @@ def run_profile(
                     (now.isoformat(), profile_id),
                 )
         conn.commit()
+        sync_watch_pending(db_path)
         return {
             "run_id": run_id,
             "profile_id": profile_id,

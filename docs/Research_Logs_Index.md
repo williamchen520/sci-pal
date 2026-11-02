@@ -133,6 +133,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Watch write path first slice | opt-in PG delete for watch placeholder papers; profiles/runs/items/seen still SQLite | [PG write path](设计-PostgreSQL写路径生产化.md) |
 
+| 2026-11-02 | Watch synchronous PG catch-up | run end replays outbox to PG; 775 tests; not PG-primary yet | [PG write path](设计-PostgreSQL写路径生产化.md) |
+
 ## Rules
 
 ```text
