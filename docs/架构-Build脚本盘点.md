@@ -38,6 +38,22 @@ import_jats 是运行时路径
 不是 legacy build 工具
 ```
 
+现在 `import_file` 在返回前调用：
+
+```text
+services.papers.pg_writes.sync_paper_graph
+```
+
+把 papers/sections/paragraphs/sentences/figures/tables/citations/sentence_links
+镜像到 PG。
+
+如果 PG 失败：
+
+```text
+import_file 抛 PaperWriteError
+调用方不 commit，SQLite 回滚
+```
+
 ### parse_service / DatabaseWriter
 
 ```text
