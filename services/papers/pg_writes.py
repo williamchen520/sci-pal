@@ -128,3 +128,41 @@ def upsert_paper(row: dict) -> bool:
         LOGGER.error("PG paper upsert failed; refusing SQLite fallback: %s", exc)
         raise PaperWriteError("paper write backend unavailable") from exc
     return True
+
+
+def replace_children(paper_id: str, paragraphs: list[dict], sentences: list[dict]) -> bool:
+    """Replace a paper's paragraph/sentence rows in PG.
+
+    Used as a best-effort batch writer after the SQLite transaction. The
+    outbox remains a repair path until the whole ingest is PG-primary.
+    """
+    if not enabled():
+        return False
+    try:
+        with _pg_connection() as pg:
+            pg.execute("DELETE FROM sentences WHERE paper_id = %s", (paper_id,))
+            pg.execute("DELETE FROM paragraphs WHERE paper_id = %s", (paper_id,))
+            for row in paragraphs:
+                pg.execute(
+                    "INSERT INTO paragraphs "
+                    "(para_id, paper_id, section_level1, text, sequence, parse_engine, search_vector) "
+                    "VALUES (%s, %s, %s, %s, %s, 'xml', to_tsvector('english', %s))",
+                    (
+                        row["para_id"], paper_id, row.get("section_level1"), row["text"],
+                        row["sequence"], row["text"],
+                    ),
+                )
+            for row in sentences:
+                pg.execute(
+                    "INSERT INTO sentences "
+                    "(sentence_id, para_id, paper_id, text, sequence, search_vector) "
+                    "VALUES (%s, %s, %s, %s, %s, to_tsvector('english', %s))",
+                    (
+                        row["sentence_id"], row["para_id"], paper_id, row["text"],
+                        row["sequence"], row["text"],
+                    ),
+                )
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.warning("PG child batch skipped for %s: %s", paper_id, exc)
+        return False
+    return True
