@@ -58,3 +58,54 @@ def delete_paper_best_effort(paper_id: str, *, db_path: str | Path) -> bool:
     finally:
         conn.close()
     return pg_deleted
+
+
+def create_profile(data: dict) -> int:
+    try:
+        with _pg() as pg:
+            row = pg.execute(
+                "INSERT INTO watch_profiles "
+                "(owner,name,field_text,keywords,openalex_topic_ids,interval_days,window_days,"
+                "top_journal_count,max_items,same_journal_limit,metric_type,metric_min,language,delivery,enabled,created_at) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+                (
+                    data.get("owner") or "default", data.get("name"), data.get("field_text"),
+                    data.get("keywords"), data.get("openalex_topic_ids"), data.get("interval_days"),
+                    data.get("window_days"), data.get("top_journal_count"), data.get("max_items"),
+                    data.get("same_journal_limit"), data.get("metric_type"), data.get("metric_min"),
+                    data.get("language"), data.get("delivery"),
+                    1 if data.get("enabled") is None else data.get("enabled"),
+                    data.get("created_at"),
+                ),
+            ).fetchone()
+            return int(row["id"])
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch profile create failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def update_profile(profile_id: int, updates: dict) -> None:
+    assignments = ", ".join(f"{key} = %s" for key in updates)
+    try:
+        with _pg() as pg:
+            row = pg.execute(
+                f"UPDATE watch_profiles SET {assignments} WHERE id = %s RETURNING id",
+                [*updates.values(), profile_id],
+            ).fetchone()
+        if not row:
+            raise WatchWriteError("profile not found in PostgreSQL")
+    except WatchWriteError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch profile update failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc
+
+
+def delete_profile(profile_id: int) -> None:
+    try:
+        with _pg() as pg:
+            pg.execute("DELETE FROM watch_profile_journals WHERE profile_id=%s", (profile_id,))
+            pg.execute("DELETE FROM watch_profiles WHERE id=%s", (profile_id,))
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG watch profile delete failed; refusing SQLite fallback: %s", exc)
+        raise WatchWriteError("watch write backend unavailable") from exc

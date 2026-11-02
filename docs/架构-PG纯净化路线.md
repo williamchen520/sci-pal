@@ -233,7 +233,20 @@ SQLite mirror 可选
 SQLite/PG row count 一致
 ```
 
-### Phase 2：papers/watch 写路径 PG-primary
+### Phase 2：papers/watch 写路径 PG-primary（进行中）
+
+已完成：
+
+```text
+watch profile create/update/delete PG-first
+```
+
+待完成：
+
+```text
+watch runs/items/seen
+papers 写路径
+```
 
 交付：
 
