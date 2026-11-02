@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from services.search.diversity import diversity_report, select_diverse
+from services.search.diversity import diversity_report, select_diverse, select_evidence_preserving
 
 
 class DiversityTests(unittest.TestCase):
@@ -33,6 +33,26 @@ class DiversityTests(unittest.TestCase):
         report = diversity_report(selected)
         self.assertEqual(report["distinct_papers"], 2)
         self.assertEqual(report["max_hits_per_paper"], 2)
+
+    def test_preserves_one_evidence_per_paper(self):
+        items = [
+            {"para_id": "a1", "paper_id": "a", "text": "alpha beta gamma", "score": 10},
+            {"para_id": "a2", "paper_id": "a", "text": "alpha beta delta", "score": 9},
+            {"para_id": "b1", "paper_id": "b", "text": "zeta eta theta", "score": 8},
+            {"para_id": "c1", "paper_id": "c", "text": "iota kappa lambda", "score": 7},
+        ]
+        selected = select_evidence_preserving(items, top_k=3, max_per_paper=3)
+        self.assertEqual([item["para_id"] for item in selected], ["a1", "b1", "c1"])
+
+    def test_fills_extra_slots_after_reserve(self):
+        items = [
+            {"para_id": "a1", "paper_id": "a", "text": "alpha beta gamma", "score": 10},
+            {"para_id": "a2", "paper_id": "a", "text": "alpha beta delta", "score": 9},
+            {"para_id": "b1", "paper_id": "b", "text": "zeta eta theta", "score": 8},
+        ]
+        selected = select_evidence_preserving(items, top_k=3, max_per_paper=2)
+        self.assertEqual(len(selected), 3)
+        self.assertEqual({item["para_id"] for item in selected}, {"a1", "a2", "b1"})
 
 
 if __name__ == "__main__":

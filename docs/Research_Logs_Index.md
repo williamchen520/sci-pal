@@ -145,6 +145,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | HybridSearch rerank: sentence + latency | gold sentence 7/20; p95 3.26s > 3s; not production | [Rerank 20-query](检索-HybridSearch-Rerank-20query.md) |
 
+| 2026-11-02 | Evidence-preserving selection audit | reserve1 gold sentence 5/20; reserve2 10/20 but recall .95; reject | [Evidence preserving](检索-Evidence-Preserving-审计.md) |
+
 ## Rules
 
 ```text

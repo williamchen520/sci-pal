@@ -108,3 +108,91 @@ def diversity_report(selected: Sequence[Dict[str, Any]], *, paper_key: str = "pa
         "distinct_papers": len(counts),
         "max_hits_per_paper": max(counts.values()) if counts else 0,
     }
+
+
+def select_evidence_preserving(
+    items: Sequence[Dict[str, Any]],
+    *,
+    top_k: int = 10,
+    max_per_paper: int = 3,
+    lambda_: float = 0.75,
+    reserve_per_paper: int = 1,
+    text_key: str = "text",
+    paper_key: str = "paper_id",
+    score_key: str = "score",
+) -> List[Dict[str, Any]]:
+    """Reserve each paper's best evidence, then fill with MMR.
+
+    Unlike a hard cap, this cannot drop all evidence from a paper before the
+    paper enters the candidate set: each paper's highest-scoring item is
+    reserved first. Extra items per paper are filled only when slots remain.
+    """
+    unique: List[Dict[str, Any]] = []
+    seen_ids = set()
+    seen_text = set()
+    for item in items:
+        identity = item.get("sentence_id") or item.get("para_id") or item.get(text_key)
+        normalized = normalize_text(str(item.get(text_key) or ""))
+        if identity and identity in seen_ids:
+            continue
+        if normalized and normalized in seen_text:
+            continue
+        if identity:
+            seen_ids.add(identity)
+        if normalized:
+            seen_text.add(normalized)
+        unique.append(item)
+    if not unique or top_k <= 0:
+        return []
+
+    scores = [_score(item, score_key) for item in unique]
+    low, high = min(scores), max(scores)
+    span = high - low
+    normalized_scores = [((score - low) / span if span else 1.0) for score in scores]
+    signatures = [shingles(str(item.get(text_key) or "")) for item in unique]
+
+    by_paper: Dict[str, List[int]] = {}
+    for index, item in enumerate(unique):
+        paper = _paper(item, paper_key) or f"__none_{index}"
+        by_paper.setdefault(paper, []).append(index)
+    for indexes in by_paper.values():
+        indexes.sort(key=lambda index: -normalized_scores[index])
+
+    reserved = sorted(
+        (
+            index
+            for indexes in by_paper.values()
+            for index in indexes[: max(1, reserve_per_paper)]
+        ),
+        key=lambda index: -normalized_scores[index],
+    )
+    selected_indexes = reserved[:top_k]
+    selected = [unique[index] for index in selected_indexes]
+    selected_sigs = [signatures[index] for index in selected_indexes]
+    counts: Dict[str, int] = {}
+    for index in selected_indexes:
+        paper = _paper(unique[index], paper_key) or f"__none_{index}"
+        counts[paper] = counts.get(paper, 0) + 1
+
+    remaining = set(range(len(unique))) - set(selected_indexes)
+    while remaining and len(selected) < top_k:
+        best_index = None
+        best_value = -math.inf
+        for index in remaining:
+            paper = _paper(unique[index], paper_key) or f"__none_{index}"
+            if counts.get(paper, 0) >= max_per_paper:
+                continue
+            similarity = max((jaccard(signatures[index], sig) for sig in selected_sigs), default=0.0)
+            value = lambda_ * normalized_scores[index] - (1 - lambda_) * similarity
+            if value > best_value:
+                best_value = value
+                best_index = index
+        if best_index is None:
+            break
+        selected.append(unique[best_index])
+        selected_sigs.append(signatures[best_index])
+        paper = _paper(unique[best_index], paper_key) or f"__none_{best_index}"
+        counts[paper] = counts.get(paper, 0) + 1
+        remaining.remove(best_index)
+
+    return selected
