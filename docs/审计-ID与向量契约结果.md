@@ -2,7 +2,7 @@
 
 > 脚本：`scripts/audit_id_vector_contract.py`  
 > 模式：只读  
-> 结果：**FAIL**
+> 结果：修复前 **FAIL**；2026-11-03 修复后 **WARN**
 
 ## 1. 结论
 
@@ -146,4 +146,52 @@ paragraphs 73.22%
 
 ```text
 eval/results/id_vector_contract_audit.json
+```
+
+
+---
+
+## 10. 修复后复核（2026-11-03）
+
+执行：
+
+```text
+scripts/repair_paragraph_vectors.py
+```
+
+结果：
+
+```text
+orphans deleted       26,226
+missing backfilled    44,786
+paragraph vectors     166,470
+orphan after          0
+missing after         0
+coverage after        99.45%
+```
+
+审计复核：
+
+```text
+verdict              WARN
+vector resolution    100%
+failures             []
+```
+
+剩余 warning：
+
+```text
+papers coverage           62.66%
+figures coverage           1.63%
+tables coverage            2.32%
+section_summaries coverage 89.59%
+```
+
+paragraphs 剩余 918 条未向量化，因文本长度 < 10，被建索引脚本过滤。
+
+结论：
+
+```text
+paragraph 向量契约已恢复
+下一步是补 papers / sections / figures / tables 覆盖
 ```
