@@ -152,6 +152,17 @@ def _event(conn, claim_id: str, action: str, actor: str = "human", note: str = "
     )
 
 
+def _event_row(claim_id: str, action: str, actor: str, note: str, now: str) -> dict:
+    return {
+        "event_id": f"evt_{hashlib.sha1((claim_id+action+now).encode()).hexdigest()[:12]}",
+        "claim_id": claim_id,
+        "action": action,
+        "actor": actor,
+        "note": note,
+        "created_at": now,
+    }
+
+
 def _sentence(conn, sentence_id: str) -> Optional[Dict[str, Any]]:
     row = conn.execute(
         "SELECT s.sentence_id, s.paper_id, s.text, p.title "
@@ -305,9 +316,16 @@ def add_note(
     claim = get_claim(conn, claim_id)
     if not claim:
         raise ValueError("claim not found")
-    _event(conn, claim_id, "review_note", actor, note)
+    now = _now()
+    fields = {"updated_at": now}
+    event = _event_row(claim_id, "review_note", actor, note, now)
+    if pg_writes.enabled():
+        pg_writes.update_claim(claim_id, fields, event)
+    conn.execute("UPDATE claim_cards SET updated_at = ? WHERE claim_id = ?", (now, claim_id))
     conn.execute(
-        "UPDATE claim_cards SET updated_at = ? WHERE claim_id = ?", (_now(), claim_id)
+        "INSERT INTO claim_card_events (event_id, claim_id, action, actor, note, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (event["event_id"], claim_id, event["action"], event["actor"], event["note"], event["created_at"]),
     )
     conn.commit()
     return get_claim(conn, claim_id) or {}
@@ -322,11 +340,20 @@ def set_writing_brief(
     claim = get_claim(conn, claim_id)
     if not claim:
         raise ValueError("claim not found")
+    now = _now()
+    fields = {"writing_brief": json.dumps(brief, ensure_ascii=False), "updated_at": now}
+    event = _event_row(claim_id, "writing_brief", actor, "", now)
+    if pg_writes.enabled():
+        pg_writes.update_claim(claim_id, fields, event)
     conn.execute(
         "UPDATE claim_cards SET writing_brief = ?, updated_at = ? WHERE claim_id = ?",
-        (json.dumps(brief, ensure_ascii=False), _now(), claim_id),
+        (fields["writing_brief"], now, claim_id),
     )
-    _event(conn, claim_id, "writing_brief", actor, "")
+    conn.execute(
+        "INSERT INTO claim_card_events (event_id, claim_id, action, actor, note, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (event["event_id"], claim_id, event["action"], event["actor"], event["note"], event["created_at"]),
+    )
     conn.commit()
     return get_claim(conn, claim_id) or {}
 
@@ -393,12 +420,28 @@ def decide(
         "reject": "rejected",
         "contest": "contested",
     }[decision]
+    now = _now()
+    fields = {
+        "status": status,
+        "decision": decision,
+        "decision_note": note,
+        "decided_by": actor,
+        "decided_at": now,
+        "updated_at": now,
+    }
+    event = _event_row(claim_id, f"decision:{decision}", actor, note, now)
+    if pg_writes.enabled():
+        pg_writes.update_claim(claim_id, fields, event)
     conn.execute(
         "UPDATE claim_cards SET status = ?, decision = ?, decision_note = ?, decided_by = ?, "
         "decided_at = ?, updated_at = ? WHERE claim_id = ?",
-        (status, decision, note, actor, _now(), _now(), claim_id),
+        (status, decision, note, actor, now, now, claim_id),
     )
-    _event(conn, claim_id, f"decision:{decision}", actor, note)
+    conn.execute(
+        "INSERT INTO claim_card_events (event_id, claim_id, action, actor, note, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (event["event_id"], claim_id, event["action"], event["actor"], event["note"], event["created_at"]),
+    )
     conn.commit()
     return get_claim(conn, claim_id) or {}
 

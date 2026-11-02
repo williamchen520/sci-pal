@@ -78,3 +78,25 @@ def add_evidence(evidence: dict, event: dict) -> None:
     except Exception as exc:  # noqa: BLE001
         LOGGER.error("PG claim evidence failed; refusing SQLite fallback: %s", exc)
         raise ClaimWriteError("claim write backend unavailable") from exc
+
+
+def update_claim(claim_id: str, fields: dict, event: dict) -> None:
+    assignments = ", ".join(f"{key} = %s" for key in fields)
+    try:
+        with _pg() as pg:
+            row = pg.execute(
+                f"UPDATE claim_cards SET {assignments} WHERE claim_id = %s RETURNING claim_id",
+                [*fields.values(), claim_id],
+            ).fetchone()
+            if not row:
+                raise ClaimWriteError("claim not found in PostgreSQL")
+            pg.execute(
+                "INSERT INTO claim_card_events (event_id, claim_id, action, actor, note, created_at) "
+                "VALUES (%(event_id)s, %(claim_id)s, %(action)s, %(actor)s, %(note)s, %(created_at)s)",
+                event,
+            )
+    except ClaimWriteError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.error("PG claim update failed; refusing SQLite fallback: %s", exc)
+        raise ClaimWriteError("claim write backend unavailable") from exc
