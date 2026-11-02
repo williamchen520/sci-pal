@@ -191,6 +191,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-02 | Build/ingest script inventory | import_jats graph PG sync added; triggers retained for remaining build scripts | [Inventory](架构-Build脚本盘点.md) |
 
+| 2026-11-02 | Legacy build scripts disposition | build_database/build_xml_db marked LEGACY; FTS/embeddings kept | [Legacy disposal](架构-Legacy-Build脚本处置.md) |
+
 ## Rules
 
 ```text

@@ -1,3 +1,8 @@
+"""LEGACY full-rebuild script. Do not run on production.
+
+Superseded by import_jats / parse_service / DatabaseWriter.
+"""
+
 """
 Build Sci-Pal Database
 V20.3 - Store figure+paragraph page+bbox coordinates; infer journal from DOI
