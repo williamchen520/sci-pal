@@ -158,7 +158,7 @@ Chroma
 
 ## 5. 分阶段路线图
 
-### Phase 0：Schema parity
+### Phase 0：Schema parity（已完成 2026-11-02）
 
 交付：
 
@@ -172,6 +172,14 @@ PG migration:
   experiment_audit
   experiment_access_requests
   experiment_runs 补 8 列
+```
+
+状态：
+
+```text
+PG 67 tables；projects/project_members 已回填
+剩余：FTS 4 张 + dual_write_outbox
+详情：架构-Phase0-完成记录.md
 ```
 
 验收：

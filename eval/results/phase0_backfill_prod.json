@@ -1,0 +1,55 @@
+{
+  "tables": {
+    "projects": {
+      "source": 1,
+      "inserted": 1,
+      "columns": [
+        "project_id",
+        "workspace_id",
+        "owner_user_id",
+        "name",
+        "description",
+        "status",
+        "data_class",
+        "copied_from",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "project_members": {
+      "source": 2,
+      "inserted": 2,
+      "columns": [
+        "project_id",
+        "user_id",
+        "role",
+        "created_at"
+      ]
+    },
+    "experiments": {
+      "source": 0,
+      "inserted": 0
+    },
+    "experiment_revisions": {
+      "source": 0,
+      "inserted": 0
+    },
+    "experiment_signatures": {
+      "source": 0,
+      "inserted": 0
+    },
+    "experiment_audit": {
+      "source": 0,
+      "inserted": 0
+    },
+    "experiment_access_requests": {
+      "source": 0,
+      "inserted": 0
+    },
+    "experiment_runs": {
+      "source": 0,
+      "inserted": 0
+    }
+  },
+  "apply": true
+}
