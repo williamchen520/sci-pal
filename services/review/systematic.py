@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from services.review import pg_writes
+
 import csv
 import io
 import json
@@ -38,18 +40,22 @@ def create_project(
     owner: str = "default",
 ) -> str:
     project_id = "rev_" + uuid.uuid4().hex[:10]
+    created_at = now()
+    row = {
+        "project_id": project_id,
+        "owner": owner,
+        "name": name,
+        "field_text": field_text,
+        "pico_json": json.dumps(pico or {}, ensure_ascii=False),
+        "created_at": created_at,
+    }
+    if pg_writes.enabled():
+        pg_writes.create_project(row)
     conn.execute(
         "INSERT INTO review_projects "
         "(project_id, owner, name, field_text, pico_json, created_at) "
         "VALUES (?, ?, ?, ?, ?, ?)",
-        (
-            project_id,
-            owner,
-            name,
-            field_text,
-            json.dumps(pico or {}, ensure_ascii=False),
-            now(),
-        ),
+        (project_id, owner, name, field_text, row["pico_json"], created_at),
     )
     conn.commit()
     return project_id
