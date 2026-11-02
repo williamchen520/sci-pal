@@ -1,0 +1,59 @@
+{
+  "sqlite_tables": 72,
+  "pg_tables": 60,
+  "common_tables": 60,
+  "sqlite_only": [
+    "dual_write_outbox",
+    "experiment_access_requests",
+    "experiment_audit",
+    "experiment_revisions",
+    "experiment_signatures",
+    "experiments",
+    "papers_fts",
+    "paragraphs_fts",
+    "project_members",
+    "projects",
+    "sentences_fts",
+    "summaries_fts"
+  ],
+  "pg_only": [],
+  "column_diffs": {
+    "experiment_runs": {
+      "missing_in_pg": [
+        "actual_json",
+        "ended_at",
+        "experiment_id",
+        "observations",
+        "owner_user_id",
+        "planned_json",
+        "started_at",
+        "workspace_id"
+      ],
+      "missing_in_sqlite": []
+    },
+    "papers": {
+      "missing_in_pg": [],
+      "missing_in_sqlite": [
+        "search_vector"
+      ]
+    },
+    "paragraphs": {
+      "missing_in_pg": [],
+      "missing_in_sqlite": [
+        "search_vector"
+      ]
+    },
+    "sentences": {
+      "missing_in_pg": [],
+      "missing_in_sqlite": [
+        "search_vector"
+      ]
+    },
+    "summaries": {
+      "missing_in_pg": [],
+      "missing_in_sqlite": [
+        "search_vector"
+      ]
+    }
+  }
+}

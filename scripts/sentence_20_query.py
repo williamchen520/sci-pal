@@ -77,12 +77,27 @@ def main() -> int:
     cases = load_cases(ROOT / "eval" / "plugins" / "retriever_queries.json", args.per_source)
     db = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
     sentence_fts = SentenceFTS(args.pg_dsn)
+    import psycopg
     rows = []
     try:
         for case in cases:
             gold_papers = set(case.get("gold_paper_ids") or [])
             gold_sentences = set(case.get("gold_sentence_ids") or [])
             gold_para = _gold_para(db, gold_sentences)
+            pg_gold_sentences = set()
+            if gold_sentences:
+                marks = ",".join("?" * len(gold_sentences))
+                for pid, text in db.execute(
+                    f"SELECT paper_id, text FROM sentences WHERE sentence_id IN ({marks})",
+                    list(gold_sentences),
+                ):
+                    with psycopg.connect(args.pg_dsn) as pg:
+                        found = pg.execute(
+                            "SELECT sentence_id FROM sentences WHERE paper_id=%s AND text=%s LIMIT 1",
+                            (pid, text),
+                        ).fetchone()
+                    if found:
+                        pg_gold_sentences.add(found[0])
             if not gold_papers:
                 continue
             started = time.perf_counter()
@@ -104,7 +119,7 @@ def main() -> int:
                     "system": system,
                     "gold_count": len(gold_papers),
                     "gold_sentence_rank": _rank(
-                        sentence_order, next(iter(gold_sentences), None)
+                        sentence_order, next(iter(pg_gold_sentences), None)
                     ) if system == "sentence_fts" else None,
                     "gold_para_rank": _rank(
                         sentence_order if system == "paragraph_fts" else [hit.para_id for hit in sent_hits],
