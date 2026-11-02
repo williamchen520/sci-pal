@@ -2,7 +2,7 @@
 
 > 脚本：`scripts/audit_id_vector_contract.py`  
 > 模式：只读  
-> 结果：修复前 **FAIL**；2026-11-03 修复后 **WARN**
+> 结果：修复前 **FAIL**；2026-11-03 修复后 **PASS**
 
 ## 1. 结论
 
@@ -242,4 +242,45 @@ tables  114 / 4,922    2.32%
 ```text
 papers / section_summaries 契约已补齐
 只剩 figures / tables 覆盖问题
+```
+
+
+---
+
+## 12. figures / tables 补全（2026-11-03）
+
+执行：
+
+```text
+scripts/backfill_figure_table_vectors.py
+```
+
+结果：
+
+```text
+figures vectors  13,098 / 13,471   97.23%
+tables  vectors   4,919 / 4,922    99.94%
+```
+
+处理：
+
+```text
+figures missing  12,879
+tables  missing   4,805
+```
+
+审计：
+
+```text
+verdict   PASS
+failures  []
+warnings  []
+resolution 100%
+```
+
+剩余未向量化：
+
+```text
+figures 373 条无有效 caption
+tables    3 条无 caption/markdown
 ```

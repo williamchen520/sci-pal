@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-11-02T22:55:13.515733+00:00",
+  "figures_missing": 12879,
+  "tables_missing": 4805,
+  "dry_run": false,
+  "figures_upserted": 12879,
+  "tables_upserted": 4805,
+  "vectors_after": {
+    "figures": 13098,
+    "tables": 4919
+  }
+}
