@@ -249,6 +249,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | PG FTS adapters + shadow | 20q; paragraph Jaccard .020; summary .242; slow | [Worklog](../worklogs/2026-11-03-pg-fts-shadow.md) |
 
+| 2026-11-03 | PG FTS shadow v2 | match recall .975/1.0; Jaccard .109/.313; slow | [Worklog](../worklogs/2026-11-03-pg-fts-shadow-v2.md) |
+
 ## Rules
 
 ```text

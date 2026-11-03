@@ -338,6 +338,38 @@ PG FTS 能返回结果
 不能切
 ```
 
+### 9.1 v2：限制 term + match recall
+
+参数：
+
+```text
+term_limit=6
+ranker=ts_rank
+```
+
+结果：
+
+```text
+paragraph Jaccard     0.109
+paragraph match recall 0.975
+summary   Jaccard     0.313
+summary   match recall 1.000
+```
+
+解读：
+
+```text
+SQLite top-10 有 97.5% 落在 PG 命中集
+PG 召回基本没问题
+差距主要在 ranking
+```
+
+延迟仍高：
+
+```text
+PG paragraph 3.5–16 秒/query
+```
+
 ## 10. 下一步
 
 ```text
