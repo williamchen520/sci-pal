@@ -124,10 +124,13 @@ class UnifiedRetriever:
                 contextual_mode = os.environ.get(
                     "SCIPAL_CONTEXTUAL_MODE", "adaptive"
                 ).lower()
-                if (
+                use_contextual = contextual_mode == "always" or (
                     contextual_mode not in ("off", "baseline", "0")
-                    and getattr(self.searcher, "contextual_collection", None) is not None
                     and is_complex(query)
+                )
+                if (
+                    use_contextual
+                    and getattr(self.searcher, "contextual_collection", None) is not None
                 ):
                     paragraph_collection = self.searcher.contextual_collection
 
