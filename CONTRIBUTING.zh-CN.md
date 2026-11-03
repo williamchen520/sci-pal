@@ -4,6 +4,20 @@
 
 > 本文件中的“铁律”优先级高于个人习惯；违反铁律的 PR 不予合并。
 
+## 架构即代码（默认规则）
+
+`ARCHITECTURE.json` 是路由的唯一真理源。
+
+新增、修改、删除路由前：
+
+1. 先改 `ARCHITECTURE.json`；新节点标 `"status": "planned"`；
+2. 运行 `python scripts/validate_arch.py`；
+3. 校验通过后才写 Flask 路由/handler，或先生成骨架：
+   `python scripts/scaffold_from_arch.py --node <id>`；
+4. 注册 blueprint、改为 `implemented`，再次 validate。
+
+不在 JSON 中的野路由会被拒绝。详见 [docs/开发流程规范.md](docs/开发流程规范.md)。
+
 ## 铁律
 
 ### 1. PR 必须使用模板

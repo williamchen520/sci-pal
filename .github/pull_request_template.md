@@ -5,6 +5,13 @@
 四个问题必须逐条回答，不能留空。
 -->
 
+### 0) 架构即代码自检（对应规则 0）
+
+- [ ] 改路由前已更新 `ARCHITECTURE.json`
+- [ ] 新路由使用 `status: "planned"`，并已生成/实现
+- [ ] `python scripts/validate_arch.py` 通过
+- [ ] 无 JSON 之外的 wild route
+
 ### 1) 这个 PR 解决了什么单一主题？（对应规则 1）
 
 <!-- 一句话说明。若包含多个主题，拆成多个 PR。 -->

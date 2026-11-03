@@ -4,6 +4,27 @@
 > 本文件优先于 README、AGENTS.md、docs/ 下的任何其他说明。
 > 详细解释见 [docs/协作规范.md](docs/协作规范.md)。
 
+## 规则 0：架构即代码（最高优先）
+
+- `ARCHITECTURE.json` 是路由与 API 面的唯一真理源。
+- 新增、修改、删除任何路由前，**第一步修改 `ARCHITECTURE.json`**；未改 JSON 禁止改 Python 路由。
+- 新路由代码尚未存在时，JSON 节点必须标 `status: "planned"`，并提供 `codegen` 块。
+- 改完 JSON 立即运行：
+
+  ```powershell
+  python scripts/validate_arch.py
+  ```
+
+- 校验通过后，才允许写路由 / handler；骨架用：
+
+  ```powershell
+  python scripts/scaffold_from_arch.py --node <codegen.id>
+  ```
+
+- 实现完成、blueprint 注册后，把状态改为 `implemented`，再次运行 `validate_arch.py`。
+- 禁止“野路由”绕过 JSON；禁止用跳过校验的方式合并。
+- 详细流程见 [docs/开发流程规范.md](docs/开发流程规范.md)。
+
 ## 规则 1：一个 PR 一个主题
 
 - 一个 PR 只解决一个单一主题。
