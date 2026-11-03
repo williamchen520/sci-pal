@@ -453,6 +453,34 @@ cross-encoder 能纠正大部分排序
 PG 候选召回足够（v4 recall 0.975）
 ```
 
+### 9.4 v6：100 query 扩样
+
+```text
+SQLite nDCG        0.466
+PG raw nDCG        0.319
+PG + rerank nDCG   0.496
+```
+
+提升：
+
+```text
++0.030 vs SQLite
+```
+
+延迟：
+
+```text
+PG 3.79s + rerank 1.32s
+```
+
+解读：
+
+```text
+20 query 的 +0.101 有样本偶然性
+100 query 仍有正收益，但缩小到 +0.030
+PG raw 明显低，reranker 必要
+```
+
 ## 10. 下一步
 
 ```text

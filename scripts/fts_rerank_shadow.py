@@ -20,8 +20,23 @@ from services.search.pg_fts import PGParagraphFTS  # noqa: E402
 from services.search.reranker import Reranker  # noqa: E402
 
 
+def _load_cases(path: Path) -> list[dict]:
+    if path.suffix == ".jsonl":
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return payload.get("cases") or payload
+
+
+def _case_id(case: dict) -> str:
+    return case.get("case_id") or case.get("id") or ""
+
+
+def _query(case: dict) -> str:
+    return case.get("query") or case.get("question") or ""
+
+
 def _gold_para(case: dict) -> str:
-    for sentence_id in case.get("gold_sentence_ids") or []:
+    for sentence_id in case.get("gold_sentence_ids") or case.get("evidence") or []:
         if "_sent_" in sentence_id:
             return sentence_id.rsplit("_sent_", 1)[0]
     return ""
@@ -50,14 +65,14 @@ def main() -> int:
         print("--pg-dsn is required", file=sys.stderr)
         return 2
 
-    cases = json.loads(Path(args.queries).read_text(encoding="utf-8")).get("cases") or []
+    cases = _load_cases(Path(args.queries))
     cases = cases[: args.limit]
     reranker = None if args.no_rerank else Reranker()
     rows = []
     pg_fts = PGParagraphFTS(args.pg_dsn, ranker="rank")
     try:
         for case in cases:
-            query = case["query"]
+            query = _query(case)
             gold = _gold_para(case)
             sqlite_ids = _sqlite_ids(args.db, "paragraphs_fts", "para_id", query, args.top_k)
             started = time.perf_counter()
@@ -77,7 +92,7 @@ def main() -> int:
                 reranked_ids = [row["para_id"] for row in reranked]
             rows.append(
                 {
-                    "case": case["case_id"],
+                    "case": _case_id(case),
                     "gold": gold,
                     "sqlite_top10": sqlite_ids,
                     "pg_top10": pg_ids,
@@ -89,7 +104,7 @@ def main() -> int:
                     "rerank_seconds": round(rerank_seconds, 3),
                 }
             )
-            print(f"[{case['case_id']}]", flush=True)
+            print(f"[{_case_id(case)}]", flush=True)
     finally:
         close_pools()
 
