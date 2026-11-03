@@ -14,22 +14,31 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data", default="data")
-    parser.add_argument("--out", default="backups")
-    args = parser.parse_args()
-    root = Path(args.data).resolve()
-    out = Path(args.out).resolve()
-    out.mkdir(parents=True, exist_ok=True)
+def _exclude_live_db(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
+    """Do not archive the live SQLite file; the snapshot is added instead."""
+    name = tarinfo.name.replace("\\", "/")
+    if name in {"data/research.db", "data/research.db-wal", "data/research.db-shm"}:
+        return None
+    return tarinfo
+
+
+def create_archive(data: str | Path = "data", out: str | Path = "backups") -> Path:
+    """Create one verified snapshot archive and return its path."""
+    root = Path(data).resolve()
+    out_dir = Path(out).resolve()
+    if not root.exists():
+        raise FileNotFoundError(f"data directory not found: {root}")
+    out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    archive = out / f"scipal-{stamp}.tar.gz"
+    archive = out_dir / f"scipal-{stamp}.tar.gz"
+    if archive.exists():
+        raise FileExistsError(f"refusing to overwrite archive: {archive}")
     db = root / "research.db"
 
     with tempfile.TemporaryDirectory() as tmp:
         snapshot = Path(tmp) / "research.db"
         if db.exists():
-            source = sqlite3.connect(db)
+            source = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
             target = sqlite3.connect(snapshot)
             try:
                 source.backup(target)
@@ -37,10 +46,18 @@ def main() -> None:
                 target.close()
                 source.close()
         with tarfile.open(archive, "w:gz") as tar:
-            tar.add(root, arcname="data")
+            tar.add(root, arcname="data", filter=_exclude_live_db)
             if snapshot.exists():
                 tar.add(snapshot, arcname="data/research.db")
-    print(archive)
+    return archive
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", default="data")
+    parser.add_argument("--out", default="backups")
+    args = parser.parse_args()
+    print(create_archive(args.data, args.out))
 
 
 if __name__ == "__main__":

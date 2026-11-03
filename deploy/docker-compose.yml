@@ -68,6 +68,31 @@ services:
       disable: true
     restart: unless-stopped
 
+  backup-cron:
+    image: scipal-app:latest
+    command:
+      - python
+      - scripts/run_backup_loop.py
+      - --data
+      - /app/data
+      - --out
+      - /app/backups
+      - --interval-hours
+      - "${SCIPAL_BACKUP_INTERVAL_HOURS:-24}"
+      - --retention-days
+      - "${SCIPAL_BACKUP_RETENTION_DAYS:-30}"
+    env_file:
+      - .env
+    environment:
+      SCIPAL_AUTH_REQUIRED: "1"
+    volumes:
+      - ../data:/app/data:ro
+      - ../backups:/app/backups
+      - ../logs:/app/logs
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
   caddy:
     image: caddy:2
     depends_on:
