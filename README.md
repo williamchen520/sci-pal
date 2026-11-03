@@ -4,6 +4,8 @@
 >
 > 🚀 **开发者极速接入**：[开发-模块手册](docs/开发-模块手册.md) — 按模块找职责、路由、入口和测试；跨模块数据流再看架构与路由图。
 
+> Machine-readable architecture: [ARCHITECTURE.json](ARCHITECTURE.json)
+
 **English** | [简体中文](README.zh-CN.md)
 
 SciPal is a locally deployable system for searching scientific literature, parsing papers into structured evidence, and producing traceable literature reviews. Its core is a **deterministic retrieval layer** — vector search, FTS5/BM25, reciprocal-rank fusion (RRF), cross-encoder reranking, query routing, and adaptive context expansion. For generation, we recommend a **small local model for orchestration plus a cloud or DSH model for reasoning**.
