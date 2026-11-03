@@ -216,6 +216,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Architecture constitution guard | JSON read-only; pre-commit + commit-msg; 批准修改 | [Worklog](../worklogs/2026-11-03-architecture-constitution.md) |
 
+| 2026-11-03 | Refusal sufficiency regression | per-item coverage; q023/q025 refuse; 813 tests | [Worklog](../worklogs/2026-11-03-refusal-sufficiency.md) |
+
 ## Rules
 
 ```text
