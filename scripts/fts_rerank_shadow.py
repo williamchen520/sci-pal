@@ -65,6 +65,7 @@ def main() -> int:
     parser.add_argument("--queries", default=str(ROOT / "eval" / "plugins" / "retriever_queries.json"))
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--candidates", type=int, default=50)
+    parser.add_argument("--term-limit", type=int, default=4)
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--no-rerank", action="store_true")
     parser.add_argument("--no-fusion", action="store_true")
@@ -87,7 +88,7 @@ def main() -> int:
             gold = _gold_para(case)
             sqlite_ids = _sqlite_ids(args.db, "paragraphs_fts", "para_id", query, args.top_k)
             started = time.perf_counter()
-            candidates = pg_fts.search(query, top_k=args.candidates, term_limit=4)
+            candidates = pg_fts.search(query, top_k=args.candidates, term_limit=args.term_limit)
             pg_seconds = time.perf_counter() - started
             pg_ids = [hit.para_id for hit in candidates][: args.top_k]
             reranked_ids = []

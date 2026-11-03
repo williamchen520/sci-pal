@@ -499,6 +499,31 @@ qualifier/methods/multi_hop -> RRF
 
 RRF 全局启用会拉低总体，不能一刀切。
 
+### 9.6 延迟目标 2s 实验
+
+```text
+term4 / cand100   5.79s   nDCG .501
+term3 / cand50    4.16s   nDCG .623
+term2 / cand50    2.74s   nDCG .513
+SQLite            0.2s    nDCG .532
+```
+
+结论：
+
+```text
+2s 与质量不可兼得
+term2 达到 2.7s，但低于 SQLite
+term3 质量好，但 4.2s
+```
+
+可选路线：
+
+```text
+接受 3–4s
+SQLite 候选 + PG rerank（非单栈）
+ParadeDB / OpenSearch 专用 FTS
+```
+
 ## 10. 下一步
 
 ```text
