@@ -42,6 +42,15 @@ def _gold_para(case: dict) -> str:
     return ""
 
 
+def _rrf(pg_ids: list[str], reranked_ids: list[str], *, k: int = 60, top_k: int = 10) -> list[str]:
+    scores: dict[str, float] = {}
+    for rank, pid in enumerate(pg_ids, 1):
+        scores[pid] = scores.get(pid, 0.0) + 1.0 / (k + rank)
+    for rank, pid in enumerate(reranked_ids, 1):
+        scores[pid] = scores.get(pid, 0.0) + 1.0 / (k + rank)
+    return [pid for pid, _ in sorted(scores.items(), key=lambda item: (-item[1], item[0]))[:top_k]]
+
+
 def _ndcg(ids: list[str], gold: str) -> float:
     if not gold or gold not in ids:
         return 0.0
@@ -58,6 +67,8 @@ def main() -> int:
     parser.add_argument("--candidates", type=int, default=50)
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--no-rerank", action="store_true")
+    parser.add_argument("--no-fusion", action="store_true")
+    parser.add_argument("--rrf-k", type=int, default=60)
     parser.add_argument("--out", default=str(ROOT / "docs" / "PostgreSQL迁移-FTS-rerank.json"))
     parser.add_argument("--out-md", default=str(ROOT / "docs" / "PostgreSQL迁移-FTS-rerank.md"))
     args = parser.parse_args()
@@ -80,16 +91,21 @@ def main() -> int:
             pg_seconds = time.perf_counter() - started
             pg_ids = [hit.para_id for hit in candidates][: args.top_k]
             reranked_ids = []
+            reranked_all = []
             rerank_seconds = 0.0
             if reranker is not None:
                 started = time.perf_counter()
                 reranked = reranker.rerank(
                     query,
                     [{"para_id": hit.para_id, "text": hit.text} for hit in candidates],
-                    top_k=args.top_k,
+                    top_k=len(candidates),
                 )
                 rerank_seconds = time.perf_counter() - started
-                reranked_ids = [row["para_id"] for row in reranked]
+                reranked_all = [row["para_id"] for row in reranked]
+                reranked_ids = reranked_all[: args.top_k]
+            fused_ids = reranked_ids
+            if reranked_all and not args.no_fusion:
+                fused_ids = _rrf([h.para_id for h in candidates], reranked_all, k=args.rrf_k, top_k=args.top_k)
             rows.append(
                 {
                     "case": _case_id(case),
@@ -100,6 +116,8 @@ def main() -> int:
                     "sqlite_ndcg": _ndcg(sqlite_ids, gold),
                     "pg_ndcg": _ndcg(pg_ids, gold),
                     "pg_rerank_ndcg": _ndcg(reranked_ids, gold),
+                    "fused_top10": fused_ids,
+                    "fused_ndcg": _ndcg(fused_ids, gold),
                     "pg_seconds": round(pg_seconds, 3),
                     "rerank_seconds": round(rerank_seconds, 3),
                 }
@@ -117,7 +135,7 @@ def main() -> int:
         "candidates": args.candidates,
         "avg": {
             key: avg(key)
-            for key in ("sqlite_ndcg", "pg_ndcg", "pg_rerank_ndcg", "pg_seconds", "rerank_seconds")
+            for key in ("sqlite_ndcg", "pg_ndcg", "pg_rerank_ndcg", "fused_ndcg", "pg_seconds", "rerank_seconds")
         },
         "rows": rows,
     }
@@ -130,15 +148,16 @@ def main() -> int:
         f"> SQLite nDCG: {report['avg']['sqlite_ndcg']:.3f}  ",
         f"> PG nDCG: {report['avg']['pg_ndcg']:.3f}  ",
         f"> PG+rerank nDCG: {report['avg']['pg_rerank_ndcg']:.3f}  ",
+        f"> PG+rerank+RRF nDCG: {report['avg']['fused_ndcg']:.3f}  ",
         f"> PG seconds: {report['avg']['pg_seconds']:.2f}  ",
         f"> rerank seconds: {report['avg']['rerank_seconds']:.2f}",
         "",
-        "| case | sqlite nDCG | pg nDCG | pg+rerank nDCG |",
-        "|---|---:|---:|---:|",
+        "| case | sqlite nDCG | pg nDCG | pg+rerank nDCG | fused nDCG |",
+        "|---|---:|---:|---:|---:|",
     ]
     for row in rows:
         lines.append(
-            f"| {row['case']} | {row['sqlite_ndcg']:.3f} | {row['pg_ndcg']:.3f} | {row['pg_rerank_ndcg']:.3f} |"
+            f"| {row['case']} | {row['sqlite_ndcg']:.3f} | {row['pg_ndcg']:.3f} | {row['pg_rerank_ndcg']:.3f} | {row['fused_ndcg']:.3f} |"
         )
     Path(args.out_md).write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(json.dumps(report["avg"], ensure_ascii=False))
