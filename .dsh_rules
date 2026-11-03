@@ -4,18 +4,31 @@
 > 本文件优先于 README、AGENTS.md、docs/ 下的任何其他说明。
 > 详细解释见 [docs/协作规范.md](docs/协作规范.md)。
 
-## 规则 0：架构即代码（最高优先）
+## 规则 0：ARCHITECTURE.json 只读与人工审批（最高安全红线）
 
-- `ARCHITECTURE.json` 是路由与 API 面的唯一真理源。
-- 新增、修改、删除任何路由前，**第一步修改 `ARCHITECTURE.json`**；未改 JSON 禁止改 Python 路由。
-- 新路由代码尚未存在时，JSON 节点必须标 `status: "planned"`，并提供 `codegen` 块。
-- 改完 JSON 立即运行：
+- `ARCHITECTURE.json` 是系统唯一宪法。**AI 绝对禁止擅自修改。**
+- 开发新功能若必须改 JSON：
+  1. 先在对话框输出拟修改的 JSON 代码块；
+  2. 说明原因、影响的路由/契约；
+  3. 等待人类明确回复 **“批准修改”**；
+  4. 收到“批准修改”后才允许写入文件。
+- 未收到“批准修改”前，JSON 和 Python 路由都不得改动。
+- 批准后提交的 commit message 必须包含：
+
+  ```text
+  [APPROVED_BY_HUMAN]
+  ```
+
+- 如果测试失败是因为代码与 JSON 契约不一致：
+  - **必须改 Python 适配 JSON**；
+  - 绝对禁止为了跑通测试反向修改 JSON 参数。
+- 修改 JSON 后运行：
 
   ```powershell
   python scripts/validate_arch.py
   ```
 
-- 校验通过后，才允许写路由 / handler；骨架用：
+- 新节点标 `status: "planned"`，用下面命令生成骨架：
 
   ```powershell
   python scripts/scaffold_from_arch.py --node <codegen.id>
@@ -23,6 +36,7 @@
 
 - 实现完成、blueprint 注册后，把状态改为 `implemented`，再次运行 `validate_arch.py`。
 - 禁止“野路由”绕过 JSON；禁止用跳过校验的方式合并。
+- 物理拦截：`.githooks/pre-commit` + `.githooks/commit-msg`；后者检查 `[APPROVED_BY_HUMAN]`。
 - 详细流程见 [docs/开发流程规范.md](docs/开发流程规范.md)。
 
 ## 规则 1：一个 PR 一个主题
@@ -82,20 +96,22 @@ python scripts/record_eval_metric.py --name Recall@10 --value 0.5885
 默认模式：收到需求后自动推进，不逐步询问。
 
 ```text
-1. 先改 ARCHITECTURE.json（路由/契约）
-2. validate_arch.py
-3. 写代码/生成骨架
-4. 跑全量测试
-5. 失败 -> 读日志 -> 修复 -> 重跑，直到 100% 通过
-6. 写 Worklog
-7. 提交分支 + 创建 PR（Pending Review）
-8. 等待“批准合并”
+1. 如需改 JSON：先给拟修改代码块 + 原因，等“批准修改”
+2. 收到批准后改 ARCHITECTURE.json
+3. validate_arch.py
+4. 写代码/生成骨架
+5. 跑全量测试
+6. 失败 -> 读日志 -> 修复 -> 重跑，直到 100% 通过
+7. 写 Worklog
+8. 提交分支 + 创建 PR（Pending Review）
+9. 等待“批准合并”
 ```
 
 必须停下来问的例外：
 
 ```text
 - 无法解决的循环报错（同一错误 2 次以上）
+- 需要修改 ARCHITECTURE.json，但尚未收到“批准修改”
 - 需要修改核心鉴权逻辑（auth / tenancy / 权限判定）
 - 需要删除或不可逆修改生产数据
 - 研究裁决（claim 状态、证据关系、语料取舍）

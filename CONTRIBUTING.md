@@ -6,25 +6,30 @@ Thanks for your interest in SciPal. We welcome bug reports, design feedback, doc
 
 **Please open an issue before you start coding.** This lets us confirm the problem, agree on scope, and avoid duplicate work. Pull requests that were not discussed in an issue may be closed without review.
 
-## Architecture-as-Code (Default Rule)
+## Architecture Constitution (Highest Safety Rule)
 
-`ARCHITECTURE.json` is the single source of truth for routes.
+`ARCHITECTURE.json` is the system constitution and is **read-only for AI**.
 
-Before adding, changing, or removing a route:
+To change a route, the AI must:
 
-1. edit `ARCHITECTURE.json` first; mark new nodes `"status": "planned"`;
-2. run `python scripts/validate_arch.py`;
-3. only then write the Flask route/handler (or scaffold it with `python scripts/scaffold_from_arch.py --node <id>`);
-4. register the blueprint, mark the node `implemented`, and validate again.
+1. output the proposed JSON block and rationale in chat;
+2. wait for the human to reply **“批准修改”**;
+3. only then edit `ARCHITECTURE.json`; mark new nodes `"status": "planned"`;
+4. run `python scripts/validate_arch.py`;
+5. then write the Flask route/handler, and validate again.
+
+If a test fails because Python disagrees with the JSON contract, fix Python; **never reverse-edit JSON parameters to make tests pass**.
+
+Commits that modify `ARCHITECTURE.json` must include `[APPROVED_BY_HUMAN]` in the commit message. The `pre-commit` + `commit-msg` hooks enforce this.
 
 Wild routes that are absent from the JSON are rejected. See [docs/开发流程规范.md](docs/开发流程规范.md).
 
 ## Autonomous Build and PR Approval
 
-Default workflow: edit JSON → implement → run `validate_arch.py` → run the full test suite → write a worklog → open a PR.
+Default workflow: propose JSON change if needed → implement → run `validate_arch.py` → run the full test suite → write a worklog → open a PR.
 
 - Fix failures yourself and rerun until the suite is green.
-- Stop only for an unsolvable loop, core auth/tenancy changes, irreversible data operations, research decisions, or a >300-line refactor.
+- Stop only for an unsolvable loop, unapproved JSON changes, core auth/tenancy changes, irreversible data operations, research decisions, or a >300-line refactor.
 - Write `worklogs/YYYY-MM-DD-<topic>.md` and include modules, business-logic changes, test pass rate, and external-API/data risks.
 - PRs are opened as `Pending Review`. **Do not merge until a human replies exactly “批准合并”.**
 - PRs with more than 300 net changed lines must be marked `[LARGE]` and require dedicated review.

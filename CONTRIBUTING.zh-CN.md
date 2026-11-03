@@ -4,26 +4,30 @@
 
 > 本文件中的“铁律”优先级高于个人习惯；违反铁律的 PR 不予合并。
 
-## 架构即代码（默认规则）
+## 架构宪法（最高安全红线）
 
-`ARCHITECTURE.json` 是路由的唯一真理源。
+`ARCHITECTURE.json` 是系统宪法，**AI 只读**。
 
-新增、修改、删除路由前：
+修改路由必须：
 
-1. 先改 `ARCHITECTURE.json`；新节点标 `"status": "planned"`；
-2. 运行 `python scripts/validate_arch.py`；
-3. 校验通过后才写 Flask 路由/handler，或先生成骨架：
-   `python scripts/scaffold_from_arch.py --node <id>`；
-4. 注册 blueprint、改为 `implemented`，再次 validate。
+1. 在对话框输出拟修改 JSON 代码块和原因；
+2. 等待人类回复 **“批准修改”**；
+3. 收到批准后才写 `ARCHITECTURE.json`；新节点标 `"status": "planned"`；
+4. 运行 `python scripts/validate_arch.py`；
+5. 校验通过后才写 Flask 路由/handler。
+
+测试失败若因 Python 与 JSON 契约不一致，必须改 Python 适配 JSON；**绝对禁止反向修改 JSON 参数来跑通测试**。
+
+修改 `ARCHITECTURE.json` 的 commit message 必须含 `[APPROVED_BY_HUMAN]`；由 `pre-commit` + `commit-msg` 钩子拦截。
 
 不在 JSON 中的野路由会被拒绝。详见 [docs/开发流程规范.md](docs/开发流程规范.md)。
 
 ## 全自动施工与 PR 审批
 
-默认流程：改 JSON → 实现 → `validate_arch.py` → 全量测试 → 写 Worklog → 建 PR。
+默认流程：需要时先提出 JSON 方案 → 实现 → `validate_arch.py` → 全量测试 → 写 Worklog → 建 PR。
 
 - 测试失败自己修、自己重跑，直到全绿。
-- 只在循环报错、核心鉴权/tenancy、不可逆数据操作、研究裁决、>300 行重构时停下来问。
+- 只在循环报错、JSON 未获批准、核心鉴权/tenancy、不可逆数据操作、研究裁决、>300 行重构时停下来问。
 - Worklog 写在 `worklogs/YYYY-MM-DD-<topic>.md`，包含模块、业务变化、测试通过率、外部 API/数据风险。
 - PR 状态为 `Pending Review`；**只有人类明确回复“批准合并”才能合并。**
 - 净变更超过 300 行的 PR 标 `[LARGE]`，必须单独评审。

@@ -5,9 +5,10 @@
 四个问题必须逐条回答，不能留空。
 -->
 
-### 0) 架构即代码自检（对应规则 0）
+### 0) 架构宪法自检（对应规则 0）
 
-- [ ] 改路由前已更新 `ARCHITECTURE.json`
+- [ ] 本 PR **未修改** `ARCHITECTURE.json`
+- [ ] 如修改了 JSON：已获得人类“批准修改”，commit 含 `[APPROVED_BY_HUMAN]`
 - [ ] 新路由使用 `status: "planned"`，并已生成/实现
 - [ ] `python scripts/validate_arch.py` 通过
 - [ ] 无 JSON 之外的 wild route

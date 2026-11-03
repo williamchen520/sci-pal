@@ -5,6 +5,7 @@
 > 🚀 **开发者极速接入**：[开发-模块手册](docs/开发-模块手册.md) — 按模块找职责、路由、入口和测试；跨模块数据流再看架构与路由图。
 
 > Machine-readable architecture: [ARCHITECTURE.json](ARCHITECTURE.json)  
+> **Read-only constitution**: changes require human “批准修改” and `[APPROVED_BY_HUMAN]`.  
 > Architecture-as-code workflow: [development workflow](docs/开发流程规范.md)
 
 **English** | [简体中文](README.zh-CN.md)

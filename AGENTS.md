@@ -7,12 +7,14 @@
 > 本文件帮助 AI 代码助手快速理解项目架构、代码规范和开发约定。
 > 每次修改代码前请先阅读本文件。
 
-> **架构即代码（最高优先）**：路由以 [`ARCHITECTURE.json`](ARCHITECTURE.json) 为唯一真理源。
-> 改路由前先改 JSON（新路由标 `status: "planned"`），运行 `python scripts/validate_arch.py`，
-> 再写 Python。详见 [docs/开发流程规范.md](docs/开发流程规范.md)。
+> **架构宪法（最高安全红线）**：[`ARCHITECTURE.json`](ARCHITECTURE.json) **只读**。
+> AI 不得直接修改；必须先输出拟修改 JSON + 原因，等待人类回复 **“批准修改”**。
+> 测试失败若与契约不一致，只能改 Python 适配 JSON，禁止反向改 JSON 参数。
+> 批准后的 commit message 必须含 `[APPROVED_BY_HUMAN]`。
+> 详见 [docs/开发流程规范.md](docs/开发流程规范.md)。
 
-> **全自动施工闭环**：默认自主改 JSON → 写代码 → validate → 全量测试 → 写 Worklog → 建 PR。
-> 只有循环报错、核心鉴权、不可逆数据操作、研究裁决、>300 行重构才停下来问。
+> **全自动施工闭环**：默认自主写代码 → validate → 全量测试 → 写 Worklog → 建 PR。
+> 只有循环报错、核心鉴权、不可逆数据操作、研究裁决、JSON 未获批准、>300 行重构才停下来问。
 > PR 状态 `Pending Review`；只有人类回复 **“批准合并”** 才能合并。
 
 ## 项目概述
