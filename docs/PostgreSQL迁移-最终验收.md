@@ -64,10 +64,20 @@ archive 可生成
 ```text
 1. ~~deploy/backup.py 的 tar 包中 data/research.db 出现两次~~
    已在本轮修复，并加了回归测试
-2. ~~没有自动定时备份~~：已加 `backup-cron` 服务，待部署验证
+2. ~~没有自动定时备份~~：`backup-cron` 已部署并完成首次备份
 3. 没有定期恢复演练记录
 4. G 盘最新业务快照仍是 2026-11-02 的 before-tenancy
 5. 没有 30 天保留策略的实际执行证据
+```
+
+首次自动备份：
+
+```text
+archive   scipal-20261103-110222.tar.gz
+size      3,557,726,245 bytes (3.56 GB)
+integrity ok
+papers    3313
+status    backups/backup_status.json
 ```
 
 结论：
@@ -75,9 +85,18 @@ archive 可生成
 ```text
 脚本化：是
 单次可用：是
-自动定时：代码已加，待部署
-恢复演练：脚本已加，待形成周期
-P0 不能签字完成，但已从“缺失”推进到“待部署验证”
+自动定时：已部署，首次成功
+恢复演练：脚本已做 integrity/papers 验证，未做持久化恢复
+P0 仍不能签字：30 天保留与异地备份未解决
+```
+
+容量问题：
+
+```text
+archive 3.56 GB/天
+30 天约 107 GB
+G 盘当前只剩约 53 GB
+按当前全量 data 备份无法满足 30 天保留
 ```
 
 ---
