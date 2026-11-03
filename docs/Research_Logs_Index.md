@@ -243,6 +243,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | P4 outbox audit | 27 triggers; pending 0; core mirror kept | [Audit](PostgreSQL迁移-P4-outbox-audit.md) |
 
+| 2026-11-03 | FTS single-stack inventory | coverage/tokenizer/ranking/query/CJK gaps | [Inventory](PostgreSQL迁移-FTS单栈盘点.md) |
+
 ## Rules
 
 ```text
