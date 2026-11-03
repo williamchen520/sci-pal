@@ -79,8 +79,12 @@ services:
       - /app/backups
       - --interval-hours
       - "${SCIPAL_BACKUP_INTERVAL_HOURS:-24}"
-      - --retention-days
-      - "${SCIPAL_BACKUP_RETENTION_DAYS:-30}"
+      - --db-retention-days
+      - "${SCIPAL_BACKUP_DB_RETENTION_DAYS:-30}"
+      - --full-retention-days
+      - "${SCIPAL_BACKUP_FULL_RETENTION_DAYS:-28}"
+      - --full-interval-days
+      - "${SCIPAL_BACKUP_FULL_INTERVAL_DAYS:-7}"
     env_file:
       - .env
     environment:

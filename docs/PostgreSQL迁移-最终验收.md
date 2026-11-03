@@ -90,13 +90,17 @@ status    backups/backup_status.json
 P0 仍不能签字：30 天保留与异地备份未解决
 ```
 
-容量问题：
+容量问题与策略：
 
 ```text
-archive 3.56 GB/天
-30 天约 107 GB
-G 盘当前只剩约 53 GB
-按当前全量 data 备份无法满足 30 天保留
+首版全量 archive 3.56 GB/天
+30 天约 107 GB，G 盘约 53 GB，不可持续
+
+已改为：
+  每日 DB 快照（scipal-db-*）
+  每周全量 data（scipal-full-*）
+  DB 保留 30 天
+  全量保留 28 天
 ```
 
 ---

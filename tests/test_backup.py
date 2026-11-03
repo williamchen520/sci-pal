@@ -35,6 +35,15 @@ class BackupTests(unittest.TestCase):
             self.assertTrue(result["ok"])
             self.assertEqual(result["papers"], 1)
 
+    def test_db_scope_contains_only_database(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = create_archive(self._data(root), root / "backups", scope="db")
+            with tarfile.open(archive) as tar:
+                names = [m.name for m in tar.getmembers()]
+            self.assertEqual(names, ["data/research.db"])
+            self.assertTrue(verify_archive(archive, expected_papers=1)["ok"])
+
     def test_restore_writes_database(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

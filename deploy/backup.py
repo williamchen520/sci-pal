@@ -1,6 +1,9 @@
 """Cross-platform backup for SciPal data.
 
-Creates a consistent SQLite copy, then archives the data directory.
+Scopes:
+  db    only the consistent SQLite snapshot (small, daily)
+  full  data directory + SQLite snapshot (larger, weekly)
+
 Run while the service is idle; SQLite backup is online-safe.
 """
 
@@ -22,15 +25,22 @@ def _exclude_live_db(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
     return tarinfo
 
 
-def create_archive(data: str | Path = "data", out: str | Path = "backups") -> Path:
+def create_archive(
+    data: str | Path = "data",
+    out: str | Path = "backups",
+    *,
+    scope: str = "full",
+) -> Path:
     """Create one verified snapshot archive and return its path."""
+    if scope not in {"db", "full"}:
+        raise ValueError("scope must be 'db' or 'full'")
     root = Path(data).resolve()
     out_dir = Path(out).resolve()
     if not root.exists():
         raise FileNotFoundError(f"data directory not found: {root}")
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    archive = out_dir / f"scipal-{stamp}.tar.gz"
+    archive = out_dir / f"scipal-{scope}-{stamp}.tar.gz"
     if archive.exists():
         raise FileExistsError(f"refusing to overwrite archive: {archive}")
     db = root / "research.db"
@@ -46,7 +56,8 @@ def create_archive(data: str | Path = "data", out: str | Path = "backups") -> Pa
                 target.close()
                 source.close()
         with tarfile.open(archive, "w:gz") as tar:
-            tar.add(root, arcname="data", filter=_exclude_live_db)
+            if scope == "full":
+                tar.add(root, arcname="data", filter=_exclude_live_db)
             if snapshot.exists():
                 tar.add(snapshot, arcname="data/research.db")
     return archive
@@ -56,8 +67,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default="data")
     parser.add_argument("--out", default="backups")
+    parser.add_argument("--scope", choices=("db", "full"), default="full")
     args = parser.parse_args()
-    print(create_archive(args.data, args.out))
+    print(create_archive(args.data, args.out, scope=args.scope))
 
 
 if __name__ == "__main__":
