@@ -37,12 +37,15 @@ def build_core_blueprint(*, db_path: Path, get_retriever: Callable[[], Any]) -> 
 
     @bp.get("/api/health")
     def health():
+        from services.db.pg_pool import pool_status
+
         return jsonify(
             {
                 "status": "ok",
                 "service": "sci-pal",
                 "version": "V33.96",
                 "db_exists": Path(db_path).exists(),
+                "pg_pool": pool_status(),
             }
         )
 

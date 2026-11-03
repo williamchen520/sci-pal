@@ -87,10 +87,9 @@ class ReadRouter:
             pg = self._connector()
             close = False
         else:
-            import psycopg
-            from psycopg.rows import dict_row
+            from services.db.pg_pool import pg_connection
 
-            pg = psycopg.connect(self.pg_dsn, row_factory=dict_row)
+            pg = pg_connection(self.pg_dsn)
             close = True
         try:
             rows = pg.execute(
@@ -107,10 +106,9 @@ class ReadRouter:
     def _pg_connection(self):
         if self._connector is not None:
             return self._connector(), False
-        import psycopg
-        from psycopg.rows import dict_row
+        from services.db.pg_pool import pg_connection
 
-        return psycopg.connect(self.pg_dsn, row_factory=dict_row), True
+        return pg_connection(self.pg_dsn), True
 
     def _pg_paper_detail(self, paper_id: str, workspace_id: str) -> Optional[dict]:
         pg, close = self._pg_connection()

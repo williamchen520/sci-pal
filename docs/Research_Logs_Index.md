@@ -233,6 +233,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | P0 backup retention policy | daily DB + weekly full; 30/28 days | [Worklog](../worklogs/2026-11-03-p0-backup-policy.md) |
 
+| 2026-11-03 | PG connection pool | pool min/max/timeout; health status; 824 tests | [Worklog](../worklogs/2026-11-03-pg-pool.md) |
+
 ## Rules
 
 ```text
