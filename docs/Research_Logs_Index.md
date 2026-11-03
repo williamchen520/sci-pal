@@ -269,6 +269,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | Abstract FTS repair | restored 0-byte DB; 3923/3923; triggers | [Worklog](../worklogs/2026-11-04-abstract-fts.md) |
 
+| 2026-11-04 | Evidence request profile | 122s; 4 variants; vector/threading bottleneck | [Profile](性能-profile-evidence.md) |
+
 ## Rules
 
 ```text

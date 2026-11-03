@@ -2,6 +2,7 @@
 摘要库检索：vector + FTS，跟全文库并列。
 V30.0 - Abstract search layer
 """
+import re
 import sqlite3
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -64,6 +65,15 @@ class AbstractSearch:
         """FTS 搜索摘要库"""
         conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
+        terms = [
+            term
+            for term in re.findall(r"[A-Za-z0-9]+", query.lower())
+            if len(term) > 1
+        ]
+        if not terms:
+            conn.close()
+            return []
+        match = " OR ".join(f'"{term}"' for term in terms[:12])
         
         # FTS 表只有 pmid, title, abstract, authors, journal, topic
         # 先从 FTS 表查 pmid，再从 papers 表关联查 doi, year
@@ -76,7 +86,7 @@ class AbstractSearch:
         """
         
         try:
-            rows = conn.execute(sql, (query, top_k)).fetchall()
+            rows = conn.execute(sql, (match, top_k)).fetchall()
         except Exception as e:
             print(f"  ⚠️  摘要 FTS 搜索失败: {e}")
             conn.close()
