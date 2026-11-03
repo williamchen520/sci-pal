@@ -57,8 +57,10 @@ def evaluate(question: str, evidence: Iterable[Dict[str, Any]]) -> Dict[str, Any
     top_score = 0.0
     top_item_coverage = 0.0
     max_item_coverage = 0.0
+    all_tokens = set()
     for item in items:
         item_tokens = _tokens(item.get("text", ""))
+        all_tokens |= item_tokens
         coverage = len(query & item_tokens) / len(query) if query else 0.0
         max_item_coverage = max(max_item_coverage, coverage)
         score = float(item.get("score") or 0.0)
@@ -66,17 +68,23 @@ def evaluate(question: str, evidence: Iterable[Dict[str, Any]]) -> Dict[str, Any
             top_score = score
             top_item_coverage = coverage
 
+    union_coverage = len(query & all_tokens) / len(query) if query else 0.0
+    # Short questions are ambiguous and must be covered by one strong passage.
+    # Longer questions may legitimately need several passages; for those use
+    # union coverage but keep the same score gate.
+    effective_coverage = top_item_coverage if len(query) <= 3 else union_coverage
     sufficient = (
         bool(items)
         and top_score >= MIN_SCORE
-        and top_item_coverage >= min_coverage
+        and effective_coverage >= min_coverage
     )
     return {
         "sufficient": sufficient,
         "top_score": round(top_score, 4),
         "top_item_coverage": round(top_item_coverage, 4),
         "max_item_coverage": round(max_item_coverage, 4),
-        "query_coverage": round(top_item_coverage, 4),
+        "union_coverage": round(union_coverage, 4),
+        "query_coverage": round(effective_coverage, 4),
         "min_coverage": round(min_coverage, 4),
         "thresholds": {"min_score": MIN_SCORE, "min_coverage": min_coverage},
     }

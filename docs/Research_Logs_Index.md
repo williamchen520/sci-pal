@@ -218,6 +218,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Refusal sufficiency regression | per-item coverage; q023/q025 refuse; 813 tests | [Worklog](../worklogs/2026-11-03-refusal-sufficiency.md) |
 
+| 2026-11-03 | Sufficiency long-query fallback | short strict, long union; q051/q070/q089 recovered; 814 tests | [Worklog](../worklogs/2026-11-03-refusal-hybrid.md) |
+
 ## Rules
 
 ```text

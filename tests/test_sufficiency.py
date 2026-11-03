@@ -76,6 +76,18 @@ class SufficiencyTests(unittest.TestCase):
         self.assertTrue(result["sufficient"])
         self.assertLess(result["min_coverage"], 0.5)
 
+    def test_long_question_can_use_multiple_passages(self) -> None:
+        evidence = [
+            {"text": "The study describes salinization.", "score": 0.95},
+            {"text": "It represents a relationship between soil and water.", "score": 0.8},
+        ]
+        result = evaluate(
+            "How does the study describe the relationship between salinization and represents?",
+            evidence,
+        )
+        self.assertTrue(result["sufficient"])
+        self.assertGreater(result["union_coverage"], result["top_item_coverage"])
+
     def test_empty(self) -> None:
         self.assertFalse(evaluate("Anything?", [])["sufficient"])
 
