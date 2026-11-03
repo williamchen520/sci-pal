@@ -429,6 +429,30 @@ match recall 保持 0.975/0.985
 ranking 仍是主要差距
 ```
 
+### 9.3 v5：PG 候选 + cross-encoder rerank
+
+20 query：
+
+```text
+SQLite nDCG        0.532
+PG raw nDCG        0.343
+PG + rerank nDCG   0.633
+```
+
+延迟：
+
+```text
+PG 候选 3.14s + rerank 1.53s
+```
+
+解读：
+
+```text
+PG raw 排序差
+cross-encoder 能纠正大部分排序
+PG 候选召回足够（v4 recall 0.975）
+```
+
 ## 10. 下一步
 
 ```text
