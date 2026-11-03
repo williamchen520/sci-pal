@@ -257,6 +257,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | PG FTS + rerank | nDCG .633 vs SQLite .532; 4.7s | [Worklog](../worklogs/2026-11-04-pg-fts-rerank.md) |
 
+| 2026-11-04 | PG FTS rerank 100q | nDCG .496 vs SQLite .466; 5.1s | [Worklog](../worklogs/2026-11-04-pg-fts-rerank-100.md) |
+
 ## Rules
 
 ```text
