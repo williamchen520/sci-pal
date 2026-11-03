@@ -1,6 +1,8 @@
 # SciPal — A Retrieval-Augmented Research Workbench
 
 > 🚀 **Developer quick start:** [Modules and Routes](docs/en/Modules-and-Routes.md) — find module responsibilities, routes, entry points, and tests; use Architecture and Routes for cross-module flow.
+>
+> 🚀 **开发者极速接入**：[开发-模块手册](docs/开发-模块手册.md) — 按模块找职责、路由、入口和测试；跨模块数据流再看架构与路由图。
 
 **English** | [简体中文](README.zh-CN.md)
 
