@@ -235,6 +235,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | PG connection pool | pool min/max/timeout; health status; 824 tests | [Worklog](../worklogs/2026-11-03-pg-pool.md) |
 
+| 2026-11-03 | Single-machine dev test standard | dev gate vs production gate; 824 tests | [Workflow](开发流程规范.md) |
+
 ## Rules
 
 ```text
