@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from dataclasses import asdict, dataclass, field
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
@@ -55,11 +56,13 @@ class ShadowReader:
         *,
         pg_placeholder: str = "%s",
         sample_limit: int = 5,
+        ignore_fields: Sequence[str] = (),
     ):
         self.sqlite_path = assert_snapshot(sqlite_path)
         self.pg = pg_conn
         self.pg_placeholder = pg_placeholder
         self.sample_limit = sample_limit
+        self.ignore_fields = set(ignore_fields)
 
     def _sqlite(self) -> sqlite3.Connection:
         conn = sqlite3.connect(f"file:{self.sqlite_path}?mode=ro", uri=True)
@@ -70,10 +73,36 @@ class ShadowReader:
         return [row[1] for row in conn.execute(f"PRAGMA table_info({quote_ident(table)})")]
 
     @staticmethod
-    def _row_tuple(row: Any) -> tuple:
-        if isinstance(row, dict):
-            return tuple(row.values())
-        return tuple(row)
+    def _canonical(value: Any) -> Any:
+        """Normalize SQLite text / PG datetime/journal types for comparison."""
+        if value is None or isinstance(value, (int, float, bool)):
+            return value
+        if isinstance(value, datetime):
+            return value.astimezone(timezone.utc).replace(tzinfo=None).isoformat(timespec="seconds")
+        if isinstance(value, date):
+            return value.isoformat()
+        if isinstance(value, bytes):
+            return value.hex()
+        if isinstance(value, (dict, list)):
+            return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+        if isinstance(value, str):
+            text = value.strip()
+            try:
+                parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+                return parsed.astimezone(timezone.utc).replace(tzinfo=None).isoformat(timespec="seconds")
+            except ValueError:
+                pass
+            if text.startswith(("{", "[")):
+                try:
+                    return json.dumps(json.loads(text), ensure_ascii=False, sort_keys=True)
+                except json.JSONDecodeError:
+                    pass
+        return value
+
+    @classmethod
+    def _row_tuple(cls, row: Any) -> tuple:
+        values = row.values() if isinstance(row, dict) else row
+        return tuple(cls._canonical(value) for value in values)
 
     def compare_table(
         self,
@@ -135,19 +164,15 @@ class ShadowReader:
                     continue
                 left = sqlite_map[key_value]
                 right = pg_map[key_value]
-                if left != right:
+                changed = [
+                    columns[i]
+                    for i, (a, b) in enumerate(zip(left, right))
+                    if a != b and columns[i] not in self.ignore_fields
+                ]
+                if changed:
                     diff.field_diffs += 1
                     if len(diff.samples) < self.sample_limit:
-                        diff.samples.append(
-                            {
-                                "key": str(key_value),
-                                "fields": [
-                                    columns[i]
-                                    for i, (a, b) in enumerate(zip(left, right))
-                                    if a != b
-                                ],
-                            }
-                        )
+                        diff.samples.append({"key": str(key_value), "fields": changed})
             if (
                 diff.sqlite_rows != diff.postgres_rows
                 or diff.missing_in_pg
@@ -251,6 +276,7 @@ class ShadowReader:
         report = {
             "source": str(self.sqlite_path),
             "limit": limit,
+            "ignored_fields": sorted(self.ignore_fields),
             "tables": [],
             "fts": [],
             "status": "ok",

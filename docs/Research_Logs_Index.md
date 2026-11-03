@@ -237,6 +237,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Single-machine dev test standard | dev gate vs production gate; 824 tests | [Workflow](开发流程规范.md) |
 
+| 2026-11-03 | P3 shadow report | JSON+MD; 7 tables; status ok; 827 tests | [Worklog](../worklogs/2026-11-03-p3-shadow-report.md) |
+
 ## Rules
 
 ```text
