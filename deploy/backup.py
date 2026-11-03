@@ -48,7 +48,10 @@ def create_archive(
     with tempfile.TemporaryDirectory() as tmp:
         snapshot = Path(tmp) / "research.db"
         if db.exists():
-            source = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+            # WAL mode needs the -shm sidecar; a read-only handle on a
+            # read-only bind mount cannot create it. Open read-write but only
+            # use the SQLite backup API (no data writes).
+            source = sqlite3.connect(db)
             target = sqlite3.connect(snapshot)
             try:
                 source.backup(target)

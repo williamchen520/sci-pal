@@ -72,7 +72,33 @@ tests.test_backup + tests.test_backup_policy
 DB-only archive 实际大小需部署后确认
 ```
 
-## 8. 未完成项
+## 8. 首次 daily DB 失败与修复
+
+失败：
+
+```text
+[Errno 2] No such file or directory: /app/data/research.db-shm
+```
+
+原因：
+
+```text
+data 只读挂载
+SQLite WAL 需要 -shm
+只读连接无法创建 -shm
+```
+
+修复：
+
+```text
+backup-cron data 改为可写挂载
+备份连接改为 sqlite3.connect(db)
+仍只调用 SQLite backup API，不写业务数据
+```
+
+测试新增 WAL 模式临时库，备份/恢复通过。
+
+## 9. 未完成项
 
 ```text
 PR Pending Review
