@@ -15,6 +15,7 @@ class BackupTests(unittest.TestCase):
         data = tmp / "data"
         data.mkdir()
         conn = sqlite3.connect(data / "research.db")
+        conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("CREATE TABLE papers (paper_id TEXT)")
         conn.execute("INSERT INTO papers VALUES ('p1')")
         conn.commit()

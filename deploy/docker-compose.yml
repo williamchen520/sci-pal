@@ -90,7 +90,7 @@ services:
     environment:
       SCIPAL_AUTH_REQUIRED: "1"
     volumes:
-      - ../data:/app/data:ro
+      - ../data:/app/data
       - ../backups:/app/backups
       - ../logs:/app/logs
     healthcheck:
