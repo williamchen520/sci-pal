@@ -265,6 +265,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | PG FTS latency | 2s target; term2 2.74s nDCG .513; term3 4.16s .623 | [Worklog](../worklogs/2026-11-04-pg-fts-latency.md) |
 
+| 2026-11-04 | PG FTS term3 integration | flag postgres; 4s; fallback SQLite; 843 tests | [Worklog](../worklogs/2026-11-04-pg-fts-term3-integration.md) |
+
 ## Rules
 
 ```text

@@ -95,6 +95,7 @@ class HybridSearch:
 
         # V25.19: retrieval diagnostics
         self.diagnostics = RetrievalDiagnostics(enabled=diagnostics)
+        self._pg_retriever = None
 
     def _get_collection(self, name):
         """Get a collection if it exists, else None."""
@@ -207,6 +208,34 @@ class HybridSearch:
                 break
         return hits
 
+    def _pg_fts_search(self, query: str, top_k: int, paper_id: str, filters: Optional[Dict]):
+        """PG term3 candidates + rerank; None means fall back to SQLite."""
+        if filters and any(filters.get(key) for key in ("year_min", "year_max", "journal")):
+            return None
+        try:
+            import logging
+
+            if self._pg_retriever is None:
+                from services.search.pg_paragraph_retriever import PGParagraphRetriever
+
+                self._pg_retriever = PGParagraphRetriever()
+            result = self._pg_retriever.search(
+                query,
+                top_k=top_k,
+                paper_id=paper_id or "",
+                section_l1=(filters or {}).get("section_l1") or "",
+            )
+            paper_ids = (filters or {}).get("paper_ids")
+            if paper_ids is not None:
+                allowed = set(paper_ids)
+                result = [row for row in result if row["paper_id"] in allowed]
+            if not result:
+                return None
+            return result
+        except Exception as exc:  # noqa: BLE001 - PG is optional; SQLite fallback
+            logging.getLogger(__name__).warning("PG FTS failed, falling back to SQLite: %s", exc)
+            return None
+
     def fts_search(self, query: str, top_k: int = FTS_TOP_K,
                    paper_id: str = None,
                    filters: Optional[Dict] = None) -> List[Dict]:
@@ -216,6 +245,10 @@ class HybridSearch:
         Year/journal filters require a JOIN with the papers table.
         V25.19: enhanced FTS query with phrase matching, NEAR, entity weighting.
         """
+        if os.environ.get("SCIPAL_FTS_BACKEND", "").strip().lower() in {"postgres", "postgresql", "pg"}:
+            pg_results = self._pg_fts_search(query, top_k, paper_id, filters)
+            if pg_results is not None:
+                return pg_results
         # V25.19: use enhanced FTS query builder or fall back to simple
         if ENHANCED_FTS and hasattr(self, "fts_builder"):
             fts_query = self.fts_builder.build(query)
