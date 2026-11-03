@@ -1,7 +1,7 @@
 # 运维主线：SQLite 长跑后句柄失效
 
 > 日期：2026-11-03  
-> 状态：**已止损，等待方案决策**  
+> 状态：**A 方案已验证通过**  
 > 触发：连续两次长 eval 后出现 `unable to open database file`
 
 ## 1. 现象
@@ -117,7 +117,42 @@ C 作为并行缓解
 D 作为长期架构方向
 ```
 
-## 7. 停止条件
+## 7. A 方案验证（2026-11-03）
+
+改动：
+
+```text
+eval/retrieval_eval.py
+  --pg-dsn 用 PG 做 sentence -> section/paragraph 映射
+  无 PG 时每次查询打开/关闭 SQLite
+  不再持有宿主机 SQLite 长连接
+```
+
+完整 96 题使用 PG 映射：
+
+```text
+recall@10   0.6615
+refusal     1.00
+```
+
+跑完后容器检查：
+
+```text
+papers 3313
+paper_flags 0
+/api/health 200
+app healthy
+未重启
+```
+
+结论：
+
+```text
+宿主机 eval 的长期 SQLite 连接是触发条件
+A 方案消除了长跑后重启
+```
+
+## 8. 停止条件
 
 ```text
 不再用“重启 app”作为修复

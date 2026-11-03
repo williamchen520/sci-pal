@@ -11,6 +11,8 @@ import argparse
 import json
 import sqlite3
 import math
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any, Callable, Dict, List
@@ -43,8 +45,15 @@ def http_search(query: str, top_k: int, base_url: str) -> Dict[str, Any]:
         headers={"Content-Type": "application/json; charset=utf-8"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=180) as response:
-        return json.loads(response.read().decode("utf-8"))
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(request, timeout=180) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            if exc.code < 500 or attempt == 2:
+                raise
+            time.sleep(2 * (attempt + 1))
+    raise RuntimeError("unreachable")
 
 
 def _dcg(gains: List[int]) -> float:
@@ -71,6 +80,7 @@ def evaluate(
     refusal_ok = 0
 
     for item in gold:
+        print(f"[{item['id']}]", flush=True)
         expected = set(item.get("evidence") or [])
         payload = search_fn(item["question"], top_k)
         found = _sentences_from_response(payload)
@@ -165,6 +175,11 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--output", default=str(DEFAULT_OUT))
     parser.add_argument("--db", default=str(Path(__file__).resolve().parent.parent / "data" / "research.db"))
+    parser.add_argument(
+        "--pg-dsn",
+        default="",
+        help="Use PostgreSQL for sentence->section/paragraph mapping (avoids a long-lived host SQLite handle).",
+    )
     args = parser.parse_args()
 
     gold = load_gold(Path(args.gold))
@@ -172,32 +187,54 @@ def main() -> None:
         gold = gold[: args.limit]
     section_cache: Dict[str, Any] = {}
     para_cache: Dict[str, Any] = {}
-    section_conn = sqlite3.connect(args.db)
+    pg = None
+
+    if args.pg_dsn:
+        import psycopg
+
+        pg = psycopg.connect(args.pg_dsn)
+
+        def _lookup(sql: str, sentence_id: str):
+            row = pg.execute(sql.replace("?", "%s"), (sentence_id,)).fetchone()
+            return row[0] if row else None
+    else:
+        db_uri = f"file:{Path(args.db).as_posix()}?mode=ro"
+
+        def _lookup(sql: str, sentence_id: str):
+            # Open/close per lookup: do not hold a host SQLite connection for
+            # the whole multi-hour evaluation run.
+            conn = sqlite3.connect(db_uri, uri=True)
+            try:
+                row = conn.execute(sql, (sentence_id,)).fetchone()
+                return row[0] if row else None
+            finally:
+                conn.close()
 
     def section_of(sentence_id: str):
         if sentence_id not in section_cache:
-            row = section_conn.execute(
-                "SELECT section_id FROM sentences WHERE sentence_id = ?", (sentence_id,)
-            ).fetchone()
-            section_cache[sentence_id] = row[0] if row else None
+            section_cache[sentence_id] = _lookup(
+                "SELECT section_id FROM sentences WHERE sentence_id = ?", sentence_id
+            )
         return section_cache[sentence_id]
 
     def paragraph_of(sentence_id: str):
         if sentence_id not in para_cache:
-            row = section_conn.execute(
-                "SELECT para_id FROM sentences WHERE sentence_id = ?", (sentence_id,)
-            ).fetchone()
-            para_cache[sentence_id] = row[0] if row else None
+            para_cache[sentence_id] = _lookup(
+                "SELECT para_id FROM sentences WHERE sentence_id = ?", sentence_id
+            )
         return para_cache[sentence_id]
 
-    result = evaluate(
-        gold,
-        lambda q, k: http_search(q, k, args.base_url),
-        args.top_k,
-        section_of=section_of,
-        paragraph_of=paragraph_of,
-    )
-    section_conn.close()
+    try:
+        result = evaluate(
+            gold,
+            lambda q, k: http_search(q, k, args.base_url),
+            args.top_k,
+            section_of=section_of,
+            paragraph_of=paragraph_of,
+        )
+    finally:
+        if pg is not None:
+            pg.close()
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")

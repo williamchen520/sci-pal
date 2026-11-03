@@ -222,6 +222,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | SQLite long-run handle failure | stopped blind restarts; A eval/PG, B named volume | [Mainline](运维-SQLite长跑故障.md) |
 
+| 2026-11-03 | SQLite long-run fix A | eval uses PG/per-query SQLite; 96q then no restart; 814 tests | [Worklog](../worklogs/2026-11-03-sqlite-eval-fix.md) |
+
 ## Rules
 
 ```text
