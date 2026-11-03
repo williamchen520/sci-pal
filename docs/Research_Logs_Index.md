@@ -203,6 +203,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Retrieval after vector backfill | 96q R@10 .5729; paired 20 R@10 .575 vs .65; gate sample mismatch | [Retrieval eval](检索-向量补全后评估-2026-11-03.md) |
 
+| 2026-11-03 | Deploy preflight build | app cf81e86c97c3; healthy; preflight enabled; 800 tests | [Deploy record](部署-2026-11-03-Preflight.md) |
+
 ## Rules
 
 ```text
