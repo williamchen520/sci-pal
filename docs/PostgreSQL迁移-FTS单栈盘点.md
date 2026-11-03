@@ -305,7 +305,40 @@ coverage：已补齐 0 / 0
 
 ---
 
-## 9. 下一步
+## 9. 2026-11-03 影子对比结果
+
+20 query，top-10：
+
+```text
+paragraph avg Jaccard 0.020
+summary   avg Jaccard 0.242
+```
+
+典型：
+
+```text
+q001 / q002 paragraph common 0/10
+q004 paragraph common 3/10
+q002 summary common 7/10
+```
+
+PG paragraph 查询耗时：
+
+```text
+约 5–22 秒 / query（12 个 OR term）
+SQLite 约 0.1–0.2 秒
+```
+
+结论：
+
+```text
+PG FTS 能返回结果
+但 ranking 差异过大
+且延迟不可接受
+不能切
+```
+
+## 10. 下一步
 
 ```text
 1. 补 SQLite FTS 覆盖缺口
