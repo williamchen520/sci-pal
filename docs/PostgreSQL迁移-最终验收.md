@@ -257,36 +257,39 @@ ID / 行数 100% 对齐
 
 ## 6. PG 连接池与并发
 
-当前代码：
+代码状态：
 
 ```text
-每个 PG 操作直接 psycopg.connect(...)
-没有 psycopg_pool.ConnectionPool
-没有 min_size / max_size / timeout 配置
+已新增 services/db/pg_pool.py
+ConnectionPool，按 DSN 复用
+SCIPAL_PG_POOL_MIN=1
+SCIPAL_PG_POOL_MAX=10
+SCIPAL_PG_POOL_TIMEOUT=5
+读写路径已切换到 pg_connection()
 ```
 
 当前 PG：
 
 ```text
 max_connections = 100
-当前连接数 = 6
+实测连接数 = 2（单进程池 min=1, size=2）
 ```
 
-风险：
+仍待完成：
 
 ```text
-多用户并发时连接数线性上升
-没有连接复用
-没有池耗尽保护
-没有等待超时策略
+生产部署
+50/100 并发压测
+P95 延迟基线
+长跑连接泄漏观察
 ```
 
 结论：
 
 ```text
-连接池未配置
-不能声称已经抗住多用户并发
-需要连接池 + 并发压测后再验收
+连接池代码与单元测试完成
+生产验收仍未完成
+不能仅凭连接池就声称已抗住多用户并发
 ```
 
 ---
@@ -296,7 +299,7 @@ max_connections = 100
 当前测试：
 
 ```text
-814 tests OK
+824 tests OK
 ```
 
 但：
@@ -304,7 +307,7 @@ max_connections = 100
 ```text
 大多数测试使用 SQLite / tempfile / fake connector
 PG 相关测试主要是 unit/mock，不是完整 live PG
-没有证据显示 814 项全部跑在真实 PostgreSQL 上
+没有证据显示 824 项全部跑在真实 PostgreSQL 上
 ```
 
 结论：
@@ -377,7 +380,7 @@ P5：100% canary，但不是单轨
 P6：未完成
 老数据：ID 100% 对齐，内容 checksum 未完成
 连接池：未配置
-测试：814 全绿，但不是全部跑 PG
+测试：824 全绿，但不是全部跑 PG
 ```
 
 最终判定：

@@ -28,15 +28,14 @@ def sync_pending(db_path: str | Path, *, limit: int = 500) -> dict | None:
     if not enabled():
         return None
     try:
-        import psycopg
-
         from services.db.dual_write import ensure_outbox
+        from services.db.pg_pool import pg_connection
 
         conn = sqlite3.connect(str(db_path), timeout=30)
         conn.row_factory = sqlite3.Row
         try:
             ensure_outbox(conn)
-            with psycopg.connect(os.environ["SCIPAL_PG_DSN"]) as pg:
+            with pg_connection(os.environ["SCIPAL_PG_DSN"]) as pg:
                 result = replay(conn, pg, limit=limit)
             return result
         finally:

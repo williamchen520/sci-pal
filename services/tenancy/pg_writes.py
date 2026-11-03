@@ -22,10 +22,9 @@ def enabled() -> bool:
 
 
 def _connect():
-    import psycopg
-    from psycopg.rows import dict_row
+    from services.db.pg_pool import pg_connection
 
-    return psycopg.connect(os.environ["SCIPAL_PG_DSN"], row_factory=dict_row)
+    return pg_connection(os.environ["SCIPAL_PG_DSN"])
 
 
 def _ensure_audit_sequence(pg) -> None:

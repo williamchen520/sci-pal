@@ -72,10 +72,9 @@ def _pg_read_enabled() -> bool:
 
 
 def _pg_connection():
-    import psycopg
-    from psycopg.rows import dict_row
+    from services.db.pg_pool import pg_connection
 
-    return psycopg.connect(os.environ["SCIPAL_PG_DSN"], row_factory=dict_row)
+    return pg_connection(os.environ["SCIPAL_PG_DSN"])
 
 
 def _pg_authenticate(username: str, password: str):

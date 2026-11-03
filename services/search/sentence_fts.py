@@ -40,10 +40,9 @@ class SentenceFTS:
     def _connection(self):
         if self._connector is not None:
             return self._connector(), False
-        import psycopg
-        from psycopg.rows import dict_row
+        from services.db.pg_pool import pg_connection
 
-        return psycopg.connect(self.dsn, row_factory=dict_row), True
+        return pg_connection(self.dsn), True
 
     def search(
         self,

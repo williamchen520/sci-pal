@@ -110,15 +110,9 @@ class PostgresAdapter(DBAdapter):
     def _connect(self) -> Any:
         if self._connector is not None:
             return self._connector()
-        try:
-            import psycopg
-            from psycopg.rows import dict_row
-        except ImportError as exc:
-            raise DBAdapterError(
-                "psycopg is required for SCIPAL_DB_BACKEND=postgres; "
-                "install psycopg[binary]"
-            ) from exc
-        return psycopg.connect(self.dsn, row_factory=dict_row)
+        from services.db.pg_pool import pg_connection
+
+        return pg_connection(self.dsn)
 
     def connect(self) -> Any:
         return self._connect()
