@@ -28,6 +28,7 @@ from build_db.mention_patterns import figure_mentions, table_mentions
 from build_db.sentence_geometry import split_sentences
 from build_db.structure_v3 import refresh_for_paper
 from services.papers import pg_writes
+from services.papers import preflight
 
 DEFAULT_DB = Path(__file__).resolve().parent.parent / "data" / "research.db"
 DEFAULT_DIR = Path(__file__).resolve().parent.parent / "documents_xml"
@@ -80,6 +81,12 @@ def import_file(
     paper_id = paper_id or _paper_id_for(xml_path, conn)
     if not paper_id:
         return {}
+
+    if preflight.enabled():
+        report = preflight.audit_and_repair(data, paper_id, "jats")
+        if report.errors:
+            print(f"preflight failed for {paper_id}: {'; '.join(report.errors)}")
+            return {}
 
     meta = data.get("metadata") or {}
     _clear_paper(conn, paper_id)

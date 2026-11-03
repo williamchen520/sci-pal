@@ -24,11 +24,11 @@ SciPal is a locally deployable system for searching scientific literature, parsi
 ```text
 Paper read path / detail / graph / tenancy reads   PostgreSQL
 Tenancy writes                                    PostgreSQL primary + SQLite mirror
-Other writes                                      SQLite + P4 outbox
+Runtime writes                                    PostgreSQL primary (legacy outbox bridge remains)
 FTS / Chroma                                      SQLite / Chroma
 Production paper ranking                          paragraph FTS
 Domain routing / topic penalty                    disabled
-Tests                                             766
+Tests                                             800
 ```
 
 Operational notes:
@@ -165,6 +165,74 @@ services/* (retrieval, QA, reviews, guard, tenancy, source adapters)
 | sentence_links | 296,867 (JATS 291,857 + GROBID 3,292) |
 | paper_links | 164,802 |
 
+## Data Audit and Pre-Ingest Gate
+
+SciPal now audits data **before** it reaches the paper graph, not only after a large database has been built.
+
+### Existing database audit
+
+```powershell
+python scripts/audit_id_vector_contract.py ^
+  --sqlite data/research.db ^
+  --pg-dsn "postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench" ^
+  --chroma data/chroma ^
+  --out eval/results/id_vector_contract_audit.json
+```
+
+It checks:
+
+```text
+Chroma id -> SQLite row resolution
+SQLite/PG id consistency
+section / paragraph / sentence hierarchy
+metadata completeness
+per-collection vector coverage
+gold-sentence text/ID mapping
+```
+
+Repair scripts (run with `--dry-run` first, stop the API before applying):
+
+```text
+scripts/repair_paragraph_vectors.py
+scripts/backfill_paper_summary_vectors.py
+scripts/backfill_figure_table_vectors.py
+```
+
+### Pre-ingest audit and repair
+
+Every parsed paper now passes `services/papers/preflight.py` before any write:
+
+```text
+PDF upload / parse -> DatabaseWriter -> preflight
+PMC / JATS ingest  -> import_jats    -> preflight
+Batch ingest       -> ingest._write_batch -> preflight
+```
+
+It repairs identity/shape issues:
+
+```text
+missing or duplicate para_id / section_id / fig_id / table_id / citation_id
+empty paragraphs (dropped)
+dangling section parents (detached)
+missing title (set to Untitled)
+```
+
+It blocks ingestion only for hard errors:
+
+```text
+missing paper_id
+paragraphs / sections / figures / tables not a list
+metadata not an object
+```
+
+Disable only for debugging:
+
+```powershell
+$env:SCIPAL_INGEST_PREFLIGHT = "0"
+```
+
+The goal is fail-fast: broken input should be rejected or repaired at the boundary, not discovered after 100k+ rows have been written.
+
 ## Quick Start
 
 ```powershell
@@ -244,7 +312,7 @@ sci-pal/
 ├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
 ├─ docs/                     architecture, data, and design documents
 ├─ deploy/                   Dockerfile, compose, health-cron
-├─ tests/                    766 tests
+├─ tests/                    800 tests
 ├─ documents/                PDFs
 ├─ documents_xml/            JATS XML
 ├─ data/                     research.db, Chroma
@@ -273,7 +341,7 @@ The source of truth is `routes/` and `api_server.py`. See [API Reference](docs/e
 ## Tests
 
 ```text
-766 tests, ~70s
+800 tests, ~70s
 ```
 
 Coverage includes retrieval, routing, guard, structure, JATS import, watch, domain packs, claim pilot, multi-user isolation, projects/experiments/runs, and plugin ports.
