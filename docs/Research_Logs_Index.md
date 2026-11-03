@@ -245,6 +245,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | FTS single-stack inventory | coverage/tokenizer/ranking/query/CJK gaps | [Inventory](PostgreSQL迁移-FTS单栈盘点.md) |
 
+| 2026-11-03 | FTS coverage repair | paragraphs 167388; summaries 69128; triggers; 831 tests | [Worklog](../worklogs/2026-11-03-fts-coverage.md) |
+
 ## Rules
 
 ```text

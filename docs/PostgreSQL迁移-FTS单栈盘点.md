@@ -13,9 +13,9 @@
 | 表 | 行数 | 基表行数 | 缺失 | tokenizer |
 |---|---:|---:|---:|---|
 | `papers_fts` | 3,313 | 3,313 | 0 | unicode61 remove_diacritics 2 |
-| `paragraphs_fts` | 166,465 | 167,388 | **923** | unicode61 remove_diacritics 2 |
+| `paragraphs_fts` | 167,388 | 167,388 | 0 | unicode61 remove_diacritics 2 |
 | `sentences_fts` | 862,677 | 862,677 | 0 | 默认 unicode61 |
-| `summaries_fts` | 61,932 | 69,128 | **7,196** | 默认 unicode61 |
+| `summaries_fts` | 69,128 | 69,128 | 0 | 默认 unicode61 |
 
 ### PostgreSQL
 
@@ -123,21 +123,23 @@ top-10 common 只有 0–2
 
 ## 4. 阻塞单栈的五个问题
 
-### 4.1 覆盖率缺口
+### 4.1 覆盖率缺口（已修复）
+
+修复前：
 
 ```text
 paragraphs_fts 缺 923 条
 summaries_fts 缺 7,196 条
 ```
 
-PG `search_vector` 是完整的。
-
-如果直接切 PG：
+2026-11-03 已补齐：
 
 ```text
-可能召回更多
-但不是“同结果切换”，需要重新评估指标
+paragraphs_fts 167,388 = paragraphs 167,388
+summaries_fts  69,128 = summaries  69,128
 ```
+
+并新增 `summaries_ai/ad/au` trigger，防止后续再漏。
 
 ### 4.2 Tokenizer 不对齐
 
@@ -288,7 +290,7 @@ PG FTS 数据面：基本完整
 PG FTS 查询面：未接入生产
 tokenizer：需 porter 对齐或接受差异
 ranking：bm25 vs ts_rank_cd 必须单独评审
-coverage：SQLite 自身缺 923 / 7,196
+coverage：已补齐 0 / 0
 中文：未解决
 ```
 
