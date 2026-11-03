@@ -18,7 +18,7 @@
 P0 备份/冻结        部分完成
 P1 Schema/连接层    已完成
 P2 只读 ETL         已完成
-P3 影子读           代码完成，未持续运行
+P3 影子读           报告脚本完成，手动运行通过
 P4 双写             PG-primary + SQLite mirror/outbox，未关闭
 P5 读切换           papers 读 100% PG，但有 SQLite fallback
 P6 归档             未完成
@@ -138,13 +138,26 @@ services/db/shadow_read.py
 docs/PostgreSQL迁移-P3-shadow.json
 ```
 
-代码和一次性报告存在，但没有形成每日/每周持续影子读。
+有报告脚本 `scripts/p3_shadow_report.py`，输出 JSON + Markdown；开发态手动运行。
+
+实测：
+
+```text
+status      ok
+papers      3313
+sections    69128
+paragraphs  167388
+sentences   862677
+citations   182817
+field_diffs 0
+```
 
 结论：
 
 ```text
 P3 代码完成
-P3 持续运行未完成
+P3 报告脚本完成
+每日调度属于生产态，开发态手动运行
 ```
 
 ---
@@ -372,7 +385,7 @@ P6 未完成
 | P0 | 每月恢复演练 | 从备份恢复到临时目录并 integrity_check |
 | P1 | 引入 `psycopg_pool.ConnectionPool` | min/max/timeout 可配 |
 | P1 | 并发压测 | 50/100 并发无池耗尽 |
-| P3 | 每日 shadow read | 差异报告自动生成 |
+| P3 | 每日 shadow read | 报告脚本已可用；生产态再调度 |
 | P4 | 逐表关闭 outbox 或明确冻结 | trigger 数量可解释 |
 | P5 | 明确 fallback 策略 | PG 故障时行为可观测 |
 | P6 | 30 天无回退后再归档 | SQLite 只读、两份备份 |
