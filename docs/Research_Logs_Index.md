@@ -271,6 +271,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | Evidence request profile | 122s; 4 variants; vector/threading bottleneck | [Profile](性能-profile-evidence.md) |
 
+| 2026-11-04 | Query variants 2 profile | cold 91s; warm 2.6s vs 7.8s; rerank bottleneck | [Worklog](../worklogs/2026-11-04-variants2-profile.md) |
+
 ## Rules
 
 ```text
