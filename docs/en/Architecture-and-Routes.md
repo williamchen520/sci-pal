@@ -8,6 +8,8 @@
 
 ---
 
+> 🚀 **Module onboarding:** [Modules and Routes](Modules-and-Routes.md) — read this first for per-module entry points; this document is for cross-module flow.
+
 ## 1. Design Principles
 
 ```text

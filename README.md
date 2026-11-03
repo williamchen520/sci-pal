@@ -1,5 +1,7 @@
 # SciPal — A Retrieval-Augmented Research Workbench
 
+> 🚀 **Developer quick start:** [Modules and Routes](docs/en/Modules-and-Routes.md) — find module responsibilities, routes, entry points, and tests; use Architecture and Routes for cross-module flow.
+
 **English** | [简体中文](README.zh-CN.md)
 
 SciPal is a locally deployable system for searching scientific literature, parsing papers into structured evidence, and producing traceable literature reviews. Its core is a **deterministic retrieval layer** — vector search, FTS5/BM25, reciprocal-rank fusion (RRF), cross-encoder reranking, query routing, and adaptive context expansion. For generation, we recommend a **small local model for orchestration plus a cloud or DSH model for reasoning**.

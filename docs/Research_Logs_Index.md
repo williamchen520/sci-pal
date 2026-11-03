@@ -203,6 +203,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Retrieval after vector backfill | 96q R@10 .5729; paired 20 R@10 .575 vs .65; gate sample mismatch | [Retrieval eval](检索-向量补全后评估-2026-11-03.md) |
 
+| 2026-11-03 | Bilingual module guide | English module/route guide; both READMEs and architecture docs linked | [EN guide](en/Modules-and-Routes.md) |
+
 ## Rules
 
 ```text
