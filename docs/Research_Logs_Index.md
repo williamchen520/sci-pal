@@ -224,6 +224,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | SQLite long-run fix A | eval uses PG/per-query SQLite; 96q then no restart; 814 tests | [Worklog](../worklogs/2026-11-03-sqlite-eval-fix.md) |
 
+| 2026-11-03 | PostgreSQL final acceptance | P0-P6 inventory; ID parity 100%; P6 not done | [Acceptance](PostgreSQL迁移-最终验收.md) |
+
 ## Rules
 
 ```text
