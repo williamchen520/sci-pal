@@ -87,3 +87,6 @@ tests/backups/
 # 本地数据沙箱（聚合/脱敏产物，运行期生成）
 /data_sandbox/
 
+# architecture.json codegen 产物
+/generated/
+
