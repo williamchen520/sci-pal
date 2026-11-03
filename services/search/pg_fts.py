@@ -54,10 +54,65 @@ class _BasePG:
 
         return pg_connection(self.dsn), True
 
-    def _query(self, query: str, match: str, term_limit: int) -> str:
-        terms = _extract_keywords(query)[: max(1, min(term_limit, 12))]
-        operator = " | " if match == "any" else " & "
-        return operator.join(terms)
+    def _lexemes(self, pg, terms: list[str], source: str) -> list[str]:
+        """Map query words to PG lexemes and rank them by rarity."""
+        try:
+            rows = pg.execute(
+                "SELECT t.term, l.lexeme FROM unnest(%s::text[]) AS t(term), "
+                "LATERAL unnest(to_tsvector('english', t.term)) AS l(lexeme)",
+                (terms,),
+            ).fetchall()
+        except Exception:  # noqa: BLE001 - optional stats path
+            return terms
+        by_term: dict[str, list[str]] = {}
+        try:
+            for row in rows:
+                by_term.setdefault(row["term"], []).append(row["lexeme"])
+        except Exception:  # noqa: BLE001 - fake/absent stats rows
+            return terms
+        lexemes = []
+        for term in terms:
+            lexemes.extend(by_term.get(term, []))
+        return list(dict.fromkeys(lexemes)) or terms
+
+    def _query(
+        self,
+        query: str,
+        match: str,
+        term_limit: int,
+        *,
+        pg=None,
+        source: str = "paragraphs",
+    ) -> str:
+        limit = max(1, min(term_limit, 12))
+        terms = _extract_keywords(query)
+        if not terms:
+            return ""
+        if pg is None:
+            pg, close = self._connection()
+            try:
+                return self._query(query, match, term_limit, pg=pg, source=source)
+            finally:
+                if close:
+                    pg.close()
+        lexemes = self._lexemes(pg, terms, source)
+        try:
+            rows = pg.execute(
+                "SELECT word, nentry FROM fts_term_stats WHERE source = %s AND word = ANY(%s)",
+                (source, lexemes),
+            ).fetchall()
+        except Exception:  # noqa: BLE001 - stats table may not exist yet
+            return (" | " if match == "any" else " & ").join(lexemes)
+        try:
+            rarity = {row["word"]: int(row["nentry"]) for row in rows}
+        except Exception:  # noqa: BLE001 - fake/absent stats rows
+            return (" | " if match == "any" else " & ").join(lexemes)
+        ranked = sorted(
+            enumerate(lexemes),
+            key=lambda item: (rarity.get(item[1], 10**12), item[0]),
+        )
+        selected = [word for _, word in ranked[:limit]]
+        return (" | " if match == "any" else " & ").join(selected or lexemes)
 
     @property
     def _rank_expr(self) -> str:

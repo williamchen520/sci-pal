@@ -20,6 +20,28 @@ class FakeCursor:
         return self.rows
 
 
+class StatsCursor:
+    def execute(self, sql, params):
+        self.sql = sql
+        self.params = params
+        if "unnest" in sql:
+            self.rows = [
+                {"term": "common", "lexeme": "common"},
+                {"term": "rare", "lexeme": "rare"},
+            ]
+        elif "fts_term_stats" in sql:
+            self.rows = [
+                {"word": "common", "nentry": 1000},
+                {"word": "rare", "nentry": 2},
+            ]
+        else:
+            self.rows = []
+        return self
+
+    def fetchall(self):
+        return self.rows
+
+
 class PGParagraphFTSTests(unittest.TestCase):
     def test_returns_hits_and_builds_or_query(self):
         fake = FakeCursor(
@@ -53,6 +75,13 @@ class PGParagraphFTSTests(unittest.TestCase):
 
     def test_empty_query(self):
         self.assertEqual(PGParagraphFTS(connector=lambda: object()).search("  "), [])
+
+    def test_rare_term_selection(self):
+        cursor = StatsCursor()
+        query = PGParagraphFTS(connector=lambda: cursor)._query(
+            "common rare", "any", 1, pg=cursor, source="paragraphs"
+        )
+        self.assertEqual(query, "rare")
 
     def test_recall_has_no_rank_order(self):
         fake = FakeCursor([])
