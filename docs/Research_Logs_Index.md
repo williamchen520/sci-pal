@@ -241,6 +241,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | P5 fallback observability | pg_fallbacks in health; 829 tests | [Worklog](../worklogs/2026-11-03-p5-fallback.md) |
 
+| 2026-11-03 | P4 outbox audit | 27 triggers; pending 0; core mirror kept | [Audit](PostgreSQL迁移-P4-outbox-audit.md) |
+
 ## Rules
 
 ```text
