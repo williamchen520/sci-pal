@@ -98,7 +98,25 @@ backup-cron data 改为可写挂载
 
 测试新增 WAL 模式临时库，备份/恢复通过。
 
-## 9. 未完成项
+## 9. 部署验证
+
+```text
+daily DB archive  425 MB
+integrity         ok
+papers            3313
+耗时              约 8 分钟
+state             last_db_at 已写入
+```
+
+容量：
+
+```text
+DB 30 天约 12.8 GB
+全量 4 周约 14.2 GB
+合计约 27 GB / 53 GB 可用
+```
+
+## 10. 未完成项
 
 ```text
 PR Pending Review
