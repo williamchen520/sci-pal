@@ -227,6 +227,8 @@ topic 错误可能传导到 coverage audit
 | 2026-11-03 | Offline mode code freeze | cloud outage -> local Ollama may not code/JSON/route | [Workflow](开发流程规范.md) |
 | 2026-11-03 | PostgreSQL final acceptance | P0-P6 inventory; ID parity 100%; P6 not done | [Acceptance](PostgreSQL迁移-最终验收.md) |
 
+| 2026-11-03 | P0 automated backup | tar fix; verify/restore; backup-cron; 817 tests | [Worklog](../worklogs/2026-11-03-p0-backup.md) |
+
 ## Rules
 
 ```text

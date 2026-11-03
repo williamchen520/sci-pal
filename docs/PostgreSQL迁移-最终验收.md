@@ -62,9 +62,9 @@ archive 可生成
 ### 2.3 发现的问题
 
 ```text
-1. deploy/backup.py 的 tar 包中 data/research.db 出现两次
-   （先 tar.add(root)，再 tar.add(snapshot) 同名）
-2. 没有发现自动定时备份任务
+1. ~~deploy/backup.py 的 tar 包中 data/research.db 出现两次~~
+   已在本轮修复，并加了回归测试
+2. ~~没有自动定时备份~~：已加 `backup-cron` 服务，待部署验证
 3. 没有定期恢复演练记录
 4. G 盘最新业务快照仍是 2026-11-02 的 before-tenancy
 5. 没有 30 天保留策略的实际执行证据
@@ -75,9 +75,9 @@ archive 可生成
 ```text
 脚本化：是
 单次可用：是
-自动定时：否
-恢复演练：未形成周期
-P0 不能签字完成
+自动定时：代码已加，待部署
+恢复演练：脚本已加，待形成周期
+P0 不能签字完成，但已从“缺失”推进到“待部署验证”
 ```
 
 ---
