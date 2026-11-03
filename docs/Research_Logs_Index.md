@@ -201,6 +201,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | ID/vector audit result | paragraphs 99.45%, papers/sections 100%, figures 97.23%, tables 99.94%; audit PASS | [Audit result](审计-ID与向量契约结果.md) |
 
+| 2026-11-03 | Retrieval after vector backfill | 96q R@10 .5729; paired 20 R@10 .575 vs .65; gate sample mismatch | [Retrieval eval](检索-向量补全后评估-2026-11-03.md) |
+
 ## Rules
 
 ```text
