@@ -19,7 +19,7 @@ P0 备份/冻结        部分完成
 P1 Schema/连接层    已完成
 P2 只读 ETL         已完成
 P3 影子读           报告脚本完成，手动运行通过
-P4 双写             PG-primary + SQLite mirror/outbox，未关闭
+P4 双写             开发态冻结：27 trigger 保留，pending 0
 P5 读切换           papers 读 100% PG，但有 SQLite fallback
 P6 归档             未完成
 ```
@@ -228,9 +228,10 @@ outbox pending 0
 结论：
 
 ```text
-P4 双写没有关闭
-outbox 仍作为 legacy/build 兼容桥
-P5 没有全量单轨
+P4 双写开发态冻结
+27 个 trigger 保留，pending 0
+核心表 SQLite mirror 仍供 FTS/检索
+详见 docs/PostgreSQL迁移-P4-outbox-audit.md
 ```
 
 ---
