@@ -749,8 +749,12 @@ if __name__ == "__main__":
     # V33.13: 启动时预热模型，避免第一次请求超时
     print("🔥 启动预热：加载模型...")
     try:
-        get_retriever()
+        retriever = get_retriever()
         print("  ✅ 检索模型已加载")
+        if os.environ.get("SCIPAL_WARMUP", "").strip().lower() in {"1", "true", "yes", "on"}:
+            print("  🔥 预热向量索引...")
+            retriever.searcher.vector_search("warmup", 1)
+            print("  ✅ 向量索引已预热")
     except Exception as e:
         print(f"  ⚠️ 检索模型预热失败: {e}")
     try:
