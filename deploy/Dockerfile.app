@@ -4,6 +4,7 @@ FROM scipal-base:py312
 WORKDIR /app
 
 COPY . .
+RUN pip install --no-cache-dir "psycopg-pool>=3.2"
 RUN mkdir -p data documents documents_xml logs
 
 EXPOSE 5000

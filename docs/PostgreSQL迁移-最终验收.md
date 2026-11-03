@@ -275,13 +275,21 @@ max_connections = 100
 实测连接数 = 2（单进程池 min=1, size=2）
 ```
 
+已部署：
+
+```text
+image scipal-app:latest 51090161209f
+psycopg-pool 3.3.3
+50 workers / 100 requests: 0 errors, p50 0.371s, p95 0.707s
+100 workers / 200 requests: 0 errors, p50 0.090s, p95 0.175s
+```
+
 仍待完成：
 
 ```text
-生产部署
-50/100 并发压测
-P95 延迟基线
+生产端点级压测
 长跑连接泄漏观察
+池参数按实例调优
 ```
 
 结论：
