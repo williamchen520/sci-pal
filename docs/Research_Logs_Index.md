@@ -255,6 +255,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | PG FTS rare-term v4 | Jaccard .200/.411; recall .975/.985; 837 tests | [Worklog](../worklogs/2026-11-04-pg-fts-rare-term.md) |
 
+| 2026-11-04 | PG FTS + rerank | nDCG .633 vs SQLite .532; 4.7s | [Worklog](../worklogs/2026-11-04-pg-fts-rerank.md) |
+
 ## Rules
 
 ```text
