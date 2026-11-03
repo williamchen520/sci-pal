@@ -2,6 +2,8 @@
 
 # SciPal — 科研文献 RAG 系统
 
+> 🚀 **开发者极速接入**：[开发-模块手册](docs/开发-模块手册.md) — 按模块找职责、路由、入口和测试；跨模块数据流再看架构与路由图。
+
 本地化部署的科研文献检索、结构化解析与综述生成系统。核心是**确定性检索层**
 （向量 + FTS5/BM25 + RRF 融合 + Cross-Encoder 重排 + 查询路由 + 自适应上下文扩展），
 生成层推荐**本地小模型做调度 + 云端/DSH 模型做推理**。
@@ -142,6 +144,74 @@ SQLite research.db + ChromaDB + documents/ + documents_xml/
 | figures / tables | 13,458 / 4,920 |
 | sentence_links | 296,867（JATS 291,857 + GROBID 3,292） |
 | paper_links | 164,802 |
+
+## 数据审计与入库前闸门
+
+SciPal 现在在数据进入论文图之前先审计，而不是等大库建完才发现问题。
+
+### 已有库审计
+
+```powershell
+python scripts/audit_id_vector_contract.py ^
+  --sqlite data/research.db ^
+  --pg-dsn "postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench" ^
+  --chroma data/chroma ^
+  --out eval/results/id_vector_contract_audit.json
+```
+
+检查：
+
+```text
+Chroma ID -> SQLite 行解析
+SQLite/PG ID 一致性
+章节 / 段 / 句层级
+metadata 完整性
+各集合向量覆盖率
+gold sentence 文本/ID 映射
+```
+
+修复脚本（先 `--dry-run`，应用前停 API）：
+
+```text
+scripts/repair_paragraph_vectors.py
+scripts/backfill_paper_summary_vectors.py
+scripts/backfill_figure_table_vectors.py
+```
+
+### 入库前审计与修复
+
+每个解析后的论文在写库前经过 `services/papers/preflight.py`：
+
+```text
+PDF upload / parse -> DatabaseWriter -> preflight
+PMC / JATS ingest  -> import_jats    -> preflight
+Batch ingest       -> ingest._write_batch -> preflight
+```
+
+修复身份/结构问题：
+
+```text
+缺失/重复的 para_id / section_id / fig_id / table_id / citation_id
+空段落（丢弃）
+悬挂的 section parent（断开）
+缺失标题（设为 Untitled）
+```
+
+硬错误才阻断：
+
+```text
+missing paper_id
+paragraphs / sections / figures / tables 不是 list
+metadata 不是 object
+```
+
+仅调试时关闭：
+
+```powershell
+$env:SCIPAL_INGEST_PREFLIGHT = "0"
+```
+
+目标是把坏数据挡在边界，而不是写入 10 万行后才发现。
 
 ## 快速开始
 
