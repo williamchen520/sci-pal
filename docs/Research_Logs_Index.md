@@ -208,6 +208,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Machine-readable architecture v2.1 | modules, bilingual docs, data_audit, tests 800 | [ARCHITECTURE.json](../ARCHITECTURE.json) |
 
+| 2026-11-03 | Contextual always adoption | 20q R@10 0.65, MRR .425, nDCG .4606; gate pass | [Plan](../docs/开发-主线计划.md) |
+
 ## Rules
 
 ```text

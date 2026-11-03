@@ -47,19 +47,36 @@ $env:SCIPAL_PARAGRAPH_COLLECTION = "paragraphs_contextual"
 | sentence-in-paragraphs | 0.8462 | 0.8846 |
 | refusal | 0.75 | 0.50 |
 
-## 6. 自适应模式（默认）
+## 6. 查询模式
 
-无需设置环境变量；默认即 adaptive。  
-关闭：
+2026-11-03 起，生产默认：
 
-```powershell
-$env:SCIPAL_CONTEXTUAL_MODE = "off"
+```text
+SCIPAL_CONTEXTUAL_MODE=always
 ```
 
-- 简单问题：原 `paragraphs`；
-- 复杂问题：`paragraphs_contextual`。
+所有 simple / complex 问题都走 `paragraphs_contextual`。
 
-### 100 题（top10）
+可选模式：
+
+```powershell
+$env:SCIPAL_CONTEXTUAL_MODE = "adaptive"   # 复杂问题才走 contextual
+$env:SCIPAL_CONTEXTUAL_MODE = "off"        # 只用 paragraphs
+```
+
+选择 `always` 的直接原因：20 题回归里 q009/q015 只在 contextual 下回到 top10。
+
+### 20 题回归（2026-11-03，top10）
+
+| 指标 | 旧基线 | adaptive | always |
+|---|---:|---:|---:|
+| recall@10 | 0.6500 | 0.5750 | **0.6500** |
+| MRR | 0.4164 | 0.4033 | **0.4250** |
+| nDCG@10 | 0.4439 | 0.4153 | **0.4606** |
+| section_recall | — | 0.75 | **0.90** |
+| paragraph_recall | — | 0.80 | **0.85** |
+
+### 历史 100 题（top10）
 
 | 指标 | 基线 | adaptive | 全量 contextual |
 |---|---|---|---|
@@ -92,7 +109,9 @@ $env:SCIPAL_CONTEXTUAL_MODE = "off"
 
 - adaptive：strict +9.7%（100 题），拒答保持 0.75；
 - 全量 contextual：strict +25.2%，拒答降到 0.50；
-- 默认仍关闭；高召回场景可用全量，日常问答建议 adaptive。
+- 2026-11-03 起生产采用 `always`，20 题回归恢复 recall 并提升 MRR/nDCG；
+- **注意**：历史 100 题上全量 contextual 的拒答从 0.75 降到 0.50，需持续监控；
+- 需要保守拒答时设 `SCIPAL_CONTEXTUAL_MODE=adaptive`。
 
 ## 7.1 复杂问题 top10 vs top20 延迟
 
