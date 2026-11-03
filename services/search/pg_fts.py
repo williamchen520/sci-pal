@@ -109,6 +109,50 @@ class PGParagraphFTS(_BasePG):
                 pg.close()
         return [ParagraphHit(**row) for row in rows]
 
+    def recall(
+        self,
+        query: str,
+        *,
+        top_n: int = 200,
+        paper_id: str = "",
+        section_level1: str = "",
+        match: str = "any",
+        term_limit: int = 6,
+    ) -> List[ParagraphHit]:
+        """Cheap GIN recall without database-side ranking."""
+        query = (query or "").strip()
+        if not query:
+            return []
+        if match not in ("any", "all"):
+            raise ValueError("match must be any or all")
+        ts_query = self._query(query, match, term_limit)
+        if not ts_query:
+            return []
+        where = "p.search_vector @@ q.query"
+        params: list = [ts_query]
+        if paper_id:
+            where += " AND p.paper_id = %s"
+            params.append(paper_id)
+        if section_level1:
+            where += " AND p.section_level1 = %s"
+            params.append(section_level1)
+        params.append(top_n)
+        sql = f"""
+            WITH q AS (SELECT to_tsquery('english', %s) AS query)
+            SELECT p.para_id, p.paper_id, p.section_level1, p.section_level2,
+                   p.text, 0.0::float8 AS rank
+            FROM paragraphs p CROSS JOIN q
+            WHERE {where}
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [ParagraphHit(**row) for row in rows]
+
 
 class PGSummaryFTS(_BasePG):
     def search(
@@ -141,6 +185,45 @@ class PGSummaryFTS(_BasePG):
             FROM summaries s CROSS JOIN q
             WHERE {where}
             ORDER BY rank DESC, s.summary_id
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [SummaryHit(**row) for row in rows]
+
+    def recall(
+        self,
+        query: str,
+        *,
+        top_n: int = 200,
+        paper_id: str = "",
+        match: str = "any",
+        term_limit: int = 6,
+    ) -> List[SummaryHit]:
+        query = (query or "").strip()
+        if not query:
+            return []
+        if match not in ("any", "all"):
+            raise ValueError("match must be any or all")
+        ts_query = self._query(query, match, term_limit)
+        if not ts_query:
+            return []
+        where = "s.search_vector @@ q.query"
+        params: list = [ts_query]
+        if paper_id:
+            where += " AND s.paper_id = %s"
+            params.append(paper_id)
+        params.append(top_n)
+        sql = f"""
+            WITH q AS (SELECT to_tsquery('english', %s) AS query)
+            SELECT s.summary_id, s.paper_id, s.section_id, s.level, s.title,
+                   s.text, 0.0::float8 AS rank
+            FROM summaries s CROSS JOIN q
+            WHERE {where}
             LIMIT %s
         """
         pg, close = self._connection()

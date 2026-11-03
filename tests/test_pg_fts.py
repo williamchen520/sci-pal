@@ -54,6 +54,13 @@ class PGParagraphFTSTests(unittest.TestCase):
     def test_empty_query(self):
         self.assertEqual(PGParagraphFTS(connector=lambda: object()).search("  "), [])
 
+    def test_recall_has_no_rank_order(self):
+        fake = FakeCursor([])
+        PGParagraphFTS(connector=lambda: fake).recall("tumor microenvironment", top_n=50)
+        self.assertIn("LIMIT %s", fake.sql)
+        self.assertNotIn("ORDER BY", fake.sql)
+        self.assertEqual(fake.params[-1], 50)
+
 
 class PGSummaryFTSTests(unittest.TestCase):
     def test_summary_hit(self):

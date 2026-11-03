@@ -370,6 +370,32 @@ PG 召回基本没问题
 PG paragraph 3.5–16 秒/query
 ```
 
+根因：
+
+```text
+EXPLAIN ANALYZE:
+  Parallel Seq Scan on paragraphs
+  Filter: search_vector @@ tsquery
+
+宽泛 OR term 命中约 55% 行
+规划器放弃 GIN，改全表扫描
+```
+
+候选召回实验：
+
+```text
+PG recall LIMIT 200 无 ORDER BY
+paragraph recall 0.08
+summary   recall 0.31
+```
+
+结论：
+
+```text
+无排序 LIMIT 不是 top 200 召回
+需要 term frequency / rare-term 选择
+```
+
 ## 10. 下一步
 
 ```text

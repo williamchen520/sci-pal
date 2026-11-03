@@ -251,6 +251,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | PG FTS shadow v2 | match recall .975/1.0; Jaccard .109/.313; slow | [Worklog](../worklogs/2026-11-03-pg-fts-shadow-v2.md) |
 
+| 2026-11-03 | PG FTS recall experiment | unordered LIMIT recall .08; seq scan root cause | [Worklog](../worklogs/2026-11-03-pg-fts-recall.md) |
+
 ## Rules
 
 ```text
