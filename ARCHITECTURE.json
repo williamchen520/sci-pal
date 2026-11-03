@@ -1,7 +1,7 @@
 {
-  "schema_version": "2.0",
+  "schema_version": "2.1",
   "generated_for": "V33.96",
-  "generated_at": "2026-10-31",
+  "generated_at": "2026-11-03",
   "project": {
     "name": "SciPal",
     "display_name": "SciPal 科研文献 RAG 系统",
@@ -28,7 +28,7 @@
     "host": "0.0.0.0",
     "port": 5000,
     "default_url": "http://127.0.0.1:5000",
-    "database": "SQLite data/research.db",
+    "database": "PostgreSQL 16 (runtime reads/main writes) + SQLite data/research.db (FTS/legacy mirror)",
     "vector_store": "ChromaDB data/chroma/"
   },
   "tech_stack": {
@@ -1699,13 +1699,13 @@
       443
     ],
     "data_root": "G:\\sciPal_deploy",
-    "image": "scipal-app:latest",
+    "image": "scipal-app:latest (cf81e86c97c3, 2026-11-03)",
     "models_mount": "/models:ro",
     "offline_bundle": "deploy/build_offline_bundle.py"
   },
   "tests": {
     "framework": "unittest",
-    "count": 735,
+    "count": 800,
     "duration_seconds": 60,
     "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
     "coverage": [
@@ -1740,7 +1740,12 @@
     "claim": "docs/claim-pilot-审讯记录-01.md",
     "claim_online_ingest": "docs/claim-pilot-在线入库-01.md",
     "domain_pack": "packs/biomed-oncoimmuno/README.md",
-    "tests": "docs/评测说明.md"
+    "tests": "docs/评测说明.md",
+    "module_guide_zh": "docs/开发-模块手册.md",
+    "module_guide_en": "docs/en/Modules-and-Routes.md",
+    "architecture_en": "docs/en/Architecture-and-Routes.md",
+    "deployment_preflight": "docs/部署-2026-11-03-Preflight.md",
+    "audit_id_vector": "docs/审计-ID与向量契约结果.md"
   },
   "collaboration": {
     "highest_priority_rules": ".dsh_rules",
@@ -1966,5 +1971,252 @@
       "status": "ok",
       "fallback": "PG error -> SQLite"
     }
+  },
+  "modules": [
+    {
+      "id": "core",
+      "name": "Core / System",
+      "route_prefixes": [
+        "/api/health",
+        "/api/retrieve",
+        "/api/graph",
+        "/api/communities"
+      ],
+      "paths": [
+        "routes/core.py",
+        "routes/system.py",
+        "services/retrieval/",
+        "services/graph/"
+      ],
+      "responsibility": "health, retrieval entry, graph and community stats"
+    },
+    {
+      "id": "search",
+      "name": "Search",
+      "route_prefixes": [
+        "/api/search"
+      ],
+      "paths": [
+        "routes/search.py",
+        "routes/search_downloads.py",
+        "services/search/"
+      ],
+      "responsibility": "local/online search, download, dedup, RRF, rerank"
+    },
+    {
+      "id": "papers",
+      "name": "Papers",
+      "route_prefixes": [
+        "/api/papers"
+      ],
+      "paths": [
+        "routes/papers.py",
+        "routes/papers_actions.py",
+        "services/papers/",
+        "build_db/parse_service.py",
+        "build_db/db_writer.py"
+      ],
+      "responsibility": "paper detail, parse, upload, trace, preflight"
+    },
+    {
+      "id": "ingest",
+      "name": "Ingest",
+      "route_prefixes": [
+        "/api/ingest",
+        "/api/embed"
+      ],
+      "paths": [
+        "routes/ingest.py",
+        "services/search/ingest.py",
+        "build_db/import_jats.py"
+      ],
+      "responsibility": "PMC batch download, parse, write, embed"
+    },
+    {
+      "id": "evidence_qa",
+      "name": "Evidence / QA",
+      "route_prefixes": [
+        "/api/evidence",
+        "/api/qa",
+        "/api/agentic",
+        "/api/verify"
+      ],
+      "paths": [
+        "routes/evidence.py",
+        "routes/qa.py",
+        "services/qa/"
+      ],
+      "responsibility": "evidence packs, QA, answer verification"
+    },
+    {
+      "id": "references_abstracts",
+      "name": "References / Abstracts",
+      "route_prefixes": [
+        "/api/references",
+        "/api/abstracts"
+      ],
+      "paths": [
+        "routes/references.py",
+        "routes/abstracts.py"
+      ],
+      "responsibility": "references and abstract DB"
+    },
+    {
+      "id": "watch",
+      "name": "Watch",
+      "route_prefixes": [
+        "/api/watch"
+      ],
+      "paths": [
+        "routes/watch.py",
+        "services/watch/",
+        "scripts/run_watch_due.py"
+      ],
+      "responsibility": "journal monitoring, digests, feedback"
+    },
+    {
+      "id": "claims",
+      "name": "Claims",
+      "route_prefixes": [
+        "/api/claims"
+      ],
+      "paths": [
+        "routes/claims.py",
+        "services/claims/"
+      ],
+      "responsibility": "claim cards, evidence, decisions"
+    },
+    {
+      "id": "reviews",
+      "name": "Reviews",
+      "route_prefixes": [
+        "/api/reviews",
+        "/api/review",
+        "/api/review-projects"
+      ],
+      "paths": [
+        "routes/reviews.py",
+        "routes/review_actions.py",
+        "routes/systematic_review.py",
+        "services/review/"
+      ],
+      "responsibility": "review generation and systematic review projects"
+    },
+    {
+      "id": "projects_experiments",
+      "name": "Projects / Experiments",
+      "route_prefixes": [
+        "/api/projects",
+        "/api/experiments",
+        "/api/runs"
+      ],
+      "paths": [
+        "routes/projects.py",
+        "routes/experiments.py",
+        "routes/runs.py",
+        "services/tenancy/"
+      ],
+      "responsibility": "projects, experiments, runs, signatures"
+    },
+    {
+      "id": "tenancy",
+      "name": "Tenancy",
+      "route_prefixes": [
+        "/api/auth",
+        "/api/workspaces"
+      ],
+      "paths": [
+        "routes/tenancy.py"
+      ],
+      "responsibility": "auth, users, workspaces, isolation"
+    },
+    {
+      "id": "notes",
+      "name": "Notes",
+      "route_prefixes": [
+        "/api/notes"
+      ],
+      "paths": [
+        "routes/notes.py"
+      ],
+      "responsibility": "paper notes"
+    },
+    {
+      "id": "domain_packs",
+      "name": "Domain packs",
+      "route_prefixes": [
+        "/api/domain-packs"
+      ],
+      "paths": [
+        "routes/domain_packs.py",
+        "packs/"
+      ],
+      "responsibility": "declarative domain packs"
+    },
+    {
+      "id": "guard",
+      "name": "Guard",
+      "route_prefixes": [
+        "/api/guard"
+      ],
+      "paths": [
+        "routes/guard.py",
+        "services/guard/"
+      ],
+      "responsibility": "terminology guard"
+    },
+    {
+      "id": "data",
+      "name": "Data",
+      "route_prefixes": [
+        "/api/data"
+      ],
+      "paths": [
+        "routes/data.py",
+        "services/data/"
+      ],
+      "responsibility": "local tabular profile, aggregate, artifacts"
+    },
+    {
+      "id": "tasks",
+      "name": "Tasks",
+      "route_prefixes": [
+        "/api/tasks"
+      ],
+      "paths": [
+        "routes/tasks.py"
+      ],
+      "responsibility": "unified async task status"
+    },
+    {
+      "id": "protocols",
+      "name": "Protocols",
+      "route_prefixes": [
+        "/api/protocols"
+      ],
+      "paths": [
+        "routes/protocols.py"
+      ],
+      "responsibility": "Protocols.io and lab protocols"
+    }
+  ],
+  "data_audit": {
+    "pre_ingest": "services/papers/preflight.py",
+    "post_ingest": "scripts/audit_id_vector_contract.py",
+    "repair_scripts": [
+      "scripts/repair_paragraph_vectors.py",
+      "scripts/backfill_paper_summary_vectors.py",
+      "scripts/backfill_figure_table_vectors.py"
+    ],
+    "env": {
+      "SCIPAL_INGEST_PREFLIGHT": "1"
+    },
+    "checks": [
+      "paper_id",
+      "paragraph/section/figure/table/citation ids",
+      "empty paragraphs",
+      "dangling section parents",
+      "metadata shape"
+    ]
   }
 }

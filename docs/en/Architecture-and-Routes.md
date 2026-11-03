@@ -1,7 +1,7 @@
 # SciPal Architecture and Routes
 
-> Version: V33.96+ (2026-10-31)  
-> Code: Flask + SQLite + ChromaDB + vanilla HTML/JS  
+> Version: V33.96+ (2026-11-03)  
+> Code: Flask + PostgreSQL 16 + SQLite FTS mirror + ChromaDB + vanilla HTML/JS  
 > Deployment: Docker Compose (app + watch-cron + Caddy)
 >
 > ⚠️ The project is under heavy development (WIP) and must not be used in production. See the README in the repository root for details.
@@ -9,6 +9,8 @@
 ---
 
 > 🚀 **Module onboarding:** [Modules and Routes](Modules-and-Routes.md) — read this first for per-module entry points; this document is for cross-module flow.
+
+> Machine-readable architecture: [ARCHITECTURE.json](../ARCHITECTURE.json)
 
 ## 1. Design Principles
 

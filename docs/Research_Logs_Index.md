@@ -206,6 +206,8 @@ topic 错误可能传导到 coverage audit
 | 2026-11-03 | Deploy preflight build | app cf81e86c97c3; healthy; preflight enabled; 800 tests | [Deploy record](部署-2026-11-03-Preflight.md) |
 | 2026-11-03 | Bilingual module guide | English module/route guide; both READMEs and architecture docs linked | [EN guide](en/Modules-and-Routes.md) |
 
+| 2026-11-03 | Machine-readable architecture v2.1 | modules, bilingual docs, data_audit, tests 800 | [ARCHITECTURE.json](../ARCHITECTURE.json) |
+
 ## Rules
 
 ```text
