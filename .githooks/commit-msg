@@ -1,0 +1,23 @@
+#!/bin/sh
+# Physical enforcement for the architecture constitution.
+#
+# Git passes the commit message file as $1. If ARCHITECTURE.json is staged,
+# the message must contain the exact approval tag.
+
+msg_file="$1"
+staged=$(git diff --cached --name-only --diff-filter=ACMRD -- ARCHITECTURE.json)
+[ -z "$staged" ] && exit 0
+
+if ! grep -qF "[APPROVED_BY_HUMAN]" "$msg_file"; then
+    echo "" >&2
+    echo "commit-msg: ARCHITECTURE.json is staged, but the commit message" >&2
+    echo "            does not contain [APPROVED_BY_HUMAN]." >&2
+    echo "" >&2
+    echo "The JSON is the system constitution. Ask a human for '批准修改'," >&2
+    echo "then commit with:" >&2
+    echo "  git commit -m \"... [APPROVED_BY_HUMAN]\"" >&2
+    echo "" >&2
+    exit 1
+fi
+
+exit 0
