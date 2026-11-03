@@ -9,6 +9,7 @@ import json
 from typing import Dict, List, Any
 from config.settings import DATABASE_PATH
 from services.papers import pg_writes as paper_pg_writes
+from services.papers import preflight
 
 class DatabaseWriter:
     """Writes parsed paper data into the database"""

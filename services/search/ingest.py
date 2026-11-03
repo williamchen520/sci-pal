@@ -26,6 +26,7 @@ from pathlib import Path
 
 from config.paths import EMBEDDING_MODEL
 from services.papers import pg_writes as paper_pg_writes
+from services.papers import preflight
 from services.papers.pg_writes import update_metadata_if_exists
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
@@ -284,6 +285,12 @@ class IngestService:
                 for item in parsed:
                     data = item["data"]
                     paper_id = _paper_id(item["pmc_id"])
+                    if preflight.enabled():
+                        report = preflight.audit_and_repair(data, paper_id, "pmc_xml")
+                        if report.errors:
+                            raise preflight.PreflightError(
+                                f"{paper_id}: {'; '.join(report.errors)}"
+                            )
                     if has_fts:
                         # REPLACE does not fire DELETE triggers by default, so the
                         # old papers_fts row must be removed explicitly.
