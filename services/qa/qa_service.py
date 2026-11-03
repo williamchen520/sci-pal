@@ -236,7 +236,6 @@ class QAService:
             router = DomainRouter()
             distribution = router.query_distribution(question)
             top_domain = max(distribution, key=distribution.get)
-            threshold = router.refusal_threshold(top_domain)
             sufficiency = retrieval_result.get("sufficiency") or {}
             if not sufficiency:
                 from services.qa.sufficiency import evaluate as evaluate_sufficiency
@@ -253,10 +252,7 @@ class QAService:
                     )
                 ]
                 sufficiency = evaluate_sufficiency(question, evidence_items)
-            if (
-                not sufficiency.get("sufficient", False)
-                or float(sufficiency.get("query_coverage", 1.0)) < threshold
-            ):
+            if not sufficiency.get("sufficient", False):
                 print(f"Domain refusal: domain={top_domain}, sufficiency={sufficiency}")
                 return {
                     "answer": (

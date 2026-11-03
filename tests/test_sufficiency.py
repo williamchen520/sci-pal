@@ -31,6 +31,51 @@ class SufficiencyTests(unittest.TestCase):
         )
         self.assertFalse(result["sufficient"])
 
+    def test_cross_document_union_does_not_count(self) -> None:
+        evidence = [
+            {"text": "Boiling is a phase transition.", "score": 0.95},
+            {"text": "Mercury is toxic to aquatic organisms.", "score": 0.004},
+        ]
+        result = evaluate("What is the boiling point of mercury?", evidence)
+        self.assertFalse(result["sufficient"])
+        self.assertEqual(result["top_item_coverage"], 0.3333)
+
+    def test_short_question_needs_full_coverage(self) -> None:
+        evidence = [
+            {"text": "France is a country in Europe.", "score": 0.9},
+            {"text": "Paris is the capital city.", "score": 0.8},
+        ]
+        result = evaluate("What is the capital of France?", evidence)
+        self.assertFalse(result["sufficient"])
+        self.assertEqual(result["min_coverage"], 1.0)
+
+    def test_four_token_question_allows_half_coverage(self) -> None:
+        evidence = [
+            {
+                "text": "ICI rechallenge is increasingly used in hepatocellular carcinoma.",
+                "score": 0.9,
+            }
+        ]
+        result = evaluate(
+            "What is ICI rechallenge in hepatocellular carcinoma?", evidence
+        )
+        self.assertTrue(result["sufficient"])
+        self.assertEqual(result["min_coverage"], 0.5)
+
+    def test_long_question_allows_partial_coverage(self) -> None:
+        evidence = [
+            {
+                "text": "Single-cell analysis reveals heterogeneity in the tumor microenvironment.",
+                "score": 0.9,
+            }
+        ]
+        result = evaluate(
+            "How does single-cell analysis reveal tumor heterogeneity and treatment resistance?",
+            evidence,
+        )
+        self.assertTrue(result["sufficient"])
+        self.assertLess(result["min_coverage"], 0.5)
+
     def test_empty(self) -> None:
         self.assertFalse(evaluate("Anything?", [])["sufficient"])
 
