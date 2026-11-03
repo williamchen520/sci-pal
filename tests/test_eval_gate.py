@@ -17,6 +17,17 @@ class GateTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertEqual(result["failures"][0]["metric"], "recall@10")
 
+    def test_rejects_different_id_sets(self) -> None:
+        result = compare(
+            {"recall@10": 0.5},
+            {"recall@10": 0.5},
+            0.02,
+            ["q001", "q002"],
+            ["q001", "q003"],
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["failures"][0]["metric"], "gold_id_set")
+
 
 if __name__ == "__main__":
     unittest.main()
