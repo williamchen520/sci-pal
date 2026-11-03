@@ -263,6 +263,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | PG FTS rerank 100 v2 | cand100 .501; RRF .470; category-specific | [Worklog](../worklogs/2026-11-04-pg-fts-rerank-100-v2.md) |
 
+| 2026-11-04 | PG FTS latency | 2s target; term2 2.74s nDCG .513; term3 4.16s .623 | [Worklog](../worklogs/2026-11-04-pg-fts-latency.md) |
+
 ## Rules
 
 ```text
