@@ -210,6 +210,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Contextual always adoption | 20q R@10 0.65, MRR .425, nDCG .4606; gate pass | [Plan](../docs/开发-主线计划.md) |
 
+| 2026-11-03 | Architecture-as-code guardrails | validate_arch + scaffold_from_arch + development workflow | [流程规范](开发流程规范.md) |
+
 ## Rules
 
 ```text

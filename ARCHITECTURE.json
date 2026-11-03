@@ -1745,7 +1745,8 @@
     "module_guide_en": "docs/en/Modules-and-Routes.md",
     "architecture_en": "docs/en/Architecture-and-Routes.md",
     "deployment_preflight": "docs/部署-2026-11-03-Preflight.md",
-    "audit_id_vector": "docs/审计-ID与向量契约结果.md"
+    "audit_id_vector": "docs/审计-ID与向量契约结果.md",
+    "development_flow": "docs/开发流程规范.md"
   },
   "collaboration": {
     "highest_priority_rules": ".dsh_rules",
@@ -2218,5 +2219,12 @@
       "dangling section parents",
       "metadata shape"
     ]
+  },
+  "codegen": {
+    "validator": "scripts/validate_arch.py",
+    "scaffold": "scripts/scaffold_from_arch.py",
+    "node_field": "api.endpoints[].codegen",
+    "planned_status": "planned",
+    "rule": "JSON first; validate before Python; no wild routes"
   }
 }
