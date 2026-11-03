@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.fts_rerank_shadow import _case_id, _gold_para, _load_cases, _ndcg, _query
+from scripts.fts_rerank_shadow import _case_id, _gold_para, _load_cases, _ndcg, _query, _rrf
 
 
 class FtsRerankShadowTests(unittest.TestCase):
@@ -20,6 +20,9 @@ class FtsRerankShadowTests(unittest.TestCase):
         self.assertEqual(_case_id(cases[0]), "q1")
         self.assertEqual(_query(cases[0]), "What is X?")
         self.assertEqual(_gold_para(cases[0]), "para_p")
+
+    def test_rrf_keeps_both_rankings(self):
+        self.assertEqual(_rrf(["a", "b", "c"], ["b", "c", "a"], top_k=3), ["b", "a", "c"])
 
     def test_ndcg_binary(self):
         self.assertEqual(_ndcg(["p2"], "p2"), 1.0)

@@ -481,6 +481,24 @@ PG 3.79s + rerank 1.32s
 PG raw 明显低，reranker 必要
 ```
 
+### 9.5 v7：candidates 100 + RRF
+
+```text
+SQLite       0.466
+PG+rerank    0.501
+PG+RRF       0.470
+```
+
+分层：
+
+```text
+factual / auto   -> rerank only
+comparison       -> SQLite
+qualifier/methods/multi_hop -> RRF
+```
+
+RRF 全局启用会拉低总体，不能一刀切。
+
 ## 10. 下一步
 
 ```text
