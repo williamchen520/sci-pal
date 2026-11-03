@@ -11,6 +11,10 @@
 > 改路由前先改 JSON（新路由标 `status: "planned"`），运行 `python scripts/validate_arch.py`，
 > 再写 Python。详见 [docs/开发流程规范.md](docs/开发流程规范.md)。
 
+> **全自动施工闭环**：默认自主改 JSON → 写代码 → validate → 全量测试 → 写 Worklog → 建 PR。
+> 只有循环报错、核心鉴权、不可逆数据操作、研究裁决、>300 行重构才停下来问。
+> PR 状态 `Pending Review`；只有人类回复 **“批准合并”** 才能合并。
+
 ## 项目概述
 
 **Sci-Pal** 是一个本地化部署的科研文献 RAG（检索增强生成）系统，用于：

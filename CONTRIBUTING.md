@@ -19,6 +19,16 @@ Before adding, changing, or removing a route:
 
 Wild routes that are absent from the JSON are rejected. See [docs/开发流程规范.md](docs/开发流程规范.md).
 
+## Autonomous Build and PR Approval
+
+Default workflow: edit JSON → implement → run `validate_arch.py` → run the full test suite → write a worklog → open a PR.
+
+- Fix failures yourself and rerun until the suite is green.
+- Stop only for an unsolvable loop, core auth/tenancy changes, irreversible data operations, research decisions, or a >300-line refactor.
+- Write `worklogs/YYYY-MM-DD-<topic>.md` and include modules, business-logic changes, test pass rate, and external-API/data risks.
+- PRs are opened as `Pending Review`. **Do not merge until a human replies exactly “批准合并”.**
+- PRs with more than 300 net changed lines must be marked `[LARGE]` and require dedicated review.
+
 ## Before You Start
 
 - Read the [README](README.md) and the [architecture overview](docs/en/Architecture-Overview.md).

@@ -12,6 +12,14 @@
 - [ ] `python scripts/validate_arch.py` 通过
 - [ ] 无 JSON 之外的 wild route
 
+### 0.1) 全自动施工与审批
+
+- [ ] Worklog：`worklogs/YYYY-MM-DD-<topic>.md`
+- [ ] PR 状态：`Pending Review`
+- [ ] 只有人类明确回复“批准合并”才会 merge
+- [ ] 净变更行数：____（>300 行必须在标题加 `[LARGE]`）
+- [ ] 风险：外部 API / 写库 / 权限变化已列出
+
 ### 1) 这个 PR 解决了什么单一主题？（对应规则 1）
 
 <!-- 一句话说明。若包含多个主题，拆成多个 PR。 -->

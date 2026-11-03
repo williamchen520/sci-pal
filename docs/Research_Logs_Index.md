@@ -212,6 +212,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | Architecture-as-code guardrails | validate_arch + scaffold_from_arch + development workflow | [流程规范](开发流程规范.md) |
 
+| 2026-11-03 | Autonomous build + PR approval policy | full-auto loop; Pending Review; 批准合并; >300 lines [LARGE] | [Policy worklog](../worklogs/2026-11-03-autonomy-policy.md) |
+
 ## Rules
 
 ```text
