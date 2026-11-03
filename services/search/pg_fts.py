@@ -54,10 +54,65 @@ class _BasePG:
 
         return pg_connection(self.dsn), True
 
-    def _query(self, query: str, match: str, term_limit: int) -> str:
-        terms = _extract_keywords(query)[: max(1, min(term_limit, 12))]
-        operator = " | " if match == "any" else " & "
-        return operator.join(terms)
+    def _lexemes(self, pg, terms: list[str], source: str) -> list[str]:
+        """Map query words to PG lexemes and rank them by rarity."""
+        try:
+            rows = pg.execute(
+                "SELECT t.term, l.lexeme FROM unnest(%s::text[]) AS t(term), "
+                "LATERAL unnest(to_tsvector('english', t.term)) AS l(lexeme)",
+                (terms,),
+            ).fetchall()
+        except Exception:  # noqa: BLE001 - optional stats path
+            return terms
+        by_term: dict[str, list[str]] = {}
+        try:
+            for row in rows:
+                by_term.setdefault(row["term"], []).append(row["lexeme"])
+        except Exception:  # noqa: BLE001 - fake/absent stats rows
+            return terms
+        lexemes = []
+        for term in terms:
+            lexemes.extend(by_term.get(term, []))
+        return list(dict.fromkeys(lexemes)) or terms
+
+    def _query(
+        self,
+        query: str,
+        match: str,
+        term_limit: int,
+        *,
+        pg=None,
+        source: str = "paragraphs",
+    ) -> str:
+        limit = max(1, min(term_limit, 12))
+        terms = _extract_keywords(query)
+        if not terms:
+            return ""
+        if pg is None:
+            pg, close = self._connection()
+            try:
+                return self._query(query, match, term_limit, pg=pg, source=source)
+            finally:
+                if close:
+                    pg.close()
+        lexemes = self._lexemes(pg, terms, source)
+        try:
+            rows = pg.execute(
+                "SELECT word, nentry FROM fts_term_stats WHERE source = %s AND word = ANY(%s)",
+                (source, lexemes),
+            ).fetchall()
+        except Exception:  # noqa: BLE001 - stats table may not exist yet
+            return (" | " if match == "any" else " & ").join(lexemes)
+        try:
+            rarity = {row["word"]: int(row["nentry"]) for row in rows}
+        except Exception:  # noqa: BLE001 - fake/absent stats rows
+            return (" | " if match == "any" else " & ").join(lexemes)
+        ranked = sorted(
+            enumerate(lexemes),
+            key=lambda item: (rarity.get(item[1], 10**12), item[0]),
+        )
+        selected = [word for _, word in ranked[:limit]]
+        return (" | " if match == "any" else " & ").join(selected or lexemes)
 
     @property
     def _rank_expr(self) -> str:
@@ -109,6 +164,50 @@ class PGParagraphFTS(_BasePG):
                 pg.close()
         return [ParagraphHit(**row) for row in rows]
 
+    def recall(
+        self,
+        query: str,
+        *,
+        top_n: int = 200,
+        paper_id: str = "",
+        section_level1: str = "",
+        match: str = "any",
+        term_limit: int = 6,
+    ) -> List[ParagraphHit]:
+        """Cheap GIN recall without database-side ranking."""
+        query = (query or "").strip()
+        if not query:
+            return []
+        if match not in ("any", "all"):
+            raise ValueError("match must be any or all")
+        ts_query = self._query(query, match, term_limit)
+        if not ts_query:
+            return []
+        where = "p.search_vector @@ q.query"
+        params: list = [ts_query]
+        if paper_id:
+            where += " AND p.paper_id = %s"
+            params.append(paper_id)
+        if section_level1:
+            where += " AND p.section_level1 = %s"
+            params.append(section_level1)
+        params.append(top_n)
+        sql = f"""
+            WITH q AS (SELECT to_tsquery('english', %s) AS query)
+            SELECT p.para_id, p.paper_id, p.section_level1, p.section_level2,
+                   p.text, 0.0::float8 AS rank
+            FROM paragraphs p CROSS JOIN q
+            WHERE {where}
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [ParagraphHit(**row) for row in rows]
+
 
 class PGSummaryFTS(_BasePG):
     def search(
@@ -141,6 +240,45 @@ class PGSummaryFTS(_BasePG):
             FROM summaries s CROSS JOIN q
             WHERE {where}
             ORDER BY rank DESC, s.summary_id
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [SummaryHit(**row) for row in rows]
+
+    def recall(
+        self,
+        query: str,
+        *,
+        top_n: int = 200,
+        paper_id: str = "",
+        match: str = "any",
+        term_limit: int = 6,
+    ) -> List[SummaryHit]:
+        query = (query or "").strip()
+        if not query:
+            return []
+        if match not in ("any", "all"):
+            raise ValueError("match must be any or all")
+        ts_query = self._query(query, match, term_limit)
+        if not ts_query:
+            return []
+        where = "s.search_vector @@ q.query"
+        params: list = [ts_query]
+        if paper_id:
+            where += " AND s.paper_id = %s"
+            params.append(paper_id)
+        params.append(top_n)
+        sql = f"""
+            WITH q AS (SELECT to_tsquery('english', %s) AS query)
+            SELECT s.summary_id, s.paper_id, s.section_id, s.level, s.title,
+                   s.text, 0.0::float8 AS rank
+            FROM summaries s CROSS JOIN q
+            WHERE {where}
             LIMIT %s
         """
         pg, close = self._connection()

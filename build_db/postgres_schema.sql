@@ -748,3 +748,16 @@ CREATE INDEX IF NOT EXISTS "sentences_search_idx" ON "sentences" USING GIN (sear
 
 ALTER TABLE "summaries" ADD COLUMN IF NOT EXISTS search_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(title,'') || ' ' || coalesce(text,''))) STORED;
 CREATE INDEX IF NOT EXISTS "summaries_search_idx" ON "summaries" USING GIN (search_vector);
+
+
+-- FTS rare-term selection (rebuild with scripts/build_pg_term_stats.py)
+CREATE TABLE IF NOT EXISTS fts_term_stats (
+    source TEXT NOT NULL,
+    word TEXT NOT NULL,
+    ndoc INTEGER NOT NULL,
+    nentry BIGINT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (source, word)
+);
+CREATE INDEX IF NOT EXISTS fts_term_stats_rarity_idx
+    ON fts_term_stats (source, nentry);

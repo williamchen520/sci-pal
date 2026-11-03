@@ -370,6 +370,65 @@ PG 召回基本没问题
 PG paragraph 3.5–16 秒/query
 ```
 
+根因：
+
+```text
+EXPLAIN ANALYZE:
+  Parallel Seq Scan on paragraphs
+  Filter: search_vector @@ tsquery
+
+宽泛 OR term 命中约 55% 行
+规划器放弃 GIN，改全表扫描
+```
+
+候选召回实验：
+
+```text
+PG recall LIMIT 200 无 ORDER BY
+paragraph recall 0.08
+summary   recall 0.31
+```
+
+结论：
+
+```text
+无排序 LIMIT 不是 top 200 召回
+需要 term frequency / rare-term 选择
+```
+
+### 9.2 v4：term frequency / rare-term
+
+统计表：
+
+```text
+paragraphs 394,025 terms
+summaries   84,059 terms
+sentences  393,781 terms
+```
+
+结果：
+
+```text
+paragraph Jaccard      0.200
+paragraph match recall 0.975
+summary Jaccard        0.411
+summary match recall   0.985
+```
+
+延迟：
+
+```text
+2.5–5.2 秒/query
+```
+
+结论：
+
+```text
+rare-term 选词明显改善 Jaccard
+match recall 保持 0.975/0.985
+ranking 仍是主要差距
+```
+
 ## 10. 下一步
 
 ```text
