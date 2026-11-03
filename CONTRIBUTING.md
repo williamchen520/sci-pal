@@ -6,6 +6,19 @@ Thanks for your interest in SciPal. We welcome bug reports, design feedback, doc
 
 **Please open an issue before you start coding.** This lets us confirm the problem, agree on scope, and avoid duplicate work. Pull requests that were not discussed in an issue may be closed without review.
 
+## Architecture-as-Code (Default Rule)
+
+`ARCHITECTURE.json` is the single source of truth for routes.
+
+Before adding, changing, or removing a route:
+
+1. edit `ARCHITECTURE.json` first; mark new nodes `"status": "planned"`;
+2. run `python scripts/validate_arch.py`;
+3. only then write the Flask route/handler (or scaffold it with `python scripts/scaffold_from_arch.py --node <id>`);
+4. register the blueprint, mark the node `implemented`, and validate again.
+
+Wild routes that are absent from the JSON are rejected. See [docs/开发流程规范.md](docs/开发流程规范.md).
+
 ## Before You Start
 
 - Read the [README](README.md) and the [architecture overview](docs/en/Architecture-Overview.md).

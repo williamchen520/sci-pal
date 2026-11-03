@@ -7,6 +7,10 @@
 > 本文件帮助 AI 代码助手快速理解项目架构、代码规范和开发约定。
 > 每次修改代码前请先阅读本文件。
 
+> **架构即代码（最高优先）**：路由以 [`ARCHITECTURE.json`](ARCHITECTURE.json) 为唯一真理源。
+> 改路由前先改 JSON（新路由标 `status: "planned"`），运行 `python scripts/validate_arch.py`，
+> 再写 Python。详见 [docs/开发流程规范.md](docs/开发流程规范.md)。
+
 ## 项目概述
 
 **Sci-Pal** 是一个本地化部署的科研文献 RAG（检索增强生成）系统，用于：
