@@ -231,6 +231,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | P0 backup deployed | first archive 3.56 GB; integrity ok; 30d retention exceeds disk | [Worklog](../worklogs/2026-11-03-p0-backup.md) |
 
+| 2026-11-03 | P0 backup retention policy | daily DB + weekly full; 30/28 days | [Worklog](../worklogs/2026-11-03-p0-backup-policy.md) |
+
 ## Rules
 
 ```text
