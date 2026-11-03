@@ -1,0 +1,152 @@
+"""PostgreSQL FTS adapters for paragraphs and section summaries.
+
+These are shadow-read candidates: they do not change production routing yet.
+"""
+
+from __future__ import annotations
+
+import os
+from dataclasses import asdict, dataclass
+from typing import List, Optional
+
+from services.search.fts_query_builder import _extract_keywords
+
+
+@dataclass
+class ParagraphHit:
+    para_id: str
+    paper_id: str
+    section_level1: Optional[str]
+    section_level2: Optional[str]
+    text: str
+    rank: float
+
+    def as_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class SummaryHit:
+    summary_id: str
+    paper_id: str
+    section_id: Optional[str]
+    level: Optional[int]
+    title: Optional[str]
+    text: str
+    rank: float
+
+    def as_dict(self) -> dict:
+        return asdict(self)
+
+
+class _BasePG:
+    def __init__(self, dsn: Optional[str] = None, *, connector=None, ranker: str = "rank_cd"):
+        self.dsn = dsn or os.environ.get("SCIPAL_PG_DSN", "")
+        self._connector = connector
+        if ranker not in ("rank", "rank_cd"):
+            raise ValueError("ranker must be rank or rank_cd")
+        self.ranker = ranker
+
+    def _connection(self):
+        if self._connector is not None:
+            return self._connector(), False
+        from services.db.pg_pool import pg_connection
+
+        return pg_connection(self.dsn), True
+
+    def _query(self, query: str, match: str, term_limit: int) -> str:
+        terms = _extract_keywords(query)[: max(1, min(term_limit, 12))]
+        operator = " | " if match == "any" else " & "
+        return operator.join(terms)
+
+    @property
+    def _rank_expr(self) -> str:
+        return "ts_rank_cd" if self.ranker == "rank_cd" else "ts_rank"
+
+
+class PGParagraphFTS(_BasePG):
+    def search(
+        self,
+        query: str,
+        *,
+        top_k: int = 20,
+        paper_id: str = "",
+        section_level1: str = "",
+        match: str = "any",
+        term_limit: int = 12,
+    ) -> List[ParagraphHit]:
+        query = (query or "").strip()
+        if not query:
+            return []
+        if match not in ("any", "all"):
+            raise ValueError("match must be any or all")
+        ts_query = self._query(query, match, term_limit)
+        if not ts_query:
+            return []
+        where = "p.search_vector @@ q.query"
+        params: list = [ts_query]
+        if paper_id:
+            where += " AND p.paper_id = %s"
+            params.append(paper_id)
+        if section_level1:
+            where += " AND p.section_level1 = %s"
+            params.append(section_level1)
+        params.append(top_k)
+        sql = f"""
+            WITH q AS (SELECT to_tsquery('english', %s) AS query)
+            SELECT p.para_id, p.paper_id, p.section_level1, p.section_level2,
+                   p.text, {self._rank_expr}(p.search_vector, q.query) AS rank
+            FROM paragraphs p CROSS JOIN q
+            WHERE {where}
+            ORDER BY rank DESC, p.para_id
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [ParagraphHit(**row) for row in rows]
+
+
+class PGSummaryFTS(_BasePG):
+    def search(
+        self,
+        query: str,
+        *,
+        top_k: int = 3,
+        paper_id: str = "",
+        match: str = "any",
+        term_limit: int = 8,
+    ) -> List[SummaryHit]:
+        query = (query or "").strip()
+        if not query:
+            return []
+        if match not in ("any", "all"):
+            raise ValueError("match must be any or all")
+        ts_query = self._query(query, match, term_limit)
+        if not ts_query:
+            return []
+        where = "s.search_vector @@ q.query"
+        params: list = [ts_query]
+        if paper_id:
+            where += " AND s.paper_id = %s"
+            params.append(paper_id)
+        params.append(top_k)
+        sql = f"""
+            WITH q AS (SELECT to_tsquery('english', %s) AS query)
+            SELECT s.summary_id, s.paper_id, s.section_id, s.level, s.title,
+                   s.text, {self._rank_expr}(s.search_vector, q.query) AS rank
+            FROM summaries s CROSS JOIN q
+            WHERE {where}
+            ORDER BY rank DESC, s.summary_id
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [SummaryHit(**row) for row in rows]

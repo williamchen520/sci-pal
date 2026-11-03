@@ -247,6 +247,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | FTS coverage repair | paragraphs 167388; summaries 69128; triggers; 831 tests | [Worklog](../worklogs/2026-11-03-fts-coverage.md) |
 
+| 2026-11-03 | PG FTS adapters + shadow | 20q; paragraph Jaccard .020; summary .242; slow | [Worklog](../worklogs/2026-11-03-pg-fts-shadow.md) |
+
 ## Rules
 
 ```text

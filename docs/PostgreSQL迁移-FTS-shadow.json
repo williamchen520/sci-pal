@@ -1,0 +1,1254 @@
+{
+  "queries": 20,
+  "top_k": 10,
+  "paragraph": {
+    "avg_jaccard": 0.019642242862057104,
+    "cases": [
+      {
+        "id": "q001",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0044",
+          "para_paper_PMC12707946_2d3bcc67_0028",
+          "para_paper_PMC12707946_2d3bcc67_0015",
+          "para_paper_PMC12707946_2d3bcc67_0024",
+          "para_paper_PMC12707946_2d3bcc67_0029",
+          "para_paper_PMC12707946_2d3bcc67_0064",
+          "para_paper_PMC12707946_2d3bcc67_0017",
+          "para_paper_PMC12707946_2d3bcc67_0049",
+          "para_paper_PMC12707946_2d3bcc67_0055",
+          "para_paper_PMC12707946_2d3bcc67_0020"
+        ],
+        "pg_top": [
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "para_paper_PMC12707946_2d3bcc67_0037",
+          "para_paper_PMC12707946_2d3bcc67_0040",
+          "para_paper_PMC12807518_6dfefde2_0038",
+          "paper_PMC13694692_f7e8b1bc_xml_para_00008",
+          "paper_PMC13625931_70a7768d_xml_para_00157",
+          "para_paper_PMC13613113_427d8865_0025",
+          "para_paper_PMC13613722_dffed48e_0054"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q002",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0013",
+          "para_paper_PMC12707946_2d3bcc67_0036",
+          "para_paper_PMC12707946_2d3bcc67_0008",
+          "paper_PMC13625931_70a7768d_xml_para_00097",
+          "para_paper_PMC12707946_2d3bcc67_0039",
+          "para_paper_PMC12707946_2d3bcc67_0041",
+          "para_paper_PMC12707946_2d3bcc67_0061",
+          "para_paper_PMC12707946_2d3bcc67_0017",
+          "para_paper_PMC12707946_2d3bcc67_0058",
+          "para_paper_PMC12707946_2d3bcc67_0059"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "para_paper_PMC13612373_891143fb_0056",
+          "paper_PMC13630834_966fae7d_xml_para_00009",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "para_paper_PMC12707946_2d3bcc67_0037",
+          "paper_PMC13632211_bdcc18c8_xml_para_00017"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q003",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0035",
+          "para_paper_PMC12707946_2d3bcc67_0059",
+          "para_paper_PMC12707946_2d3bcc67_0040",
+          "para_paper_PMC12707946_2d3bcc67_0034",
+          "para_paper_PMC12707946_2d3bcc67_0042",
+          "para_paper_PMC12707946_2d3bcc67_0014",
+          "para_paper_PMC12707946_2d3bcc67_0008",
+          "para_paper_PMC12707946_2d3bcc67_0030",
+          "para_paper_PMC12707946_2d3bcc67_0036",
+          "paper_PMC13631683_c8dd1d14_xml_para_00016"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13632354_c700b68e_xml_para_00024",
+          "paper_PMC13632255_7aecae6b_xml_para_00015",
+          "para_paper_PMC13069283_90be962c_0051",
+          "paper_PMC13615264_cc45d4a2_xml_para_00022",
+          "paper_PMC13630072_6dc89311_xml_para_00028",
+          "paper_PMC13601635_f6a790d6_xml_para_00136",
+          "paper_PMC13632255_7aecae6b_xml_para_00013"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q004",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0019",
+          "para_paper_PMC12707946_2d3bcc67_0020",
+          "para_paper_PMC12707946_2d3bcc67_0037",
+          "para_paper_PMC12707946_2d3bcc67_0018",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC12707946_2d3bcc67_0028",
+          "para_paper_PMC12707946_2d3bcc67_0029",
+          "para_paper_PMC12707946_2d3bcc67_0025",
+          "para_paper_PMC12707946_2d3bcc67_0030",
+          "para_paper_PMC12707946_2d3bcc67_0034"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "paper_PMC13694692_f7e8b1bc_xml_para_00008",
+          "para_paper_PMC12707946_2d3bcc67_0037",
+          "para_paper_PMC12707946_2d3bcc67_0040",
+          "paper_PMC13632354_c700b68e_xml_para_00024",
+          "para_paper_PMC12807518_6dfefde2_0038",
+          "paper_PMC13625931_70a7768d_xml_para_00157",
+          "para_paper_PMC12707946_2d3bcc67_0020"
+        ],
+        "common": 3,
+        "jaccard": 0.17647058823529413,
+        "sqlite_top_in_pg": 3,
+        "pg_top_in_sqlite": 3
+      },
+      {
+        "id": "q005",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0039",
+          "para_paper_PMC12707946_2d3bcc67_0042",
+          "para_paper_PMC12707946_2d3bcc67_0058",
+          "para_paper_PMC12707946_2d3bcc67_0008",
+          "para_paper_PMC12707946_2d3bcc67_0062",
+          "para_paper_PMC12707946_2d3bcc67_0014",
+          "para_paper_PMC12707946_2d3bcc67_0013",
+          "para_paper_PMC12707946_2d3bcc67_0027",
+          "para_paper_PMC12707946_2d3bcc67_0036",
+          "para_paper_PMC12707946_2d3bcc67_0041"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "paper_PMC13694692_f7e8b1bc_xml_para_00008",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "para_paper_PMC13613722_dffed48e_0054",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "para_paper_PMC13613722_dffed48e_0053",
+          "para_paper_PMC12707946_2d3bcc67_0031",
+          "paper_PMC13615055_b9d17cde_xml_para_00026"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q006",
+        "sqlite_top": [
+          "para_paper_PMC12707966_ae9a35bd_0006",
+          "paper_PMC13683985_1af5b8e5_xml_para_00001",
+          "paper_PMC13631557_3e7af6bf_xml_para_00098",
+          "paper_PMC13655921_f697a5bb_xml_para_00017",
+          "paper_PMC13613964_0b39cae9_mineru_para_00004",
+          "para_paper_PMC12707966_ae9a35bd_0013",
+          "paper_PMC13612816_4ecbe955_xml_para_00014",
+          "paper_PMC13601432_fca91059_xml_para_00013",
+          "paper_PMC13617522_4da532d5_xml_para_00070",
+          "paper_PMC13621659_cdba246e_xml_para_00002"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "paper_PMC13691269_3d6abec9_xml_para_00020",
+          "paper_PMC13615756_35947933_xml_para_00017",
+          "paper_PMC13623731_af380964_xml_para_00004",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "paper_PMC13629200_8d5a8306_xml_para_00037",
+          "paper_PMC13691269_3d6abec9_xml_para_00014",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "paper_PMC13614331_0e7b48fd_xml_para_00045",
+          "paper_PMC13627489_17f060f0_xml_para_00005"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q007",
+        "sqlite_top": [
+          "paper_PMC13655921_f697a5bb_xml_para_00060",
+          "paper_PMC13655921_f697a5bb_xml_para_00017",
+          "para_paper_PMC12707966_ae9a35bd_0046",
+          "para_paper_PMC12707966_ae9a35bd_0012",
+          "paper_PMC13655921_f697a5bb_xml_para_00053",
+          "para_paper_PMC12707966_ae9a35bd_0055",
+          "paper_PMC13655921_f697a5bb_xml_para_00020",
+          "paper_PMC13626747_db389f0a_xml_para_00084",
+          "paper_PMC13626827_98d88e16_xml_para_00018",
+          "para_paper_PMC12707966_ae9a35bd_0013"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "paper_PMC13320822_26e91dc2_xml_para_00034",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "paper_PMC13631347_9bba47ae_xml_para_00021",
+          "paper_PMC13615818_420937c7_xml_para_00044",
+          "paper_PMC13627653_001f242f_xml_para_00000",
+          "paper_PMC13615818_420937c7_xml_para_00048",
+          "paper_PMC13626827_98d88e16_xml_para_00013"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q011",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0014",
+          "para_paper_PMC12707946_2d3bcc67_0063",
+          "para_paper_PMC12707946_2d3bcc67_0036",
+          "para_paper_PMC12707946_2d3bcc67_0021",
+          "para_paper_PMC12707946_2d3bcc67_0034",
+          "para_paper_PMC12707946_2d3bcc67_0028",
+          "para_paper_PMC12707946_2d3bcc67_0029",
+          "para_paper_PMC12707946_2d3bcc67_0058",
+          "para_paper_PMC12707946_2d3bcc67_0024",
+          "para_paper_PMC12707946_2d3bcc67_0062"
+        ],
+        "pg_top": [
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "paper_PMC13615818_420937c7_xml_para_00048",
+          "para_paper_PMC12707946_2d3bcc67_0037",
+          "para_paper_PMC13612676_5962339f_0028",
+          "paper_PMC13451858_f5ad4113_xml_para_00001"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q012",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0067",
+          "para_paper_PMC12707946_2d3bcc67_0040",
+          "para_paper_PMC12707946_2d3bcc67_0054",
+          "para_paper_PMC12707946_2d3bcc67_0036",
+          "para_paper_PMC12707946_2d3bcc67_0062",
+          "para_paper_PMC12707946_2d3bcc67_0042",
+          "para_paper_PMC12707946_2d3bcc67_0041",
+          "para_paper_PMC12707946_2d3bcc67_0039",
+          "para_paper_PMC12707946_2d3bcc67_0037",
+          "para_paper_PMC12707946_2d3bcc67_0021"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13694692_f7e8b1bc_xml_para_00008",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "para_paper_PMC13613722_dffed48e_0054",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "para_paper_PMC13613722_dffed48e_0053",
+          "para_paper_PMC12707946_2d3bcc67_0031"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q013",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0040",
+          "para_paper_PMC12707946_2d3bcc67_0029",
+          "para_paper_PMC12707946_2d3bcc67_0019",
+          "para_paper_PMC12707946_2d3bcc67_0062",
+          "paper_PMC13625931_70a7768d_xml_para_00097",
+          "paper_PMC13615818_420937c7_xml_para_00052",
+          "para_paper_PMC12707946_2d3bcc67_0021",
+          "para_paper_PMC12707946_2d3bcc67_0028",
+          "para_paper_PMC12707946_2d3bcc67_0067",
+          "para_paper_PMC12707946_2d3bcc67_0013"
+        ],
+        "pg_top": [
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13614617_b028aa74_0009",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "paper_PMC13694692_f7e8b1bc_xml_para_00008",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "para_paper_PMC12707946_2d3bcc67_0040",
+          "para_paper_PMC13069283_90be962c_0051",
+          "paper_PMC13615818_420937c7_xml_para_00052",
+          "paper_PMC13630834_966fae7d_xml_para_00009"
+        ],
+        "common": 2,
+        "jaccard": 0.1111111111111111,
+        "sqlite_top_in_pg": 2,
+        "pg_top_in_sqlite": 2
+      },
+      {
+        "id": "q021",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0039",
+          "para_paper_PMC12707946_2d3bcc67_0013",
+          "para_paper_PMC12707946_2d3bcc67_0062",
+          "para_paper_PMC12707946_2d3bcc67_0061",
+          "para_paper_PMC12707946_2d3bcc67_0036",
+          "para_paper_PMC12707946_2d3bcc67_0041",
+          "para_paper_PMC12707946_2d3bcc67_0008",
+          "para_paper_PMC12707946_2d3bcc67_0040",
+          "para_paper_PMC12707946_2d3bcc67_0028",
+          "para_paper_PMC12707946_2d3bcc67_0042"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13694692_f7e8b1bc_xml_para_00008",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "para_paper_PMC13613722_dffed48e_0054",
+          "para_paper_PMC13614128_c08078c4_0050",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "para_paper_PMC13613722_dffed48e_0053"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q027",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0019",
+          "para_paper_PMC12707946_2d3bcc67_0035",
+          "para_paper_PMC12707946_2d3bcc67_0037",
+          "paper_PMC13615158_f600b66e_xml_para_00052",
+          "para_paper_PMC12707946_2d3bcc67_0020",
+          "para_paper_PMC12707946_2d3bcc67_0018",
+          "para_paper_PMC12707946_2d3bcc67_0008",
+          "para_paper_PMC12707946_2d3bcc67_0034",
+          "para_paper_PMC12707946_2d3bcc67_0065",
+          "paper_PMC13625931_70a7768d_xml_para_00157"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13632255_7aecae6b_xml_para_00015",
+          "paper_PMC13694692_f7e8b1bc_xml_para_00008",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "paper_PMC13489829_967a40f2_xml_para_00014",
+          "paper_PMC13489829_967a40f2_xml_para_00016",
+          "para_paper_PMC12707946_2d3bcc67_0037",
+          "paper_PMC13128654_e9aefe9b_xml_para_00025"
+        ],
+        "common": 1,
+        "jaccard": 0.05263157894736842,
+        "sqlite_top_in_pg": 1,
+        "pg_top_in_sqlite": 1
+      },
+      {
+        "id": "q029",
+        "sqlite_top": [
+          "para_paper_PMC12707966_ae9a35bd_0055",
+          "para_paper_PMC12707966_ae9a35bd_0013",
+          "paper_PMC13596869_67361b28_xml_para_00045",
+          "para_paper_PMC12707966_ae9a35bd_0046",
+          "para_paper_PMC12707966_ae9a35bd_0064",
+          "para_paper_PMC12707966_ae9a35bd_0047",
+          "para_paper_PMC12707966_ae9a35bd_0062",
+          "para_paper_PMC12707966_ae9a35bd_0061",
+          "paper_PMC13683985_1af5b8e5_xml_para_00025",
+          "paper_PMC13631640_40e1bfc1_xml_para_00004"
+        ],
+        "pg_top": [
+          "para_paper_PMC13612172_109eca99_0055",
+          "para_paper_PMC13614617_b028aa74_0009",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "para_paper_PMC13613722_dffed48e_0027",
+          "para_paper_PMC13613722_dffed48e_0054",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "para_paper_PMC13613722_dffed48e_0053",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "paper_PMC13614934_99230ccd_xml_para_00032",
+          "paper_PMC13615818_420937c7_xml_para_00044"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q100",
+        "sqlite_top": [
+          "para_paper_PMC12707946_2d3bcc67_0014",
+          "para_paper_PMC12707946_2d3bcc67_0036",
+          "para_paper_PMC12707946_2d3bcc67_0041",
+          "para_paper_PMC12707946_2d3bcc67_0028",
+          "para_paper_PMC12707946_2d3bcc67_0029",
+          "para_paper_PMC12707946_2d3bcc67_0021",
+          "para_paper_PMC12707946_2d3bcc67_0039",
+          "para_paper_PMC12707946_2d3bcc67_0015",
+          "para_paper_PMC12707946_2d3bcc67_0024",
+          "para_paper_PMC12707946_2d3bcc67_0057"
+        ],
+        "pg_top": [
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13614617_b028aa74_0009",
+          "paper_PMC13693314_df849bdd_xml_para_00043",
+          "paper_PMC13233740_79fdc6cb_xml_para_00042",
+          "paper_PMC13621559_0e624875_xml_para_00045",
+          "paper_PMC13627126_1570515d_xml_para_00030",
+          "para_paper_PMC12707946_2d3bcc67_0022",
+          "paper_PMC13682802_0f1b88ab_xml_para_00020",
+          "paper_PMC12677100_59f32e68_xml_para_00029",
+          "paper_PMC13538047_11807bfa_xml_para_00037"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q008",
+        "sqlite_top": [
+          "paper_PMC13599371_c03778d5_mineru_para_00087",
+          "para_paper_PMC13612676_5962339f_0003",
+          "paper_PMC13599371_c03778d5_mineru_para_00113",
+          "para_paper_PMC13612676_5962339f_0033",
+          "paper_PMC13630567_bf978b32_xml_para_00001",
+          "para_paper_PMC13612676_5962339f_0004",
+          "paper_PMC12755186_9e9b5efb_xml_para_00061",
+          "para_paper_PMC13612676_5962339f_0013",
+          "para_paper_PMC13612676_5962339f_0012",
+          "para_paper_PMC13612676_5962339f_0163"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC13613722_dffed48e_0027",
+          "paper_PMC13619546_01a099c9_xml_para_00020",
+          "paper_PMC13601635_f6a790d6_xml_para_00136",
+          "paper_PMC13615756_35947933_xml_para_00008",
+          "paper_PMC13631501_652a8275_xml_para_00000",
+          "paper_PMC13619546_01a099c9_xml_para_00014",
+          "paper_PMC13681213_1b6e038c_xml_para_00014",
+          "paper_PMC13625475_f88246c4_xml_para_00063",
+          "paper_PMC13631321_e47d73c7_xml_para_00005"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q009",
+        "sqlite_top": [
+          "paper_PMC13501572_de0d4870_xml_para_00000",
+          "paper_PMC13511682_323f2073_xml_para_00000",
+          "paper_PMC13630062_be3d89b0_xml_para_00000",
+          "paper_PMC13529014_e127f6f7_xml_para_00013",
+          "para_paper_PMC12711257_17cc19c1_0013",
+          "paper_PMC13617522_4da532d5_xml_para_00009",
+          "paper_PMC13631048_98bce038_xml_para_00043",
+          "paper_PMC13619546_01a099c9_xml_para_00042",
+          "paper_PMC13631563_4e18eb11_xml_para_00149",
+          "paper_PMC13630772_2fd56d48_xml_para_00000"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC13613722_dffed48e_0027",
+          "paper_PMC13619546_01a099c9_xml_para_00020",
+          "paper_PMC13619544_a6e3b44f_xml_para_00002",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13613319_e58e79b5_xml_para_00028",
+          "paper_PMC13619546_01a099c9_xml_para_00014",
+          "paper_PMC13630838_161cb3cc_xml_para_00006",
+          "paper_PMC13601635_f6a790d6_xml_para_00136",
+          "paper_PMC13615756_35947933_xml_para_00008"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q010",
+        "sqlite_top": [
+          "paper_PMC13625931_70a7768d_xml_para_00002",
+          "paper_PMC13624742_63e866e2_xml_para_00058",
+          "paper_PMC13602120_4cdcad34_xml_para_00059",
+          "paper_PMC13408408_8927b463_xml_para_00007",
+          "paper_PMC13628655_8d6b664a_xml_para_00000",
+          "paper_PMC13617945_dfa7d36e_xml_para_00082",
+          "paper_PMC13289810_61998baa_xml_para_00001",
+          "paper_PMC13625931_70a7768d_xml_para_00313",
+          "paper_PMC13631725_ca92e7c3_xml_para_00065",
+          "paper_PMC13614377_1c3c202d_xml_para_00000"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC12707946_2d3bcc67_0023",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13602775_b740b828_xml_para_00009",
+          "paper_PMC13604336_97c59f81_xml_para_00026",
+          "paper_PMC13630834_966fae7d_xml_para_00009",
+          "paper_PMC13631936_ea22cc80_xml_para_00001",
+          "paper_PMC13631936_ea22cc80_xml_para_00011",
+          "paper_PMC13628825_8ff055bc_xml_para_00068",
+          "paper_PMC13632816_67fd4b9e_xml_para_00045"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q014",
+        "sqlite_top": [
+          "para_paper_PMC13612676_5962339f_0055",
+          "para_paper_PMC13612676_5962339f_0003",
+          "para_paper_PMC13612676_5962339f_0071",
+          "para_paper_PMC13612676_5962339f_0014",
+          "para_paper_PMC13612676_5962339f_0136",
+          "paper_PMC13613017_98f5f2e4_xml_para_00076",
+          "para_paper_PMC13612676_5962339f_0072",
+          "para_paper_PMC13612676_5962339f_0159",
+          "paper_PMC13607229_3a1e296e_xml_para_00052",
+          "para_paper_PMC13612676_5962339f_0135"
+        ],
+        "pg_top": [
+          "para_paper_PMC13612172_109eca99_0055",
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC13613722_dffed48e_0027",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "para_paper_PMC13612676_5962339f_0028",
+          "para_paper_PMC13613722_dffed48e_0053",
+          "para_paper_PMC13613722_dffed48e_0054",
+          "para_paper_PMC13612676_5962339f_0055",
+          "paper_PMC13619546_01a099c9_xml_para_00020",
+          "paper_PMC13615756_35947933_xml_para_00017"
+        ],
+        "common": 1,
+        "jaccard": 0.05263157894736842,
+        "sqlite_top_in_pg": 1,
+        "pg_top_in_sqlite": 1
+      },
+      {
+        "id": "q015",
+        "sqlite_top": [
+          "paper_PMC13501572_de0d4870_xml_para_00000",
+          "paper_PMC13631563_4e18eb11_xml_para_00000",
+          "paper_PMC13511682_323f2073_xml_para_00146",
+          "paper_PMC13613978_38e8337b_xml_para_00043",
+          "paper_PMC13678479_72d29957_xml_para_00000",
+          "paper_PMC13632323_521c9ab0_xml_para_00000",
+          "paper_PMC13631488_19b82a5c_xml_para_00122",
+          "paper_PMC13631048_98bce038_xml_para_00043",
+          "paper_PMC13631563_4e18eb11_xml_para_00204",
+          "paper_PMC13613148_750ab685_xml_para_00000"
+        ],
+        "pg_top": [
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC13613722_dffed48e_0027",
+          "paper_PMC13619546_01a099c9_xml_para_00020",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "paper_PMC13619546_01a099c9_xml_para_00014",
+          "paper_PMC13627240_f603e8aa_xml_para_00038",
+          "paper_PMC13316175_77a5bc1e_xml_para_00009",
+          "paper_PMC13601635_f6a790d6_xml_para_00136",
+          "paper_PMC13613319_e58e79b5_xml_para_00028",
+          "paper_PMC13615756_35947933_xml_para_00008"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q016",
+        "sqlite_top": [
+          "paper_PMC13631563_4e18eb11_xml_para_00000",
+          "paper_PMC13533940_1a4dcab0_xml_para_00004",
+          "para_paper_PMC13614635_72b85adb_0052",
+          "para_paper_PMC13614635_72b85adb_0018",
+          "paper_PMC13631563_4e18eb11_xml_para_00227",
+          "para_paper_PMC13614635_72b85adb_0041",
+          "paper_PMC13664492_7371e11f_xml_para_00022",
+          "paper_PMC13619374_f2bc11ba_xml_para_00005",
+          "para_paper_PMC13614635_72b85adb_0010",
+          "para_paper_PMC13614635_72b85adb_0035"
+        ],
+        "pg_top": [
+          "paper_PMC13630834_966fae7d_xml_para_00009",
+          "para_paper_PMC13614617_b028aa74_0009",
+          "para_paper_PMC13613318_e85358f1_0009",
+          "para_paper_PMC13613631_149cbdab_0062",
+          "paper_PMC13402690_83e50075_xml_para_00060",
+          "paper_PMC13615149_f40cc921_xml_para_00021",
+          "paper_PMC13263136_b5b977ea_xml_para_00037",
+          "paper_PMC13615149_f40cc921_xml_para_00026",
+          "paper_PMC13431664_ab1b989e_xml_para_00090",
+          "paper_PMC13632106_5f510993_xml_para_00013"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      }
+    ]
+  },
+  "summary": {
+    "avg_jaccard": 0.24173952982002517,
+    "cases": [
+      {
+        "id": "q001",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0001",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0013",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13610758_c64db9c3_xml_sec_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_paper_PMC13659581_dea0bef7_xml_sec_0027",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0015",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13631417_12b85723_xml_sec_0011"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0015",
+          "sum_paper_PMC13610758_c64db9c3_xml_sec_0003",
+          "sum_paper_PMC13623769_9fd45cfd_xml_sec_0010",
+          "sum_paper_PMC13625503_13520df0_xml_sec_0015",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0042",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0073",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0095"
+        ],
+        "common": 4,
+        "jaccard": 0.25,
+        "sqlite_top_in_pg": 4,
+        "pg_top_in_sqlite": 4
+      },
+      {
+        "id": "q002",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0012",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0016",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0013"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0013",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0012"
+        ],
+        "common": 7,
+        "jaccard": 0.5384615384615384,
+        "sqlite_top_in_pg": 7,
+        "pg_top_in_sqlite": 7
+      },
+      {
+        "id": "q003",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13628146_7878cd65_xml_sec_0007",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13628336_c15d5341_xml_sec_0013",
+          "sum_paper_PMC13632113_a2f19c9c_xml_sec_0018",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_paper_PMC13631649_103c4589_xml_sec_0017",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0012"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13534042_fef635b3_xml_sec_0019",
+          "sum_paper_PMC13629787_f5d2a818_xml_sec_0029",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13529014_e127f6f7_xml_sec_0016",
+          "sum_paper_PMC13625660_d4aeaf5f_xml_sec_0004",
+          "sum_paper_PMC13626988_d4dd6815_xml_sec_0013",
+          "sum_paper_PMC13628146_7878cd65_xml_sec_0007",
+          "sum_paper_PMC13629124_1a3bdcd7_xml_sec_0011",
+          "sum_paper_PMC13630021_206ac9f1_xml_sec_0014",
+          "sum_paper_PMC13631298_82b4d464_xml_sec_0017"
+        ],
+        "common": 2,
+        "jaccard": 0.1111111111111111,
+        "sqlite_top_in_pg": 2,
+        "pg_top_in_sqlite": 2
+      },
+      {
+        "id": "q004",
+        "sqlite_top": [
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0013",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13631417_12b85723_xml_sec_0011",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0016",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0015",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_paper_PMC13678546_eabbbd55_xml_sec_0022",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0015",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0042",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0098",
+          "sum_paper_PMC13631417_12b85723_xml_sec_0011",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008"
+        ],
+        "common": 5,
+        "jaccard": 0.3333333333333333,
+        "sqlite_top_in_pg": 5,
+        "pg_top_in_sqlite": 5
+      },
+      {
+        "id": "q005",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0012",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0016",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0013"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_paper_PMC13629315_20962d7f_xml_sec_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0074",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0013",
+          "sum_paper_PMC13694692_f7e8b1bc_xml_sec_0008"
+        ],
+        "common": 3,
+        "jaccard": 0.17647058823529413,
+        "sqlite_top_in_pg": 3,
+        "pg_top_in_sqlite": 3
+      },
+      {
+        "id": "q006",
+        "sqlite_top": [
+          "sum_paper_PMC13621873_801b0f7d_xml_sec_0028",
+          "sum_paper_PMC13655921_f697a5bb_xml_sec_0014",
+          "sum_paper_PMC13631557_3e7af6bf_xml_sec_0034",
+          "sum_sec_paper_PMC13612816_4ecbe955_xml_0044",
+          "sum_sec_paper_PMC13613143_6ca8f48b_xml_0041",
+          "sum_paper_PMC13683985_1af5b8e5_xml_sec_0014",
+          "sum_paper_PMC13683985_1af5b8e5_xml_sec_0022",
+          "sum_sec_paper_PMC13612816_4ecbe955_xml_0004",
+          "sum_paper_PMC13632725_be55b820_xml_sec_0025",
+          "sum_paper_PMC13617522_4da532d5_xml_sec_0026"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13621873_801b0f7d_xml_sec_0028",
+          "sum_paper_PMC13655921_f697a5bb_xml_sec_0014",
+          "sum_paper_PMC12662978_f2b1bb0b_xml_sec_0014",
+          "sum_paper_PMC13627347_bc2eaa0a_xml_sec_0026",
+          "sum_paper_PMC13631557_3e7af6bf_xml_sec_0034",
+          "sum_paper_PMC13632725_be55b820_xml_sec_0025",
+          "sum_paper_PMC13694692_f7e8b1bc_xml_sec_0026",
+          "sum_sec_paper_PMC13601198_68864f98_xml_0004",
+          "sum_sec_paper_PMC13612816_4ecbe955_xml_0004",
+          "sum_sec_paper_PMC13612816_4ecbe955_xml_0044"
+        ],
+        "common": 6,
+        "jaccard": 0.42857142857142855,
+        "sqlite_top_in_pg": 6,
+        "pg_top_in_sqlite": 6
+      },
+      {
+        "id": "q007",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707966_ae9a35bd_0011",
+          "sum_paper_PMC13631422_323f25ef_xml_sec_0004",
+          "sum_paper_PMC13598461_bee4e467_xml_sec_0023",
+          "sum_paper_PMC13539050_e30d1a10_xml_sec_0038",
+          "sum_paper_PMC13627653_001f242f_xml_sec_0001",
+          "sum_paper_PMC13655921_f697a5bb_xml_sec_0032",
+          "sum_paper_PMC13629867_63d298ae_xml_sec_0014",
+          "sum_paper_PMC13631739_bca4864e_xml_sec_0008",
+          "sum_paper_PMC13284260_b8f4e93f_xml_sec_0008",
+          "sum_paper_PMC13631422_323f25ef_xml_sec_0002"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13552360_e8d76049_xml_sec_0034",
+          "sum_paper_PMC13631422_323f25ef_xml_sec_0004",
+          "sum_paper_PMC13631648_095fce5b_xml_sec_0004",
+          "sum_paper_PMC13655921_f697a5bb_xml_sec_0032",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0013",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_sec_paper_PMC12707966_ae9a35bd_0011",
+          "sum_paper_PMC13284260_b8f4e93f_xml_sec_0008",
+          "sum_paper_PMC13284260_b8f4e93f_xml_sec_0011",
+          "sum_paper_PMC13361432_692c3bea_xml_sec_0021"
+        ],
+        "common": 4,
+        "jaccard": 0.25,
+        "sqlite_top_in_pg": 4,
+        "pg_top_in_sqlite": 4
+      },
+      {
+        "id": "q011",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0012",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0015",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0016",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0013"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0013",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0015",
+          "sum_sec_paper_PMC13605232_2bb3f033_xml_0125",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_paper_PMC13628531_b3ac2f83_xml_sec_0015"
+        ],
+        "common": 4,
+        "jaccard": 0.25,
+        "sqlite_top_in_pg": 4,
+        "pg_top_in_sqlite": 4
+      },
+      {
+        "id": "q012",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0016",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0012",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0011"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_paper_PMC13629315_20962d7f_xml_sec_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0074",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0013",
+          "sum_paper_PMC13694692_f7e8b1bc_xml_sec_0008"
+        ],
+        "common": 4,
+        "jaccard": 0.25,
+        "sqlite_top_in_pg": 4,
+        "pg_top_in_sqlite": 4
+      },
+      {
+        "id": "q013",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0016",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_paper_PMC13610758_c64db9c3_xml_sec_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0015",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0011",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0093",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13559652_658a2e90_xml_sec_0017",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0013",
+          "sum_sec_paper_PMC13615807_b533cd8b_xml_0010",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13408408_8927b463_xml_sec_0016",
+          "sum_paper_PMC13631559_9ad16c1a_xml_sec_0021",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0015",
+          "sum_paper_PMC13433859_1228bd82_xml_sec_0020"
+        ],
+        "common": 3,
+        "jaccard": 0.17647058823529413,
+        "sqlite_top_in_pg": 3,
+        "pg_top_in_sqlite": 3
+      },
+      {
+        "id": "q021",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0012",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0014",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0016"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13629315_20962d7f_xml_sec_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12846323_c1b8e8f4_xml_0004",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0074"
+        ],
+        "common": 5,
+        "jaccard": 0.3333333333333333,
+        "sqlite_top_in_pg": 5,
+        "pg_top_in_sqlite": 5
+      },
+      {
+        "id": "q027",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0013",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_paper_PMC13659581_dea0bef7_xml_sec_0027",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0042",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13631417_12b85723_xml_sec_0011",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_paper_PMC13630780_ca98dbc3_xml_sec_0037"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_paper_PMC13472757_c67d1b13_xml_sec_0024",
+          "sum_paper_PMC13610758_c64db9c3_xml_sec_0007",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0042",
+          "sum_paper_PMC13631725_ca92e7c3_xml_sec_0026",
+          "sum_sec_paper_PMC13613481_cc93f2ca_xml_0010",
+          "sum_sec_paper_PMC13613722_dffed48e_0015",
+          "sum_sec_paper_PMC13613898_acc9e3b2_xml_0027"
+        ],
+        "common": 3,
+        "jaccard": 0.17647058823529413,
+        "sqlite_top_in_pg": 3,
+        "pg_top_in_sqlite": 3
+      },
+      {
+        "id": "q029",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707966_ae9a35bd_0013",
+          "sum_sec_paper_PMC12707966_ae9a35bd_0011",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0089",
+          "sum_paper_PMC13635835_9ddd9475_xml_sec_0011",
+          "sum_paper_PMC13631573_8bd6cfd5_xml_sec_0010",
+          "sum_paper_PMC13632620_d0ad859e_xml_sec_0001",
+          "sum_paper_PMC13631573_8bd6cfd5_xml_sec_0011",
+          "sum_sec_paper_PMC12707966_ae9a35bd_0009",
+          "sum_paper_PMC13631640_40e1bfc1_xml_sec_0001",
+          "sum_sec_paper_PMC12707966_ae9a35bd_0006"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0013",
+          "sum_paper_PMC13635835_9ddd9475_xml_sec_0011",
+          "sum_paper_PMC13631573_8bd6cfd5_xml_sec_0010",
+          "sum_paper_PMC13631573_8bd6cfd5_xml_sec_0011",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_paper_PMC13628531_b3ac2f83_xml_sec_0011",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0089",
+          "sum_sec_paper_PMC12707966_ae9a35bd_0006",
+          "sum_sec_paper_PMC12707966_ae9a35bd_0011",
+          "sum_sec_paper_PMC13615280_66dd7a0e_xml_0022"
+        ],
+        "common": 6,
+        "jaccard": 0.42857142857142855,
+        "sqlite_top_in_pg": 6,
+        "pg_top_in_sqlite": 6
+      },
+      {
+        "id": "q100",
+        "sqlite_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0004",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0012",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0016",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0013",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC12707946_2d3bcc67_0005",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0063",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0127",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0013",
+          "sum_paper_PMC13682802_0f1b88ab_xml_sec_0014",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0003",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0006",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0007",
+          "sum_sec_paper_PMC12707946_2d3bcc67_0008",
+          "sum_paper_PMC13559652_658a2e90_xml_sec_0017"
+        ],
+        "common": 6,
+        "jaccard": 0.42857142857142855,
+        "sqlite_top_in_pg": 6,
+        "pg_top_in_sqlite": 6
+      },
+      {
+        "id": "q008",
+        "sqlite_top": [
+          "sum_paper_PMC13631488_19b82a5c_xml_sec_0002",
+          "sum_sec_paper_PMC13612676_5962339f_0001",
+          "sum_paper_PMC13620463_0c693385_xml_sec_0005",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0088",
+          "sum_paper_PMC13631488_19b82a5c_xml_sec_0038",
+          "sum_paper_PMC13635835_9ddd9475_xml_sec_0002",
+          "sum_sec_paper_PMC13612816_4ecbe955_xml_0005",
+          "sum_paper_PMC13538504_71c58199_xml_sec_0025",
+          "sum_sec_paper_PMC13612821_bce2c8f4_xml_0019",
+          "sum_sec_paper_PMC13614745_ac124fe7_xml_0007"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13629930_f7384998_xml_sec_0006",
+          "sum_sec_paper_PMC13612676_5962339f_0001",
+          "sum_sec_paper_PMC13604569_2746f0e1_xml_0014",
+          "sum_paper_PMC13629804_93620add_xml_sec_0002",
+          "sum_paper_PMC13629930_f7384998_xml_sec_0004",
+          "sum_paper_PMC13631321_e47d73c7_xml_sec_0006",
+          "sum_paper_PMC13631488_19b82a5c_xml_sec_0002",
+          "sum_paper_PMC13631736_cd7b324a_xml_sec_0015",
+          "sum_paper_PMC13632142_8f4c3148_xml_sec_0024",
+          "sum_paper_PMC13632217_36c19ad2_xml_sec_0014"
+        ],
+        "common": 2,
+        "jaccard": 0.1111111111111111,
+        "sqlite_top_in_pg": 2,
+        "pg_top_in_sqlite": 2
+      },
+      {
+        "id": "q009",
+        "sqlite_top": [
+          "sum_paper_PMC13501572_de0d4870_xml_sec_0002",
+          "sum_paper_PMC13630062_be3d89b0_xml_sec_0002",
+          "sum_paper_PMC13631048_98bce038_xml_sec_0032",
+          "sum_paper_PMC13501081_9c293447_xml_sec_0001",
+          "sum_paper_PMC13617522_4da532d5_xml_sec_0003",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0069",
+          "sum_paper_PMC13627653_001f242f_xml_sec_0005",
+          "sum_paper_PMC13631048_98bce038_xml_sec_0002",
+          "sum_paper_PMC13631742_2bcce889_xml_sec_0001",
+          "sum_sec_paper_PMC13602120_4cdcad34_xml_0001"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13501572_de0d4870_xml_sec_0002",
+          "sum_sec_paper_PMC13613319_e58e79b5_xml_0005",
+          "sum_paper_PMC13619544_a6e3b44f_xml_sec_0001",
+          "sum_paper_PMC13627653_001f242f_xml_sec_0005",
+          "sum_paper_PMC13629785_c1854780_xml_sec_0016",
+          "sum_paper_PMC13630062_be3d89b0_xml_sec_0002",
+          "sum_paper_PMC13631048_98bce038_xml_sec_0032",
+          "sum_paper_PMC13501081_9c293447_xml_sec_0001",
+          "sum_paper_PMC13617522_4da532d5_xml_sec_0003",
+          "sum_paper_PMC13617945_dfa7d36e_xml_sec_0031"
+        ],
+        "common": 6,
+        "jaccard": 0.42857142857142855,
+        "sqlite_top_in_pg": 6,
+        "pg_top_in_sqlite": 6
+      },
+      {
+        "id": "q010",
+        "sqlite_top": [
+          "sum_paper_PMC13631725_ca92e7c3_xml_sec_0025",
+          "sum_sec_paper_PMC13611828_e6a7feb0_xml_0015",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0168",
+          "sum_paper_PMC13629104_44727308_xml_sec_0028",
+          "sum_paper_PMC13617945_dfa7d36e_xml_sec_0041",
+          "sum_paper_PMC13627995_431d5b6a_xml_sec_0019",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0133",
+          "sum_paper_PMC13624742_63e866e2_xml_sec_0033",
+          "sum_paper_PMC13625931_70a7768d_xml_sec_0094",
+          "sum_sec_paper_PMC13614125_a4401104_xml_0014"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC13464150_6c601366_xml_0008",
+          "sum_paper_PMC13631561_17e00e99_xml_sec_0022",
+          "sum_paper_PMC13624744_e16d64dc_xml_sec_0009",
+          "sum_paper_PMC13627995_431d5b6a_xml_sec_0019",
+          "sum_paper_PMC13629053_0f3caa4c_xml_sec_0013",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0042",
+          "sum_paper_PMC13631726_7f659000_xml_sec_0028",
+          "sum_sec_paper_PMC13602120_4cdcad34_xml_0019",
+          "sum_sec_paper_PMC13604167_414f1449_xml_0013",
+          "sum_sec_paper_PMC13613828_0536f10d_xml_0018"
+        ],
+        "common": 1,
+        "jaccard": 0.05263157894736842,
+        "sqlite_top_in_pg": 1,
+        "pg_top_in_sqlite": 1
+      },
+      {
+        "id": "q014",
+        "sqlite_top": [
+          "sum_sec_paper_PMC13612676_5962339f_0001",
+          "sum_sec_paper_PMC13613017_98f5f2e4_xml_0047",
+          "sum_sec_paper_PMC13601904_9362ff81_xml_0020",
+          "sum_paper_PMC13607229_3a1e296e_xml_sec_0026",
+          "sum_paper_PMC13569578_846d8055_xml_sec_0021",
+          "sum_sec_paper_PMC13615833_82f31374_xml_0013",
+          "sum_sec_paper_PMC13615833_82f31374_xml_0001",
+          "sum_paper_PMC13625475_f88246c4_xml_sec_0010",
+          "sum_paper_PMC13643519_0269817c_xml_sec_0028",
+          "sum_paper_PMC13627590_f80aa98b_xml_sec_0047"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13629930_f7384998_xml_sec_0006",
+          "sum_sec_paper_PMC13604569_2746f0e1_xml_0014",
+          "sum_paper_PMC13617522_4da532d5_xml_sec_0023",
+          "sum_paper_PMC13629804_93620add_xml_sec_0002",
+          "sum_paper_PMC13629930_f7384998_xml_sec_0004",
+          "sum_paper_PMC13631321_e47d73c7_xml_sec_0006",
+          "sum_sec_paper_PMC13615305_0943aeb5_xml_0019",
+          "sum_paper_PMC13620208_57b61ac3_xml_sec_0019",
+          "sum_paper_PMC13623292_90f267a1_xml_sec_0027",
+          "sum_paper_PMC13627590_f80aa98b_xml_sec_0045"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      },
+      {
+        "id": "q015",
+        "sqlite_top": [
+          "sum_sec_paper_PMC13613978_38e8337b_xml_0022",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0001",
+          "sum_paper_PMC13631048_98bce038_xml_sec_0032",
+          "sum_sec_paper_PMC13613148_750ab685_xml_0001",
+          "sum_paper_PMC13501572_de0d4870_xml_sec_0002",
+          "sum_paper_PMC13673961_e8851d55_xml_sec_0001",
+          "sum_paper_PMC13542973_d25384d9_xml_sec_0001",
+          "sum_paper_PMC13630089_ab908bf4_xml_sec_0001",
+          "sum_sec_paper_PMC13613049_4ea52de2_xml_0004",
+          "sum_paper_PMC13501081_9c293447_xml_sec_0001"
+        ],
+        "pg_top": [
+          "sum_sec_paper_PMC13613319_e58e79b5_xml_0005",
+          "sum_paper_PMC13629785_c1854780_xml_sec_0016",
+          "sum_paper_PMC13631048_98bce038_xml_sec_0032",
+          "sum_paper_PMC13631501_652a8275_xml_sec_0024",
+          "sum_sec_paper_PMC13605232_2bb3f033_xml_0066",
+          "sum_paper_PMC13501081_9c293447_xml_sec_0001",
+          "sum_paper_PMC13522165_1c44f653_xml_sec_0015",
+          "sum_paper_PMC13617945_dfa7d36e_xml_sec_0031",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0003",
+          "sum_paper_PMC13632106_5f510993_xml_sec_0014"
+        ],
+        "common": 2,
+        "jaccard": 0.1111111111111111,
+        "sqlite_top_in_pg": 2,
+        "pg_top_in_sqlite": 2
+      },
+      {
+        "id": "q016",
+        "sqlite_top": [
+          "sum_sec_paper_PMC13614635_72b85adb_0016",
+          "sum_paper_PMC13596869_67361b28_xml_sec_0028",
+          "sum_paper_PMC13596869_67361b28_xml_sec_0032",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0018",
+          "sum_paper_PMC13533940_1a4dcab0_xml_sec_0003",
+          "sum_sec_paper_PMC13615296_e6898f06_xml_0014",
+          "sum_paper_PMC13629315_20962d7f_xml_sec_0008",
+          "sum_paper_PMC13627653_001f242f_xml_sec_0002",
+          "sum_paper_PMC13625268_f0877192_xml_sec_0001",
+          "sum_paper_PMC13687445_832c1a29_xml_sec_0025"
+        ],
+        "pg_top": [
+          "sum_paper_PMC13630325_be6e15f3_xml_sec_0008",
+          "sum_paper_PMC13472757_c67d1b13_xml_sec_0024",
+          "sum_paper_PMC13630325_be6e15f3_xml_sec_0007",
+          "sum_paper_PMC13631563_4e18eb11_xml_sec_0119",
+          "sum_paper_PMC13631783_f54f6067_xml_sec_0007",
+          "sum_paper_PMC13395609_dfc4280b_xml_sec_0014",
+          "sum_paper_PMC13620271_4e8d0b41_xml_sec_0014",
+          "sum_paper_PMC13627671_4f01b63c_xml_sec_0011",
+          "sum_paper_PMC13630325_be6e15f3_xml_sec_0004",
+          "sum_paper_PMC13630325_be6e15f3_xml_sec_0005"
+        ],
+        "common": 0,
+        "jaccard": 0.0,
+        "sqlite_top_in_pg": 0,
+        "pg_top_in_sqlite": 0
+      }
+    ]
+  }
+}
