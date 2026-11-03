@@ -239,6 +239,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-03 | P3 shadow report | JSON+MD; 7 tables; status ok; 827 tests | [Worklog](../worklogs/2026-11-03-p3-shadow-report.md) |
 
+| 2026-11-03 | P5 fallback observability | pg_fallbacks in health; 829 tests | [Worklog](../worklogs/2026-11-03-p5-fallback.md) |
+
 ## Rules
 
 ```text

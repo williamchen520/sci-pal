@@ -37,6 +37,7 @@ def build_core_blueprint(*, db_path: Path, get_retriever: Callable[[], Any]) -> 
 
     @bp.get("/api/health")
     def health():
+        from services.db.fallback_stats import snapshot as fallback_snapshot
         from services.db.pg_pool import pool_status
 
         return jsonify(
@@ -46,6 +47,7 @@ def build_core_blueprint(*, db_path: Path, get_retriever: Callable[[], Any]) -> 
                 "version": "V33.96",
                 "db_exists": Path(db_path).exists(),
                 "pg_pool": pool_status(),
+                "pg_fallbacks": fallback_snapshot(),
             }
         )
 

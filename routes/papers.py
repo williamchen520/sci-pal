@@ -16,6 +16,7 @@ from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request
 
+from services.db.fallback_stats import record as record_fallback
 from services.db.read_router import ReadRouter
 from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 
@@ -65,6 +66,7 @@ def build_papers_blueprint(
                 )
                 response.headers["X-SciPal-Read-Backend"] = "postgres"
                 return response
+            record_fallback("papers_list")
             _log(f"read canary fell back to SQLite: {result.error}")
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
@@ -103,6 +105,7 @@ def build_papers_blueprint(
                 response.headers["X-SciPal-Read-Backend"] = "postgres"
                 return response
             if result.error:
+                record_fallback("papers_detail")
                 _log(f"paper detail canary fell back to SQLite: {result.error}")
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
@@ -198,6 +201,7 @@ def build_papers_blueprint(
                 )
         except Exception as exc:
             if use_pg:
+                record_fallback("papers_graph")
                 _log(f"paper graph canary fell back to SQLite: {exc}")
                 graph = get_graph()
                 backend = "sqlite"

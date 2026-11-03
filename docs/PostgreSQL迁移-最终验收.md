@@ -193,6 +193,15 @@ search / evidence / FTS / Chroma 仍以 SQLite/Chroma 为主
 
 所以 P5 不是“PG 单轨”，而是“PG 主读 + SQLite 回退”。
 
+回退可观测：
+
+```text
+/api/health -> pg_fallbacks
+  papers_list
+  papers_detail
+  papers_graph
+```
+
 ### 4.2 写路径
 
 生产 `.env`：
@@ -325,7 +334,7 @@ psycopg-pool 3.3.3
 当前测试：
 
 ```text
-824 tests OK
+829 tests OK
 ```
 
 但：
@@ -333,7 +342,7 @@ psycopg-pool 3.3.3
 ```text
 大多数测试使用 SQLite / tempfile / fake connector
 PG 相关测试主要是 unit/mock，不是完整 live PG
-没有证据显示 824 项全部跑在真实 PostgreSQL 上
+没有证据显示 829 项全部跑在真实 PostgreSQL 上
 ```
 
 结论：
@@ -387,7 +396,7 @@ P6 未完成
 | P1 | 并发压测 | 50/100 并发无池耗尽 |
 | P3 | 每日 shadow read | 报告脚本已可用；生产态再调度 |
 | P4 | 逐表关闭 outbox 或明确冻结 | trigger 数量可解释 |
-| P5 | 明确 fallback 策略 | PG 故障时行为可观测 |
+| P5 | fallback 可观测性 | 已加 pg_fallbacks；生产态再加告警 |
 | P6 | 30 天无回退后再归档 | SQLite 只读、两份备份 |
 | 数据 | 全表 row checksum | 内容级 100% 对齐 |
 | 测试 | live PG integration suite | 至少核心读写路径跑真 PG |
@@ -406,7 +415,7 @@ P5：100% canary + SQLite fallback；开发态接受
 P6：生产态任务，开发态不适用
 老数据：ID 100% 对齐；内容 checksum 延后
 连接池：已实现并部署；50/100 压测非开发态门槛
-测试：824 全绿；不要求全部跑真实 PG
+测试：829 全绿；不要求全部跑真实 PG
 ```
 
 最终判定：
