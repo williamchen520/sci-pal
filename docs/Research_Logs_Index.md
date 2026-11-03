@@ -267,6 +267,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | PG FTS term3 integration | flag postgres; 4s; fallback SQLite; 843 tests | [Worklog](../worklogs/2026-11-04-pg-fts-term3-integration.md) |
 
+| 2026-11-04 | Abstract FTS repair | restored 0-byte DB; 3923/3923; triggers | [Worklog](../worklogs/2026-11-04-abstract-fts.md) |
+
 ## Rules
 
 ```text
