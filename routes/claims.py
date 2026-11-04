@@ -56,6 +56,19 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
         direction = str(data.get("direction") or "support")
         if direction not in {"support", "oppose"}:
             return jsonify({"error": "direction must be support or oppose"}), 400
+        if _pg_read():
+            from services.claims import pg_search
+
+            try:
+                return jsonify(
+                    {
+                        "candidates": pg_search.search_candidates(
+                            claim_id, direction=direction
+                        )
+                    }
+                )
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 404
         conn = service.connect(db_path)
         try:
             return jsonify(
@@ -75,6 +88,21 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
         use_llm = bool(data.get("use_llm"))
         client = get_llm() if (use_llm and get_llm) else None
         retriever = get_retriever() if get_retriever else None
+        if _pg_read():
+            from services.claims import pg_search
+
+            try:
+                candidates = pg_search.interrogate(
+                    claim_id,
+                    direction=direction,
+                    use_llm=use_llm,
+                    llm_client=client,
+                    retriever=retriever,
+                    limit=min(int(data.get("limit") or 5), 8),
+                )
+                return jsonify({"candidates": candidates, "use_llm": use_llm})
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 404
         conn = service.connect(db_path)
         try:
             candidates = service.interrogate(

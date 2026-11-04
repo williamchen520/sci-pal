@@ -371,6 +371,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.5b claims PG write | evidence/decision/note; 3 tests | [Plan](PostgreSQL迁移-G3.5-claims盘点.md) |
 
+| 2026-11-05 | G3.5c claims PG search | websearch tsquery; support/oppose 3 | [Plan](PostgreSQL迁移-G3.5-claims盘点.md) |
+
 ## Rules
 
 ```text

@@ -149,6 +149,39 @@ tests.test_claims_pg_write 3 OK
 
 尚未做真实 claim 写入冒烟，避免污染现有事件。
 
+## 6d. G3.5c 完成
+
+```text
+services/claims/pg_search.py
+  search_candidates
+  interrogate
+```
+
+查询：
+
+```text
+sentences.search_vector @@ websearch_to_tsquery('english', query)
+```
+
+冒烟：
+
+```text
+support 3 / oppose 3
+```
+
+限制：
+
+```text
+oppose 的 semantic retriever 仍只接受 SQLite conn
+本轮未启用
+```
+
+测试：
+
+```text
+tests.test_claims_pg_search 1 OK
+```
+
 ## 7. 下一步
 
 ```text
