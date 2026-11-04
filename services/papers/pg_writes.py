@@ -106,15 +106,51 @@ def update_metadata_if_exists(
 
 
 def _upsert_paper_row(pg, row: dict) -> None:
+    values = {
+        "paper_id": row.get("paper_id"),
+        "filename": row.get("filename") or "",
+        "title": row.get("title") or "Untitled",
+        "authors": row.get("authors") or "",
+        "abstract": row.get("abstract") or "",
+        "journal": row.get("journal") or "",
+        "year": row.get("year"),
+        "doi": row.get("doi") or "",
+        "keywords": row.get("keywords") or "",
+        "volume": row.get("volume") or "",
+        "issue": row.get("issue") or "",
+        "pages": row.get("pages") or "",
+        "paper_type": row.get("paper_type") or "J",
+        "publisher": row.get("publisher") or "",
+        "language": row.get("language") or "en",
+        "affiliations": row.get("affiliations") or "",
+        "funding": row.get("funding") or "",
+        "parse_status": row.get("parse_status") or "completed",
+        "parse_engine": row.get("parse_engine") or "xml",
+        "total_paragraphs": row.get("total_paragraphs"),
+        "total_figures": row.get("total_figures"),
+        "total_tables": row.get("total_tables"),
+        "total_citations": row.get("total_citations"),
+    }
     pg.execute(
-        "INSERT INTO papers (paper_id, filename, title, abstract, authors, parse_engine, journal, year, doi) "
-        "VALUES (%(paper_id)s, %(filename)s, %(title)s, %(abstract)s, %(authors)s, "
-        "'xml', %(journal)s, %(year)s, %(doi)s) "
+        "INSERT INTO papers (paper_id, filename, title, abstract, authors, parse_engine, journal, year, doi, "
+        "keywords, volume, issue, pages, paper_type, publisher, language, affiliations, funding, parse_status, "
+        "total_paragraphs, total_figures, total_tables, total_citations) "
+        "VALUES (%(paper_id)s, %(filename)s, %(title)s, %(abstract)s, %(authors)s, %(parse_engine)s, "
+        "%(journal)s, %(year)s, %(doi)s, %(keywords)s, %(volume)s, %(issue)s, %(pages)s, %(paper_type)s, "
+        "%(publisher)s, %(language)s, %(affiliations)s, %(funding)s, %(parse_status)s, "
+        "%(total_paragraphs)s, %(total_figures)s, %(total_tables)s, %(total_citations)s) "
         "ON CONFLICT (paper_id) DO UPDATE SET "
-        "filename = EXCLUDED.filename, title = EXCLUDED.title, abstract = EXCLUDED.abstract, "
-        "authors = EXCLUDED.authors, parse_engine = EXCLUDED.parse_engine, "
-        "journal = EXCLUDED.journal, year = EXCLUDED.year, doi = EXCLUDED.doi",
-        row,
+        "filename=EXCLUDED.filename, title=EXCLUDED.title, abstract=EXCLUDED.abstract, "
+        "authors=EXCLUDED.authors, parse_engine=EXCLUDED.parse_engine, journal=EXCLUDED.journal, "
+        "year=EXCLUDED.year, doi=EXCLUDED.doi, keywords=EXCLUDED.keywords, volume=EXCLUDED.volume, "
+        "issue=EXCLUDED.issue, pages=EXCLUDED.pages, paper_type=EXCLUDED.paper_type, "
+        "publisher=EXCLUDED.publisher, language=EXCLUDED.language, affiliations=EXCLUDED.affiliations, "
+        "funding=EXCLUDED.funding, parse_status=EXCLUDED.parse_status, "
+        "total_paragraphs=COALESCE(EXCLUDED.total_paragraphs, papers.total_paragraphs), "
+        "total_figures=COALESCE(EXCLUDED.total_figures, papers.total_figures), "
+        "total_tables=COALESCE(EXCLUDED.total_tables, papers.total_tables), "
+        "total_citations=COALESCE(EXCLUDED.total_citations, papers.total_citations)",
+        values,
     )
 
 
@@ -228,6 +264,21 @@ def write_parsed_paper(parsed_result: dict) -> bool:
         "journal": metadata.get("journal", ""),
         "year": metadata.get("year"),
         "doi": metadata.get("doi", ""),
+        "keywords": ", ".join(metadata.get("keywords", [])) if isinstance(metadata.get("keywords"), list) else metadata.get("keywords", ""),
+        "volume": metadata.get("volume", ""),
+        "issue": metadata.get("issue", ""),
+        "pages": metadata.get("pages", ""),
+        "paper_type": metadata.get("paper_type", "J"),
+        "publisher": metadata.get("publisher", ""),
+        "language": metadata.get("language", "en"),
+        "affiliations": ", ".join(metadata.get("affiliations", [])) if isinstance(metadata.get("affiliations"), list) else metadata.get("affiliations", ""),
+        "funding": metadata.get("funding", ""),
+        "parse_status": metadata.get("parse_status", "completed"),
+        "parse_engine": metadata.get("parse_engine") or "pdf",
+        "total_paragraphs": len(paragraphs),
+        "total_figures": len(figures),
+        "total_tables": len(tables),
+        "total_citations": len(parsed_result.get("citations") or []),
     }
     try:
         with _pg_connection() as pg:

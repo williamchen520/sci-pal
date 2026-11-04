@@ -34,3 +34,34 @@ class PaperPGWritesTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class _FakePG:
+    def __init__(self):
+        self.sql = ""
+        self.params = None
+
+    def execute(self, sql, params):
+        self.sql = sql
+        self.params = params
+        return self
+
+
+class PaperRowCoverageTests(unittest.TestCase):
+    def test_full_metadata_columns(self):
+        pg = _FakePG()
+        pg_writes._upsert_paper_row(
+            pg,
+            {
+                "paper_id": "p1",
+                "title": "T",
+                "keywords": "k1,k2",
+                "volume": "12",
+                "parse_status": "completed",
+                "total_paragraphs": 3,
+            },
+        )
+        self.assertIn("keywords", pg.sql)
+        self.assertIn("parse_status", pg.sql)
+        self.assertEqual(pg.params["keywords"], "k1,k2")
+        self.assertEqual(pg.params["total_paragraphs"], 3)
+        self.assertEqual(pg.params["parse_engine"], "xml")
