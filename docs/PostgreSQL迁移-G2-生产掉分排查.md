@@ -200,3 +200,73 @@ Vector    Chroma
 Reranker  GPU
 app       healthy
 ```
+
+
+## 10. 生产 trace 结果（2026-11-04）
+
+生产临时切 pgvector 并开启：
+
+```text
+SCIPAL_VECTOR_TRACE_PATH=/tmp/vector_trace.jsonl
+```
+
+trace 样本：
+
+```text
+event=vector_enter backend=pgvector top_k=50
+event=vector_pg count=50 ids=[...]
+```
+
+结论：
+
+```text
+生产确实执行了 pgvector
+不是部署没生效
+```
+
+## 11. 关键发现：测量口径不同
+
+离线 trace 统计的是：
+
+```text
+UnifiedRetriever.retrieve()["paragraphs"]
+```
+
+生产 API 统计的是：
+
+```text
+to_evidence_json() 的 parent_contexts / evidence
+```
+
+两者不是同一个对象。
+
+离线 raw paragraphs：
+
+```text
+.95
+```
+
+生产 evidence：
+
+```text
+.70
+```
+
+所以此前把 `.95 / .77` 与 `.6875 / .625` 直接比较，存在口径错误。
+
+## 12. 当前结论
+
+```text
+pgvector 路径已确认生效
+剩余差异优先怀疑 parent-context 扩展/证据构造
+不是 pgvector 索引
+不是 entity/MMR/RRF
+```
+
+## 13. 当前生产
+
+```text
+SCIPAL_VECTOR_BACKEND=chroma
+FTS 100% ParadeDB
+app healthy
+```
