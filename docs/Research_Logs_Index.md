@@ -303,6 +303,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G1 summary | 100% ParadeDB; recall .6875 / nDCG .5116; 857 tests | [Summary](PostgreSQL迁移-G1-总结.md) |
 
+| 2026-11-04 | G2 pgvector start | schema + adapter + backfill; 860 tests | [Report](PostgreSQL迁移-G2-pgvector.md) |
+
 ## Rules
 
 ```text
