@@ -239,6 +239,10 @@ cross-encoder anchor:
   q016/q017/q018 未命中
   高亮 12–20 条
   延迟 4.5–10s
+
+embedding anchor:
+  q002/q016/q017/q018 全部未命中
+  延迟 4–11s
 ```
 
 处理：
@@ -246,15 +250,16 @@ cross-encoder anchor:
 ```text
 默认关闭
 SCIPAL_ANCHOR_SENTENCES=0
+SCIPAL_ANCHOR_EMBEDDING=0
 SCIPAL_ANCHOR_RERANK=0
 ```
 
 结论：
 
 ```text
-anchor 方向正确
-但仅对 q002 有效
-需要更强的 sentence matching / 训练/规则
+lexical / cross-encoder / embedding 三种 anchor 都不达标
+G2.6 未完成
+需要 sentence-level 监督数据或专用 attribution 模型
 ```
 
 ## 12. 当前生产
