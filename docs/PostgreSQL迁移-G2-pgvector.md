@@ -1,7 +1,7 @@
 # G2：pgvector 迁移报告（进行中）
 
 > 日期：2026-11-04  
-> 状态：G2.1–G2.4 完成，向量未切流
+> 状态：G2.1–G2.4 完成；生产切换失败已回滚
 
 ## 1. 已完成
 
@@ -104,6 +104,21 @@ HNSW：
 ef_search=100  recall .5729
 ef_search=200  recall .6146
 ef_search=500  recall .6146
+```
+
+## 7b. 生产切换结果
+
+```text
+生产 pgvector 96 题 recall .6250 / nDCG .4960
+Chroma         96 题 recall .6875 / nDCG .5116
+```
+
+结论：
+
+```text
+生产集成未达标
+已回滚 SCIPAL_VECTOR_BACKEND=chroma
+G4 阻塞
 ```
 
 ## 8. 未完成

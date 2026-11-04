@@ -307,6 +307,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2.4 pgvector backfill | 164,654; recall .6146 vs Chroma .625; Jaccard .925 | [Report](PostgreSQL迁移-G2-pgvector.md) |
 
+| 2026-11-04 | G2 production rollback | pgvector .625 < Chroma .6875; G4 blocked | [Report](PostgreSQL迁移-G2-pgvector.md) |
+
 ## Rules
 
 ```text

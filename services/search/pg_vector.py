@@ -59,7 +59,7 @@ class PGVectorParagraphSearch:
             if self._connector is None:
                 try:
                     ef_search = max(
-                        1, min(1000, int(os.environ.get("SCIPAL_PGVECTOR_EF_SEARCH", "100")))
+                        1, min(1000, int(os.environ.get("SCIPAL_PGVECTOR_EF_SEARCH", "200")))
                     )
                 except ValueError:
                     ef_search = 100
