@@ -281,6 +281,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | GPU rerank | warm 2.7s; recall .650; 849 tests | [Worklog](../worklogs/2026-11-04-gpu-rerank.md) |
 
+| 2026-11-04 | Contextual warmup | first 6.0s; warm 2.5s; startup 4min | [Worklog](../worklogs/2026-11-04-contextual-warmup.md) |
+
 ## Rules
 
 ```text
