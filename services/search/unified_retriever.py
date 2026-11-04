@@ -789,6 +789,34 @@ class UnifiedRetriever:
                         )
                         if (
                             anchors
+                            and os.environ.get("SCIPAL_ANCHOR_EMBEDDING", "1") not in {"0", "false", "off", "no"}
+                            and getattr(self.searcher, "model", None) is not None
+                        ):
+                            try:
+                                import numpy as _np
+
+                                texts = [row.get("text") or "" for row in candidates]
+                                vectors = self.searcher.model.encode(
+                                    [query] + texts, normalize_embeddings=True
+                                )
+                                query_vec = _np.asarray(vectors[0])
+                                scores = [
+                                    float(_np.dot(query_vec, _np.asarray(vector)))
+                                    for vector in vectors[1:]
+                                ]
+                                ranked = sorted(
+                                    zip(candidates, scores),
+                                    key=lambda item: item[1],
+                                    reverse=True,
+                                )
+                                anchors = [
+                                    {**row, "anchor_score": round(float(score), 6)}
+                                    for row, score in ranked[: max(1, int(os.environ.get("SCIPAL_ANCHOR_PER_EVIDENCE", "2")))]
+                                ]
+                            except Exception:
+                                pass
+                        if (
+                            anchors
                             and os.environ.get("SCIPAL_ANCHOR_RERANK", "0") not in {"0", "false", "off", "no"}
                             and getattr(self, "reranker", None) is not None
                         ):
