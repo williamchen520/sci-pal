@@ -325,6 +325,10 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 loss analysis table | para .95; sentence .75; 4 highlight misses | [Analysis](PostgreSQL迁移-G2-分析表.md) |
 
+| 2026-11-04 | G2 survey 2 | sentence-window, contextual retrieval, submodular, stage eval | [Survey](PostgreSQL迁移-G2-调查表2.md) |
+
+| 2026-11-04 | G2 plan 2 | anchor evidence; L3 .85 / L4 .55; 5–6 days | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
+
 ## Rules
 
 ```text
