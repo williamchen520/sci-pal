@@ -160,10 +160,17 @@ BM25 + pgvector + rerank + MMR
 recall .7708 / nDCG .6202
 ```
 
+等权 RRF（Chroma 20 题）：
+
+```text
+dynamic  .75 / .4961
+equal    .75 / .4837
+```
+
 所以：
 
 ```text
-MMR 也不是主因
+entity、MMR、动态 RRF 权重均不是主因
 剩余差异在生产 pgvector 路径
 ```
 
