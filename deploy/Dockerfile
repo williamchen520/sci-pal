@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p data documents documents_xml logs
 COPY deploy/entrypoint.sh /usr/local/bin/scipal-entrypoint.sh
-RUN chmod +x /usr/local/bin/scipal-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/scipal-entrypoint.sh && chmod +x /usr/local/bin/scipal-entrypoint.sh
 
 EXPOSE 5000
 

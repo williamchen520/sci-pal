@@ -7,7 +7,7 @@ COPY . .
 RUN pip install --no-cache-dir "psycopg-pool>=3.2" "gunicorn>=22.0"
 RUN mkdir -p data documents documents_xml logs
 COPY deploy/entrypoint.sh /usr/local/bin/scipal-entrypoint.sh
-RUN chmod +x /usr/local/bin/scipal-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/scipal-entrypoint.sh && chmod +x /usr/local/bin/scipal-entrypoint.sh
 
 EXPOSE 5000
 

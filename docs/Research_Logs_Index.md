@@ -285,6 +285,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | v1.0 WSGI gate | README TODO; APP_MODE DEV_PROD; gunicorn | [Worklog](../worklogs/2026-11-04-wsgi-gate.md) |
 
+| 2026-11-04 | q055/q060 regression | gold in FTS top20; rerank/MMR drops; experiments reverted | [Worklog](../worklogs/2026-11-04-q055-q060.md) |
+
 ## Rules
 
 ```text
