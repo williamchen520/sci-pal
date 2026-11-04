@@ -333,6 +333,10 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2.6 anchor trial 2 | embedding 全失败；anchor 默认关闭 | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
 
+| 2026-11-04 | G2.6 sentence window | q002/q016 fixed; q017/18 not; disabled | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
+
+| 2026-11-04 | G2 anchor Q&A + paragraph-first | q018 fixed; q017 not; 32–60 highlights | [Q&A](PostgreSQL迁移-G2-问答-Anchor与树.md) |
+
 ## Rules
 
 ```text
