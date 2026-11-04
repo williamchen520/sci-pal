@@ -351,6 +351,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.1 write inventory | 27 dualwrite + 12 FTS triggers; outbox 0 | [Report](PostgreSQL迁移-G3.1-写入盘点.md) |
 
+| 2026-11-05 | G3.2 PG-only ingest branch | fail closed; 2 tests; not enabled | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
+
 ## Rules
 
 ```text
