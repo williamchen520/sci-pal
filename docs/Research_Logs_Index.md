@@ -319,6 +319,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 production vector trace | backend=pgvector active; evidence vs paragraphs mismatch | [Report](PostgreSQL迁移-G2-生产掉分排查.md) |
 
+| 2026-11-04 | G2 raw/evidence A/B | 9/10 aligned; evidence not systemic | [Report](PostgreSQL迁移-G2-生产掉分排查.md) |
+
 ## Rules
 
 ```text
