@@ -770,9 +770,13 @@ class UnifiedRetriever:
                     for p in pctx.get("paragraphs") or []
                     if p.get("para_id")
                 ]
-                if para_ids and os.environ.get("SCIPAL_ANCHOR_SENTENCES", "0") not in {"0", "false", "off", "no"}:
+                if para_ids and (
+                    os.environ.get("SCIPAL_ANCHOR_SENTENCES", "0") not in {"0", "false", "off", "no"}
+                    or os.environ.get("SCIPAL_HIGHLIGHT_WINDOW", "0") not in {"0", "false", "off", "no"}
+                ):
                     try:
                         from services.search.anchor_sentences import (
+                            expand_existing_window,
                             select_anchor_window,
                             select_anchors,
                             select_paragraph_windows,
@@ -785,7 +789,15 @@ class UnifiedRetriever:
                             para_ids,
                         ).fetchall()
                         candidates = [dict(row) for row in rows]
-                        if os.environ.get("SCIPAL_ANCHOR_PARAGRAPH", "0") not in {"0", "false", "off", "no"}:
+                        if os.environ.get("SCIPAL_HIGHLIGHT_WINDOW", "0") not in {"0", "false", "off", "no"}:
+                            anchors = expand_existing_window(
+                                query,
+                                candidates,
+                                highlights,
+                                window=int(os.environ.get("SCIPAL_HIGHLIGHT_WINDOW", "1")),
+                                limit=int(os.environ.get("SCIPAL_HIGHLIGHT_LIMIT", "8")),
+                            )
+                        elif os.environ.get("SCIPAL_ANCHOR_PARAGRAPH", "0") not in {"0", "false", "off", "no"}:
                             anchors = select_paragraph_windows(
                                 query,
                                 candidates,

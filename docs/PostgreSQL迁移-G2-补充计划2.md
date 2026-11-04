@@ -258,6 +258,20 @@ paragraph-first window (limit 1):
   q002/q016/q018 命中
   q017 未命中
   高亮 16–30 条
+
+existing matched window:
+  q002/q016/q017/q018 全部命中
+  20 题 recall .65 / nDCG .3656
+  高亮 25–40 条
+```
+
+结论：
+
+```text
+单题命中解决
+但多 highlight 改变 evidence 排序
+20 题总分反而下降
+```
 ```
 
 处理：

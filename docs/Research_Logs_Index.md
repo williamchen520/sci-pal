@@ -339,6 +339,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2.6 paragraph limit1 | q017 still fails; 16–30 highlights; disabled | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
 
+| 2026-11-04 | G2 existing-window trial | 4/4 单题命中; 20 题 .65/.366 | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
+
 ## Rules
 
 ```text
