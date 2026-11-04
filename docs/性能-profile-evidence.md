@@ -96,10 +96,39 @@ PG FTS 4s 不是端到端瓶颈
 在这些不收敛前，不应继续切 FTS 后端
 ```
 
-## 8. 当前生产
+## 8. variants 与 warm-up 实测
+
+```text
+cold / 2 variants    91.3s
+warm / 2 variants     2.6s
+warm / 4 variants     7.8s
+rerank=True          >5 分钟未完成
+```
+
+启动 warm-up 只能预热向量索引：
+
+```text
+启动时间约 4–5 分钟
+首个 rerank 请求仍然极慢
+```
+
+所以已关闭 `SCIPAL_WARMUP`。
+
+## 9. 当前生产
 
 ```text
 SCIPAL_FTS_BACKEND=sqlite
+SCIPAL_MAX_QUERY_VARIANTS=2
+SCIPAL_WARMUP=0
 app healthy
 摘要库已恢复
+```
+
+## 10. 最终结论
+
+```text
+冷启动 ~90s
+warm 后 2 variants ~2.6s（无 rerank）
+rerank=True 仍不可在线
+瓶颈顺序：rerank > query variants > cold start > PG FTS
 ```

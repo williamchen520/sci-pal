@@ -35,8 +35,23 @@ CLEAN_BOILERPLATE = True
 
 # Multi-query expansion (V22.1): generate 2-4 query variants and fuse all
 # results with RRF. Set False to use only the original query.
-MULTI_QUERY = True
-MAX_QUERY_VARIANTS = 4
+def _env_flag(name: str, default: bool = True) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in {"0", "false", "off", "no"}
+
+
+def _env_int(name: str, default: int, *, low: int, high: int) -> int:
+    try:
+        value = int(os.environ.get(name, str(default)))
+    except (TypeError, ValueError):
+        value = default
+    return max(low, min(high, value))
+
+
+MULTI_QUERY = _env_flag("SCIPAL_MULTI_QUERY", True)
+MAX_QUERY_VARIANTS = _env_int("SCIPAL_MAX_QUERY_VARIANTS", 4, low=1, high=4)
 
 # V25.19: Enhanced FTS query (phrase matching + NEAR + entity weighting)
 ENHANCED_FTS = True
