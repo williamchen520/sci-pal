@@ -36,7 +36,7 @@ class PGVectorParagraphSearch:
         top_k: int = 10,
         paper_id: str = "",
     ) -> List[ParagraphHit]:
-        if not query_embedding:
+        if query_embedding is None or len(query_embedding) == 0:
             return []
         literal = vector_literal(query_embedding)
         where = "TRUE"
@@ -56,6 +56,14 @@ class PGVectorParagraphSearch:
         """
         pg, close = self._connection()
         try:
+            if self._connector is None:
+                try:
+                    ef_search = max(
+                        1, min(1000, int(os.environ.get("SCIPAL_PGVECTOR_EF_SEARCH", "200")))
+                    )
+                except ValueError:
+                    ef_search = 100
+                pg.execute(f"SET hnsw.ef_search = {ef_search}")
             rows = pg.execute(sql, params).fetchall()
         finally:
             if close:

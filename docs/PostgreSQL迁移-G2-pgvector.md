@@ -1,7 +1,7 @@
 # G2：pgvector 迁移报告（进行中）
 
 > 日期：2026-11-04  
-> 状态：G2.1–G2.3 完成，回填进行中
+> 状态：G2.1–G2.4 完成；生产切换失败已回滚
 
 ## 1. 已完成
 
@@ -10,7 +10,7 @@
 | G2.1 | `paragraph_embeddings` schema | ✅ |
 | G2.2 | Chroma -> pgvector 回填脚本 | ✅ |
 | G2.3 | `PGVectorParagraphSearch` | ✅ |
-| G2.4 | 全量回填 | 🟡 |
+| G2.4 | 全量回填 | ✅ |
 | G2.5 | 替换 Chroma 查询 | ⏳ |
 | G2.6 | 关闭 Chroma | ⏳ |
 
@@ -60,7 +60,9 @@ COPY 批量 OK
 当前：
 
 ```text
-全量回填进行中
+164,654 / 164,654
+无重复
+vector(768)
 ```
 
 ## 5. 查询 adapter
@@ -86,12 +88,45 @@ tests.test_pg_vector 3 OK
 全量 860 tests OK
 ```
 
-## 7. 未完成
+## 7. G2.4 影子对比
+
+96 题，向量单通道：
+
+| 指标 | Chroma | pgvector |
+|---|---:|---:|
+| recall@10 | 0.6250 | 0.6146 |
+| nDCG@10 | 0.4414 | 0.4357 |
+| Jaccard | — | 0.925 |
+
+HNSW：
 
 ```text
-全量回填
-Chroma vs pgvector recall 对比
+ef_search=100  recall .5729
+ef_search=200  recall .6146
+ef_search=500  recall .6146
+```
+
+## 7b. 生产切换结果
+
+```text
+生产 pgvector 96 题 recall .6250 / nDCG .4960
+Chroma         96 题 recall .6875 / nDCG .5116
+```
+
+结论：
+
+```text
+生产集成未达标
+已回滚 SCIPAL_VECTOR_BACKEND=chroma
+G4 阻塞
+```
+
+## 8. 未完成
+
+```text
+HNSW 精确性调参 / 精确扫描对比
 HybridSearch vector backend 切换
+Chroma vs pgvector 灰度
 关闭 Chroma
 ```
 
