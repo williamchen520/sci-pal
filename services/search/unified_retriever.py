@@ -753,12 +753,66 @@ class UnifiedRetriever:
                     for p in paragraphs
                 ]
 
+            if os.environ.get("SCIPAL_EVIDENCE_ORDER", "anchor").strip().lower() in {"anchor", "score"}:
+                env["parent_contexts"] = sorted(
+                    env.get("parent_contexts") or [],
+                    key=lambda row: float(row.get("score") or 0.0),
+                    reverse=True,
+                )
             pids = [p.get("paper_id") for p in env.get("parent_contexts") or []]
             flags_map = flags_for_papers(conn, [pid for pid in pids if pid])
             evidence = []
             for index, pctx in enumerate(env.get("parent_contexts") or [], 1):
                 pid = pctx.get("paper_id")
-                highlights = pctx.get("matched_sentences") or []
+                highlights = list(pctx.get("matched_sentences") or [])
+                para_ids = [
+                    p.get("para_id")
+                    for p in pctx.get("paragraphs") or []
+                    if p.get("para_id")
+                ]
+                if para_ids and os.environ.get("SCIPAL_ANCHOR_SENTENCES", "0") not in {"0", "false", "off", "no"}:
+                    try:
+                        from services.search.anchor_sentences import select_anchors
+
+                        marks = ",".join("?" * len(para_ids))
+                        rows = conn.execute(
+                            "SELECT sentence_id, para_id, text, sequence "
+                            f"FROM sentences WHERE para_id IN ({marks}) ORDER BY sequence",
+                            para_ids,
+                        ).fetchall()
+                        candidates = [dict(row) for row in rows]
+                        anchors = select_anchors(
+                            query,
+                            candidates,
+                            existing=highlights,
+                            limit=int(os.environ.get("SCIPAL_ANCHOR_PER_EVIDENCE", "2")),
+                        )
+                        if (
+                            anchors
+                            and os.environ.get("SCIPAL_ANCHOR_RERANK", "0") not in {"0", "false", "off", "no"}
+                            and getattr(self, "reranker", None) is not None
+                        ):
+                            try:
+                                reranked = self.reranker.rerank(
+                                    query,
+                                    [
+                                        {
+                                            "sentence_id": row.get("sentence_id"),
+                                            "para_id": row.get("para_id"),
+                                            "text": row.get("text") or "",
+                                        }
+                                        for row in candidates
+                                    ],
+                                    top_k=max(1, int(os.environ.get("SCIPAL_ANCHOR_PER_EVIDENCE", "2"))),
+                                )
+                                if reranked:
+                                    anchors = reranked
+                            except Exception:
+                                pass
+                        if anchors:
+                            highlights = anchors
+                    except Exception:
+                        pass
                 evidence.append(
                     {
                         "evidence_id": f"P{index}",
