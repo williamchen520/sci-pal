@@ -323,6 +323,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 evidence ordering root cause | raw .95/.6965; evidence .95/.4571 | [Report](PostgreSQL迁移-G2-生产掉分排查.md) |
 
+| 2026-11-04 | G2 loss analysis table | para .95; sentence .75; 4 highlight misses | [Analysis](PostgreSQL迁移-G2-分析表.md) |
+
 ## Rules
 
 ```text
