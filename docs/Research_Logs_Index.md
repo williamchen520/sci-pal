@@ -355,6 +355,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.2a PG writer fields | papers 全字段；sections/links 待补 | [Report](PostgreSQL迁移-G3.2-字段对齐.md) |
 
+| 2026-11-05 | G3.3 metadata PG-only | 跳过 SQLite mirror; 5 tests | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
+
 ## Rules
 
 ```text
