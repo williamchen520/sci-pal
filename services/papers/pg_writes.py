@@ -197,21 +197,21 @@ def write_papers_batch(papers: list[dict], children: list[tuple[str, list[dict],
                 for row in paragraphs:
                     pg.execute(
                         "INSERT INTO paragraphs "
-                        "(para_id, paper_id, section_level1, text, sequence, parse_engine, search_vector) "
-                        "VALUES (%s, %s, %s, %s, %s, 'xml', to_tsvector('english', %s))",
+                        "(para_id, paper_id, section_level1, text, sequence, parse_engine) "
+                        "VALUES (%s, %s, %s, %s, %s, 'xml')",
                         (
                             row["para_id"], paper_id, row.get("section_level1"), row["text"],
-                            row["sequence"], row["text"],
+                            row["sequence"],
                         ),
                     )
                 for row in sentences:
                     pg.execute(
                         "INSERT INTO sentences "
-                        "(sentence_id, para_id, paper_id, text, sequence, search_vector) "
-                        "VALUES (%s, %s, %s, %s, %s, to_tsvector('english', %s))",
+                        "(sentence_id, para_id, paper_id, text, sequence) "
+                        "VALUES (%s, %s, %s, %s, %s)",
                         (
                             row["sentence_id"], row["para_id"], paper_id, row["text"],
-                            row["sequence"], row["text"],
+                            row["sequence"],
                         ),
                     )
     except Exception as exc:  # noqa: BLE001
@@ -235,21 +235,21 @@ def replace_children(paper_id: str, paragraphs: list[dict], sentences: list[dict
             for row in paragraphs:
                 pg.execute(
                     "INSERT INTO paragraphs "
-                    "(para_id, paper_id, section_level1, text, sequence, parse_engine, search_vector) "
-                    "VALUES (%s, %s, %s, %s, %s, 'xml', to_tsvector('english', %s))",
+                    "(para_id, paper_id, section_level1, text, sequence, parse_engine) "
+                    "VALUES (%s, %s, %s, %s, %s, 'xml')",
                     (
                         row["para_id"], paper_id, row.get("section_level1"), row["text"],
-                        row["sequence"], row["text"],
+                        row["sequence"],
                     ),
                 )
             for row in sentences:
                 pg.execute(
                     "INSERT INTO sentences "
-                    "(sentence_id, para_id, paper_id, text, sequence, search_vector) "
-                    "VALUES (%s, %s, %s, %s, %s, to_tsvector('english', %s))",
+                    "(sentence_id, para_id, paper_id, text, sequence) "
+                    "VALUES (%s, %s, %s, %s, %s)",
                     (
                         row["sentence_id"], row["para_id"], paper_id, row["text"],
-                        row["sequence"], row["text"],
+                        row["sequence"],
                     ),
                 )
     except Exception as exc:  # noqa: BLE001
@@ -298,10 +298,10 @@ def write_parsed_paper(parsed_result: dict) -> bool:
             for para in paragraphs:
                 pg.execute(
                     "INSERT INTO paragraphs "
-                    "(para_id, paper_id, section_level1, section_level2, section_level3, text, sequence, page, bbox, parse_engine, search_vector) "
-                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'pdf',to_tsvector('english',%s)) "
+                    "(para_id, paper_id, section_level1, section_level2, section_level3, text, sequence, page, bbox, parse_engine) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'pdf') "
                     "ON CONFLICT (para_id) DO UPDATE SET text=EXCLUDED.text, sequence=EXCLUDED.sequence, "
-                    "page=EXCLUDED.page, bbox=EXCLUDED.bbox, search_vector=EXCLUDED.search_vector",
+                    "page=EXCLUDED.page, bbox=EXCLUDED.bbox",
                     (
                         para.get("para_id"), paper_id,
                         para.get("section_type") or para.get("section_level1"),
@@ -311,7 +311,6 @@ def write_parsed_paper(parsed_result: dict) -> bool:
                         para.get("para_index") or para.get("sequence") or 0,
                         para.get("page_number") or para.get("page"),
                         str(para.get("bbox", "")) if para.get("bbox") else None,
-                        para.get("text_content") or para.get("text") or "",
                     ),
                 )
             for fig in figures:
@@ -436,9 +435,9 @@ def replace_all_sentences(rows: list[tuple]) -> bool:
         with _pg_connection() as pg:
             pg.execute("DELETE FROM sentences")
             pg.executemany(
-                "INSERT INTO sentences (sentence_id,para_id,paper_id,text,sequence,search_vector) "
-                "VALUES (%s,%s,%s,%s,%s,to_tsvector('english',%s))",
-                [(sid, para, paper, text, seq, text) for sid, para, paper, text, seq in rows],
+                "INSERT INTO sentences (sentence_id,para_id,paper_id,text,sequence) "
+                "VALUES (%s,%s,%s,%s,%s)",
+                [(sid, para, paper, text, seq) for sid, para, paper, text, seq in rows],
             )
     except Exception as exc:  # noqa: BLE001
         LOGGER.error("PG full sentence rebuild failed; refusing SQLite fallback: %s", exc)
@@ -491,18 +490,18 @@ def sync_paper_graph(conn, paper_id: str) -> bool:
                 )
             for row in paragraphs:
                 pg.execute(
-                    "INSERT INTO paragraphs (para_id,paper_id,section_level1,section_level2,section_level3,text,sequence,page,bbox,parse_engine,section_path,section_id,search_vector) "
-                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,to_tsvector('english',%s))",
+                    "INSERT INTO paragraphs (para_id,paper_id,section_level1,section_level2,section_level3,text,sequence,page,bbox,parse_engine,section_path,section_id) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (row["para_id"], paper_id, row.get("section_level1"), row.get("section_level2"),
                      row.get("section_level3"), row["text"], row.get("sequence"), row.get("page"),
-                     row.get("bbox"), row.get("parse_engine"), row.get("section_path"), row.get("section_id"), row["text"]),
+                     row.get("bbox"), row.get("parse_engine"), row.get("section_path"), row.get("section_id")),
                 )
             for row in sentences:
                 pg.execute(
-                    "INSERT INTO sentences (sentence_id,para_id,paper_id,text,sequence,page,bbox,section_id,char_start,char_end,search_vector) "
-                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,to_tsvector('english',%s))",
+                    "INSERT INTO sentences (sentence_id,para_id,paper_id,text,sequence,page,bbox,section_id,char_start,char_end) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (row["sentence_id"], row["para_id"], paper_id, row["text"], row["sequence"],
-                     row.get("page"), row.get("bbox"), row.get("section_id"), row.get("char_start"), row.get("char_end"), row["text"]),
+                     row.get("page"), row.get("bbox"), row.get("section_id"), row.get("char_start"), row.get("char_end")),
                 )
             for row in figures:
                 pg.execute(

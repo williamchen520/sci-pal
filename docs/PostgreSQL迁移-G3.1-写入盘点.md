@@ -322,6 +322,30 @@ sentence_links
 paper_links
 ```
 
+## 9f. G3.2d PG-only 冒烟
+
+临时论文：
+
+```text
+smoke_pgonly_20261105
+```
+
+结果：
+
+```text
+insert True
+sections 2 / paragraphs 1
+PG paper / paragraphs / sections 均存在
+清理完成
+```
+
+同时修复：
+
+```text
+PG search_vector 是 generated column
+writer 不再显式插入 search_vector
+```
+
 ## 10. 当前生产
 
 ```text
