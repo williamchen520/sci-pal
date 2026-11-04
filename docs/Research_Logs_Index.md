@@ -357,6 +357,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.3 metadata PG-only | 跳过 SQLite mirror; 5 tests | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
 
+| 2026-11-05 | G3.2b PG sections builder | PG 读 paragraphs；写 sections | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
+
 ## Rules
 
 ```text

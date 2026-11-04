@@ -298,6 +298,30 @@ tests.test_paper_pg_writes 5 OK
 全量 877 tests OK
 ```
 
+## 9e. G3.2b 完成
+
+```text
+build_sections_tree
+  PG-only 时从 PG 读 paragraphs
+  生成 sections
+  pg_writes.replace_sections 写回 PG
+  不读/写 SQLite
+```
+
+测试：
+
+```text
+tests.test_build_sections_pg 1 OK
+全量 878 tests OK
+```
+
+仍未覆盖：
+
+```text
+sentence_links
+paper_links
+```
+
 ## 10. 当前生产
 
 ```text
