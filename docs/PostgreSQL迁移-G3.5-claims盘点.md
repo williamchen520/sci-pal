@@ -106,6 +106,30 @@ app healthy
 
 ---
 
+## 6b. G3.5a 完成
+
+```text
+services/claims/pg_read.py
+routes/claims.py
+  SCIPAL_CLAIMS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+list 5 条
+detail evidence 3 / events 10
+```
+
+测试：
+
+```text
+tests.test_claims_pg_read 2 OK
+全量 885 tests OK
+```
+
+写路径仍 SQLite。
+
 ## 7. 下一步
 
 ```text

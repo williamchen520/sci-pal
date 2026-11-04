@@ -367,6 +367,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.5 claims inventory | PG read adapter first; writes later | [Report](PostgreSQL迁移-G3.5-claims盘点.md) |
 
+| 2026-11-05 | G3.5a claims PG read | list/detail/events pass; writes SQLite | [Plan](PostgreSQL迁移-G3.5-claims盘点.md) |
+
 ## Rules
 
 ```text

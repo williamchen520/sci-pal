@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, request
 
+import os
+
 from services.claims import service
+
+
+def _pg_read() -> bool:
+    return os.environ.get("SCIPAL_CLAIMS_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
 
 
 def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=None) -> Blueprint:
@@ -14,6 +22,10 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
     @bp.get("")
     @bp.get("/")
     def listing():
+        if _pg_read():
+            from services.claims import pg_read
+
+            return jsonify({"claims": pg_read.list_claims()})
         conn = service.connect(db_path)
         try:
             return jsonify({"claims": service.list_claims(conn)})
@@ -22,6 +34,13 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
 
     @bp.get("/<claim_id>")
     def detail(claim_id: str):
+        if _pg_read():
+            from services.claims import pg_read
+
+            claim = pg_read.get_claim(claim_id)
+            if not claim:
+                return jsonify({"error": "claim not found"}), 404
+            return jsonify(claim)
         conn = service.connect(db_path)
         try:
             claim = service.get_claim(conn, claim_id)
@@ -131,6 +150,13 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
 
     @bp.get("/<claim_id>/events")
     def events(claim_id: str):
+        if _pg_read():
+            from services.claims import pg_read
+
+            claim = pg_read.get_claim(claim_id)
+            if not claim:
+                return jsonify({"error": "claim not found"}), 404
+            return jsonify({"events": claim.get("events", [])})
         conn = service.connect(db_path)
         try:
             claim = service.get_claim(conn, claim_id)
