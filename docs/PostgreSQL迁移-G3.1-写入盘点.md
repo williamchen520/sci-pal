@@ -346,6 +346,28 @@ PG search_vector 是 generated column
 writer 不再显式插入 search_vector
 ```
 
+## 9g. G3.2c Link builder
+
+```text
+services/papers/pg_links.py
+  build_paper_links_for
+  build_sentence_links_for
+```
+
+PG-only ingest 后调用：
+
+```text
+paper_links      已验证 1 条
+sentence_links   真实论文验证 320 条（source=pg_links）
+synthetic 0      是 fixture citation 映射问题
+```
+
+待办：
+
+```text
+sentence_links 已在真实论文 paper_PMC12707946 验证
+```
+
 ## 10. 当前生产
 
 ```text
