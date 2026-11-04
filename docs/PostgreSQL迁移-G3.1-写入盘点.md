@@ -260,6 +260,44 @@ tests.test_db_writer_pg_only 2 OK
 SCIPAL_INGEST_PG_ONLY=0
 ```
 
+## 9c. G3.2b 阻塞
+
+```text
+build_sections_tree 读取 SQLite paragraphs
+然后才写 PG sections
+```
+
+PG-only 后没有 SQLite paragraphs，不能直接跑该 builder。
+
+需要：
+
+```text
+G3.2b1 从 PG 读 paragraphs
+G3.2b2 生成 sections
+G3.2b3 写回 PG
+```
+
+## 9d. G3.3 已完成
+
+```text
+update_workspace
+update_metadata_if_exists
+```
+
+新增：
+
+```text
+SCIPAL_INGEST_PG_ONLY=1
+  -> PG 成功后跳过 SQLite mirror
+```
+
+测试：
+
+```text
+tests.test_paper_pg_writes 5 OK
+全量 877 tests OK
+```
+
 ## 10. 当前生产
 
 ```text
