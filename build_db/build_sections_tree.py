@@ -38,7 +38,73 @@ def _heading_path(row: sqlite3.Row) -> List[str]:
     return path
 
 
+def _build_rows(rows, paper_id: str):
+    path_ids: Dict[Tuple[str, ...], str] = {}
+    section_rows: List[Tuple[Any, ...]] = []
+    para_map: List[Tuple[str, Any]] = []
+    stats = {"sections": 0, "paragraphs": 0, "bound": 0}
+    seq = 0
+    for row in rows:
+        path = _heading_path(row)
+        parent_id = None
+        for depth in range(1, len(path) + 1):
+            key = tuple(path[:depth])
+            if key not in path_ids:
+                seq += 1
+                section_id = f"sec_{paper_id}_{seq:04d}"
+                path_ids[key] = section_id
+                section_rows.append(
+                    (
+                        section_id,
+                        paper_id,
+                        parent_id,
+                        depth,
+                        path[depth - 1],
+                        seq,
+                        row["page"],
+                        row["bbox"],
+                        "docling" if row["section_path"] else "legacy",
+                    )
+                )
+            parent_id = path_ids[key]
+        section_id = path_ids[tuple(path)] if path else None
+        para_map.append((row["para_id"], section_id))
+        stats["paragraphs"] += 1
+        if section_id:
+            stats["bound"] += 1
+    stats["sections"] = len(section_rows)
+    return section_rows, para_map, stats
+
+
+def _pg_paragraph_rows(paper_id: str):
+    from services.db.pg_pool import pg_connection
+
+    conn = pg_connection()
+    try:
+        return conn.execute(
+            "SELECT para_id, section_path, section_level1, section_level2, "
+            "section_level3, page, bbox FROM paragraphs "
+            "WHERE paper_id = %s ORDER BY sequence",
+            (paper_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+
+def _build_pg(paper_id: str) -> Dict[str, int]:
+    rows = _pg_paragraph_rows(paper_id)
+    section_rows, para_map, stats = _build_rows(rows, paper_id)
+    if not stats["paragraphs"]:
+        return stats
+    if not pg_writes.replace_sections(paper_id, section_rows, para_map):
+        raise RuntimeError("PG section write failed")
+    return stats
+
+
 def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
+    if pg_writes.pg_only() and pg_writes.enabled():
+        return _build_pg(paper_id)
+
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     stats = {"sections": 0, "paragraphs": 0, "bound": 0}
@@ -123,6 +189,34 @@ def build_for_paper(db_path: Path | str, paper_id: str) -> Dict[str, int]:
 
 
 def build_all(db_path: Path | str = DEFAULT_DB, limit: int = 0) -> Dict[str, Any]:
+    if pg_writes.pg_only() and pg_writes.enabled():
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            papers = [
+                row["paper_id"]
+                for row in pg.execute(
+                    "SELECT DISTINCT p.paper_id FROM paragraphs p "
+                    "JOIN papers pp ON pp.paper_id = p.paper_id "
+                    "WHERE COALESCE(pp.parse_engine, '') != 'xml' "
+                    "ORDER BY p.paper_id"
+                ).fetchall()
+            ]
+        finally:
+            pg.close()
+        total = {"papers": 0, "sections": 0, "paragraphs": 0, "bound": 0}
+        for paper_id in papers:
+            stats = build_for_paper(db_path, paper_id)
+            if not stats["paragraphs"]:
+                continue
+            total["papers"] += 1
+            for key in ("sections", "paragraphs", "bound"):
+                total[key] += stats[key]
+            if limit and total["papers"] >= limit:
+                break
+        return total
+
     conn = sqlite3.connect(str(db_path))
     papers = [
         row[0]
