@@ -4,7 +4,7 @@
 > 目标：彻底退出 SQLite + Chroma 混合架构  
 > 原则：先验证、再切换、最后删除；任何阶段不达标就停  
 > G0 状态：**已通过（2026-11-04）**，详见 `PostgreSQL迁移-G0-paradedb.md`  
-> G1 状态：**G1.1–G1.5 已完成**，详见 `PostgreSQL迁移-G1-FTS适配.md`
+> G1 状态：**已完成，生产 100% ParadeDB**，详见 `PostgreSQL迁移-G1-总结.md`
 
 ---
 
