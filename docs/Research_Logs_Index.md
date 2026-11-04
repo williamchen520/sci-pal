@@ -347,6 +347,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 answer anchor | anchor 0/4; context 4/4; disabled | [Plan](PostgreSQL迁移-G2-补充计划3.md) |
 
+| 2026-11-05 | G2.5 pgvector acceptance | .70/.4747 < Chroma .75/.4961; rollback | [Report](PostgreSQL迁移-G2.5-pgvector验收.md) |
+
 ## Rules
 
 ```text
