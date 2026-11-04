@@ -341,6 +341,10 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 existing-window trial | 4/4 单题命中; 20 题 .65/.366 | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
 
+| 2026-11-04 | G2.7 context split | 20 题 .75/.4961; context hit 4/4; anchor 0/4 | [Plan](PostgreSQL迁移-G2-补充计划3.md) |
+
+| 2026-11-04 | G2.7 context split 96 | 96 题 .6875/.5130 保持；context 4/4 | [Plan](PostgreSQL迁移-G2-补充计划3.md) |
+
 ## Rules
 
 ```text

@@ -873,6 +873,32 @@ class UnifiedRetriever:
                             highlights = anchors
                     except Exception:
                         pass
+                context_window = []
+                if para_ids and os.environ.get("SCIPAL_CONTEXT_WINDOW", "0") not in {"0", "false", "off", "no"}:
+                    try:
+                        from services.search.anchor_sentences import expand_existing_window
+
+                        marks = ",".join("?" * len(para_ids))
+                        rows = conn.execute(
+                            "SELECT sentence_id, para_id, text, sequence "
+                            f"FROM sentences WHERE para_id IN ({marks}) ORDER BY sequence",
+                            para_ids,
+                        ).fetchall()
+                        expanded = expand_existing_window(
+                            query,
+                            [dict(row) for row in rows],
+                            highlights,
+                            window=int(os.environ.get("SCIPAL_CONTEXT_WINDOW", "2")),
+                            limit=int(os.environ.get("SCIPAL_CONTEXT_LIMIT", "8")),
+                        )
+                        highlight_ids = {h.get("sentence_id") for h in highlights}
+                        context_window = [
+                            {**row, "role": "context"}
+                            for row in expanded
+                            if row.get("sentence_id") not in highlight_ids
+                        ]
+                    except Exception:
+                        context_window = []
                 evidence.append(
                     {
                         "evidence_id": f"P{index}",
@@ -887,6 +913,8 @@ class UnifiedRetriever:
                         ),
                         "text": pctx.get("text", ""),
                         "highlight": highlights,
+                        "context_window": context_window,
+                        "context_only": [row.get("sentence_id") for row in context_window],
                         "links": link_details([h.get("sentence_id") for h in highlights]),
                         "injection_flags": find_injections(pctx.get("text", "")),
                     }
