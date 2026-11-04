@@ -6,6 +6,7 @@ from services.search.anchor_sentences import (
     select_anchor_window,
     select_anchors,
     select_paragraph_windows,
+    expand_existing_window,
     score_sentence,
 )
 
@@ -70,3 +71,14 @@ class ParagraphWindowTests(unittest.TestCase):
         rows = select_paragraph_windows("cancer", sentences, limit_paragraphs=2, window=1)
         self.assertIn("a2", [row["sentence_id"] for row in rows])
         self.assertIn("b2", [row["sentence_id"] for row in rows])
+
+class ExistingWindowTests(unittest.TestCase):
+    def test_keeps_anchor_and_neighbors(self):
+        sentences = [
+            {"sentence_id": "s1", "para_id": "p1", "text": "a", "sequence": 1},
+            {"sentence_id": "s2", "para_id": "p1", "text": "b", "sequence": 2},
+            {"sentence_id": "s3", "para_id": "p1", "text": "c", "sequence": 3},
+            {"sentence_id": "s4", "para_id": "p1", "text": "d", "sequence": 4},
+        ]
+        rows = expand_existing_window("b", sentences, [{"sentence_id": "s3"}], window=1, limit=4)
+        self.assertEqual([row["sentence_id"] for row in rows], ["s2", "s3", "s4"])
