@@ -299,6 +299,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G1.6 ParadeDB 10% gray | compose service; percent split; 857 tests | [Report](PostgreSQL迁移-G1-FTS适配.md) |
 
+| 2026-11-04 | G1.6 ParadeDB 100% | recall .6875 / nDCG .5116; production switched | [Report](PostgreSQL迁移-G1-FTS适配.md) |
+
 ## Rules
 
 ```text
