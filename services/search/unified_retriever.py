@@ -775,6 +775,7 @@ class UnifiedRetriever:
                         from services.search.anchor_sentences import (
                             select_anchor_window,
                             select_anchors,
+                            select_paragraph_windows,
                         )
 
                         marks = ",".join("?" * len(para_ids))
@@ -784,7 +785,14 @@ class UnifiedRetriever:
                             para_ids,
                         ).fetchall()
                         candidates = [dict(row) for row in rows]
-                        if os.environ.get("SCIPAL_ANCHOR_WINDOW", "0") not in {"0", "false", "off", "no"}:
+                        if os.environ.get("SCIPAL_ANCHOR_PARAGRAPH", "0") not in {"0", "false", "off", "no"}:
+                            anchors = select_paragraph_windows(
+                                query,
+                                candidates,
+                                limit_paragraphs=int(os.environ.get("SCIPAL_ANCHOR_PARAGRAPH_LIMIT", "2")),
+                                window=int(os.environ.get("SCIPAL_ANCHOR_WINDOW", "1")),
+                            )
+                        elif os.environ.get("SCIPAL_ANCHOR_WINDOW", "0") not in {"0", "false", "off", "no"}:
                             anchors = select_anchor_window(
                                 query,
                                 candidates,

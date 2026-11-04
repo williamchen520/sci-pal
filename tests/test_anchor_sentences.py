@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import unittest
 
-from services.search.anchor_sentences import select_anchor_window, score_sentence, select_anchors
+from services.search.anchor_sentences import (
+    select_anchor_window,
+    select_anchors,
+    select_paragraph_windows,
+    score_sentence,
+)
 
 
 class AnchorSentenceTests(unittest.TestCase):
@@ -53,3 +58,15 @@ class AnchorWindowTests(unittest.TestCase):
         self.assertIn("s2", ids)
         self.assertIn("s3", ids)
         self.assertLessEqual(len(anchors), 3)
+
+class ParagraphWindowTests(unittest.TestCase):
+    def test_one_window_per_paragraph(self):
+        sentences = [
+            {"sentence_id": "a1", "para_id": "pa", "text": "intro", "sequence": 1},
+            {"sentence_id": "a2", "para_id": "pa", "text": "cancer answer", "sequence": 2},
+            {"sentence_id": "b1", "para_id": "pb", "text": "other context", "sequence": 1},
+            {"sentence_id": "b2", "para_id": "pb", "text": "cancer detail", "sequence": 2},
+        ]
+        rows = select_paragraph_windows("cancer", sentences, limit_paragraphs=2, window=1)
+        self.assertIn("a2", [row["sentence_id"] for row in rows])
+        self.assertIn("b2", [row["sentence_id"] for row in rows])

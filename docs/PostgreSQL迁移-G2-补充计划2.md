@@ -248,6 +248,11 @@ sentence window:
   q002/q016 命中
   q017/q018 未命中
   高亮 19–30 条
+
+paragraph-first window:
+  q002/q016/q018 命中
+  q017 未命中
+  高亮 32–60 条
 ```
 
 处理：

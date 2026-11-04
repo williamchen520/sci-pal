@@ -108,3 +108,32 @@ def select_anchor_window(
     chosen = [same[i] for i in order[: max(1, min(limit, 1 + 2 * window))]]
     chosen.sort(key=lambda row: int(row.get("sequence") or 0))
     return chosen
+
+def select_paragraph_windows(
+    query: str,
+    sentences: Iterable[dict],
+    *,
+    limit_paragraphs: int = 2,
+    window: int = 1,
+) -> List[dict]:
+    """Select one anchor window per paragraph, then keep the best paragraphs."""
+    groups: dict[str, list[dict]] = {}
+    for row in sentences:
+        if row.get("sentence_id") and row.get("para_id"):
+            groups.setdefault(row["para_id"], []).append(dict(row))
+    windows = []
+    for para_id, rows in groups.items():
+        chosen = select_anchor_window(query, rows, limit=3, window=window)
+        if chosen:
+            score = max(float(row.get("anchor_score") or 0.0) for row in chosen)
+            windows.append((score, para_id, chosen))
+    windows.sort(key=lambda item: -item[0])
+    out = []
+    seen = set()
+    for _, _, chosen in windows[: max(1, limit_paragraphs)]:
+        for row in chosen:
+            sid = row.get("sentence_id")
+            if sid and sid not in seen:
+                seen.add(sid)
+                out.append(row)
+    return out
