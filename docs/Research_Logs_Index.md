@@ -275,6 +275,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | Warmup and rerank profile | cold 91s; warm 2.6s; rerank >5min | [Profile](性能-profile-evidence.md) |
 
+| 2026-11-04 | Rerank truncation | cold 133s; warm 20.6s; 849 tests | [Worklog](../worklogs/2026-11-04-rerank-truncate.md) |
+
 ## Rules
 
 ```text

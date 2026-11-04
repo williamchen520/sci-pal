@@ -182,8 +182,11 @@ def get_retriever():
     if _retriever is None:
         # V31.71: 回退到旧的统一检索器（unified_retriever.py），检索层不改，只改数据层
         from services.search.unified_retriever import UnifiedRetriever
+        rerank_enabled = os.environ.get("SCIPAL_RERANK", "1").strip().lower() not in {
+            "0", "false", "off", "no"
+        }
         _retriever = UnifiedRetriever(
-            rerank=True, routing=True, expand=True, graph_expand=True)
+            rerank=rerank_enabled, routing=True, expand=True, graph_expand=True)
     return _retriever
 
 

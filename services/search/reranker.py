@@ -30,8 +30,14 @@ class Reranker:
         if not results:
             return []
 
-        # Build (query, document) pairs
-        pairs = [(query, r["text"]) for r in results]
+        # Bound CPU cost: long paragraphs are truncated before the cross-encoder.
+        try:
+            max_items = max(1, int(os.environ.get("SCIPAL_RERANK_MAX_ITEMS", "40")))
+            max_chars = max(80, int(os.environ.get("SCIPAL_RERANK_MAX_CHARS", "512")))
+        except ValueError:
+            max_items, max_chars = 40, 512
+        results = results[:max_items]
+        pairs = [(query, (r.get("text") or "")[:max_chars]) for r in results]
 
         # Cross-encoder scores (higher = more relevant)
         scores = self.model.predict(pairs, batch_size=batch_size)
