@@ -60,8 +60,7 @@ SCIPAL_PARADEDB_DSN
 ## 5. 当前范围
 
 ```text
-已完成：paragraphs
-未完成：summaries / sentences
+已完成：paragraphs / summaries / sentences
 未切换生产
 ```
 
@@ -75,8 +74,8 @@ tests.test_pg_fts 8 OK
 ## 7. 下一步
 
 ```text
-G1.2 PGSummaryBM25
-G1.3 PGSentenceBM25
+G1.2 PGSummaryBM25 ✅
+G1.3 PGSentenceBM25 ✅
 G1.4 查询语法（AND/短语）
 G1.5 20/96 影子
 ```
