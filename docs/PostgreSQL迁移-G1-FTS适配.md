@@ -10,6 +10,7 @@
 | G1.1 | `ParadeDBParagraphFTS` | ✅ |
 | G1.2 | `ParadeDBSummaryFTS` | ✅ |
 | G1.3 | `ParadeDBSentenceFTS` | ✅ |
+| G1.4 | AND / 短语查询 | ✅ |
 
 ## 2. 数据
 
@@ -79,10 +80,24 @@ tests.test_pg_fts 10 OK
 全量 853 tests OK
 ```
 
-## 7. 未完成
+## 7. 查询语法
 
 ```text
-G1.4 查询语法（AND/短语）
+"heart failure"       -> 短语
+any                   -> OR
+all                   -> AND
+```
+
+实测：
+
+```text
+"hepatocellular carcinoma" immune checkpoint  -> 3 hits
+"hepatocellular carcinoma" AND immune         -> 3 hits
+```
+
+## 8. 未完成
+
+```text
 G1.5 20/96 影子双跑
 G1.6 灰度切换
 ```
