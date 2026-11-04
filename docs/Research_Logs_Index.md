@@ -349,6 +349,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G2.5 pgvector acceptance | .70/.4747 < Chroma .75/.4961; rollback | [Report](PostgreSQL迁移-G2.5-pgvector验收.md) |
 
+| 2026-11-05 | G3.1 write inventory | 27 dualwrite + 12 FTS triggers; outbox 0 | [Report](PostgreSQL迁移-G3.1-写入盘点.md) |
+
 ## Rules
 
 ```text
