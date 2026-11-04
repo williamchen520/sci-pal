@@ -192,3 +192,18 @@ class ParadeDBSummarySentenceTests(unittest.TestCase):
         self.assertEqual(hits[0].sentence_id, "sent1")
         self.assertIn("s.paper_id = %s", fake.sql)
         self.assertIn("s.para_id = %s", fake.sql)
+
+class ParadeDBQuerySyntaxTests(unittest.TestCase):
+    def test_quoted_phrase_is_preserved(self):
+        built = ParadeDBParagraphFTS._bm25_query(
+            'What is "heart failure" therapy?', "any", 8
+        )
+        self.assertIn('"heart failure"', built)
+        self.assertIn(" OR ", built)
+
+    def test_all_uses_and(self):
+        built = ParadeDBParagraphFTS._bm25_query(
+            '"heart failure" tumor', "all", 8
+        )
+        self.assertIn(" AND ", built)
+        self.assertNotIn(" OR ", built)

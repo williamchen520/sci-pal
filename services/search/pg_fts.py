@@ -325,16 +325,21 @@ class ParadeDBParagraphFTS:
     def _bm25_query(query: str, match: str, term_limit: int) -> str:
         import re
 
+        limit = max(1, min(term_limit, 12))
+        safe = lambda value: bool(re.fullmatch(r"[A-Za-z0-9_]+", value))  # noqa: E731
+        phrases = []
+        for raw in re.findall(r'"([^"]{2,80})"', query):
+            words = [part for part in re.findall(r"[A-Za-z0-9_]+", raw) if safe(part)]
+            if words:
+                phrases.append('"' + " ".join(words) + '"')
         terms = [
-            term
-            for term in (_extract_keywords(query) or [])
-            if re.fullmatch(r"[A-Za-z0-9_]+", term)
+            term for term in (_extract_keywords(query) or []) if safe(term)
         ]
-        terms = terms[: max(1, min(term_limit, 12))]
-        if not terms:
+        parts = list(dict.fromkeys(phrases + terms))[:limit]
+        if not parts:
             return ""
         joiner = " AND " if match == "all" else " OR "
-        return joiner.join(terms)
+        return joiner.join(parts)
 
     def search(
         self,
