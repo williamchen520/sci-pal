@@ -756,8 +756,13 @@ if __name__ == "__main__":
         print("  ✅ 检索模型已加载")
         if os.environ.get("SCIPAL_WARMUP", "").strip().lower() in {"1", "true", "yes", "on"}:
             print("  🔥 预热向量索引...")
-            retriever.searcher.vector_search("warmup", 1)
-            print("  ✅ 向量索引已预热")
+            warm_collection = None
+            if os.environ.get("SCIPAL_CONTEXTUAL_MODE", "adaptive").lower() == "always":
+                warm_collection = getattr(retriever.searcher, "contextual_collection", None)
+            retriever.searcher.vector_search("warmup", 1, collection=warm_collection)
+            if getattr(retriever, "reranker", None) is not None:
+                retriever.reranker.rerank("warmup", [{"text": "warmup"}], top_k=1)
+            print("  ✅ 向量索引与 reranker 已预热")
     except Exception as e:
         print(f"  ⚠️ 检索模型预热失败: {e}")
     try:
