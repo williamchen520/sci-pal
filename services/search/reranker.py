@@ -15,7 +15,17 @@ from config.paths import RERANK_MODEL
 class Reranker:
     def __init__(self, model_name: str = RERANK_MODEL):
         from sentence_transformers import CrossEncoder
-        self.model = CrossEncoder(model_name)
+
+        device = os.environ.get("SCIPAL_RERANK_DEVICE", "").strip()
+        if not device:
+            try:
+                import torch
+
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+            except Exception:  # noqa: BLE001
+                device = "cpu"
+        self.device = device
+        self.model = CrossEncoder(model_name, device=device)
 
     def rerank(self, query: str, results: List[Dict],
                top_k: int = 5, batch_size: int = 32) -> List[Dict]:
