@@ -287,6 +287,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | q055/q060 regression | gold in FTS top20; rerank/MMR drops; experiments reverted | [Worklog](../worklogs/2026-11-04-q055-q060.md) |
 
+| 2026-11-04 | PostgreSQL single-stack plan | G0-G5; ParadeDB + pgvector; 4–6 weeks | [Plan](PostgreSQL单栈迁移计划.md) |
+
 ## Rules
 
 ```text
