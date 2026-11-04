@@ -197,22 +197,24 @@ class UnifiedRetriever:
                 self.diagnostics.mark("entity_fts_total", _entity_search_ms)
 
                 # 去重，然后加到 fused 里
-                if entity_hits:
-                    def _pid(row):
-                        return row.get("para_id") or row.get("paragraph_id") or row.get("id")
+                # Entity hits are a weighting signal, not a new lane.
+                from services.search.entity_boost import (
+                    apply_entity_boost,
+                    entity_boost_mode,
+                    entity_boost_weight,
+                )
 
-                    existing_ids = {_pid(p) for p in fused if _pid(p)}
-                    new_hits = []
-                    seen = set(existing_ids)
-                    for hit in entity_hits:
-                        key = _pid(hit)
-                        if key and key not in seen:
-                            seen.add(key)
-                            new_hits.append(hit)
-                    fused.extend(new_hits)
-                    print(f"  📊 Entity boost: total {len(entity_hits)} hits, +{len(new_hits)} new paragraphs added")
-                else:
-                    print(f"  📊 Entity boost: no new paragraphs found")
+                mode = entity_boost_mode()
+                affected = apply_entity_boost(
+                    fused,
+                    entity_hits,
+                    mode=mode,
+                    weight=entity_boost_weight(),
+                )
+                print(
+                    f"  📊 Entity boost: mode={mode}, hits={len(entity_hits)}, "
+                    f"affected={affected}"
+                )
                 self.diagnostics.mark("entity_boost", (time.time() - _entity_started) * 1000)
 
                 seed_mode = os.environ.get("SCIPAL_SENTENCE_SEEDS", "0").lower()

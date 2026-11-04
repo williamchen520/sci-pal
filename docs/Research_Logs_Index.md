@@ -311,6 +311,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 production drop diagnosis | ef/pool, entity dedup, multi-query RRF | [Report](PostgreSQL迁移-G2-生产掉分排查.md) |
 
+| 2026-11-04 | G2 entity boost plan | post-fusion boost; 20 题等价; 863 tests | [Plan](PostgreSQL迁移-G2-补充计划.md) |
+
 ## Rules
 
 ```text
