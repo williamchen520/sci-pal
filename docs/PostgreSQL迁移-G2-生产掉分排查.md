@@ -270,3 +270,35 @@ SCIPAL_VECTOR_BACKEND=chroma
 FTS 100% ParadeDB
 app healthy
 ```
+
+
+## 14. 单进程 A/B（10 题）
+
+| 题 | raw paragraphs | evidence |
+|---|---|---|
+| q001–q005 | 命中 | 命中 |
+| q006 | 未命中 | 未命中 |
+| q007–q010 | 命中 | 命中 |
+
+结论：
+
+```text
+9/10 raw 与 evidence 一致
+只有 q006 两边都失败
+parent-context 不是系统性主因
+```
+
+## 15. 当前结论
+
+```text
+evidence 构造排除
+q006 是真实检索失败样本
+生产 pgvector .625 仍未复现
+```
+
+下一步：
+
+```text
+单进程 pgvector A/B（必须避免双 Chroma 锁）
+或直接对 q006 做 stage trace
+```
