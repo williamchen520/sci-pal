@@ -11,6 +11,7 @@
 | G1.2 | `ParadeDBSummaryFTS` | ✅ |
 | G1.3 | `ParadeDBSentenceFTS` | ✅ |
 | G1.4 | AND / 短语查询 | ✅ |
+| G1.5 | 20/96 影子双跑 | ✅ |
 
 ## 2. 数据
 
@@ -95,10 +96,39 @@ all                   -> AND
 "hepatocellular carcinoma" AND immune         -> 3 hits
 ```
 
-## 8. 未完成
+## 8. G1.5 影子双跑
+
+代码路径：
 
 ```text
-G1.5 20/96 影子双跑
+ParadeDBParagraphFTS.search(top_k=50)
+  -> GPU reranker
+  -> top10
+```
+
+96 题：
+
+```text
+recall@10   0.7500
+nDCG@10     0.6203
+```
+
+对比生产：
+
+```text
+recall  0.6615
+nDCG    0.5034
+```
+
+结论：
+
+```text
+ParadeDB 全链路超过当前 SQLite 链路
+```
+
+## 9. 未完成
+
+```text
 G1.6 灰度切换
 ```
 
