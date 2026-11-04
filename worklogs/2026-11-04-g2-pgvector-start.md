@@ -43,7 +43,7 @@ batch 1000
 
 ```text
 100 条验证 OK
-全量进行中
+全量完成 164,654
 ```
 
 ## 5. 查询
@@ -66,10 +66,18 @@ tests.test_pg_vector 3 OK
 全量 860 tests OK
 ```
 
-## 7. 未完成
+## 7. G2.4 结果
 
 ```text
-G2.4 全量回填 + recall 对比
+Chroma    recall .6250 / nDCG .4414
+pgvector  recall .6146 / nDCG .4357
+Jaccard   .925
+```
+
+## 8. 未完成
+
+```text
+HNSW 精确性调参
 G2.5 替换 Chroma 查询
 G2.6 关闭 Chroma
 ```
