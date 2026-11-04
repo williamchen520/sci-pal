@@ -301,6 +301,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G1.6 ParadeDB 100% | recall .6875 / nDCG .5116; production switched | [Report](PostgreSQL迁移-G1-FTS适配.md) |
 
+| 2026-11-04 | G1 summary | 100% ParadeDB; recall .6875 / nDCG .5116; 857 tests | [Summary](PostgreSQL迁移-G1-总结.md) |
+
 ## Rules
 
 ```text
