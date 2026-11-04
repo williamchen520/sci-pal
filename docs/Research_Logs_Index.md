@@ -309,6 +309,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 production rollback | pgvector .625 < Chroma .6875; G4 blocked | [Report](PostgreSQL迁移-G2-pgvector.md) |
 
+| 2026-11-04 | G2 production drop diagnosis | ef/pool, entity dedup, multi-query RRF | [Report](PostgreSQL迁移-G2-生产掉分排查.md) |
+
 ## Rules
 
 ```text

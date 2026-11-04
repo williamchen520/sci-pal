@@ -198,8 +198,17 @@ class UnifiedRetriever:
 
                 # 去重，然后加到 fused 里
                 if entity_hits:
-                    existing_ids = {p.get("paragraph_id") or p.get("id") for p in fused}
-                    new_hits = [p for p in entity_hits if (p.get("paragraph_id") or p.get("id")) not in existing_ids]
+                    def _pid(row):
+                        return row.get("para_id") or row.get("paragraph_id") or row.get("id")
+
+                    existing_ids = {_pid(p) for p in fused if _pid(p)}
+                    new_hits = []
+                    seen = set(existing_ids)
+                    for hit in entity_hits:
+                        key = _pid(hit)
+                        if key and key not in seen:
+                            seen.add(key)
+                            new_hits.append(hit)
                     fused.extend(new_hits)
                     print(f"  📊 Entity boost: total {len(entity_hits)} hits, +{len(new_hits)} new paragraphs added")
                 else:
