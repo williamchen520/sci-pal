@@ -315,6 +315,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 boost 96 + MMR repro | boost .6875; pgvector+MMR .7708; entity/MMR excluded | [Plan](PostgreSQL迁移-G2-补充计划.md) |
 
+| 2026-11-04 | G2 equal RRF test | equal .75/.4837; components excluded | [Plan](PostgreSQL迁移-G2-补充计划.md) |
+
 ## Rules
 
 ```text

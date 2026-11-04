@@ -59,7 +59,7 @@ ENHANCED_FTS = True
 # V25.19: Dynamic RRF weights — adjust vector/FTS balance based on query type.
 # Entity-heavy queries (lots of gene/protein symbols) get higher FTS weight.
 # Natural-language queries get higher vector weight.
-DYNAMIC_RRF_WEIGHTS = True
+DYNAMIC_RRF_WEIGHTS = os.environ.get("SCIPAL_DYNAMIC_RRF_WEIGHTS", "1").strip().lower() not in {"0", "false", "off", "no"}
 DEFAULT_VECTOR_WEIGHT = 1.0
 DEFAULT_FTS_WEIGHT = 1.0
 ENTITY_FTS_WEIGHT_BOOST = 0.5  # extra FTS weight per entity (capped at +1.0)
