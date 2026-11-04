@@ -288,3 +288,81 @@ class PGSummaryFTS(_BasePG):
             if close:
                 pg.close()
         return [SummaryHit(**row) for row in rows]
+
+class ParadeDBParagraphFTS:
+    """BM25 paragraph recall through ParadeDB pg_search.
+
+    This adapter is deliberately separate from :class:`PGParagraphFTS`:
+    ``@@@`` + ``pdb.score`` are ParadeDB syntax, not native PostgreSQL FTS.
+    """
+
+    def __init__(self, dsn: Optional[str] = None, *, connector=None):
+        self.dsn = dsn or os.environ.get("SCIPAL_PARADEDB_DSN") or os.environ.get(
+            "SCIPAL_PG_DSN", ""
+        )
+        self._connector = connector
+
+    def _connection(self):
+        if self._connector is not None:
+            return self._connector(), False
+        from services.db.pg_pool import pg_connection
+
+        return pg_connection(self.dsn), True
+
+    @staticmethod
+    def _bm25_query(query: str, match: str, term_limit: int) -> str:
+        import re
+
+        terms = [
+            term
+            for term in (_extract_keywords(query) or [])
+            if re.fullmatch(r"[A-Za-z0-9_]+", term)
+        ]
+        terms = terms[: max(1, min(term_limit, 12))]
+        if not terms:
+            return ""
+        joiner = " AND " if match == "all" else " OR "
+        return joiner.join(terms)
+
+    def search(
+        self,
+        query: str,
+        *,
+        top_k: int = 20,
+        paper_id: str = "",
+        section_level1: str = "",
+        match: str = "any",
+        term_limit: int = 12,
+    ) -> List[ParagraphHit]:
+        query = (query or "").strip()
+        if not query:
+            return []
+        if match not in ("any", "all"):
+            raise ValueError("match must be any or all")
+        bm25_query = self._bm25_query(query, match, term_limit)
+        if not bm25_query:
+            return []
+        where = "p.text @@@ %s"
+        params: list = [bm25_query]
+        if paper_id:
+            where += " AND p.paper_id = %s"
+            params.append(paper_id)
+        if section_level1:
+            where += " AND p.section_level1 = %s"
+            params.append(section_level1)
+        params.append(top_k)
+        sql = f"""
+            SELECT p.para_id, p.paper_id, p.section_level1, p.section_level2,
+                   p.text, pdb.score(p.para_id) AS rank
+            FROM paragraphs p
+            WHERE {where}
+            ORDER BY rank DESC, p.para_id
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [ParagraphHit(**row) for row in rows]

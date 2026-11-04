@@ -289,6 +289,10 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | PostgreSQL single-stack plan | G0-G5; ParadeDB + pgvector; 4–6 weeks | [Plan](PostgreSQL单栈迁移计划.md) |
 
+| 2026-11-04 | G0 ParadeDB spike | BM25+rerank recall .75 / nDCG .620; pass | [Report](PostgreSQL迁移-G0-paradedb.md) |
+
+| 2026-11-04 | G1.1 ParadeDB paragraphs | BM25 adapter + hybrid flag; 851 tests | [Worklog](../worklogs/2026-11-04-g1-paradedb-paragraph.md) |
+
 ## Rules
 
 ```text

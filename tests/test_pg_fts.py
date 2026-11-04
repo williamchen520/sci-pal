@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from services.search.pg_fts import PGParagraphFTS, PGSummaryFTS
+from services.search.pg_fts import ParadeDBParagraphFTS, PGParagraphFTS, PGSummaryFTS
 
 
 class FakeCursor:
@@ -113,3 +113,37 @@ class PGSummaryFTSTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class ParadeDBParagraphFTSTests(unittest.TestCase):
+    def test_bm25_sql_and_or_query(self):
+        fake = FakeCursor(
+            [
+                {
+                    "para_id": "p1",
+                    "paper_id": "paper1",
+                    "section_level1": "Intro",
+                    "section_level2": None,
+                    "text": "HCC text",
+                    "rank": 3.5,
+                }
+            ]
+        )
+        hits = ParadeDBParagraphFTS(connector=lambda: fake).search(
+            "ICI rechallenge in hepatocellular carcinoma", top_k=5
+        )
+        self.assertEqual(len(hits), 1)
+        self.assertIn("@@@", fake.sql)
+        self.assertIn("pdb.score", fake.sql)
+        self.assertIn(" OR ", fake.params[0])
+        self.assertEqual(fake.params[-1], 5)
+
+    def test_filters_and_empty(self):
+        fake = FakeCursor([])
+        ParadeDBParagraphFTS(connector=lambda: fake).search(
+            "tumor microenvironment", paper_id="paper1", section_level1="Results",
+            match="all",
+        )
+        self.assertIn("p.paper_id = %s", fake.sql)
+        self.assertIn("p.section_level1 = %s", fake.sql)
+        self.assertIn(" AND ", fake.params[0])
+        self.assertEqual(ParadeDBParagraphFTS(connector=lambda: object()).search(" "), [])
