@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import unittest
 
-from services.search.pg_fts import ParadeDBParagraphFTS, PGParagraphFTS, PGSummaryFTS
+from services.search.pg_fts import (
+    ParadeDBParagraphFTS,
+    ParadeDBSentenceFTS,
+    ParadeDBSummaryFTS,
+    PGParagraphFTS,
+    PGSummaryFTS,
+)
 
 
 class FakeCursor:
@@ -147,3 +153,42 @@ class ParadeDBParagraphFTSTests(unittest.TestCase):
         self.assertIn("p.section_level1 = %s", fake.sql)
         self.assertIn(" AND ", fake.params[0])
         self.assertEqual(ParadeDBParagraphFTS(connector=lambda: object()).search(" "), [])
+
+class ParadeDBSummarySentenceTests(unittest.TestCase):
+    def test_summary_bm25(self):
+        fake = FakeCursor(
+            [
+                {
+                    "summary_id": "s1",
+                    "paper_id": "paper1",
+                    "section_id": "sec1",
+                    "level": 1,
+                    "title": "Results",
+                    "text": "HCC summary",
+                    "rank": 2.5,
+                }
+            ]
+        )
+        hits = ParadeDBSummaryFTS(connector=lambda: fake).search("HCC treatment", top_k=3)
+        self.assertEqual(hits[0].summary_id, "s1")
+        self.assertIn("s.text @@@ %s", fake.sql)
+        self.assertIn("pdb.score", fake.sql)
+
+    def test_sentence_filters(self):
+        fake = FakeCursor(
+            [
+                {
+                    "sentence_id": "sent1",
+                    "para_id": "p1",
+                    "paper_id": "paper1",
+                    "text": "HCC sentence",
+                    "rank": 1.5,
+                }
+            ]
+        )
+        hits = ParadeDBSentenceFTS(connector=lambda: fake).search(
+            "HCC", top_k=5, paper_id="paper1", para_id="p1"
+        )
+        self.assertEqual(hits[0].sentence_id, "sent1")
+        self.assertIn("s.paper_id = %s", fake.sql)
+        self.assertIn("s.para_id = %s", fake.sql)

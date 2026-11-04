@@ -293,6 +293,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G1.1 ParadeDB paragraphs | BM25 adapter + hybrid flag; 851 tests | [Worklog](../worklogs/2026-11-04-g1-paradedb-paragraph.md) |
 
+| 2026-11-04 | G1 ParadeDB FTS adapters | paragraphs/summaries/sentences; 853 tests | [Report](PostgreSQL迁移-G1-FTS适配.md) |
+
 ## Rules
 
 ```text

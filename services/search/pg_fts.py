@@ -26,6 +26,18 @@ class ParagraphHit:
 
 
 @dataclass
+class SentenceHit:
+    sentence_id: str
+    para_id: str
+    paper_id: str
+    text: str
+    rank: float
+
+    def as_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
 class SummaryHit:
     summary_id: str
     paper_id: str
@@ -366,3 +378,92 @@ class ParadeDBParagraphFTS:
             if close:
                 pg.close()
         return [ParagraphHit(**row) for row in rows]
+
+class ParadeDBSummaryFTS(ParadeDBParagraphFTS):
+    """BM25 section-summary recall through ParadeDB."""
+
+    def search(
+        self,
+        query: str,
+        *,
+        top_k: int = 3,
+        paper_id: str = "",
+        match: str = "any",
+        term_limit: int = 8,
+    ) -> List[SummaryHit]:
+        query = (query or "").strip()
+        if not query:
+            return []
+        bm25_query = self._bm25_query(query, match, term_limit)
+        if not bm25_query:
+            return []
+        where = "(s.title @@@ %s OR s.text @@@ %s)"
+        params: list = [bm25_query, bm25_query]
+        if paper_id:
+            where += " AND s.paper_id = %s"
+            params.append(paper_id)
+        params.append(top_k)
+        sql = f"""
+            SELECT s.summary_id, s.paper_id, s.section_id, s.level,
+                   s.title, s.text, pdb.score(s.summary_id) AS rank
+            FROM summaries s
+            WHERE {where}
+            ORDER BY rank DESC, s.summary_id
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [SummaryHit(**row) for row in rows]
+
+
+class ParadeDBSentenceFTS(ParadeDBParagraphFTS):
+    """BM25 sentence recall through ParadeDB.
+
+    Used for highlight selection and sentence-level verification, not as a
+    replacement for paragraph retrieval.
+    """
+
+    def search(
+        self,
+        query: str,
+        *,
+        top_k: int = 20,
+        paper_id: str = "",
+        para_id: str = "",
+        match: str = "any",
+        term_limit: int = 12,
+    ) -> List[SentenceHit]:
+        query = (query or "").strip()
+        if not query:
+            return []
+        bm25_query = self._bm25_query(query, match, term_limit)
+        if not bm25_query:
+            return []
+        where = "s.text @@@ %s"
+        params: list = [bm25_query]
+        if paper_id:
+            where += " AND s.paper_id = %s"
+            params.append(paper_id)
+        if para_id:
+            where += " AND s.para_id = %s"
+            params.append(para_id)
+        params.append(top_k)
+        sql = f"""
+            SELECT s.sentence_id, s.para_id, s.paper_id, s.text,
+                   pdb.score(s.sentence_id) AS rank
+            FROM sentences s
+            WHERE {where}
+            ORDER BY rank DESC, s.sentence_id
+            LIMIT %s
+        """
+        pg, close = self._connection()
+        try:
+            rows = pg.execute(sql, params).fetchall()
+        finally:
+            if close:
+                pg.close()
+        return [SentenceHit(**row) for row in rows]
