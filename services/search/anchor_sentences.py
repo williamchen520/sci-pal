@@ -74,3 +74,37 @@ def select_anchors(
         rows.append(item)
     rows.sort(key=lambda row: (-float(row.get("anchor_score") or 0.0), row.get("sequence") or 0))
     return rows[: max(1, limit)]
+
+def select_anchor_window(
+    query: str,
+    sentences: Iterable[dict],
+    *,
+    existing: Iterable[dict] = (),
+    limit: int = 3,
+    window: int = 2,
+) -> List[dict]:
+    """Pick the best sentence, then its nearest neighbours in the same paragraph."""
+    rows = [dict(row) for row in sentences if row.get("sentence_id")]
+    if not rows:
+        return []
+    existing_ids = {row.get("sentence_id") for row in existing if row.get("sentence_id")}
+    for row in rows:
+        row["anchor_score"] = score_sentence(
+            query,
+            row.get("text") or "",
+            position=int(row.get("sequence") or 0),
+            existing=row.get("sentence_id") in existing_ids,
+        )
+    best = max(rows, key=lambda row: float(row.get("anchor_score") or 0.0))
+    same = sorted(
+        [row for row in rows if row.get("para_id") == best.get("para_id")],
+        key=lambda row: int(row.get("sequence") or 0),
+    )
+    index = next(i for i, row in enumerate(same) if row.get("sentence_id") == best.get("sentence_id"))
+    order = sorted(
+        range(len(same)),
+        key=lambda i: (abs(i - index), 0 if i <= index else 1),
+    )
+    chosen = [same[i] for i in order[: max(1, min(limit, 1 + 2 * window))]]
+    chosen.sort(key=lambda row: int(row.get("sequence") or 0))
+    return chosen

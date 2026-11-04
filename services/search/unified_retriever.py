@@ -772,7 +772,10 @@ class UnifiedRetriever:
                 ]
                 if para_ids and os.environ.get("SCIPAL_ANCHOR_SENTENCES", "0") not in {"0", "false", "off", "no"}:
                     try:
-                        from services.search.anchor_sentences import select_anchors
+                        from services.search.anchor_sentences import (
+                            select_anchor_window,
+                            select_anchors,
+                        )
 
                         marks = ",".join("?" * len(para_ids))
                         rows = conn.execute(
@@ -781,12 +784,21 @@ class UnifiedRetriever:
                             para_ids,
                         ).fetchall()
                         candidates = [dict(row) for row in rows]
-                        anchors = select_anchors(
-                            query,
-                            candidates,
-                            existing=highlights,
-                            limit=int(os.environ.get("SCIPAL_ANCHOR_PER_EVIDENCE", "2")),
-                        )
+                        if os.environ.get("SCIPAL_ANCHOR_WINDOW", "0") not in {"0", "false", "off", "no"}:
+                            anchors = select_anchor_window(
+                                query,
+                                candidates,
+                                existing=highlights,
+                                limit=3,
+                                window=int(os.environ.get("SCIPAL_ANCHOR_WINDOW", "2")),
+                            )
+                        else:
+                            anchors = select_anchors(
+                                query,
+                                candidates,
+                                existing=highlights,
+                                limit=int(os.environ.get("SCIPAL_ANCHOR_PER_EVIDENCE", "2")),
+                            )
                         if (
                             anchors
                             and os.environ.get("SCIPAL_ANCHOR_EMBEDDING", "1") not in {"0", "false", "off", "no"}

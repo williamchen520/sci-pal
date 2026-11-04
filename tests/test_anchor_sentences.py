@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from services.search.anchor_sentences import score_sentence, select_anchors
+from services.search.anchor_sentences import select_anchor_window, score_sentence, select_anchors
 
 
 class AnchorSentenceTests(unittest.TestCase):
@@ -39,3 +39,17 @@ class AnchorSentenceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class AnchorWindowTests(unittest.TestCase):
+    def test_window_includes_neighbor(self):
+        sentences = [
+            {"sentence_id": "s1", "para_id": "p1", "text": "intro", "sequence": 1},
+            {"sentence_id": "s2", "para_id": "p1", "text": "classical model", "sequence": 2},
+            {"sentence_id": "s3", "para_id": "p1", "text": "contemporary model difference", "sequence": 3},
+            {"sentence_id": "s4", "para_id": "p1", "text": "other", "sequence": 4},
+        ]
+        anchors = select_anchor_window("classical difference", sentences, limit=3, window=2)
+        ids = [row["sentence_id"] for row in anchors]
+        self.assertIn("s2", ids)
+        self.assertIn("s3", ids)
+        self.assertLessEqual(len(anchors), 3)
