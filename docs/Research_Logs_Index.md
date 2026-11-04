@@ -283,6 +283,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | Contextual warmup | first 6.0s; warm 2.5s; startup 4min | [Worklog](../worklogs/2026-11-04-contextual-warmup.md) |
 
+| 2026-11-04 | v1.0 WSGI gate | README TODO; APP_MODE DEV_PROD; gunicorn | [Worklog](../worklogs/2026-11-04-wsgi-gate.md) |
+
 ## Rules
 
 ```text

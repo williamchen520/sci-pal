@@ -27,6 +27,17 @@ SciPal is a locally deployable system for searching scientific literature, parsi
 
 ---
 
+## TODO: v1.0 Release Gate
+
+> [!IMPORTANT]
+> **Before tagging v1.0 and publishing for public deployment, the Flask development server MUST be replaced by a production WSGI server (Waitress/Gunicorn).**
+>
+> `python api_server.py` is for development only. Set `APP_MODE=PROD_MODE` to run
+> under gunicorn. This gate applies when algorithms are settled, tests are green,
+> and the `v1.0` tag is about to be pushed to GitHub for public download/deploy.
+
+---
+
 ## Current Engineering Status (2026-11-02)
 
 ```text
