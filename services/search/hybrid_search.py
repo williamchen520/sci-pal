@@ -223,6 +223,46 @@ class HybridSearch:
                 break
         return hits
 
+    def _paradedb_fts_search(self, query: str, top_k: int, paper_id: str, filters: Optional[Dict]):
+        """BM25 candidates from ParadeDB; None means fall back to SQLite."""
+        if filters and any(filters.get(key) for key in ("year_min", "year_max", "journal")):
+            return None
+        try:
+            import logging
+
+            if getattr(self, "_paradedb_paragraph_fts", None) is None:
+                from services.search.pg_fts import ParadeDBParagraphFTS
+
+                self._paradedb_paragraph_fts = ParadeDBParagraphFTS()
+            hits = self._paradedb_paragraph_fts.search(
+                query,
+                top_k=top_k,
+                paper_id=paper_id or "",
+                section_level1=(filters or {}).get("section_l1") or "",
+            )
+            paper_ids = (filters or {}).get("paper_ids")
+            if paper_ids is not None:
+                allowed = set(paper_ids)
+                hits = [hit for hit in hits if hit.paper_id in allowed]
+            if not hits:
+                return None
+            return [
+                {
+                    "para_id": hit.para_id,
+                    "paper_id": hit.paper_id,
+                    "section_l1": hit.section_level1,
+                    "section_l2": hit.section_level2,
+                    "text": hit.text,
+                    "score": float(hit.rank),
+                }
+                for hit in hits
+            ]
+        except Exception as exc:  # noqa: BLE001 - optional backend
+            logging.getLogger(__name__).warning(
+                "ParadeDB FTS failed, falling back to SQLite: %s", exc
+            )
+            return None
+
     def _pg_fts_search(self, query: str, top_k: int, paper_id: str, filters: Optional[Dict]):
         """PG term3 candidates + rerank; None means fall back to SQLite."""
         if filters and any(filters.get(key) for key in ("year_min", "year_max", "journal")):
@@ -260,7 +300,12 @@ class HybridSearch:
         Year/journal filters require a JOIN with the papers table.
         V25.19: enhanced FTS query with phrase matching, NEAR, entity weighting.
         """
-        if os.environ.get("SCIPAL_FTS_BACKEND", "").strip().lower() in {"postgres", "postgresql", "pg"}:
+        backend = os.environ.get("SCIPAL_FTS_BACKEND", "").strip().lower()
+        if backend in {"paradedb", "parade", "pg_search"}:
+            parade_results = self._paradedb_fts_search(query, top_k, paper_id, filters)
+            if parade_results is not None:
+                return parade_results
+        if backend in {"postgres", "postgresql", "pg"}:
             pg_results = self._pg_fts_search(query, top_k, paper_id, filters)
             if pg_results is not None:
                 return pg_results
