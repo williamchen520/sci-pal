@@ -279,6 +279,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | Rerank quality check | trunc recall .425 < no-rerank .575; rerank off | [Worklog](../worklogs/2026-11-04-rerank-truncate.md) |
 
+| 2026-11-04 | GPU rerank | warm 2.7s; recall .650; 849 tests | [Worklog](../worklogs/2026-11-04-gpu-rerank.md) |
+
 ## Rules
 
 ```text

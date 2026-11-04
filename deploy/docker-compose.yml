@@ -1,6 +1,7 @@
 services:
   app:
     image: scipal-app:latest
+    gpus: all
     build:
       context: ..
       dockerfile: deploy/Dockerfile
