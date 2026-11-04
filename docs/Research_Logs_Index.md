@@ -363,6 +363,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.2c PG link builder | paper_links 1; sentence_links 0 待查 | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
 
+| 2026-11-05 | G3.4 notes PG | create/list/delete pass; backend flag | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
+
 ## Rules
 
 ```text

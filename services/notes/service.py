@@ -8,6 +8,14 @@ from pathlib import Path
 
 from config.settings import DATABASE_PATH
 
+
+def _pg_backend() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_NOTES_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
 SCHEMA = (
     """
     CREATE TABLE IF NOT EXISTS notes (
@@ -68,6 +76,10 @@ def list_notes(
     paper_id: str | None = None,
     db_path: str | Path = DATABASE_PATH,
 ) -> list[dict]:
+    if _pg_backend():
+        from services.notes import pg_service
+
+        return pg_service.list_notes(workspace_id, user_id, paper_id=paper_id)
     conn = _connect(db_path)
     try:
         sql = (
@@ -96,6 +108,12 @@ def create_note(
     content = (content or "").strip()
     if not content:
         raise ValueError("content is required")
+    if _pg_backend():
+        from services.notes import pg_service
+
+        return pg_service.create_note(
+            workspace_id, user_id, content, paper_id=paper_id, para_id=para_id
+        )
     conn = _connect(db_path)
     try:
         if paper_id and not paper_in_workspace(conn, paper_id, workspace_id):
@@ -128,6 +146,10 @@ def update_note(
     content = (content or "").strip()
     if not content:
         raise ValueError("content is required")
+    if _pg_backend():
+        from services.notes import pg_service
+
+        return pg_service.update_note(note_id, workspace_id, user_id, content)
     conn = _connect(db_path)
     try:
         cursor = conn.execute(
@@ -155,6 +177,10 @@ def delete_note(
     *,
     db_path: str | Path = DATABASE_PATH,
 ) -> bool:
+    if _pg_backend():
+        from services.notes import pg_service
+
+        return pg_service.delete_note(note_id, workspace_id, user_id)
     conn = _connect(db_path)
     try:
         cursor = conn.execute(

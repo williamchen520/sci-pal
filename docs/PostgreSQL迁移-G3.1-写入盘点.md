@@ -368,6 +368,28 @@ synthetic 0      是 fixture citation 映射问题
 sentence_links 已在真实论文 paper_PMC12707946 验证
 ```
 
+## 9h. G3.4 notes PG-only
+
+```text
+deploy/sql/003_notes.sql
+services/notes/pg_service.py
+services/notes/service.py
+  SCIPAL_NOTES_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+create / list / delete 全部通过
+```
+
+测试：
+
+```text
+tests.test_notes_pg 3 OK
+全量 883 tests OK
+```
+
 ## 10. 当前生产
 
 ```text
