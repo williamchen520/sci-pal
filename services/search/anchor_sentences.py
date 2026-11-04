@@ -137,3 +137,42 @@ def select_paragraph_windows(
                 seen.add(sid)
                 out.append(row)
     return out
+
+def expand_existing_window(
+    query: str,
+    sentences: Iterable[dict],
+    existing: Iterable[dict],
+    *,
+    window: int = 2,
+    limit: int = 8,
+) -> List[dict]:
+    """Keep existing matched sentences and add same-paragraph neighbours."""
+    rows = [dict(row) for row in sentences if row.get("sentence_id")]
+    by_id = {row["sentence_id"]: row for row in rows}
+    by_para: dict[str, list[dict]] = {}
+    for row in rows:
+        by_para.setdefault(row.get("para_id"), []).append(row)
+    for group in by_para.values():
+        group.sort(key=lambda row: int(row.get("sequence") or 0))
+
+    selected = []
+    seen = set()
+    for anchor in existing:
+        sid = anchor.get("sentence_id")
+        row = by_id.get(sid)
+        if not row:
+            continue
+        group = by_para.get(row.get("para_id")) or []
+        index = next(i for i, item in enumerate(group) if item.get("sentence_id") == sid)
+        for pos in range(max(0, index - window), min(len(group), index + window + 1)):
+            item = dict(group[pos])
+            item["anchor_score"] = round(
+                score_sentence(query, item.get("text") or "", position=pos, existing=pos == index),
+                6,
+            )
+            if item["sentence_id"] not in seen:
+                seen.add(item["sentence_id"])
+                selected.append(item)
+        if len(selected) >= limit:
+            break
+    return selected[: max(1, limit)]
