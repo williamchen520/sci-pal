@@ -329,6 +329,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 plan 2 | anchor evidence; L3 .85 / L4 .55; 5–6 days | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
 
+| 2026-11-04 | G2.6 anchor trial | q002 fixed; q016/17/18 not; disabled | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
+
 ## Rules
 
 ```text

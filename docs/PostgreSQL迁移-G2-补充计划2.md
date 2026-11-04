@@ -228,6 +228,35 @@ Day 6  G2.13 决策 + G2.14
 
 ---
 
+## 11b. G2.6 试验结果
+
+```text
+lexical anchor:
+  q002 未命中，highlight 膨胀
+
+cross-encoder anchor:
+  q002 命中
+  q016/q017/q018 未命中
+  高亮 12–20 条
+  延迟 4.5–10s
+```
+
+处理：
+
+```text
+默认关闭
+SCIPAL_ANCHOR_SENTENCES=0
+SCIPAL_ANCHOR_RERANK=0
+```
+
+结论：
+
+```text
+anchor 方向正确
+但仅对 q002 有效
+需要更强的 sentence matching / 训练/规则
+```
+
 ## 12. 当前生产
 
 ```text
