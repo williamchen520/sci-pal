@@ -139,11 +139,32 @@ SCIPAL_ENTITY_BOOST_WEIGHT=0.05
 | boost | .75 | .4961 |
 | off | 未跑 | — |
 
+96 题（Chroma）：
+
+```text
+boost  .6875 / .5130
+append .6875 / .5116
+```
+
 结论：
 
 ```text
-20 题上 boost 与 append 等价
-还需 96 题确认，暂不切 pgvector
+boost 与 append 基本等价
+entity 不是掉分主因
+```
+
+离线复现：
+
+```text
+BM25 + pgvector + rerank + MMR
+recall .7708 / nDCG .6202
+```
+
+所以：
+
+```text
+MMR 也不是主因
+剩余差异在生产 pgvector 路径
 ```
 
 ## 7. 当前生产
