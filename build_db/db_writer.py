@@ -55,6 +55,12 @@ class DatabaseWriter:
                 )
             if not paper_pg_writes.write_parsed_paper(parsed_result):
                 raise paper_pg_writes.PaperWriteError("PG-only ingest failed")
+            try:
+                from services.papers import pg_links
+
+                pg_links.build_links_for(parsed_result["paper_id"])
+            except Exception as exc:  # noqa: BLE001 - links are post-processing
+                print(f"⚠️ PG link build skipped: {exc}")
             return True
 
         conn = self._get_connection()
