@@ -48,6 +48,15 @@ class DatabaseWriter:
         Returns:
             True if successful
         """
+        if os.environ.get("SCIPAL_INGEST_PG_ONLY", "0").strip().lower() in {"1", "true", "on", "yes"}:
+            if not paper_pg_writes.enabled():
+                raise paper_pg_writes.PaperWriteError(
+                    "SCIPAL_INGEST_PG_ONLY requires SCIPAL_PAPER_WRITE_BACKEND=postgres"
+                )
+            if not paper_pg_writes.write_parsed_paper(parsed_result):
+                raise paper_pg_writes.PaperWriteError("PG-only ingest failed")
+            return True
+
         conn = self._get_connection()
         cursor = conn.cursor()
         

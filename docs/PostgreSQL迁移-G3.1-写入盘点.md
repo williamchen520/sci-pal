@@ -238,6 +238,28 @@ G3.10 SQLite 只读归档
 
 ---
 
+## 9b. G3.2 代码进展
+
+```text
+build_db/db_writer.py
+  SCIPAL_INGEST_PG_ONLY=1
+  PG 成功 -> 跳过 SQLite
+  PG 失败 -> fail closed，不回退
+```
+
+测试：
+
+```text
+tests.test_db_writer_pg_only 2 OK
+全量 874 tests OK
+```
+
+未启用生产：
+
+```text
+SCIPAL_INGEST_PG_ONLY=0
+```
+
 ## 10. 当前生产
 
 ```text
