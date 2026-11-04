@@ -301,7 +301,19 @@ class HybridSearch:
         V25.19: enhanced FTS query with phrase matching, NEAR, entity weighting.
         """
         backend = os.environ.get("SCIPAL_FTS_BACKEND", "").strip().lower()
-        if backend in {"paradedb", "parade", "pg_search"}:
+        try:
+            parade_percent = max(
+                0, min(100, int(os.environ.get("SCIPAL_FTS_PARADEDB_PERCENT", "0") or 0))
+            )
+        except ValueError:
+            parade_percent = 0
+        if parade_percent:
+            import zlib
+
+            use_parade = zlib.crc32(query.encode("utf-8")) % 100 < parade_percent
+        else:
+            use_parade = False
+        if backend in {"paradedb", "parade", "pg_search"} or use_parade:
             parade_results = self._paradedb_fts_search(query, top_k, paper_id, filters)
             if parade_results is not None:
                 return parade_results
