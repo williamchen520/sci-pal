@@ -166,6 +166,63 @@ class HybridSearch:
 
         V24.2: filters dict supports section_l1, year_min, year_max, journal.
         """
+        trace_path = os.environ.get("SCIPAL_VECTOR_TRACE_PATH", "").strip()
+
+        def _trace(event, **fields):
+            if not trace_path:
+                return
+            import json as _json
+            import time as _time
+            try:
+                with open(trace_path, "a", encoding="utf-8") as fh:
+                    fh.write(_json.dumps({"ts": _time.time(), "event": event, **fields}, ensure_ascii=False) + "\n")
+            except OSError:
+                pass
+
+        backend = os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower()
+        _trace("vector_enter", backend=backend, top_k=top_k, paper_id=paper_id or "", filters=filters or {})
+        if backend in {"pgvector", "pg_vec", "postgres"}:
+            if getattr(self, "_pg_vector", None) is None:
+                from services.search.pg_vector import PGVectorParagraphSearch
+
+                self._pg_vector = PGVectorParagraphSearch()
+            query_emb = self.model.encode([query], normalize_embeddings=True)[0]
+            pg_hits = self._pg_vector.search(query_emb, top_k=top_k, paper_id=paper_id or "")
+            ids = [hit.para_id for hit in pg_hits]
+            _trace("vector_pg", count=len(ids), ids=ids[:50])
+            allowed = self._get_filtered_paper_ids(filters)
+            if allowed is not None:
+                pg_hits = [hit for hit in pg_hits if hit.paper_id in set(allowed)]
+            hits = []
+            for hit in pg_hits:
+                if filters and (filters.get("section_l1") or ""):
+                    if hit.section_level1 != filters.get("section_l1"):
+                        continue
+                if EXCLUDE_REFERENCE_ENTRIES and is_reference_entry(
+                    hit.text, hit.section_level1, hit.section_level2
+                ):
+                    continue
+                text = clean_boilerplate(hit.text) if CLEAN_BOILERPLATE else hit.text
+                if not text:
+                    continue
+                hits.append({
+                    "para_id": hit.para_id,
+                    "paper_id": hit.paper_id,
+                    "section_l1": hit.section_level1,
+                    "section_l2": hit.section_level2,
+                    "text": text,
+                    "metadata": {
+                        "paper_id": hit.paper_id,
+                        "section_l1": hit.section_level1,
+                        "section_l2": hit.section_level2,
+                    },
+                    "score": float(hit.rank),
+                })
+                if len(hits) >= top_k:
+                    break
+            _trace("vector_pg_out", count=len(hits), ids=[hit["para_id"] for hit in hits])
+            return hits
+
         query_emb = self.model.encode([query]).tolist()
 
         # Build Chroma where clause
@@ -221,6 +278,7 @@ class HybridSearch:
             })
             if len(hits) >= top_k:
                 break
+        _trace("vector_chroma", count=len(hits), ids=[hit["para_id"] for hit in hits])
         return hits
 
     def _paradedb_fts_search(self, query: str, top_k: int, paper_id: str, filters: Optional[Dict]):
