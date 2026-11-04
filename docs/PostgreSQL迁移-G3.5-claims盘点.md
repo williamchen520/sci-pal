@@ -130,6 +130,25 @@ tests.test_claims_pg_read 2 OK
 
 写路径仍 SQLite。
 
+## 6c. G3.5b 完成
+
+```text
+services/claims/pg_write.py
+  add_evidence
+  decide
+  add_note
+routes/claims.py 按 SCIPAL_CLAIMS_BACKEND 切换
+```
+
+测试：
+
+```text
+tests.test_claims_pg_write 3 OK
+全量 888 tests OK
+```
+
+尚未做真实 claim 写入冒烟，避免污染现有事件。
+
 ## 7. 下一步
 
 ```text
