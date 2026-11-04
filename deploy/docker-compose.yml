@@ -99,6 +99,22 @@ services:
       disable: true
     restart: unless-stopped
 
+  paradedb:
+    image: paradedb/paradedb:latest
+    environment:
+      POSTGRES_DB: scipal_g0
+      POSTGRES_PASSWORD: scipal_g0
+    ports:
+      - "5434:5432"
+    volumes:
+      - paradedb_g0:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d scipal_g0"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   caddy:
     image: caddy:2
     depends_on:
@@ -114,5 +130,8 @@ services:
     restart: unless-stopped
 
 volumes:
+  paradedb_g0:
+    external: true
+    name: paradedb_g0
   caddy_data:
   caddy_config:
