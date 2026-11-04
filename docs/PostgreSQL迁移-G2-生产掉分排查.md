@@ -302,3 +302,41 @@ q006 是真实检索失败样本
 单进程 pgvector A/B（必须避免双 Chroma 锁）
 或直接对 q006 做 stage trace
 ```
+
+
+## 16. 维护窗口单进程 A/B（最终）
+
+操作：
+
+```text
+停止 app
+单进程跑 pgvector 20 题
+恢复 app
+```
+
+结果：
+
+| 阶段 | recall@10 | nDCG@10 |
+|---|---:|---:|
+| raw paragraphs | 0.95 | 0.6965 |
+| evidence | 0.95 | 0.4571 |
+
+结论：
+
+```text
+parent context 不丢 recall
+但会严重破坏排序
+nDCG 从 .6965 掉到 .4571
+```
+
+生产 pgvector API 的 .4747 与 evidence 的 .4571 对齐。
+所以掉分主因是 **evidence 构造/排序**，不是 pgvector。
+
+## 17. 下一步
+
+```text
+修 to_evidence_json 的 evidence 顺序
+保持 raw paragraphs 的 rerank 分数顺序
+修正 highlight sentence 选择
+再跑 20/96
+```
