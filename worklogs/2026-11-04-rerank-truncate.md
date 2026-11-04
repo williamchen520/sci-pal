@@ -60,11 +60,27 @@ warm rerank       20.6s
 
 改善明显，但仍未到 4s。
 
-## 5. 质量
+## 5. 质量复跑
+
+20 题回归：
 
 ```text
-未复跑 20/96 recall
-截断可能影响长段落排序
+rerank 关闭         recall .575 / MRR .229
+截断 rerank 20      recall .425 / MRR .341
+```
+
+结论：
+
+```text
+截断 rerank 质量反而更差
+不能接受
+```
+
+40 条截断版：
+
+```text
+8 分钟只跑 5 题
+过慢，中止
 ```
 
 ## 6. 测试
@@ -74,10 +90,17 @@ tests.test_reranker 1 OK
 全量 847 tests OK
 ```
 
-## 7. 未完成项
+## 7. 最终处理
+
+```text
+生产 SCIPAL_RERANK=0
+接口恢复 4.2–4.4s
+rerank 只保留离线/实验用途
+```
+
+## 8. 未完成项
 
 ```text
 PR Pending Review
-rerank 质量评估
-进一步降低 rerank 候选
+小模型 / GPU / 专用 rerank
 ```
