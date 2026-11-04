@@ -176,3 +176,49 @@ def expand_existing_window(
         if len(selected) >= limit:
             break
     return selected[: max(1, limit)]
+
+def answer_type_bonus(query: str, text: str) -> float:
+    q = (query or "").lower()
+    s = (text or "").lower()
+    bonus = 0.0
+    if any(cue in q for cue in ("how many", "number of", "how much")):
+        if any(cue in s for cue in ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")):
+            bonus += 0.35
+        if any(cue in s for cue in ("%", "percent", "patients", "cases")):
+            bonus += 0.05
+    if any(cue in q for cue in ("difference", "compare", "versus", " vs ")):
+        if any(cue in s for cue in ("whereas", "although", "classical", "contemporary", "in contrast", "unlike")):
+            bonus += 0.25
+    if any(cue in q for cue in ("why", "reason", "cause")):
+        if any(cue in s for cue in ("because", "due to", "reproduc", "limitation", "challenge", "insufficient")):
+            bonus += 0.25
+    if any(cue in q for cue in ("gap", "barrier", "limitation", "challenge")):
+        if any(cue in s for cue in ("gap", "implementation", "validation", "limitation", "barrier")):
+            bonus += 0.25
+    return bonus
+
+
+def select_answer_anchor(
+    query: str,
+    sentences: Iterable[dict],
+    *,
+    existing: Iterable[dict] = (),
+    limit: int = 1,
+) -> List[dict]:
+    existing_ids = {row.get("sentence_id") for row in existing if row.get("sentence_id")}
+    rows = []
+    for position, row in enumerate(sentences):
+        item = dict(row)
+        item["anchor_score"] = round(
+            score_sentence(
+                query,
+                item.get("text") or "",
+                position=position,
+                existing=item.get("sentence_id") in existing_ids,
+            )
+            + answer_type_bonus(query, item.get("text") or ""),
+            6,
+        )
+        rows.append(item)
+    rows.sort(key=lambda row: -float(row.get("anchor_score") or 0.0))
+    return rows[: max(1, limit)]

@@ -192,6 +192,34 @@ context_only：
 17–30 条/20 题
 ```
 
+## 8c. answer-type anchor 试验
+
+```text
+SCIPAL_ANCHOR_MODE=answer
+```
+
+结果：
+
+```text
+q002/q016/q017/q018 anchor 0/4
+context 4/4
+highlight 10
+```
+
+结论：
+
+```text
+规则型 answer-type 选择器失败
+数字/因果/差距线索不足以定位 gold
+```
+
+处理：
+
+```text
+SCIPAL_ANCHOR_MODE=off
+context window 保持
+```
+
 ## 9. 当前生产
 
 ```text

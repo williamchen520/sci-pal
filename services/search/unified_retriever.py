@@ -779,6 +779,7 @@ class UnifiedRetriever:
                             expand_existing_window,
                             select_anchor_window,
                             select_anchors,
+                            select_answer_anchor,
                             select_paragraph_windows,
                         )
 
@@ -789,7 +790,14 @@ class UnifiedRetriever:
                             para_ids,
                         ).fetchall()
                         candidates = [dict(row) for row in rows]
-                        if os.environ.get("SCIPAL_HIGHLIGHT_WINDOW", "0") not in {"0", "false", "off", "no"}:
+                        if os.environ.get("SCIPAL_ANCHOR_MODE", "").strip().lower() in {"answer", "answer_type"}:
+                            anchors = select_answer_anchor(
+                                query,
+                                candidates,
+                                existing=highlights,
+                                limit=1,
+                            )
+                        elif os.environ.get("SCIPAL_HIGHLIGHT_WINDOW", "0") not in {"0", "false", "off", "no"}:
                             anchors = expand_existing_window(
                                 query,
                                 candidates,

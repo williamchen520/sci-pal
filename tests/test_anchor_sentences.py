@@ -8,6 +8,7 @@ from services.search.anchor_sentences import (
     select_paragraph_windows,
     expand_existing_window,
     score_sentence,
+    select_answer_anchor,
 )
 
 
@@ -82,3 +83,20 @@ class ExistingWindowTests(unittest.TestCase):
         ]
         rows = expand_existing_window("b", sentences, [{"sentence_id": "s3"}], window=1, limit=4)
         self.assertEqual([row["sentence_id"] for row in rows], ["s2", "s3", "s4"])
+
+class AnswerAnchorTests(unittest.TestCase):
+    def test_how_many_prefers_number_sentence(self):
+        sentences = [
+            {"sentence_id": "s1", "text": "This review summarizes the literature.", "sequence": 1},
+            {"sentence_id": "s2", "text": "Four main rechallenge strategies are described.", "sequence": 2},
+        ]
+        anchors = select_answer_anchor("How many strategies are described?", sentences)
+        self.assertEqual(anchors[0]["sentence_id"], "s2")
+
+    def test_gap_prefers_gap_sentence(self):
+        sentences = [
+            {"sentence_id": "s1", "text": "High dimensional features increase overfitting.", "sequence": 1},
+            {"sentence_id": "s2", "text": "This implementation gap reflects validation weaknesses.", "sequence": 2},
+        ]
+        anchors = select_answer_anchor("What is the main implementation gap?", sentences)
+        self.assertEqual(anchors[0]["sentence_id"], "s2")
