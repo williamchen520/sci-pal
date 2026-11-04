@@ -337,6 +337,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-04 | G2 anchor Q&A + paragraph-first | q018 fixed; q017 not; 32–60 highlights | [Q&A](PostgreSQL迁移-G2-问答-Anchor与树.md) |
 
+| 2026-11-04 | G2.6 paragraph limit1 | q017 still fails; 16–30 highlights; disabled | [Plan](PostgreSQL迁移-G2-补充计划2.md) |
+
 ## Rules
 
 ```text

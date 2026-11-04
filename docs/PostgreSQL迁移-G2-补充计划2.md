@@ -249,10 +249,15 @@ sentence window:
   q017/q018 未命中
   高亮 19–30 条
 
-paragraph-first window:
+paragraph-first window (limit 2):
   q002/q016/q018 命中
   q017 未命中
   高亮 32–60 条
+
+paragraph-first window (limit 1):
+  q002/q016/q018 命中
+  q017 未命中
+  高亮 16–30 条
 ```
 
 处理：
@@ -267,7 +272,7 @@ SCIPAL_ANCHOR_RERANK=0
 结论：
 
 ```text
-lexical / cross-encoder / embedding 三种 anchor 都不达标
+lexical / cross-encoder / embedding / window / paragraph-first 都不达标
 G2.6 未完成
 需要 sentence-level 监督数据或专用 attribution 模型
 ```
