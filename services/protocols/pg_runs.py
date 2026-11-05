@@ -100,3 +100,16 @@ def delete_run(run_id: str) -> bool:
         return bool(row)
     finally:
         pg.close()
+
+def recent_runs(limit: int = 20) -> List[Dict[str, Any]]:
+    pg = pg_connection()
+    try:
+        rows = pg.execute(
+            "SELECT r.*, p.title AS protocol_title FROM protocol_runs r "
+            "LEFT JOIN protocol_imports p ON p.protocol_id = r.protocol_id "
+            "ORDER BY r.run_date DESC, r.created_at DESC LIMIT %s",
+            (max(1, limit),),
+        ).fetchall()
+        return [_run_row(row) for row in rows]
+    finally:
+        pg.close()

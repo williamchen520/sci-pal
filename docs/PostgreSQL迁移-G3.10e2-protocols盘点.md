@@ -172,6 +172,27 @@ run + file + list + path + delete ✅
 
 路由按 `SCIPAL_PROTOCOLS_BACKEND` 切换。
 
+## 5f. G3.10e2e 路由切换
+
+已切：
+
+```text
+import_payload / import_protocol
+recent_runs
+```
+
+仍走 SQLite：
+
+```text
+export_markdown
+```
+
+开关：
+
+```text
+SCIPAL_PROTOCOLS_BACKEND=postgres
+```
+
 ## 6. 当前生产
 
 ```text
