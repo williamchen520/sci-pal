@@ -1,0 +1,87 @@
+# G3.10e4 review systematic 盘点
+
+> 日期：2026-11-05  
+> 结论：PG 表已齐，服务仍是 SQLite connection 风格
+
+---
+
+## 1. PG 已有
+
+```text
+review_projects          1
+review_project_members
+review_project_papers
+screening_decisions      1
+evidence_rows            1
+review_events            0
+review_webhooks
+```
+
+与 SQLite 行数一致。
+
+---
+
+## 2. 当前结构
+
+```text
+routes/systematic_review.py
+  _conn() -> sqlite3
+  systematic.create_project(conn,...)
+  systematic.screen(conn,...)
+  systematic.prisma(conn,...)
+  systematic.list_evidence(conn,...)
+```
+
+`systematic.py` 有 30+ 个函数，全部接收 SQLite conn。
+
+---
+
+## 3. 迁移拆分
+
+```text
+G3.10e4a PG systematic service
+  projects / members / papers
+
+G3.10e4b screening
+  screen / adjudicate / prisma / conflicts / kappa
+
+G3.10e4c evidence
+  add / list / csv
+
+G3.10e4d events / notifications / webhooks
+
+G3.10e4e reports
+  brief / html / docx / pdf
+```
+
+---
+
+## 4. 风险
+
+```text
+screening 与 evidence 依赖 review_project_papers
+PRISMA 计数依赖 screening_decisions
+报告依赖 evidence_rows
+```
+
+必须按依赖顺序迁，不能只切 projects。
+
+---
+
+## 5. 当前生产
+
+```text
+reviews             PG
+review systematic   SQLite
+protocols           PG
+projects            PG
+app                 healthy
+```
+
+---
+
+## 6. 下一步
+
+```text
+G3.10e4a PG systematic projects
+```
