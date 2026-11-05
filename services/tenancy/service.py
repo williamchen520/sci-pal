@@ -64,6 +64,12 @@ def _connect(db_path: str | os.PathLike[str]) -> sqlite3.Connection:
     return conn
 
 
+def _pg_only() -> bool:
+    return os.environ.get("SCIPAL_TENANCY_PG_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on", "postgres", "postgresql", "pg"
+    }
+
+
 def _pg_read_enabled() -> bool:
     backend = os.environ.get("SCIPAL_TENANCY_READ_BACKEND", "").strip().lower()
     return backend in {"postgres", "postgresql", "pg", "1", "true"} and bool(
@@ -242,14 +248,15 @@ def create_user(
                 display_name=display_name or username,
                 is_admin=is_admin,
             )
-            try:
-                conn = _connect(db_path)
+            if not _pg_only():
                 try:
-                    _mirror_user(conn, result, password_hash)
-                finally:
-                    conn.close()
-            except Exception as mirror_exc:  # noqa: BLE001
-                LOGGER.warning("tenancy mirror failed for %s: %s", result["user_id"], mirror_exc)
+                    conn = _connect(db_path)
+                    try:
+                        _mirror_user(conn, result, password_hash)
+                    finally:
+                        conn.close()
+                except Exception as mirror_exc:  # noqa: BLE001
+                    LOGGER.warning("tenancy mirror failed for %s: %s", result["user_id"], mirror_exc)
             return result
         except Exception as exc:  # noqa: BLE001 - fall back to SQLite/outbox
             LOGGER.error("PG tenancy create_user failed; refusing SQLite fallback: %s", exc)
@@ -384,14 +391,15 @@ def create_workspace(
             result = pg_writes.create_workspace(
                 name=name, owner_user_id=owner_user_id, workspace_id=pg_wid
             )
-            try:
-                conn = _connect(db_path)
+            if not _pg_only():
                 try:
-                    _mirror_workspace(conn, result)
-                finally:
-                    conn.close()
-            except Exception as mirror_exc:  # noqa: BLE001
-                LOGGER.warning("tenancy mirror failed for %s: %s", result["workspace_id"], mirror_exc)
+                    conn = _connect(db_path)
+                    try:
+                        _mirror_workspace(conn, result)
+                    finally:
+                        conn.close()
+                except Exception as mirror_exc:  # noqa: BLE001
+                    LOGGER.warning("tenancy mirror failed for %s: %s", result["workspace_id"], mirror_exc)
             return result
         except Exception as exc:  # noqa: BLE001
             LOGGER.error("PG tenancy create_workspace failed; refusing SQLite fallback: %s", exc)
@@ -437,14 +445,15 @@ def add_member(
                 role=role,
                 actor_user_id=actor_user_id,
             )
-            try:
-                conn = _connect(db_path)
+            if not _pg_only():
                 try:
-                    _mirror_member(conn, result, actor_user_id)
-                finally:
-                    conn.close()
-            except Exception as mirror_exc:  # noqa: BLE001
-                LOGGER.warning("tenancy mirror failed for %s/%s: %s", workspace_id, user_id, mirror_exc)
+                    conn = _connect(db_path)
+                    try:
+                        _mirror_member(conn, result, actor_user_id)
+                    finally:
+                        conn.close()
+                except Exception as mirror_exc:  # noqa: BLE001
+                    LOGGER.warning("tenancy mirror failed for %s/%s: %s", workspace_id, user_id, mirror_exc)
             return Membership(result["workspace_id"], result["user_id"], result["role"], result["status"])
         except Exception as exc:  # noqa: BLE001
             LOGGER.error("PG tenancy add_member failed; refusing SQLite fallback: %s", exc)
