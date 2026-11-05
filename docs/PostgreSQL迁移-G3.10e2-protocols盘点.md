@@ -193,6 +193,28 @@ export_markdown
 SCIPAL_PROTOCOLS_BACKEND=postgres
 ```
 
+## 5g. protocols 切流
+
+```text
+SCIPAL_PROTOCOLS_BACKEND=postgres
+```
+
+API 冒烟：
+
+```text
+import payload      ✅
+list / get          ✅
+add run             ✅
+patch / delete run  ✅
+cleanup             ✅
+```
+
+已知缺口：
+
+```text
+export_markdown 仍读 SQLite
+```
+
 ## 6. 当前生产
 
 ```text
