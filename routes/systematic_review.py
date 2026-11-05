@@ -424,7 +424,11 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         try:
             if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
-            return jsonify({"events": systematic.list_events(conn, project_id)})
+            return jsonify(
+                {"events": pg_systematic.list_events(project_id)}
+                if _pg_projects()
+                else {"events": systematic.list_events(conn, project_id)}
+            )
         finally:
             conn.close()
 
