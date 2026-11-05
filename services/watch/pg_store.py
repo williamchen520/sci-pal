@@ -223,3 +223,6 @@ def set_item_feedback(conn, item_id: int, feedback: str) -> None:
     pg_writes.update_item(
         item_id, {"feedback": feedback, "feedback_at": now_iso()}
     )
+
+def delete_journal(conn, profile_id: int, issn_l: str) -> None:
+    pg_writes.delete_journal(profile_id, issn_l)

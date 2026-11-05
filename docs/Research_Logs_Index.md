@@ -473,6 +473,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10f4 P3 watch ingest PG | runner 1 item/1 abstract smoke | [Plan](PostgreSQL迁移-G3.10f4-watch-PG计划.md) |
 
+| 2026-11-05 | G3.10f4 P4 discovery PG | journals smoke; 2 tests | [Plan](PostgreSQL迁移-G3.10f4-watch-PG计划.md) |
+
 ## Rules
 
 ```text

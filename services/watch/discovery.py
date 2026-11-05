@@ -8,7 +8,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
 
-from services.watch import pg_writes, repo
+from services.watch import pg_store, pg_writes, repo
 
 USER_AGENT = "SciPal-Watch/1.0 (mailto:scipal@example.org)"
 OPENALEX = "https://api.openalex.org"
@@ -96,10 +96,21 @@ def openalex_topic_search(query: str, limit: int = 10) -> List[Dict[str, Any]]:
     ]
 
 
+def _store():
+    import os
+
+    if os.environ.get("SCIPAL_WATCH_PG_STORE", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }:
+        return pg_store
+    return repo
+
+
 def discover_journals(conn, profile: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Union auto-discovered top journals with manually pinned ISSNs."""
+    store = _store()
     profile_id = profile["id"]
-    existing = {row["issn_l"]: row for row in repo.list_journals(conn, profile_id)}
+    existing = {row["issn_l"]: row for row in store.list_journals(conn, profile_id)}
     manual = {
         issn: entry
         for issn, entry in existing.items()
@@ -131,7 +142,7 @@ def discover_journals(conn, profile: Dict[str, Any]) -> List[Dict[str, Any]]:
                 if (entry.get("openalex_metric") or 0) >= float(profile["metric_min"])
             ]
         for entry in auto:
-            repo.upsert_journal(
+            store.upsert_journal(
                 conn,
                 {
                     "issn_l": entry["issn_l"],
@@ -144,15 +155,16 @@ def discover_journals(conn, profile: Dict[str, Any]) -> List[Dict[str, Any]]:
         # drop previously auto-added ISSNs that no longer make the cut
         for issn in list(existing):
             if existing[issn].get("source") == "auto" and issn not in allowed:
-                if pg_writes.enabled():
-                    pg_writes.delete_journal(profile_id, issn)
-                conn.execute(
-                    "DELETE FROM watch_profile_journals WHERE profile_id = ? AND issn_l = ?",
-                    (profile_id, issn),
-                )
+                if store is pg_store:
+                    store.delete_journal(conn, profile_id, issn)
+                else:
+                    conn.execute(
+                        "DELETE FROM watch_profile_journals WHERE profile_id = ? AND issn_l = ?",
+                        (profile_id, issn),
+                    )
     merged = {entry["issn_l"]: {**entry, "source": entry.get("source", "auto")} for entry in auto}
     merged.update(manual)
-    repo.set_journals(
+    store.set_journals(
         conn,
         profile_id,
         [
@@ -160,8 +172,9 @@ def discover_journals(conn, profile: Dict[str, Any]) -> List[Dict[str, Any]]:
             for issn, entry in merged.items()
         ],
     )
-    conn.commit()
-    return repo.list_journals(conn, profile_id)
+    if store is not pg_store:
+        conn.commit()
+    return store.list_journals(conn, profile_id)
 
 
 def _crossref_date(item: Dict[str, Any]) -> str:
