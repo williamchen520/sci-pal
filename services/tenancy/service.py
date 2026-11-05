@@ -323,11 +323,52 @@ def bootstrap_default_workspace(
     *,
     db_path: str | os.PathLike[str] = DATABASE_PATH,
 ) -> dict[str, Any]:
-    """Create the default workspace for existing single-user data.
-
-    Existing users are enrolled as members. If there are no users, a disabled
-    local bootstrap user is created so migration never invents a login secret.
-    """
+    """Create the default workspace for existing single-user data."""
+    if _pg_only():
+        pg = _pg_connection()
+        try:
+            row = pg.execute(
+                "SELECT workspace_id, owner_user_id FROM workspaces WHERE workspace_id = %s",
+                (DEFAULT_WORKSPACE_ID,),
+            ).fetchone()
+            if row:
+                return {
+                    "workspace_id": row["workspace_id"],
+                    "owner_user_id": row["owner_user_id"],
+                    "created": False,
+                }
+            user = pg.execute(
+                "SELECT user_id FROM users ORDER BY created_at LIMIT 1"
+            ).fetchone()
+            owner = user["user_id"] if user else "user_local"
+            if not user:
+                pg.execute(
+                    "INSERT INTO users (user_id, username, display_name, status, is_admin) "
+                    "VALUES (%s, 'local', 'Local user', 'pending', 0) ON CONFLICT DO NOTHING",
+                    (owner,),
+                )
+            pg.execute(
+                "INSERT INTO workspaces (workspace_id, name, owner_user_id) "
+                "VALUES (%s, 'Default workspace', %s) ON CONFLICT DO NOTHING",
+                (DEFAULT_WORKSPACE_ID, owner),
+            )
+            users = pg.execute("SELECT user_id FROM users").fetchall()
+            for item in users:
+                role = "owner" if item["user_id"] == owner else "member"
+                pg.execute(
+                    "INSERT INTO memberships (workspace_id, user_id, role) "
+                    "VALUES (%s, %s, %s) ON CONFLICT (workspace_id, user_id) "
+                    "DO UPDATE SET role=EXCLUDED.role",
+                    (DEFAULT_WORKSPACE_ID, item["user_id"], role),
+                )
+            pg.commit()
+            return {
+                "workspace_id": DEFAULT_WORKSPACE_ID,
+                "owner_user_id": owner,
+                "created": True,
+            }
+        finally:
+            pg.close()
     conn = _connect(db_path)
     try:
         ensure_schema(conn)

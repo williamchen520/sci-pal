@@ -188,6 +188,19 @@ bootstrap_default_workspace
 role 管理 / 其他 tenancy admin
 ```
 
+## 4j. tenancy bootstrap PG
+
+```text
+bootstrap_default_workspace -> PG when PG_ONLY
+```
+
+冒烟：
+
+```text
+ws_default exists
+SQLite workspaces 1 -> 1
+```
+
 ## 5. 当前生产
 
 ```text
