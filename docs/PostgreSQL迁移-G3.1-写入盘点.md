@@ -420,6 +420,29 @@ figures / tables / citations / sentence_links / paper_links
 因此暂不删除 trigger
 ```
 
+## 9j. G3.8c trigger 退役
+
+```text
+dualwrite triggers 27 -> 0
+FTS triggers       12 保留
+备份 deploy/backups/dualwrite_triggers_20261105.sql
+```
+
+post-drop live 冒烟：
+
+```text
+SQLite papers 3313 -> 3313
+outbox        249 -> 249
+PG            新增 1
+cleanup       ✅
+```
+
+gate：
+
+```text
+ok true
+```
+
 ## 10. 当前生产
 
 ```text
