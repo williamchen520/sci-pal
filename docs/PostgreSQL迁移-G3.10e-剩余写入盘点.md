@@ -149,6 +149,36 @@ cleanup ✅
 copy_project 未写 workspace audit
 ```
 
+## 5d. review repository PG
+
+```text
+services/review/review_repository.py
+  SCIPAL_REVIEWS_BACKEND=postgres
+```
+
+数据：
+
+```text
+reviews 29 / 29
+```
+
+冒烟：
+
+```text
+list 5
+save / get
+cleanup ✅
+```
+
+仍未迁移：
+
+```text
+review_projects
+screening_decisions
+evidence_rows
+tasks
+```
+
 ## 6. 当前生产
 
 ```text

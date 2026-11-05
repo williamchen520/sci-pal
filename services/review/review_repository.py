@@ -40,6 +40,13 @@ class ReviewRepository:
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = Path(db_path)
 
+    def _pg_backend(self) -> bool:
+        import os
+
+        return os.environ.get("SCIPAL_REVIEWS_BACKEND", "").strip().lower() in {
+            "postgres", "postgresql", "pg", "1", "true"
+        }
+
     def ensure_schema(self) -> None:
         with self._session() as conn:
             for statement in SCHEMA:
@@ -63,6 +70,32 @@ class ReviewRepository:
         created_at: str | None = None,
     ) -> str:
         self.ensure_schema()
+        if self._pg_backend():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                pg.execute(
+                    "INSERT INTO reviews "
+                    "(review_id, run_id, topic, markdown, stats_json, references_json, "
+                    "warnings_json, guard_json, created_at) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                    "ON CONFLICT (review_id) DO UPDATE SET run_id=EXCLUDED.run_id, "
+                    "topic=EXCLUDED.topic, markdown=EXCLUDED.markdown, "
+                    "stats_json=EXCLUDED.stats_json, references_json=EXCLUDED.references_json, "
+                    "warnings_json=EXCLUDED.warnings_json, guard_json=EXCLUDED.guard_json, "
+                    "created_at=EXCLUDED.created_at",
+                    (
+                        review_id, run_id, topic, markdown, _dump(stats or {}),
+                        _dump(references or []), _dump(warnings or []),
+                        _dump(guard) if guard is not None else None,
+                        created_at or _now(),
+                    ),
+                )
+                pg.commit()
+            finally:
+                pg.close()
+            return review_id
         with self._session() as conn:
             conn.execute(
                 """
@@ -87,6 +120,17 @@ class ReviewRepository:
 
     def get(self, review_id: str) -> dict[str, Any] | None:
         self.ensure_schema()
+        if self._pg_backend():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                row = pg.execute(
+                    "SELECT * FROM reviews WHERE review_id = %s", (review_id,)
+                ).fetchone()
+                return _row_to_dict(row) if row else None
+            finally:
+                pg.close()
         with self._session() as conn:
             row = conn.execute(
                 "SELECT * FROM reviews WHERE review_id = ?", (review_id,)
@@ -95,6 +139,18 @@ class ReviewRepository:
 
     def list(self, limit: int = 20) -> list[dict[str, Any]]:
         self.ensure_schema()
+        if self._pg_backend():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                rows = pg.execute(
+                    "SELECT * FROM reviews ORDER BY created_at DESC LIMIT %s",
+                    (max(1, limit),),
+                ).fetchall()
+                return [_row_to_dict(row) for row in rows]
+            finally:
+                pg.close()
         with self._session() as conn:
             rows = conn.execute(
                 "SELECT * FROM reviews ORDER BY created_at DESC LIMIT ?", (max(1, limit),)
