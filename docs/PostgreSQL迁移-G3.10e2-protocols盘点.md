@@ -116,6 +116,30 @@ tests.test_protocols_pg_read 2 OK
 
 写路径仍 SQLite，默认关闭。
 
+## 5c. G3.10e2b 完成
+
+```text
+services/protocols/pg_import.py
+  import_payload
+  import_protocol
+```
+
+冒烟：
+
+```text
+import payload
+protocol_steps 1
+cleanup ✅
+```
+
+测试：
+
+```text
+tests.test_protocols_pg_import 1 OK
+```
+
+路由未切换。
+
 ## 6. 当前生产
 
 ```text

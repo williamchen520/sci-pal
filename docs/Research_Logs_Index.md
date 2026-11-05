@@ -417,6 +417,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10e2a protocols PG read | list/count/get; 2 tests | [Plan](PostgreSQL迁移-G3.10e2-protocols盘点.md) |
 
+| 2026-11-05 | G3.10e2b protocol import PG | imports/steps smoke; 1 test | [Plan](PostgreSQL迁移-G3.10e2-protocols盘点.md) |
+
 ## Rules
 
 ```text
