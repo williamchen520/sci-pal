@@ -8,7 +8,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from services.watch import discovery, repo
+from services.watch import discovery, pg_store, repo
 from services.watch.pg_writes import enabled as watch_pg_enabled, delete_paper_best_effort
 from services.watch.pg_sync import sync_pending as sync_watch_pending
 
@@ -17,6 +17,16 @@ _STOP = {
     "the", "and", "for", "with", "from", "that", "this", "are", "was", "were",
     "into", "their", "have", "has", "not", "but", "use", "using", "study",
 }
+
+
+def _store():
+    import os
+
+    if os.environ.get("SCIPAL_WATCH_PG_STORE", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }:
+        return pg_store
+    return repo
 
 
 def _tokens(text: str) -> List[str]:
@@ -198,24 +208,25 @@ def run_profile(
     fulltext_fn=None,
     oa_pdf_fn=None,
 ) -> Dict[str, Any]:
-    conn = repo.connect(db_path)
-    profile = repo.get_profile(conn, profile_id)
+    store = _store()
+    conn = store.connect(db_path)
+    profile = store.get_profile(conn, profile_id)
     if not profile:
         raise ValueError("profile not found")
     now = now or datetime.now(timezone.utc)
     window_days = max(int(profile.get("window_days") or 7), int(profile.get("interval_days") or 3))
     start = now - timedelta(days=window_days)
     owner = profile.get("owner") or "default"
-    run_id = repo.create_run(
+    run_id = store.create_run(
         conn, profile_id, start.isoformat(), now.isoformat(), owner=owner
     )
     stats = {"found": 0, "selected": 0, "imported_full": 0, "imported_abstract": 0, "skipped": 0}
     try:
-        journals = repo.list_journals(conn, profile_id)
+        journals = store.list_journals(conn, profile_id)
         if not journals and (profile.get("field_text") or profile.get("openalex_topic_ids")):
             journals = discovery.discover_journals(conn, profile)
         issns = [row["issn_l"] for row in journals if row.get("issn_l")]
-        metrics = repo.journal_metrics(conn, issns)
+        metrics = store.journal_metrics(conn, issns)
         search = candidate_fn or discovery.crossref_candidates
         candidates = search(
             issns,
@@ -235,8 +246,8 @@ def run_profile(
         ]
         scored = []
         for candidate in candidates:
-            key = repo.dedup_key(candidate.get("doi"), candidate.get("title"))
-            if repo.seen(conn, profile_id, key) or repo.paper_exists(conn, candidate.get("doi")):
+            key = store.dedup_key(candidate.get("doi"), candidate.get("title"))
+            if store.seen(conn, profile_id, key) or store.paper_exists(conn, candidate.get("doi")):
                 stats["skipped"] += 1
                 continue
             title_abstract = f"{candidate.get('title', '')} {candidate.get('abstract', '')}"
@@ -285,8 +296,8 @@ def run_profile(
             if full_paper_id:
                 paper_id = full_paper_id
                 acquisition = "fulltext"
-            key = repo.dedup_key(candidate.get("doi"), candidate.get("title"))
-            repo.mark_seen(conn, profile_id, key, paper_id)
+            key = store.dedup_key(candidate.get("doi"), candidate.get("title"))
+            store.mark_seen(conn, profile_id, key, paper_id)
             reason = (
                 f"领域匹配 {candidate['score']:.2f}；"
                 f"{candidate.get('journal') or '未知期刊'}；{candidate.get('published') or '日期未知'}"
@@ -303,7 +314,7 @@ def run_profile(
                 "owner": owner,
                 "abstract": candidate.get("abstract") or "",
             }
-            repo.add_item(conn, run_id, profile_id, item)
+            store.add_item(conn, run_id, profile_id, item)
             items.append(item)
             if acquisition == "fulltext":
                 stats["imported_full"] += 1
@@ -311,7 +322,7 @@ def run_profile(
                 stats["imported_abstract"] += 1
         stats["selected"] = len(items)
 
-        run = repo.get_run(conn, run_id)
+        run = store.get_run(conn, run_id)
         run = {**run, **stats}
         heartbeat = 0
         pushed = False
@@ -337,7 +348,7 @@ def run_profile(
                 pushed = True
             else:
                 digest = ""
-        repo.finish_run(
+        store.finish_run(
             conn,
             run_id,
             status="success" if items else "empty",
@@ -374,7 +385,7 @@ def run_profile(
             **stats,
         }
     except Exception as exc:  # noqa: BLE001
-        repo.finish_run(conn, run_id, status="failed", error=str(exc)[:500], **stats)
+        store.finish_run(conn, run_id, status="failed", error=str(exc)[:500], **stats)
         raise
     finally:
         conn.close()
