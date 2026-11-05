@@ -33,6 +33,13 @@ class ReferenceLibrary:
     def __init__(self, db_path: str | Path) -> None:
         self.db_path = Path(db_path)
 
+    def _pg_backend(self) -> bool:
+        import os
+
+        return os.environ.get("SCIPAL_REFERENCE_LIBRARY_BACKEND", "").strip().lower() in {
+            "postgres", "postgresql", "pg", "1", "true"
+        }
+
     def ensure_schema(self) -> None:
         with self._session() as conn:
             for statement in SCHEMA:
@@ -46,6 +53,40 @@ class ReferenceLibrary:
     ) -> dict[str, int]:
         self.ensure_schema()
         added = skipped = 0
+        if self._pg_backend():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                for reference in references:
+                    doi = _clean(getattr(reference, "doi", "") or _dict(reference).get("doi"))
+                    title = _clean(getattr(reference, "title", "") or _dict(reference).get("title"))
+                    if not doi and not title:
+                        skipped += 1
+                        continue
+                    key = doi.lower() if doi else f"title:{title.lower()}|{_year(reference)}"
+                    reference_id = "ref_" + hashlib.sha1(key.encode("utf-8")).hexdigest()[:12]
+                    row = pg.execute(
+                        "INSERT INTO reference_library "
+                        "(reference_id, doi, title, authors, journal, year, abstract, source, created_at) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING "
+                        "RETURNING reference_id",
+                        (
+                            reference_id, doi, title, _authors(reference),
+                            _clean(getattr(reference, "journal", "") or _dict(reference).get("journal")),
+                            _year(reference),
+                            _clean(getattr(reference, "abstract", "") or _dict(reference).get("abstract")),
+                            source, _now(),
+                        ),
+                    ).fetchone()
+                    if row:
+                        added += 1
+                    else:
+                        skipped += 1
+                pg.commit()
+            finally:
+                pg.close()
+            return {"added": added, "skipped": skipped}
         with self._session() as conn:
             for reference in references:
                 doi = _clean(getattr(reference, "doi", "") or _dict(reference).get("doi"))
@@ -81,6 +122,18 @@ class ReferenceLibrary:
 
     def list(self, limit: int = 50) -> list[dict[str, Any]]:
         self.ensure_schema()
+        if self._pg_backend():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                rows = pg.execute(
+                    "SELECT * FROM reference_library ORDER BY created_at DESC LIMIT %s",
+                    (max(1, limit),),
+                ).fetchall()
+                return [dict(row) for row in rows]
+            finally:
+                pg.close()
         with self._session() as conn:
             rows = conn.execute(
                 "SELECT * FROM reference_library ORDER BY created_at DESC LIMIT ?",
@@ -90,6 +143,14 @@ class ReferenceLibrary:
 
     def count(self) -> int:
         self.ensure_schema()
+        if self._pg_backend():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                return int(pg.execute("SELECT COUNT(*) AS n FROM reference_library").fetchone()["n"])
+            finally:
+                pg.close()
         with self._session() as conn:
             return int(conn.execute("SELECT COUNT(*) FROM reference_library").fetchone()[0])
 
