@@ -69,6 +69,34 @@ G3.10e SQLite 只读
 
 ---
 
+## 4b. G3.10b audit PG
+
+```text
+services/data_sandbox/audit.py
+  SCIPAL_AUDIT_BACKEND=postgres
+```
+
+修复：
+
+```text
+data_audit identity sequence 落后
+setval -> max(id)+1
+```
+
+冒烟：
+
+```text
+list 1
+SQLite audit 40 -> 40
+cleanup ✅
+```
+
+测试：
+
+```text
+tests.test_audit_pg 2 OK
+```
+
 ## 5. 当前生产
 
 ```text

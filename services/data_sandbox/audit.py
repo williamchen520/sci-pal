@@ -30,6 +30,12 @@ CREATE INDEX IF NOT EXISTS idx_data_audit_project
 """
 
 
+def _pg_backend() -> bool:
+    return os.environ.get("SCIPAL_AUDIT_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
 def _db_path() -> Path:
     return Path(os.environ.get("SCIPAL_AUDIT_DB", str(DEFAULT_DB)))
 
@@ -63,6 +69,24 @@ def log_event(
     """Append one metadata event; never store file contents."""
     size = path.stat().st_size if path and path.exists() else 0
     digest = file_digest(path) if path and path.exists() else ""
+    if _pg_backend():
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            pg.execute(
+                "INSERT INTO data_audit "
+                "(owner, project_id, action, artifact_id, kind, provider, bytes, sha256, detail, created_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    owner, project_id, action, artifact_id, kind, provider,
+                    size, digest, detail[:500], datetime.now(timezone.utc).isoformat(),
+                ),
+            )
+            pg.commit()
+        finally:
+            pg.close()
+        return
     conn = _connect()
     try:
         conn.execute(
@@ -90,6 +114,25 @@ def log_event(
 def list_events(
     owner: str, project_id: Optional[str] = None, limit: int = 100
 ) -> List[Dict[str, Any]]:
+    if _pg_backend():
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            if project_id:
+                rows = pg.execute(
+                    "SELECT * FROM data_audit WHERE owner = %s AND project_id = %s "
+                    "ORDER BY id DESC LIMIT %s",
+                    (owner, project_id, limit),
+                ).fetchall()
+            else:
+                rows = pg.execute(
+                    "SELECT * FROM data_audit WHERE owner = %s ORDER BY id DESC LIMIT %s",
+                    (owner, limit),
+                ).fetchall()
+            return [dict(row) for row in rows]
+        finally:
+            pg.close()
     conn = _connect()
     conn.row_factory = sqlite3.Row
     try:
