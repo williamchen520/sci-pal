@@ -140,6 +140,22 @@ tests.test_protocols_pg_import 1 OK
 
 路由未切换。
 
+## 5d. G3.10e2c 完成
+
+```text
+deploy/sql/004_protocol_runs.sql
+services/protocols/pg_runs.py
+  add_run / list_runs / update_run / delete_run
+```
+
+冒烟：
+
+```text
+add / list / update / delete ✅
+```
+
+路由按 `SCIPAL_PROTOCOLS_BACKEND` 切换，默认关闭。
+
 ## 6. 当前生产
 
 ```text
