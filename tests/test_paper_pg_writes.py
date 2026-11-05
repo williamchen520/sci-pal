@@ -46,6 +46,15 @@ class _FakePG:
         return self
 
 
+class PaperYearTests(unittest.TestCase):
+    def test_empty_year(self):
+        self.assertIsNone(pg_writes._year_value(""))
+        self.assertIsNone(pg_writes._year_value(None))
+
+    def test_year_prefix(self):
+        self.assertEqual(pg_writes._year_value("2024-01"), 2024)
+
+
 class PaperRowCoverageTests(unittest.TestCase):
     def test_full_metadata_columns(self):
         pg = _FakePG()

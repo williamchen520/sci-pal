@@ -217,8 +217,6 @@ def try_oa_pdf(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: str)
     import urllib.request
 
     doi = candidate.get("doi")
-    if _pg_mode():
-        return None
     email = os.environ.get("SCIPAL_UNPAYWALL_EMAIL")
     if not doi or not email:
         return None
@@ -242,7 +240,16 @@ def try_oa_pdf(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: str)
         paper_id = result.get("paper_id") or (result.get("stats") or {}).get("paper_id")
         if not paper_id:
             return None
-        if watch_pg_enabled():
+        if _pg_mode():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                pg.execute("DELETE FROM papers WHERE paper_id = %s", (abstract_paper_id,))
+                pg.commit()
+            finally:
+                pg.close()
+        elif watch_pg_enabled():
             delete_paper_best_effort(abstract_paper_id, db_path=db_path)
         else:
             conn.execute("DELETE FROM papers WHERE paper_id = ?", (abstract_paper_id,))
