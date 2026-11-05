@@ -140,6 +140,20 @@ runs     9
 
 写路径仍 SQLite，默认关闭。
 
+## 4g. qa/watch 切流
+
+```text
+SCIPAL_QA_CITATIONS_BACKEND=postgres
+SCIPAL_WATCH_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+qa 8 sentence ids
+watch profiles 1 / runs 9
+```
+
 ## 5. 当前生产
 
 ```text
