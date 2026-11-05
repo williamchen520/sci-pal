@@ -457,6 +457,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10f2 reference library PG | count/list/import smoke | [Plan](PostgreSQL迁移-G3.10f-SQLite残余.md) |
 
+| 2026-11-05 | G3.10f2 reference cutover | API 1; PG enabled | [Plan](PostgreSQL迁移-G3.10f-SQLite残余.md) |
+
 ## Rules
 
 ```text
