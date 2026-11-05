@@ -15,6 +15,7 @@ from services.projects import (
     list_projects,
     update_project,
 )
+from services.projects import pg_service as project_pg
 from services.tenancy import get_membership
 from services.tenancy.permissions import audit
 from services.tenancy.web import resolve_workspace
@@ -37,6 +38,8 @@ def build_projects_blueprint(*, db_path: str | Path, log: Any = None) -> Bluepri
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
+        if project_pg.enabled():
+            return jsonify({"projects": project_pg.list_projects(workspace_id, user_id)})
         return jsonify({"projects": list_projects(workspace_id, user_id, db_path=db)})
 
     @bp.post("/api/projects")
@@ -48,14 +51,23 @@ def build_projects_blueprint(*, db_path: str | Path, log: Any = None) -> Bluepri
             return jsonify({"error": "workspace access denied"}), 403
         body = request.get_json(silent=True) or {}
         try:
-            project = create_project(
-                workspace_id,
-                user_id,
-                str(body.get("name") or ""),
-                str(body.get("description") or ""),
-                status=str(body.get("status") or "active"),
-                db_path=db,
-            )
+            if project_pg.enabled():
+                project = project_pg.create_project(
+                    workspace_id,
+                    user_id,
+                    str(body.get("name") or ""),
+                    str(body.get("description") or ""),
+                    status=str(body.get("status") or "active"),
+                )
+            else:
+                project = create_project(
+                    workspace_id,
+                    user_id,
+                    str(body.get("name") or ""),
+                    str(body.get("description") or ""),
+                    status=str(body.get("status") or "active"),
+                    db_path=db,
+                )
         except PermissionError:
             return jsonify({"error": "workspace access denied"}), 403
         except ValueError as exc:
@@ -69,7 +81,11 @@ def build_projects_blueprint(*, db_path: str | Path, log: Any = None) -> Bluepri
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        project = get_project(project_id, workspace_id, user_id, db_path=db)
+        project = (
+            project_pg.get_project(project_id, workspace_id, user_id)
+            if project_pg.enabled()
+            else get_project(project_id, workspace_id, user_id, db_path=db)
+        )
         if not project:
             return jsonify({"error": "Project not found"}), 404
         membership = get_membership(workspace_id, user_id, db_path=db)
@@ -98,15 +114,25 @@ def build_projects_blueprint(*, db_path: str | Path, log: Any = None) -> Bluepri
             return jsonify({"error": "workspace access denied"}), 403
         body = request.get_json(silent=True) or {}
         try:
-            project = update_project(
-                project_id,
-                workspace_id,
-                user_id,
-                name=body.get("name"),
-                description=body.get("description"),
-                status=body.get("status"),
-                db_path=db,
-            )
+            if project_pg.enabled():
+                project = project_pg.update_project(
+                    project_id,
+                    workspace_id,
+                    user_id,
+                    name=body.get("name"),
+                    description=body.get("description"),
+                    status=body.get("status"),
+                )
+            else:
+                project = update_project(
+                    project_id,
+                    workspace_id,
+                    user_id,
+                    name=body.get("name"),
+                    description=body.get("description"),
+                    status=body.get("status"),
+                    db_path=db,
+                )
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         if not project:
@@ -122,14 +148,23 @@ def build_projects_blueprint(*, db_path: str | Path, log: Any = None) -> Bluepri
             return jsonify({"error": "workspace access denied"}), 403
         body = request.get_json(silent=True) or {}
         try:
-            member = add_member(
-                project_id,
-                workspace_id,
-                user_id,
-                str(body.get("user_id") or ""),
-                str(body.get("role") or "member"),
-                db_path=db,
-            )
+            if project_pg.enabled():
+                member = project_pg.add_member(
+                    project_id,
+                    workspace_id,
+                    user_id,
+                    str(body.get("user_id") or ""),
+                    str(body.get("role") or "member"),
+                )
+            else:
+                member = add_member(
+                    project_id,
+                    workspace_id,
+                    user_id,
+                    str(body.get("user_id") or ""),
+                    str(body.get("role") or "member"),
+                    db_path=db,
+                )
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         if not member:
