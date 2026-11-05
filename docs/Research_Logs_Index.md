@@ -381,6 +381,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.6b experiments create PG | create+revision+audit; 2 tests | [Plan](PostgreSQL迁移-G3.6-experiments盘点.md) |
 
+| 2026-11-05 | G3.6b2 experiments update/sign | revision/audit/signature; 4 tests | [Plan](PostgreSQL迁移-G3.6-experiments盘点.md) |
+
 ## Rules
 
 ```text

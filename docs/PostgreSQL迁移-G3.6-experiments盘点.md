@@ -151,11 +151,16 @@ tests.test_experiments_pg_write 2 OK
 全量 891 tests OK
 ```
 
-仍需：
+已完成：
 
 ```text
 update_experiment
 sign_experiment
+```
+
+仍需：
+
+```text
 access requests
 ```
 
