@@ -475,6 +475,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10f4 P4 discovery PG | journals smoke; 2 tests | [Plan](PostgreSQL迁移-G3.10f4-watch-PG计划.md) |
 
+| 2026-11-05 | G3.10f4 P5 watch routes store | CRUD/run/items via store; 25 tests | [Plan](PostgreSQL迁移-G3.10f4-watch-PG计划.md) |
+
 ## Rules
 
 ```text

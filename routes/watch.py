@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from flask import Blueprint, Response, g, jsonify, request, session
 
-from services.watch import discovery, pg_read, repo, runner
+from services.watch import discovery, pg_read, pg_store, repo, runner
 
 
 def build_watch_blueprint(*, db_path, log) -> Blueprint:
@@ -17,8 +17,11 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def _owner() -> str:
         return getattr(g, "owner", "default")
 
+    def _store():
+        return pg_store if pg_store.enabled() else repo
+
     def _owned_run(conn, run_id: int):
-        row = pg_read.get_run(run_id) if pg_read.enabled() else repo.get_run(conn, run_id)
+        row = _store().get_run(conn, run_id)
         if row and (row.get("owner") or "default") != _owner():
             return None
         return row
@@ -33,14 +36,14 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
                     {
                         "profiles": pg_read.list_profiles(owner)
                         if pg_read.enabled()
-                        else repo.list_profiles(conn, owner)
+                        else _store().list_profiles(conn, owner)
                     }
                 )
             data = request.get_json(silent=True) or {}
             if not (data.get("name") or "").strip():
                 return jsonify({"error": "name required"}), 400
             data["owner"] = owner
-            profile_id = repo.create_profile(conn, data)
+            profile_id = _store().create_profile(conn, data)
             return jsonify({"profile_id": profile_id}), 201
         finally:
             conn.close()
@@ -53,16 +56,16 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             row = (
                 pg_read.get_profile(profile_id, owner)
                 if pg_read.enabled()
-                else repo.get_profile(conn, profile_id, owner)
+                else _store().get_profile(conn, profile_id, owner)
             )
             if not row:
                 return jsonify({"error": "profile not found"}), 404
             if request.method == "GET":
                 return jsonify(row)
             if request.method == "PUT":
-                repo.update_profile(conn, profile_id, request.get_json(silent=True) or {})
-                return jsonify(repo.get_profile(conn, profile_id, owner))
-            repo.delete_profile(conn, profile_id)
+                _store().update_profile(conn, profile_id, request.get_json(silent=True) or {})
+                return jsonify(_store().get_profile(conn, profile_id, owner))
+            _store().delete_profile(conn, profile_id)
             return jsonify({"ok": True})
         finally:
             conn.close()
@@ -71,16 +74,16 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def journals(profile_id: int):
         conn = repo.connect(db_path)
         try:
-            if not repo.get_profile(conn, profile_id, getattr(g, "owner", "default")):
+            if not _store().get_profile(conn, profile_id, getattr(g, "owner", "default")):
                 return jsonify({"error": "profile not found"}), 404
             if request.method == "GET":
-                return jsonify({"journals": repo.list_journals(conn, profile_id)})
+                return jsonify({"journals": _store().list_journals(conn, profile_id)})
             data = request.get_json(silent=True) or {}
             entries = data.get("journals") or []
             for entry in entries:
                 entry.setdefault("source", "manual")
-            repo.set_journals(conn, profile_id, entries)
-            return jsonify({"journals": repo.list_journals(conn, profile_id)})
+            _store().set_journals(conn, profile_id, entries)
+            return jsonify({"journals": _store().list_journals(conn, profile_id)})
         finally:
             conn.close()
 
@@ -88,7 +91,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def discover(profile_id: int):
         conn = repo.connect(db_path)
         try:
-            profile = repo.get_profile(conn, profile_id, getattr(g, "owner", "default"))
+            profile = _store().get_profile(conn, profile_id, getattr(g, "owner", "default"))
             if not profile:
                 return jsonify({"error": "profile not found"}), 404
             entries = discovery.discover_journals(conn, profile)
@@ -103,7 +106,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def run(profile_id: int):
         conn = repo.connect(db_path)
         try:
-            if not repo.get_profile(conn, profile_id, getattr(g, "owner", "default")):
+            if not _store().get_profile(conn, profile_id, getattr(g, "owner", "default")):
                 return jsonify({"error": "profile not found"}), 404
         finally:
             conn.close()
@@ -124,9 +127,9 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
                 if not pg_read.get_profile(profile_id, _owner()):
                     return jsonify({"error": "profile not found"}), 404
                 return jsonify({"runs": pg_read.list_runs(profile_id)})
-            if not repo.get_profile(conn, profile_id, _owner()):
+            if not _store().get_profile(conn, profile_id, _owner()):
                 return jsonify({"error": "profile not found"}), 404
-            return jsonify({"runs": repo.list_runs(conn, profile_id)})
+            return jsonify({"runs": _store().list_runs(conn, profile_id)})
         finally:
             conn.close()
 
@@ -142,7 +145,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
                     "run": row,
                     "items": pg_read.list_items(run_id)
                     if pg_read.enabled()
-                    else repo.list_items(conn, run_id),
+                    else _store().list_items(conn, run_id),
                 }
             )
         finally:
@@ -163,14 +166,14 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def latest_profile(profile_id: int):
         conn = repo.connect(db_path)
         try:
-            if not repo.get_profile(conn, profile_id, _owner()):
+            if not _store().get_profile(conn, profile_id, _owner()):
                 return jsonify({"error": "profile not found"}), 404
-            runs = repo.list_runs(conn, profile_id, limit=1)
+            runs = _store().list_runs(conn, profile_id, limit=1)
             if not runs:
                 return jsonify({"run": None, "items": []})
             latest_run = runs[0]
             return jsonify(
-                {"run": latest_run, "items": repo.list_items(conn, latest_run["id"])}
+                {"run": latest_run, "items": _store().list_items(conn, latest_run["id"])}
             )
         finally:
             conn.close()
@@ -183,9 +186,9 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             if not row:
                 return jsonify({"error": "run not found"}), 404
             profile_id = row["profile_id"]
-            runs = repo.list_runs(conn, profile_id, limit=1)
+            runs = _store().list_runs(conn, profile_id, limit=1)
             latest_run = runs[0] if runs else None
-            items = repo.list_items(conn, latest_run["id"]) if latest_run else []
+            items = _store().list_items(conn, latest_run["id"]) if latest_run else []
             return jsonify({"run": latest_run, "items": items})
         finally:
             conn.close()
@@ -204,12 +207,18 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def read_item(item_id: int):
         conn = repo.connect(db_path)
         try:
+            if pg_store.enabled():
+                item = pg_store.get_item(conn, item_id)
+                if not item or (item.get("owner") or "default") != _owner():
+                    return jsonify({"error": "item not found"}), 404
+                _store().mark_item_read(conn, item_id)
+                return jsonify({"ok": True})
             row = conn.execute(
                 "SELECT owner FROM watch_items WHERE id = ?", (item_id,)
             ).fetchone()
             if not row or (row["owner"] or "default") != _owner():
                 return jsonify({"error": "item not found"}), 404
-            repo.mark_item_read(conn, item_id)
+            _store().mark_item_read(conn, item_id)
             return jsonify({"ok": True})
         finally:
             conn.close()
@@ -218,6 +227,16 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def feedback(item_id: int):
         conn = repo.connect(db_path)
         try:
+            if pg_store.enabled():
+                item = pg_store.get_item(conn, item_id)
+                if not item or (item.get("owner") or "default") != _owner():
+                    return jsonify({"error": "item not found"}), 404
+                data = request.get_json(silent=True) or {}
+                value = str(data.get("feedback") or "").strip()
+                if value not in {"useful", "not_useful"}:
+                    return jsonify({"error": "feedback must be useful or not_useful"}), 400
+                _store().set_item_feedback(conn, item_id, value)
+                return jsonify({"ok": True, "feedback": value})
             row = conn.execute(
                 "SELECT owner FROM watch_items WHERE id = ?", (item_id,)
             ).fetchone()
@@ -227,7 +246,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             value = str(data.get("feedback") or "").strip()
             if value not in {"useful", "not_useful"}:
                 return jsonify({"error": "feedback must be useful or not_useful"}), 400
-            repo.set_item_feedback(conn, item_id, value)
+            _store().set_item_feedback(conn, item_id, value)
             return jsonify({"ok": True, "feedback": value})
         finally:
             conn.close()
@@ -238,8 +257,8 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
         try:
             if not _owned_run(conn, run_id):
                 return jsonify({"error": "run not found"}), 404
-            for item in repo.list_items(conn, run_id):
-                repo.mark_item_read(conn, item["id"])
+            for item in _store().list_items(conn, run_id):
+                _store().mark_item_read(conn, item["id"])
             return jsonify({"ok": True})
         finally:
             conn.close()
