@@ -57,6 +57,26 @@ G3.10f5 SQLite 只读
 
 ---
 
+## 4b. G3.10f1 tasks PG
+
+```text
+services/review/pg_tasks.py
+  PGTaskManager
+SCIPAL_REVIEW_TASKS_BACKEND=postgres
+```
+
+同步：
+
+```text
+tasks 477/477
+```
+
+冒烟：
+
+```text
+create / get / complete ✅
+```
+
 ## 5. 当前生产
 
 ```text

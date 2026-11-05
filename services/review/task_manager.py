@@ -27,6 +27,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import uuid
 from datetime import datetime
@@ -283,4 +284,11 @@ class TaskManager:
 
 
 # 全局任务管理器实例（api_server.py 的 `from ... import task_manager` 不能变）
-task_manager = TaskManager()
+if os.environ.get("SCIPAL_REVIEW_TASKS_BACKEND", "").strip().lower() in {
+    "postgres", "postgresql", "pg", "1", "true"
+}:
+    from .pg_tasks import PGTaskManager
+
+    task_manager = PGTaskManager()
+else:
+    task_manager = TaskManager()
