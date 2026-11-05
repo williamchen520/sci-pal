@@ -369,6 +369,26 @@ update_profile 允许 last_run_at / next_run_at
 last_push_at / last_heartbeat_at
 ```
 
+## 10e. P4 完成
+
+```text
+discovery.discover_journals -> store
+  journals 读/写/删
+```
+
+冒烟：
+
+```text
+journals 1 manual
+cleanup ✅
+```
+
+测试：
+
+```text
+tests.test_watch_discovery_store 2 OK
+```
+
 ## 11. 执行顺序
 
 ```text
