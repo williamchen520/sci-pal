@@ -460,7 +460,30 @@ Unpaywall PDF -> PG
 
 再切 `SCIPAL_WATCH_PG_STORE`。
 
-## 10i. P3b 阻塞
+## 10h2. P6 全文复测通过
+
+```text
+run 13
+selected 1
+imported_full 1
+imported_abstract 0
+acquisition fulltext
+read / feedback ok
+```
+
+数据：
+
+```text
+1 / 2 / 10 / 14 / 14
+```
+
+生产：
+
+```text
+SCIPAL_WATCH_PG_STORE=1
+```
+
+## 10i. P3b 阻塞（历史）
 
 尝试复用：
 
