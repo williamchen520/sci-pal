@@ -127,6 +127,41 @@ tests.test_runs_pg 2 OK
 
 默认关闭。
 
+## 4e. runs 切流
+
+```text
+SCIPAL_RUNS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+create run
+list 1
+update completed
+cleanup ✅
+```
+
+## 4f. G3.10d FTS trigger 评估
+
+现状：
+
+```text
+FTS triggers 12 保留
+SQLite 核心写入已停止
+trigger 实际不再触发
+```
+
+结论：
+
+```text
+保留 trigger 作为回退表定义
+不删除
+直到 SQLite FTS 回退退役
+```
+
+新论文只进 PG，SQLite FTS 回退本身已不覆盖新论文。
+
 ## 5. 当前生产
 
 ```text
