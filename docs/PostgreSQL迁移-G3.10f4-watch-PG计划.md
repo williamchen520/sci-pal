@@ -491,6 +491,22 @@ P3b1 生产 schema 的 JATS -> PG importer
 P3b2 Unpaywall PDF -> PG
 ```
 
+P3b1 曲线方案：
+
+```text
+jats_parser.parse_file
+  -> _adapt
+  -> write_parsed_paper(PG)
+```
+
+冒烟：
+
+```text
+papers 1
+paragraphs 19
+cleanup ✅
+```
+
 在 P3b 完成前：
 
 ```text
