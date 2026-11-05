@@ -132,6 +132,27 @@ cleanup ✅
 
 路由按 `SCIPAL_SYSTEMATIC_BACKEND` 切换。
 
+## 5d. G3.10e4c 完成
+
+```text
+pg_systematic.add_evidence / list_evidence / evidence_csv
+```
+
+修复：
+
+```text
+evidence_rows identity sequence 落后
+```
+
+冒烟：
+
+```text
+papers 1
+evidence 1
+csv 411
+cleanup ✅
+```
+
 ## 6. 下一步
 
 ```text
