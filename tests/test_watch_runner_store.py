@@ -16,6 +16,7 @@ class WatchRunnerStoreTests(unittest.TestCase):
     def test_pg_store_flag(self):
         with mock.patch.dict(os.environ, {"SCIPAL_WATCH_PG_STORE": "postgres"}):
             self.assertIs(runner._store(), pg_store)
+            self.assertTrue(runner._pg_mode())
 
 
 if __name__ == "__main__":

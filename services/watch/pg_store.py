@@ -47,6 +47,7 @@ def update_profile(conn, profile_id: int, data: Dict[str, Any]) -> None:
         "name", "field_text", "keywords", "openalex_topic_ids", "interval_days",
         "window_days", "top_journal_count", "max_items", "same_journal_limit",
         "metric_type", "metric_min", "language", "delivery", "enabled",
+        "last_run_at", "next_run_at", "last_push_at", "last_heartbeat_at",
     }
     updates = {k: v for k, v in data.items() if k in allowed}
     if "openalex_topic_ids" in updates and isinstance(updates["openalex_topic_ids"], (list, tuple)):
