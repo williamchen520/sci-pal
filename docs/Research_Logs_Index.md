@@ -411,6 +411,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10e1 projects PG | list/get/create/update/member; copy pending | [Plan](PostgreSQL迁移-G3.10e-剩余写入盘点.md) |
 
+| 2026-11-05 | G3.10e1 projects cutover | backend enabled; copy PG | [Plan](PostgreSQL迁移-G3.10e-剩余写入盘点.md) |
+
 ## Rules
 
 ```text

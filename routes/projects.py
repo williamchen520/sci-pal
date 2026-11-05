@@ -100,7 +100,11 @@ def build_projects_blueprint(*, db_path: str | Path, log: Any = None) -> Bluepri
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        project = copy_project(project_id, workspace_id, user_id, db_path=db)
+        project = (
+            project_pg.copy_project(project_id, workspace_id, user_id)
+            if project_pg.enabled()
+            else copy_project(project_id, workspace_id, user_id, db_path=db)
+        )
         if not project:
             return jsonify({"error": "Project not found or copy denied"}), 404
         return jsonify(project), 201
