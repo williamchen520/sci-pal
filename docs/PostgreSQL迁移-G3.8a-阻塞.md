@@ -110,6 +110,31 @@ tests.test_ingest_pg_only 1 OK
 SCIPAL_INGEST_PG_ONLY=0
 ```
 
+## 5c. G3.8a3/a4 完成
+
+生产：
+
+```text
+SCIPAL_INGEST_PG_ONLY=1
+SCIPAL_PAPER_WRITE_BACKEND=postgres
+```
+
+live 冒烟：
+
+```text
+SQLite papers 3313 -> 3313
+PG papers     新增 1
+sections      PG
+cleanup       ✅
+```
+
+gate：
+
+```text
+outbox_pending 0
+ok true
+```
+
 ## 6. 当前生产
 
 ```text

@@ -393,6 +393,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.8a batch PG-only | ingest + online branches; 1 test | [Report](PostgreSQL迁移-G3.8a-阻塞.md) |
 
+| 2026-11-05 | G3.8a3 core PG-only | live smoke; SQLite unchanged; gate ok | [Report](PostgreSQL迁移-G3.8a-阻塞.md) |
+
 ## Rules
 
 ```text
