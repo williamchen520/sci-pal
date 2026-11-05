@@ -134,6 +134,31 @@ list 1 / get true / revisions 1 / audit 1
 PG memberships / projects / project_members
 ```
 
+## 6c. G3.6b 进行中
+
+已完成：
+
+```text
+create_experiment PG-only
+  experiment + revision + audit
+路由 POST /api/projects/<id>/experiments
+```
+
+测试：
+
+```text
+tests.test_experiments_pg_write 2 OK
+全量 891 tests OK
+```
+
+仍需：
+
+```text
+update_experiment
+sign_experiment
+access requests
+```
+
 ## 7. 下一步
 
 ```text

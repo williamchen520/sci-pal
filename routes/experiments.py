@@ -69,6 +69,20 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "workspace access denied"}), 403
         body = request.get_json(silent=True) or {}
         try:
+            if _pg_read():
+                from services.experiments import pg_write
+
+                row = pg_write.create_experiment(
+                    project_id,
+                    workspace_id,
+                    user_id,
+                    str(body.get("title") or ""),
+                    protocol_id=str(body.get("protocol_id") or ""),
+                    protocol_version=str(body.get("protocol_version") or ""),
+                    status=str(body.get("status") or "planned"),
+                    content=str(body.get("content") or ""),
+                )
+                return jsonify(row), 201
             row = create_experiment(
                 project_id,
                 workspace_id,
