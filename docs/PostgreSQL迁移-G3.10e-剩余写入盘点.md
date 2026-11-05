@@ -98,6 +98,35 @@ PG 作为检索/核心数据
 
 ---
 
+## 5b. G3.10e1 projects
+
+```text
+services/projects/pg_service.py
+  list/get/create/update/add_member
+routes/projects.py
+  SCIPAL_PROJECTS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+list 1
+create / get / update / add_member ✅
+cleanup ✅
+```
+
+仍未覆盖：
+
+```text
+copy_project 仍走 SQLite
+```
+
+测试：
+
+```text
+tests.test_projects_pg 2 OK
+```
+
 ## 6. 当前生产
 
 ```text
