@@ -514,6 +514,36 @@ SCIPAL_WATCH_PG_STORE 不启用
 watch 全文能力保留在 SQLite
 ```
 
+## 10j. P3b2 完成
+
+```text
+try_oa_pdf -> parse_and_store (PG_ONLY)
+  -> PG papers/paragraphs
+  -> delete abstract
+```
+
+冒烟：
+
+```text
+paper 1
+paragraphs 85
+figures 7
+cleanup ✅
+```
+
+修复：
+
+```text
+空字符串 year 写 bigint 失败
+_year_value -> None / int
+```
+
+测试：
+
+```text
+tests.test_paper_pg_writes 7 OK
+```
+
 ## 11. 执行顺序
 
 ```text

@@ -483,6 +483,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10f4 P3b1 JATS PG | 1 paper / 19 paragraphs | [Plan](PostgreSQL迁移-G3.10f4-watch-PG计划.md) |
 
+| 2026-11-05 | G3.10f4 P3b2 PDF PG | 85 paras/7 figs; empty year fixed | [Plan](PostgreSQL迁移-G3.10f4-watch-PG计划.md) |
+
 ## Rules
 
 ```text

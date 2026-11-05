@@ -117,6 +117,15 @@ def update_metadata_if_exists(
     return True
 
 
+def _year_value(value):
+    if value in (None, ""):
+        return None
+    try:
+        return int(str(value)[:4])
+    except (TypeError, ValueError):
+        return None
+
+
 def _upsert_paper_row(pg, row: dict) -> None:
     values = {
         "paper_id": row.get("paper_id"),
@@ -125,7 +134,7 @@ def _upsert_paper_row(pg, row: dict) -> None:
         "authors": row.get("authors") or "",
         "abstract": row.get("abstract") or "",
         "journal": row.get("journal") or "",
-        "year": row.get("year"),
+        "year": _year_value(row.get("year")),
         "doi": row.get("doi") or "",
         "keywords": row.get("keywords") or "",
         "volume": row.get("volume") or "",
