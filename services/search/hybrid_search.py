@@ -181,6 +181,9 @@ class HybridSearch:
 
         backend = os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower()
         _trace("vector_enter", backend=backend, top_k=top_k, paper_id=paper_id or "", filters=filters or {})
+        if os.environ.get("SCIPAL_VECTOR_ENABLED", "1").strip().lower() in {"0", "false", "off", "no"}:
+            _trace("vector_disabled")
+            return []
         if backend in {"pgvector", "pg_vec", "postgres"}:
             if getattr(self, "_pg_vector", None) is None:
                 from services.search.pg_vector import PGVectorParagraphSearch
