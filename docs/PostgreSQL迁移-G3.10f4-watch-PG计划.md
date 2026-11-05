@@ -460,6 +460,44 @@ Unpaywall PDF -> PG
 
 再切 `SCIPAL_WATCH_PG_STORE`。
 
+## 10i. P3b 阻塞
+
+尝试复用：
+
+```text
+build_db/pg_v2_import_xml.import_one
+```
+
+失败：
+
+```text
+column "source_flags" does not exist
+```
+
+原因：
+
+```text
+pg_v2_import_xml 面向 scipal_v2 schema
+生产 scipal_bench 不是 v2 schema
+```
+
+已撤回无效代码，未提交。
+
+需要：
+
+```text
+P3b1 生产 schema 的 JATS -> PG importer
+      或 jats_parser + DatabaseWriter(PG-only)
+P3b2 Unpaywall PDF -> PG
+```
+
+在 P3b 完成前：
+
+```text
+SCIPAL_WATCH_PG_STORE 不启用
+watch 全文能力保留在 SQLite
+```
+
 ## 11. 执行顺序
 
 ```text
