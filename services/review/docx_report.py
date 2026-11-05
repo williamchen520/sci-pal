@@ -11,13 +11,16 @@ from docx.shared import Pt
 from services.review import risk_of_bias, systematic
 
 
-def render_docx(conn: sqlite3.Connection, project_id: str) -> bytes:
-    project = systematic.get_project(conn, project_id)
-    if not project:
-        raise KeyError("project not found")
-    counts = systematic.prisma(conn, project_id)
-    evidence = systematic.list_evidence(conn, project_id)
-    rob_rows = risk_of_bias.list_rows(conn, project_id)
+def render_docx(conn: sqlite3.Connection, project_id: str, *, data=None) -> bytes:
+    if data is None:
+        project = systematic.get_project(conn, project_id)
+        if not project:
+            raise KeyError("project not found")
+        counts = systematic.prisma(conn, project_id)
+        evidence = systematic.list_evidence(conn, project_id)
+        rob_rows = risk_of_bias.list_rows(conn, project_id)
+    else:
+        project, counts, evidence, rob_rows = data
 
     document = Document()
     style = document.styles["Normal"]
