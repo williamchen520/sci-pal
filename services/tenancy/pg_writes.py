@@ -130,3 +130,9 @@ def list_members(workspace_id: str) -> list[dict[str, Any]]:
             (workspace_id,),
         ).fetchall()
     return [dict(row) for row in rows]
+
+def audit_event(
+    workspace_id, actor_user_id, action, target=None, detail=None
+) -> None:
+    with _connect() as pg:
+        _audit(pg, workspace_id, actor_user_id, action, target, detail)
