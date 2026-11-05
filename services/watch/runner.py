@@ -19,14 +19,16 @@ _STOP = {
 }
 
 
-def _store():
+def _pg_mode() -> bool:
     import os
 
-    if os.environ.get("SCIPAL_WATCH_PG_STORE", "").strip().lower() in {
+    return os.environ.get("SCIPAL_WATCH_PG_STORE", "").strip().lower() in {
         "postgres", "postgresql", "pg", "1", "true"
-    }:
-        return pg_store
-    return repo
+    }
+
+
+def _store():
+    return pg_store if _pg_mode() else repo
 
 
 def _tokens(text: str) -> List[str]:
@@ -69,6 +71,29 @@ def _paper_id(doi: str, title: str) -> str:
 def ingest_abstract(conn, candidate: Dict[str, Any]) -> str:
     """Store metadata + abstract only (acquisition='abstract')."""
     paper_id = _paper_id(candidate.get("doi") or "", candidate.get("title") or "")
+    if _pg_mode():
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            pg.execute(
+                "INSERT INTO papers "
+                "(paper_id, filename, title, authors, abstract, journal, year, doi, parse_status, "
+                "parse_engine, acquisition, created_at, updated_at) "
+                "VALUES (%s, '', %s, %s, %s, %s, %s, %s, 'abstract', 'watch', 'abstract', %s, %s) "
+                "ON CONFLICT (paper_id) DO NOTHING",
+                (
+                    paper_id, candidate.get("title"),
+                    json.dumps(candidate.get("authors") or [], ensure_ascii=False),
+                    candidate.get("abstract") or "", candidate.get("journal"),
+                    (candidate.get("published") or "")[:4] or None, candidate.get("doi"),
+                    repo.now_iso(), repo.now_iso(),
+                ),
+            )
+            pg.commit()
+        finally:
+            pg.close()
+        return paper_id
     conn.execute(
         "INSERT OR IGNORE INTO papers "
         "(paper_id, filename, title, authors, abstract, journal, year, doi, parse_status, "
@@ -119,6 +144,8 @@ def _digest(profile: Dict[str, Any], run: Dict[str, Any], items: List[Dict[str, 
 def try_fulltext(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: str):
     """Try Europe PMC OA JATS; on success replace the abstract-only record."""
     doi = candidate.get("doi")
+    if _pg_mode():
+        return None
     if not doi:
         return None
     try:
@@ -167,6 +194,8 @@ def try_oa_pdf(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: str)
     import urllib.request
 
     doi = candidate.get("doi")
+    if _pg_mode():
+        return None
     email = os.environ.get("SCIPAL_UNPAYWALL_EMAIL")
     if not doi or not email:
         return None
@@ -356,26 +385,17 @@ def run_profile(
             heartbeat=heartbeat,
             **stats,
         )
-        conn.execute(
-            "UPDATE watch_profiles SET last_run_at = ?, next_run_at = ? WHERE id = ?",
-            (
-                now.isoformat(),
-                (now + timedelta(days=int(profile.get("interval_days") or 3))).isoformat(),
-                profile_id,
-            ),
-        )
+        profile_updates = {
+            "last_run_at": now.isoformat(),
+            "next_run_at": (
+                now + timedelta(days=int(profile.get("interval_days") or 3))
+            ).isoformat(),
+        }
         if pushed:
+            profile_updates["last_push_at"] = now.isoformat()
             if heartbeat:
-                conn.execute(
-                    "UPDATE watch_profiles SET last_push_at = ?, last_heartbeat_at = ? WHERE id = ?",
-                    (now.isoformat(), now.isoformat(), profile_id),
-                )
-            else:
-                conn.execute(
-                    "UPDATE watch_profiles SET last_push_at = ? WHERE id = ?",
-                    (now.isoformat(), profile_id),
-                )
-        conn.commit()
+                profile_updates["last_heartbeat_at"] = now.isoformat()
+        store.update_profile(conn, profile_id, profile_updates)
         sync_watch_pending(db_path)
         return {
             "run_id": run_id,
@@ -388,4 +408,5 @@ def run_profile(
         store.finish_run(conn, run_id, status="failed", error=str(exc)[:500], **stats)
         raise
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()

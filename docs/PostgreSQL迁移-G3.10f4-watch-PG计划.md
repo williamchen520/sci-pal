@@ -322,6 +322,14 @@ runner.run_profile -> store
 
 ```text
 tests.test_watch_runner_store 2 OK
+tests.test_watch 8 OK
+```
+
+修复：
+
+```text
+update_profile 允许 last_run_at / next_run_at
+last_push_at / last_heartbeat_at
 ```
 
 注意：
@@ -329,6 +337,36 @@ tests.test_watch_runner_store 2 OK
 ```text
 P2 仍保留 raw conn.execute 更新 profile
 P3 前不能启用
+```
+
+## 10d. P3 完成
+
+```text
+ingest_abstract -> PG papers
+try_fulltext / try_oa_pdf -> PG 模式暂跳过
+runner profile 更新 -> store.update_profile
+```
+
+PG store 干跑：
+
+```text
+run 12
+items 1
+abstract 1
+```
+
+测试：
+
+```text
+tests.test_watch_runner_store 2 OK
+tests.test_watch 8 OK
+```
+
+修复：
+
+```text
+update_profile 允许 last_run_at / next_run_at
+last_push_at / last_heartbeat_at
 ```
 
 ## 11. 执行顺序
