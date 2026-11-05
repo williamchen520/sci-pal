@@ -214,6 +214,21 @@ evidence 1
 
 brief/pdf 待部署后复测。
 
+## 5h. systematic 切流完成
+
+```text
+SCIPAL_SYSTEMATIC_BACKEND=postgres
+```
+
+报告复测：
+
+```text
+brief        200
+report.html  200
+report.pdf   200
+report.docx  200 37085
+```
+
 ## 6. 下一步
 
 ```text
