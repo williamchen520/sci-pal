@@ -403,6 +403,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10b audit PG | backend + sequence fix; 2 tests | [Report](PostgreSQL迁移-G3.10-SQLite归档.md) |
 
+| 2026-11-05 | G3.10c runs PG + audit cutover | audit enabled; runs adapter 2 tests | [Report](PostgreSQL迁移-G3.10-SQLite归档.md) |
+
 ## Rules
 
 ```text
