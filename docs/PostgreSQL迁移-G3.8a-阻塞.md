@@ -89,6 +89,27 @@ G3.8c 删 trigger
 
 ---
 
+## 5b. 代码进展
+
+```text
+services/search/ingest.py
+  PG-only 批量分支
+services/search/online_downloader.py
+  PG-only 批量分支
+```
+
+测试：
+
+```text
+tests.test_ingest_pg_only 1 OK
+```
+
+默认关闭：
+
+```text
+SCIPAL_INGEST_PG_ONLY=0
+```
+
 ## 6. 当前生产
 
 ```text

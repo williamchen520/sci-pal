@@ -268,6 +268,58 @@ class IngestService:
         metadata_updates: list[tuple[str, object, object, object]] = []
         children: list[tuple[str, list[dict], list[dict]]] = []
         paper_rows: list[dict] = []
+        if paper_pg_writes.pg_only() and paper_pg_writes.enabled():
+            from build_db.sentence_geometry import split_sentences
+
+            for item in parsed:
+                data = item["data"]
+                paper_id = _paper_id(item["pmc_id"])
+                if preflight.enabled():
+                    report = preflight.audit_and_repair(data, paper_id, "pmc_xml")
+                    if report.errors:
+                        raise preflight.PreflightError(
+                            f"{paper_id}: {'; '.join(report.errors)}"
+                        )
+                paper_rows.append(
+                    {
+                        "paper_id": paper_id,
+                        "filename": f"{item['pmc_id']}.xml",
+                        "title": data.get("title"),
+                        "abstract": data.get("abstract") or "",
+                        "authors": data.get("authors") or "",
+                        "journal": data.get("journal") or "",
+                        "year": data.get("year"),
+                        "doi": data.get("doi") or "",
+                        "parse_engine": "xml",
+                    }
+                )
+                paper_paragraphs: list[dict] = []
+                paper_sentences: list[dict] = []
+                for index, para in enumerate(data.get("paragraphs") or []):
+                    para_id = f"{paper_id}_para_{index:05d}"
+                    path = para.get("path") or []
+                    paper_paragraphs.append(
+                        {
+                            "para_id": para_id,
+                            "section_level1": (path[0] if path else para.get("section")) or "",
+                            "text": para.get("text") or "",
+                            "sequence": para.get("sequence") or index,
+                        }
+                    )
+                    for sent_index, text in enumerate(split_sentences(para.get("text") or "")):
+                        paper_sentences.append(
+                            {
+                                "sentence_id": f"{para_id}_sent_{sent_index:03d}",
+                                "para_id": para_id,
+                                "text": text,
+                                "sequence": sent_index,
+                            }
+                        )
+                children.append((paper_id, paper_paragraphs, paper_sentences))
+                written += 1
+            paper_pg_writes.write_papers_batch(paper_rows, children)
+            return written
+
         # `paragraphs_ad` deletes from FTS5 with `WHERE para_id = ?`, which is a
         # full scan per deleted row (para_id is UNINDEXED). Dropping it for the
         # batch and deleting by a single set-based join keeps re-ingest fast.

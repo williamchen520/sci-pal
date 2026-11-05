@@ -542,9 +542,10 @@ class OnlineDownloader:
         """
         from import_xml_v2 import parse_jats_xml
 
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        children: list[tuple[str, list[dict]]] = []
+        pg_only = paper_pg_writes.pg_only() and paper_pg_writes.enabled()
+        conn = None if pg_only else sqlite3.connect(DB_PATH)
+        c = conn.cursor() if conn is not None else None
+        children: list[tuple[str, list[dict], list[dict]]] = []
         paper_rows: list[dict] = []
 
         for i, pmc_id in enumerate(task.new_paper_ids, 1):
@@ -580,14 +581,16 @@ class OnlineDownloader:
                         "doi": data.get("doi") or "",
                     }
                 )
-                c.execute("""
-                    INSERT OR REPLACE INTO papers
-                    (paper_id, filename, title, abstract, authors, parse_engine)
-                    VALUES (?, ?, ?, ?, ?, 'xml')
-                """, (paper_id, f"{pmc_id}.xml", data["title"], data["abstract"], data["authors"]))
+                if not pg_only:
+                    c.execute("""
+                        INSERT OR REPLACE INTO papers
+                        (paper_id, filename, title, abstract, authors, parse_engine)
+                        VALUES (?, ?, ?, ?, ?, 'xml')
+                    """, (paper_id, f"{pmc_id}.xml", data["title"], data["abstract"], data["authors"]))
 
                 # 先删除这篇论文旧的段落（如果有），再插入新的
-                c.execute("DELETE FROM paragraphs WHERE paper_id = ?", (paper_id,))
+                if not pg_only:
+                    c.execute("DELETE FROM paragraphs WHERE paper_id = ?", (paper_id,))
 
                 # 插入段落
                 paper_paragraphs: list[dict] = []
@@ -601,13 +604,14 @@ class OnlineDownloader:
                             "sequence": para["sequence"],
                         }
                     )
-                    c.execute("""
-                        INSERT OR REPLACE INTO paragraphs
-                        (para_id, paper_id, section_level1, text, sequence, parse_engine)
-                        VALUES (?, ?, ?, ?, ?, 'xml')
-                    """, (para_id, paper_id, para["section"], para["text"], para["sequence"]))
+                    if not pg_only:
+                        c.execute("""
+                            INSERT OR REPLACE INTO paragraphs
+                            (para_id, paper_id, section_level1, text, sequence, parse_engine)
+                            VALUES (?, ?, ?, ?, ?, 'xml')
+                        """, (para_id, paper_id, para["section"], para["text"], para["sequence"]))
 
-                children.append((paper_id, paper_paragraphs))
+                children.append((paper_id, paper_paragraphs, []))
                 task.imported += 1
 
                 if self.verbose:
@@ -620,9 +624,11 @@ class OnlineDownloader:
         try:
             if paper_pg_writes.enabled():
                 paper_pg_writes.write_papers_batch(paper_rows, children)
-            conn.commit()
+            if conn is not None:
+                conn.commit()
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
         if self.verbose:
             print(f"  ✅ 增量导入完成: {task.imported} 篇")
