@@ -453,6 +453,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10f SQLite residual | tasks/references/qa/watch remain | [Report](PostgreSQL迁移-G3.10f-SQLite残余.md) |
 
+| 2026-11-05 | G3.10f1 review tasks PG | 477/477; smoke | [Plan](PostgreSQL迁移-G3.10f-SQLite残余.md) |
+
 ## Rules
 
 ```text
