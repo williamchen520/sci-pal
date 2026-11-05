@@ -410,6 +410,56 @@ tests/test_watch*.py 25 OK
 
 未启用生产。
 
+## 10g. P6 结果
+
+API 全链路：
+
+```text
+create profile
+set journals
+runner 1 item / 1 abstract
+run detail 1 item
+read
+feedback useful
+delete profile
+```
+
+数据对账：
+
+```text
+profiles 1 / 1
+journals 2 / 2
+runs 10 / 10
+items 14 / 14
+seen 14 / 14
+```
+
+但 PG 模式暂不抓全文，为避免生产退化：
+
+```text
+SCIPAL_WATCH_PG_STORE removed
+```
+
+生产仍 SQLite 读写。
+
+## 10h. 前置：P3b 全文
+
+PG 模式当前：
+
+```text
+try_fulltext -> None
+try_oa_pdf -> None
+```
+
+必须先补：
+
+```text
+Europe PMC JATS -> PG
+Unpaywall PDF -> PG
+```
+
+再切 `SCIPAL_WATCH_PG_STORE`。
+
 ## 11. 执行顺序
 
 ```text
