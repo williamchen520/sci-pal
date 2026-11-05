@@ -93,6 +93,20 @@ import 1
 cleanup ✅
 ```
 
+## 4d. reference library 切流
+
+```text
+SCIPAL_REFERENCE_LIBRARY_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+count 1
+list 1
+api 1
+```
+
 ## 5. 当前生产
 
 ```text
