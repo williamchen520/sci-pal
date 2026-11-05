@@ -7,6 +7,7 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from services.db.pg_pool import pg_connection
+from services.tenancy.permissions import pi_can_copy
 
 
 def enabled() -> bool:
@@ -190,3 +191,45 @@ def add_member(
         return {"project_id": project_id, "user_id": target_user_id, "role": role}
     finally:
         pg.close()
+
+def copy_project(
+    project_id: str,
+    workspace_id: str,
+    actor_user_id: str,
+) -> Optional[Dict[str, Any]]:
+    pg = pg_connection()
+    try:
+        role = _workspace_role(pg, workspace_id, actor_user_id)
+        if role not in {"owner", "pi"}:
+            return None
+        source = pg.execute(
+            "SELECT * FROM projects WHERE project_id = %s AND workspace_id = %s",
+            (project_id, workspace_id),
+        ).fetchone()
+        if not source:
+            return None
+        if role == "pi" and not pi_can_copy(source.get("data_class")):
+            return None
+        new_id = f"project_{uuid.uuid4().hex}"
+        pg.execute(
+            "INSERT INTO projects "
+            "(project_id, workspace_id, owner_user_id, name, description, status, data_class, copied_from) "
+            "VALUES (%s, %s, %s, %s, %s, 'planning', %s, %s)",
+            (
+                new_id,
+                workspace_id,
+                actor_user_id,
+                f"Copy of {source['name']}",
+                source.get("description") or "",
+                source.get("data_class") or "internal",
+                project_id,
+            ),
+        )
+        pg.execute(
+            "INSERT INTO project_members (project_id, user_id, role) VALUES (%s, %s, 'owner')",
+            (new_id, actor_user_id),
+        )
+        pg.commit()
+    finally:
+        pg.close()
+    return get_project(new_id, workspace_id, actor_user_id)

@@ -115,16 +115,38 @@ create / get / update / add_member ✅
 cleanup ✅
 ```
 
-仍未覆盖：
+copy_project 已补：
 
 ```text
-copy_project 仍走 SQLite
+pg_service.copy_project
 ```
 
 测试：
 
 ```text
 tests.test_projects_pg 2 OK
+```
+
+## 5c. projects 切流
+
+```text
+SCIPAL_PROJECTS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+list 1
+get HBV
+create / update / add_member
+copy_project ✅
+cleanup ✅
+```
+
+已知缺口：
+
+```text
+copy_project 未写 workspace audit
 ```
 
 ## 6. 当前生产
