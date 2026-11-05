@@ -156,6 +156,22 @@ add / list / update / delete ✅
 
 路由按 `SCIPAL_PROTOCOLS_BACKEND` 切换，默认关闭。
 
+## 5e. G3.10e2d 完成
+
+```text
+deploy/sql/005_protocol_run_files.sql
+services/protocols/pg_attachments.py
+  add/list/path/delete
+```
+
+冒烟：
+
+```text
+run + file + list + path + delete ✅
+```
+
+路由按 `SCIPAL_PROTOCOLS_BACKEND` 切换。
+
 ## 6. 当前生产
 
 ```text
