@@ -389,6 +389,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.8 outbox gate | pending 0; 9 tables parity | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
 
+| 2026-11-05 | G3.8a ingest blocker | batch paths still SQLite-first | [Report](PostgreSQL迁移-G3.8a-阻塞.md) |
+
 ## Rules
 
 ```text
