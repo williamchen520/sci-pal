@@ -80,6 +80,32 @@ app                 healthy
 
 ---
 
+## 5b. G3.10e4a 完成
+
+```text
+services/review/pg_systematic.py
+  create/get/list/can_access
+  add_member/members
+  add_papers
+routes/systematic_review.py
+  SCIPAL_SYSTEMATIC_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+list 1
+create/get
+add_papers 1
+cleanup ✅
+```
+
+仍未切：
+
+```text
+screen / prisma / evidence / reports
+```
+
 ## 6. 下一步
 
 ```text
