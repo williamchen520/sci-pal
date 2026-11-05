@@ -443,6 +443,26 @@ gate：
 ok true
 ```
 
+## 9k. G3.9 notes PG 切流
+
+```text
+SCIPAL_NOTES_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+create / list / delete 全部通过
+```
+
+数据：
+
+```text
+SQLite notes 表不存在
+PG notes 0 条
+无旧数据迁移需求
+```
+
 ## 10. 当前生产
 
 ```text

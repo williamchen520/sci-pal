@@ -397,6 +397,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.8c dualwrite triggers retired | 27 dropped; live smoke pass | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
 
+| 2026-11-05 | G3.9 notes PG cutover | create/list/delete pass | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
+
 ## Rules
 
 ```text
