@@ -145,7 +145,30 @@ def try_fulltext(db_path, conn, candidate: Dict[str, Any], abstract_paper_id: st
     """Try Europe PMC OA JATS; on success replace the abstract-only record."""
     doi = candidate.get("doi")
     if _pg_mode():
-        return None
+        if not doi:
+            return None
+        try:
+            from pathlib import Path as _Path
+
+            from services.search.europe_pmc import EuropePMCClient
+            from services.watch.pg_fulltext import import_jats
+
+            client = EuropePMCClient(timeout=20)
+            hits = client.search(f'DOI:"{doi}"', page_size=3)
+            pmcid = next((h.get("pmcid") for h in hits if h.get("pmcid")), None)
+            if not pmcid:
+                return None
+            xml = client.fetch_fulltext_xml(pmcid)
+            if not xml:
+                return None
+            xml_dir = _Path(db_path).resolve().parent.parent / "documents_xml"
+            xml_dir.mkdir(parents=True, exist_ok=True)
+            target = xml_dir / f"{pmcid.upper()}.xml"
+            target.write_text(xml, encoding="utf-8")
+            full_id = f"paper_watch_{pmcid.lower()}"
+            return import_jats(target, full_id, abstract_paper_id)
+        except Exception:  # noqa: BLE001
+            return None
     if not doi:
         return None
     try:
