@@ -407,6 +407,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10d runs cutover + FTS eval | runs PG; FTS triggers kept | [Report](PostgreSQL迁移-G3.10-SQLite归档.md) |
 
+| 2026-11-05 | G3.10e remaining SQLite writes | >100 writes; query_only blocked | [Report](PostgreSQL迁移-G3.10e-剩余写入盘点.md) |
+
 ## Rules
 
 ```text
