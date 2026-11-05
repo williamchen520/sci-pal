@@ -27,6 +27,15 @@ def audit(
     detail: str | None = None,
     db_path: str | Path = DATABASE_PATH,
 ) -> None:
+    import os
+
+    if os.environ.get("SCIPAL_TENANCY_PG_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on", "postgres", "postgresql", "pg"
+    }:
+        from services.tenancy import pg_writes
+
+        pg_writes.audit_event(workspace_id, actor_user_id, action, target, detail)
+        return
     path = Path(db_path)
     conn = sqlite3.connect(path)
     try:

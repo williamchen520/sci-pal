@@ -201,6 +201,22 @@ ws_default exists
 SQLite workspaces 1 -> 1
 ```
 
+## 4k. tenancy audit 切流
+
+```text
+SCIPAL_TENANCY_PG_ONLY=1
+permissions.audit -> PG
+```
+
+冒烟：
+
+```text
+PG audit 1
+SQLite audit 179 -> 179
+```
+
+生产已启用 PG_ONLY。
+
 ## 5. 当前生产
 
 ```text
