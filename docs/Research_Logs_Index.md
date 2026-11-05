@@ -387,6 +387,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.6 experiments PG cutover | create/update smoke; env enabled | [Plan](PostgreSQL迁移-G3.6-experiments盘点.md) |
 
+| 2026-11-05 | G3.8 outbox gate | pending 0; 9 tables parity | [Plan](PostgreSQL迁移-G3.1-写入盘点.md) |
+
 ## Rules
 
 ```text
