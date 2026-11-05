@@ -391,6 +391,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.8a ingest blocker | batch paths still SQLite-first | [Report](PostgreSQL迁移-G3.8a-阻塞.md) |
 
+| 2026-11-05 | G3.8a batch PG-only | ingest + online branches; 1 test | [Report](PostgreSQL迁移-G3.8a-阻塞.md) |
+
 ## Rules
 
 ```text
