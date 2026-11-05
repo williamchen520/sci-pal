@@ -18,7 +18,7 @@ from services.review import pdf_report
 from services.review import prisma_svg
 from services.review import report as report_mod
 from services.review import risk_of_bias
-from services.review import pico, pg_report, pg_systematic, systematic
+from services.review import pico, pg_pdf, pg_report, pg_systematic, systematic
 
 
 def _pg_projects() -> bool:
@@ -360,7 +360,11 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             row = systematic.get_project(conn, project_id)
             if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
-            pdf = pdf_report.render_pdf(conn, project_id)
+            pdf = (
+                pg_pdf.render_pdf(project_id)
+                if _pg_projects()
+                else pdf_report.render_pdf(conn, project_id)
+            )
             return Response(
                 pdf,
                 mimetype="application/pdf",
@@ -562,7 +566,11 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         try:
             if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
-            payload = docx_report.render_docx(conn, project_id)
+            payload = (
+                pg_pdf.render_docx(project_id)
+                if _pg_projects()
+                else docx_report.render_docx(conn, project_id)
+            )
             return Response(
                 payload,
                 mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

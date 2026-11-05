@@ -192,11 +192,10 @@ brief 599
 html 5170
 ```
 
-仍走 SQLite：
+PDF/DOCX 已补：
 
 ```text
-report.pdf
-report.docx
+services/review/pg_pdf.py
 ```
 
 ## 6. 下一步
