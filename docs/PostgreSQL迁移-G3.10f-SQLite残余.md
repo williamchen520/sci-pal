@@ -77,6 +77,22 @@ tasks 477/477
 create / get / complete ✅
 ```
 
+## 4c. G3.10f2 reference library PG
+
+```text
+services/references/library.py
+  SCIPAL_REFERENCE_LIBRARY_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+count 1
+list 1
+import 1
+cleanup ✅
+```
+
 ## 5. 当前生产
 
 ```text
