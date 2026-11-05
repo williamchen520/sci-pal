@@ -97,6 +97,36 @@ cleanup ✅
 tests.test_audit_pg 2 OK
 ```
 
+## 4c. audit 切流
+
+```text
+SCIPAL_AUDIT_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+list 1
+SQLite audit 40 -> 40
+cleanup ✅
+```
+
+## 4d. G3.10c experiment_runs PG
+
+```text
+services/experiments/pg_runs.py
+  list/create/get/update
+SCIPAL_RUNS_BACKEND=postgres
+```
+
+测试：
+
+```text
+tests.test_runs_pg 2 OK
+```
+
+默认关闭。
+
 ## 5. 当前生产
 
 ```text
