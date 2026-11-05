@@ -172,6 +172,33 @@ access request list
 tests.test_experiments_pg_write 6 OK
 ```
 
+## 6d. 生产切换
+
+```text
+SCIPAL_EXPERIMENTS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+create  exp_504a...  ✅
+update  revision 2   ✅
+cleanup              ✅
+```
+
+测试：
+
+```text
+全量 895 tests OK
+```
+
+数据现状：
+
+```text
+experiments 0 条
+protocols   1 条
+```
+
 ## 7. 下一步
 
 ```text
