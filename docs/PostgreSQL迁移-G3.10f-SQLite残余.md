@@ -154,6 +154,16 @@ qa 8 sentence ids
 watch profiles 1 / runs 9
 ```
 
+## 4h. watch 读开关回滚
+
+发现读 PG / 写 SQLite 会分叉：新建 profile 读不到。
+
+```text
+SCIPAL_WATCH_BACKEND removed
+```
+
+先回滚读，等 runner/writes PG 完成后再切。
+
 ## 5. 当前生产
 
 ```text
