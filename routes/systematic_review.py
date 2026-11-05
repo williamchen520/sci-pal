@@ -18,7 +18,7 @@ from services.review import pdf_report
 from services.review import prisma_svg
 from services.review import report as report_mod
 from services.review import risk_of_bias
-from services.review import pico, pg_systematic, systematic
+from services.review import pico, pg_report, pg_systematic, systematic
 
 
 def _pg_projects() -> bool:
@@ -325,7 +325,11 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             row = systematic.get_project(conn, project_id)
             if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
-            text = brief_mod.build_brief(conn, project_id)
+            text = (
+                pg_report.build_brief(project_id)
+                if _pg_projects()
+                else brief_mod.build_brief(conn, project_id)
+            )
             return Response(text, mimetype="text/markdown; charset=utf-8")
         finally:
             conn.close()
@@ -337,8 +341,13 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             row = systematic.get_project(conn, project_id)
             if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
+            html_body = (
+                pg_report.render_html(project_id)
+                if _pg_projects()
+                else report_mod.render_html(conn, project_id)
+            )
             return Response(
-                report_mod.render_html(conn, project_id),
+                html_body,
                 mimetype="text/html; charset=utf-8",
             )
         finally:

@@ -176,6 +176,29 @@ report.pdf
 report.docx
 ```
 
+## 5f. G3.10e4e brief/report
+
+```text
+services/review/pg_report.py
+  build_brief
+  render_html
+```
+
+冒烟：
+
+```text
+projects 1
+brief 599
+html 5170
+```
+
+仍走 SQLite：
+
+```text
+report.pdf
+report.docx
+```
+
 ## 6. 下一步
 
 ```text
