@@ -334,3 +334,15 @@ def project_papers(project_id: str) -> List[Dict]:
         return [dict(row) for row in rows]
     finally:
         pg.close()
+
+def list_events(project_id: str, limit: int = 100) -> List[Dict]:
+    pg = pg_connection()
+    try:
+        rows = pg.execute(
+            "SELECT actor, action, target, detail, created_at FROM review_events "
+            "WHERE project_id = %s ORDER BY id DESC LIMIT %s",
+            (project_id, max(1, limit)),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        pg.close()

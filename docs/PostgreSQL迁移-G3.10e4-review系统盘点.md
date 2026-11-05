@@ -153,6 +153,29 @@ csv 411
 cleanup ✅
 ```
 
+## 5e. G3.10e4d events
+
+```text
+pg_systematic.log_event
+pg_systematic.list_events
+```
+
+冒烟：
+
+```text
+events 1
+cleanup ✅
+```
+
+报告仍未迁：
+
+```text
+brief
+report.html
+report.pdf
+report.docx
+```
+
 ## 6. 下一步
 
 ```text
