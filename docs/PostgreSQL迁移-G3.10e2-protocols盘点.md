@@ -91,6 +91,31 @@ SQLite protocol 表不增长
 
 ---
 
+## 5b. G3.10e2a 完成
+
+```text
+services/protocols/pg_read.py
+  list / count / get
+routes/protocols.py
+  SCIPAL_PROTOCOLS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+list 1
+count 1
+get 325000 / steps 15
+```
+
+测试：
+
+```text
+tests.test_protocols_pg_read 2 OK
+```
+
+写路径仍 SQLite，默认关闭。
+
 ## 6. 当前生产
 
 ```text
