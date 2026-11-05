@@ -310,6 +310,27 @@ tests.test_watch_pg_store 2 OK
 
 生产未启用。
 
+## 10c. P2 完成
+
+```text
+runner.run_profile -> store
+  repo 默认
+  pg_store when SCIPAL_WATCH_PG_STORE=1
+```
+
+测试：
+
+```text
+tests.test_watch_runner_store 2 OK
+```
+
+注意：
+
+```text
+P2 仍保留 raw conn.execute 更新 profile
+P3 前不能启用
+```
+
 ## 11. 执行顺序
 
 ```text
