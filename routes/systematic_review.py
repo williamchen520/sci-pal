@@ -185,7 +185,23 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             if request.method == "GET":
-                return jsonify({"rows": systematic.list_evidence(conn, project_id)})
+                return jsonify(
+                    {"rows": pg_systematic.list_evidence(project_id)}
+                    if _pg_projects()
+                    else {"rows": systematic.list_evidence(conn, project_id)}
+                )
+            if _pg_projects():
+                project_row = pg_systematic.get_project(project_id)
+                if not project_row or not pg_systematic.can_access(project_id, _owner()):
+                    return jsonify({"error": "project not found"}), 404
+                papers = pg_systematic.project_papers(project_id)
+                added = 0
+                for paper in papers:
+                    row = systematic.extract_evidence(paper, project_row.get("pico"))
+                    pg_systematic.add_evidence(project_id, paper["paper_id"], row)
+                    added += 1
+                _audit(conn, project_id, "evidence_extracted", "", str(added))
+                return jsonify({"added": added, "rows": pg_systematic.list_evidence(project_id)})
             project_row = systematic.get_project(conn, project_id)
             if not project_row or not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
@@ -209,7 +225,9 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             return Response(
-                systematic.evidence_csv(conn, project_id),
+                pg_systematic.evidence_csv(project_id)
+                if _pg_projects()
+                else systematic.evidence_csv(conn, project_id),
                 mimetype="text/csv",
                 headers={
                     "Content-Disposition": f"attachment; filename={project_id}_evidence.csv"

@@ -265,3 +265,72 @@ def log_event(project_id: str, actor: str, action: str, target: str = "", detail
         pg.commit()
     finally:
         pg.close()
+
+def add_evidence(project_id: str, paper_id: str, row: Dict[str, str]) -> None:
+    pg = pg_connection()
+    try:
+        pg.execute(
+            "INSERT INTO evidence_rows "
+            "(project_id, paper_id, design, sample_size, intervention, comparator, "
+            " outcomes, effect, source_sentence, created_at) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (
+                project_id, paper_id, row.get("design"), row.get("sample_size"),
+                row.get("intervention"), row.get("comparator"), row.get("outcomes"),
+                row.get("effect"), row.get("source_sentence"), _now(),
+            ),
+        )
+        pg.commit()
+    finally:
+        pg.close()
+
+
+def list_evidence(project_id: str) -> List[Dict]:
+    pg = pg_connection()
+    try:
+        rows = pg.execute(
+            "SELECT paper_id, design, sample_size, intervention, comparator, outcomes, effect "
+            "FROM evidence_rows WHERE project_id = %s ORDER BY id",
+            (project_id,),
+        ).fetchall()
+        return [
+            {
+                "paper_id": row["paper_id"],
+                "design": row["design"],
+                "sample_size": row["sample_size"],
+                "intervention": row["intervention"],
+                "comparator": row["comparator"],
+                "outcomes": row["outcomes"],
+                "effect": row["effect"],
+            }
+            for row in rows
+        ]
+    finally:
+        pg.close()
+
+
+def evidence_csv(project_id: str) -> str:
+    import csv
+    import io
+
+    rows = list_evidence(project_id)
+    if not rows:
+        return ""
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=list(rows[0]))
+    writer.writeheader()
+    writer.writerows(rows)
+    return buffer.getvalue()
+
+
+def project_papers(project_id: str) -> List[Dict]:
+    pg = pg_connection()
+    try:
+        rows = pg.execute(
+            "SELECT p.paper_id, p.title, p.abstract FROM review_project_papers rp "
+            "JOIN papers p ON p.paper_id = rp.paper_id WHERE rp.project_id = %s",
+            (project_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        pg.close()

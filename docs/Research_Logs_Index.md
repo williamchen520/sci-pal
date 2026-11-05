@@ -439,6 +439,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10e4b screening PG | screen/prisma/conflicts smoke | [Plan](PostgreSQL迁移-G3.10e4-review系统盘点.md) |
 
+| 2026-11-05 | G3.10e4c evidence PG | add/list/csv smoke | [Plan](PostgreSQL迁移-G3.10e4-review系统盘点.md) |
+
 ## Rules
 
 ```text
