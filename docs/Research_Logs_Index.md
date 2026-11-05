@@ -423,6 +423,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10e2d protocol attachments PG | metadata + fs smoke | [Plan](PostgreSQL迁移-G3.10e2-protocols盘点.md) |
 
+| 2026-11-05 | G3.10e2e protocols route switch | import/recent runs PG; export pending | [Plan](PostgreSQL迁移-G3.10e2-protocols盘点.md) |
+
 ## Rules
 
 ```text

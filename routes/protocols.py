@@ -29,12 +29,22 @@ def build_protocols_blueprint(
         payload = body.get("payload")
         try:
             if isinstance(payload, dict):
-                result = get_service().import_payload(payload, url=str(body.get("url") or ""))
+                if _pg_read():
+                    from services.protocols import pg_import
+
+                    result = pg_import.import_payload(payload, url=str(body.get("url") or ""))
+                else:
+                    result = get_service().import_payload(payload, url=str(body.get("url") or ""))
             else:
                 protocol_id = str(body.get("protocol_id") or body.get("id") or "").strip()
                 if not protocol_id:
                     return jsonify({"ok": False, "error": "protocol_id required"}), 400
-                result = get_service().import_protocol(protocol_id)
+                if _pg_read():
+                    from services.protocols import pg_import
+
+                    result = pg_import.import_protocol(protocol_id, get_service().client)
+                else:
+                    result = get_service().import_protocol(protocol_id)
         except (RuntimeError, ValueError) as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
         except Exception as exc:  # noqa: BLE001
@@ -134,7 +144,12 @@ def build_protocols_blueprint(
             limit = max(1, min(int(request.args.get("limit", 20)), 100))
         except (TypeError, ValueError):
             limit = 20
-        rows = get_service().recent_runs(limit)
+        if _pg_read():
+            from services.protocols import pg_runs
+
+            rows = pg_runs.recent_runs(limit)
+        else:
+            rows = get_service().recent_runs(limit)
         return jsonify({"ok": True, "count": len(rows), "runs": rows})
 
     @bp.patch("/experiments/<run_id>")
