@@ -158,10 +158,18 @@ update_experiment
 sign_experiment
 ```
 
-仍需：
+已完成：
 
 ```text
-access requests
+access request create
+access request decide
+access request list
+```
+
+测试：
+
+```text
+tests.test_experiments_pg_write 6 OK
 ```
 
 ## 7. 下一步
