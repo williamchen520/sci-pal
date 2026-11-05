@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from datetime import timedelta
 from datetime import datetime, timezone
 
 from services.db.pg_pool import pg_connection
@@ -224,3 +225,95 @@ def sign_experiment(
     }
     pg_writes.create_signature(signature, audit)
     return signature
+
+def create_access_request(
+    experiment_id: str,
+    workspace_id: str,
+    requester_user_id: str,
+) -> dict | None:
+    pg = pg_connection()
+    try:
+        if pg_read._workspace_role(pg, workspace_id, requester_user_id) != "pi":
+            return None
+        experiment = pg.execute(
+            "SELECT * FROM experiments WHERE experiment_id = %s AND workspace_id = %s",
+            (experiment_id, workspace_id),
+        ).fetchone()
+        if not experiment or experiment["owner_user_id"] == requester_user_id:
+            return None
+        existing = pg.execute(
+            "SELECT 1 FROM experiment_access_requests WHERE experiment_id = %s "
+            "AND requester_user_id = %s AND status IN ('pending','approved')",
+            (experiment_id, requester_user_id),
+        ).fetchone()
+        if existing:
+            return None
+        request_id = f"req_{uuid.uuid4().hex}"
+        row = {
+            "request_id": request_id,
+            "experiment_id": experiment_id,
+            "workspace_id": workspace_id,
+            "requester_user_id": requester_user_id,
+            "owner_user_id": experiment["owner_user_id"],
+            "created_at": _now(),
+        }
+        pg.execute(
+            "INSERT INTO experiment_access_requests "
+            "(request_id, experiment_id, workspace_id, requester_user_id, owner_user_id, "
+            "status, scope, created_at) "
+            "VALUES (%(request_id)s, %(experiment_id)s, %(workspace_id)s, "
+            "%(requester_user_id)s, %(owner_user_id)s, 'pending', 'read', %(created_at)s)",
+            row,
+        )
+        pg.commit()
+        return row
+    finally:
+        pg.close()
+
+
+def decide_access_request(
+    experiment_id: str,
+    request_id: str,
+    workspace_id: str,
+    owner_user_id: str,
+    approve: bool,
+    *,
+    hours: int = 24,
+) -> dict | None:
+    pg = pg_connection()
+    try:
+        experiment = pg.execute(
+            "SELECT 1 FROM experiments WHERE experiment_id = %s AND workspace_id = %s "
+            "AND owner_user_id = %s",
+            (experiment_id, workspace_id, owner_user_id),
+        ).fetchone()
+        if not experiment:
+            return None
+        request_row = pg.execute(
+            "SELECT * FROM experiment_access_requests WHERE request_id = %s "
+            "AND experiment_id = %s AND workspace_id = %s AND status = 'pending'",
+            (request_id, experiment_id, workspace_id),
+        ).fetchone()
+        if not request_row:
+            return None
+        now = _now()
+        status = "approved" if approve else "denied"
+        expires_at = (
+            (datetime.fromisoformat(now) + timedelta(hours=max(1, hours))).isoformat()
+            if approve
+            else None
+        )
+        pg.execute(
+            "UPDATE experiment_access_requests SET status = %s, decided_at = %s, expires_at = %s "
+            "WHERE request_id = %s",
+            (status, now, expires_at, request_id),
+        )
+        pg.commit()
+        return {
+            **dict(request_row),
+            "status": status,
+            "decided_at": now,
+            "expires_at": expires_at,
+        }
+    finally:
+        pg.close()

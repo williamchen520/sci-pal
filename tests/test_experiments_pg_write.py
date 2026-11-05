@@ -56,7 +56,10 @@ class _RowPG:
         return self
 
     def fetchone(self):
-        return self.rows[0] if self.rows else None
+        return self.rows.pop(0) if self.rows else None
+
+    def commit(self):
+        return None
 
     def close(self):
         return None
@@ -104,3 +107,23 @@ class ExperimentsUpdateSignTests(unittest.TestCase):
             with mock.patch.object(pg_write, "verify_password", return_value=False):
                 with self.assertRaises(PermissionError):
                     pg_write.sign_experiment("e1", "w", "u", "bad")
+
+class AccessRequestPGTests(unittest.TestCase):
+    def test_create_request(self):
+        pg = _RowPG([
+            {"owner_user_id": "owner"},
+            None,
+        ])
+        with mock.patch.object(pg_write, "pg_connection", return_value=pg):
+            with mock.patch.object(pg_write.pg_read, "_workspace_role", return_value="pi"):
+                row = pg_write.create_access_request("e1", "w", "u")
+        self.assertEqual(row["experiment_id"], "e1")
+
+    def test_decide_request(self):
+        pg = _RowPG([
+            {"experiment_id": "e1"},
+            {"request_id": "req1", "status": "pending"},
+        ])
+        with mock.patch.object(pg_write, "pg_connection", return_value=pg):
+            row = pg_write.decide_access_request("e1", "req1", "w", "owner", True)
+        self.assertEqual(row["status"], "approved")

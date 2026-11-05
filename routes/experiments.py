@@ -266,7 +266,12 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        row = create_access_request(experiment_id, workspace_id, user_id, db_path=db)
+        if _pg_read():
+            from services.experiments import pg_write
+
+            row = pg_write.create_access_request(experiment_id, workspace_id, user_id)
+        else:
+            row = create_access_request(experiment_id, workspace_id, user_id, db_path=db)
         if not row:
             return jsonify({"error": "Request not allowed"}), 404
         return jsonify(row), 201
@@ -296,15 +301,27 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
         body = request.get_json(silent=True) or {}
-        request_row = decide_access_request(
-            experiment_id,
-            request_id,
-            workspace_id,
-            user_id,
-            bool(body.get("approve")),
-            hours=int(body.get("hours") or 24),
-            db_path=db,
-        )
+        if _pg_read():
+            from services.experiments import pg_write
+
+            request_row = pg_write.decide_access_request(
+                experiment_id,
+                request_id,
+                workspace_id,
+                user_id,
+                bool(body.get("approve")),
+                hours=int(body.get("hours") or 24),
+            )
+        else:
+            request_row = decide_access_request(
+                experiment_id,
+                request_id,
+                workspace_id,
+                user_id,
+                bool(body.get("approve")),
+                hours=int(body.get("hours") or 24),
+                db_path=db,
+            )
         if not request_row:
             return jsonify({"error": "Request not found"}), 404
         return jsonify(request_row)
