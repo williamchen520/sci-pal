@@ -36,6 +36,9 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         return getattr(g, "owner", "default")
 
     def _audit(conn, project_id, action, target="", detail=""):
+        if _pg_projects():
+            pg_systematic.log_event(project_id, _owner(), action, target, detail)
+            return
         systematic.log_event(conn, project_id, _owner(), action, target, detail)
         try:
             threading.Thread(
@@ -137,17 +140,31 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             data = request.get_json(silent=True) or {}
             if not data.get("paper_id") or not data.get("decision"):
                 return jsonify({"error": "paper_id and decision required"}), 400
-            systematic.screen(
-                conn,
-                project_id,
-                data["paper_id"],
-                data["decision"],
-                data.get("reason", ""),
-                data.get("reviewer", ""),
-                data.get("stage", "title_abstract"),
-            )
+            if _pg_projects():
+                pg_systematic.screen(
+                    project_id,
+                    data["paper_id"],
+                    data["decision"],
+                    data.get("reason", ""),
+                    data.get("reviewer", ""),
+                    data.get("stage", "title_abstract"),
+                )
+            else:
+                systematic.screen(
+                    conn,
+                    project_id,
+                    data["paper_id"],
+                    data["decision"],
+                    data.get("reason", ""),
+                    data.get("reviewer", ""),
+                    data.get("stage", "title_abstract"),
+                )
             _audit(conn, project_id, "screened", data["paper_id"], data["decision"])
-            return jsonify(systematic.prisma(conn, project_id))
+            return jsonify(
+                pg_systematic.prisma(project_id)
+                if _pg_projects()
+                else systematic.prisma(conn, project_id)
+            )
         finally:
             conn.close()
 
@@ -155,7 +172,11 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def prisma(project_id: str):
         conn = _conn()
         try:
-            return jsonify(systematic.prisma(conn, project_id))
+            return jsonify(
+                pg_systematic.prisma(project_id)
+                if _pg_projects()
+                else systematic.prisma(conn, project_id)
+            )
         finally:
             conn.close()
 

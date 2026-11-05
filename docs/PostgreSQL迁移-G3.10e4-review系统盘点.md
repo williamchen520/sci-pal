@@ -106,6 +106,32 @@ cleanup ✅
 screen / prisma / evidence / reports
 ```
 
+## 5c. G3.10e4b 完成
+
+```text
+pg_systematic.screen / adjudicate / prisma / conflicts
+```
+
+修复：
+
+```text
+screening_decisions identity sequence 落后
+adjudications identity sequence 落后
+setval -> max(id)+1
+```
+
+冒烟：
+
+```text
+screen include/exclude
+prisma 1/1
+conflicts 1
+adjudicate -> included
+cleanup ✅
+```
+
+路由按 `SCIPAL_SYSTEMATIC_BACKEND` 切换。
+
 ## 6. 下一步
 
 ```text

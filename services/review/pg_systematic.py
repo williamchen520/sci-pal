@@ -134,3 +134,134 @@ def add_papers(project_id: str, paper_ids: List[str]) -> int:
         return len(paper_ids)
     finally:
         pg.close()
+
+def screen(
+    project_id: str,
+    paper_id: str,
+    decision: str,
+    reason: str = "",
+    reviewer: str = "",
+    stage: str = "title_abstract",
+) -> None:
+    pg = pg_connection()
+    try:
+        pg.execute(
+            "INSERT INTO screening_decisions "
+            "(project_id, paper_id, stage, decision, reason, reviewer, created_at) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (project_id, paper_id, stage, decision, reason, reviewer, _now()),
+        )
+        pg.commit()
+    finally:
+        pg.close()
+
+
+def adjudicate(
+    project_id: str,
+    paper_id: str,
+    decision: str,
+    reason: str = "",
+    editor: str = "",
+) -> None:
+    pg = pg_connection()
+    try:
+        pg.execute(
+            "INSERT INTO adjudications "
+            "(project_id, paper_id, decision, reason, editor, created_at) "
+            "VALUES (%s, %s, %s, %s, %s, %s)",
+            (project_id, paper_id, decision, reason, editor, _now()),
+        )
+        pg.commit()
+    finally:
+        pg.close()
+
+
+def _latest_adjudications(project_id: str) -> Dict[str, str]:
+    pg = pg_connection()
+    try:
+        rows = pg.execute(
+            "SELECT paper_id, decision FROM ("
+            " SELECT paper_id, decision, ROW_NUMBER() OVER ("
+            " PARTITION BY paper_id ORDER BY id DESC) AS rn"
+            " FROM adjudications WHERE project_id = %s"
+            ") t WHERE rn = 1",
+            (project_id,),
+        ).fetchall()
+        return {row["paper_id"]: row["decision"] for row in rows}
+    finally:
+        pg.close()
+
+
+def prisma(project_id: str) -> Dict[str, int]:
+    pg = pg_connection()
+    try:
+        identified = pg.execute(
+            "SELECT COUNT(*) AS n FROM review_project_papers WHERE project_id = %s",
+            (project_id,),
+        ).fetchone()["n"]
+        rows = pg.execute(
+            "SELECT paper_id, decision FROM ("
+            " SELECT paper_id, decision, ROW_NUMBER() OVER ("
+            " PARTITION BY paper_id ORDER BY id DESC) AS rn"
+            " FROM screening_decisions WHERE project_id = %s"
+            ") t WHERE rn = 1",
+            (project_id,),
+        ).fetchall()
+        decisions = {row["paper_id"]: row["decision"] for row in rows}
+    finally:
+        pg.close()
+    decisions.update(_latest_adjudications(project_id))
+    counts: Dict[str, int] = {}
+    for decision in decisions.values():
+        counts[decision] = counts.get(decision, 0) + 1
+    included = counts.get("include", 0)
+    excluded = counts.get("exclude", 0)
+    return {
+        "identified": identified,
+        "screened": sum(counts.values()),
+        "included": included,
+        "excluded": excluded,
+        "pending": max(identified - included - excluded, 0),
+    }
+
+
+def conflicts(project_id: str, stage: str = "title_abstract") -> List[Dict]:
+    pg = pg_connection()
+    try:
+        rows = pg.execute(
+            "SELECT paper_id, reviewer, decision FROM ("
+            " SELECT paper_id, reviewer, decision, ROW_NUMBER() OVER ("
+            " PARTITION BY paper_id, reviewer ORDER BY id DESC) AS rn"
+            " FROM screening_decisions WHERE project_id = %s AND stage = %s"
+            " AND reviewer <> '') t WHERE rn = 1 ORDER BY paper_id",
+            (project_id, stage),
+        ).fetchall()
+    finally:
+        pg.close()
+    by_paper: Dict[str, Dict[str, str]] = {}
+    for row in rows:
+        by_paper.setdefault(row["paper_id"], {})[row["reviewer"]] = row["decision"]
+    resolved = _latest_adjudications(project_id)
+    return [
+        {
+            "paper_id": paper_id,
+            "decisions": decisions,
+            "resolved": paper_id in resolved,
+            "adjudicated": resolved.get(paper_id),
+        }
+        for paper_id, decisions in by_paper.items()
+        if len(set(decisions.values())) > 1
+    ]
+
+
+def log_event(project_id: str, actor: str, action: str, target: str = "", detail: str = "") -> None:
+    pg = pg_connection()
+    try:
+        pg.execute(
+            "INSERT INTO review_events (project_id, actor, action, target, detail, created_at) "
+            "VALUES (%s, %s, %s, %s, %s, %s)",
+            (project_id, actor, action, target, detail, _now()),
+        )
+        pg.commit()
+    finally:
+        pg.close()
