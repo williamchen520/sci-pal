@@ -103,6 +103,37 @@ app healthy
 
 ---
 
+## 6b. G3.6a 完成
+
+```text
+services/experiments/pg_read.py
+  list_experiments
+  get_experiment
+  list_revisions
+  get_audit
+  list_signatures
+  list_access_requests
+  list_workspace_requests
+```
+
+路由：
+
+```text
+SCIPAL_EXPERIMENTS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+list 1 / get true / revisions 1 / audit 1
+```
+
+权限：
+
+```text
+PG memberships / projects / project_members
+```
+
 ## 7. 下一步
 
 ```text

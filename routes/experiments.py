@@ -25,6 +25,14 @@ from services.experiments import (
 from services.tenancy.web import resolve_workspace
 
 
+def _pg_read() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_EXPERIMENTS_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
 def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blueprint:
     bp = Blueprint("experiments", __name__)
     db = str(db_path)
@@ -42,7 +50,12 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        rows = list_experiments(project_id, workspace_id, user_id, db_path=db)
+        if _pg_read():
+            from services.experiments import pg_read
+
+            rows = pg_read.list_experiments(project_id, workspace_id, user_id)
+        else:
+            rows = list_experiments(project_id, workspace_id, user_id, db_path=db)
         if rows is None:
             return jsonify({"error": "Project not found"}), 404
         return jsonify({"experiments": rows})
@@ -82,6 +95,10 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
+        if _pg_read():
+            from services.experiments import pg_read
+
+            return jsonify({"requests": pg_read.list_workspace_requests(workspace_id, user_id)})
         return jsonify(
             {"requests": list_workspace_requests(workspace_id, user_id, db_path=db)}
         )
@@ -93,7 +110,12 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        row = get_experiment(experiment_id, workspace_id, user_id, db_path=db)
+        if _pg_read():
+            from services.experiments import pg_read
+
+            row = pg_read.get_experiment(experiment_id, workspace_id, user_id)
+        else:
+            row = get_experiment(experiment_id, workspace_id, user_id, db_path=db)
         if not row:
             return jsonify({"error": "Experiment not found"}), 404
         return jsonify(row)
@@ -129,7 +151,12 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        rows = list_revisions(experiment_id, workspace_id, user_id, db_path=db)
+        if _pg_read():
+            from services.experiments import pg_read
+
+            rows = pg_read.list_revisions(experiment_id, workspace_id, user_id)
+        else:
+            rows = list_revisions(experiment_id, workspace_id, user_id, db_path=db)
         if rows is None:
             return jsonify({"error": "Experiment not found"}), 404
         return jsonify({"revisions": rows})
@@ -141,7 +168,12 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        rows = get_audit(experiment_id, workspace_id, user_id, db_path=db)
+        if _pg_read():
+            from services.experiments import pg_read
+
+            rows = pg_read.get_audit(experiment_id, workspace_id, user_id)
+        else:
+            rows = get_audit(experiment_id, workspace_id, user_id, db_path=db)
         if rows is None:
             return jsonify({"error": "Experiment not found"}), 404
         return jsonify({"audit": rows})
@@ -178,7 +210,12 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        rows = list_signatures(experiment_id, workspace_id, user_id, db_path=db)
+        if _pg_read():
+            from services.experiments import pg_read
+
+            rows = pg_read.list_signatures(experiment_id, workspace_id, user_id)
+        else:
+            rows = list_signatures(experiment_id, workspace_id, user_id, db_path=db)
         if rows is None:
             return jsonify({"error": "Experiment not found"}), 404
         return jsonify({"signatures": rows})
@@ -202,7 +239,12 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "authentication required"}), 401
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 403
-        rows = list_access_requests(experiment_id, workspace_id, user_id, db_path=db)
+        if _pg_read():
+            from services.experiments import pg_read
+
+            rows = pg_read.list_access_requests(experiment_id, workspace_id, user_id)
+        else:
+            rows = list_access_requests(experiment_id, workspace_id, user_id, db_path=db)
         if rows is None:
             return jsonify({"error": "Experiment not found"}), 404
         return jsonify({"requests": rows})
