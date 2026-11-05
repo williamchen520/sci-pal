@@ -82,6 +82,23 @@ def build_protocols_blueprint(
     @bp.post("/protocols/<protocol_id>/runs")
     def add_run(protocol_id: str):
         service = get_service()
+        if _pg_read():
+            from services.protocols import pg_read, pg_runs
+
+            if pg_read.get_protocol(protocol_id) is None:
+                return jsonify({"ok": False, "error": "protocol not found"}), 404
+            body = request.get_json(silent=True) or {}
+            run = pg_runs.add_run(
+                protocol_id,
+                title=str(body.get("title") or ""),
+                operator=str(body.get("operator") or ""),
+                run_date=str(body.get("run_date") or ""),
+                status=str(body.get("status") or "planned"),
+                result=str(body.get("result") or ""),
+                notes=str(body.get("notes") or ""),
+                done_steps=body.get("done_steps"),
+            )
+            return jsonify({"ok": True, "run": run}), 201
         if service.get(protocol_id) is None:
             return jsonify({"ok": False, "error": "protocol not found"}), 404
         body = request.get_json(silent=True) or {}
@@ -103,7 +120,12 @@ def build_protocols_blueprint(
             limit = max(1, min(int(request.args.get("limit", 50)), 200))
         except (TypeError, ValueError):
             limit = 50
-        rows = get_service().list_runs(protocol_id, limit)
+        if _pg_read():
+            from services.protocols import pg_runs
+
+            rows = pg_runs.list_runs(protocol_id, limit)
+        else:
+            rows = get_service().list_runs(protocol_id, limit)
         return jsonify({"ok": True, "count": len(rows), "runs": rows})
 
     @bp.get("/experiments")
@@ -118,14 +140,25 @@ def build_protocols_blueprint(
     @bp.patch("/experiments/<run_id>")
     def update_run(run_id: str):
         body = request.get_json(silent=True) or {}
-        run = get_service().update_run(run_id, **body)
+        if _pg_read():
+            from services.protocols import pg_runs
+
+            run = pg_runs.update_run(run_id, **body)
+        else:
+            run = get_service().update_run(run_id, **body)
         if run is None:
             return jsonify({"ok": False, "error": "run not found or no fields"}), 404
         return jsonify({"ok": True, "run": run})
 
     @bp.delete("/experiments/<run_id>")
     def delete_run(run_id: str):
-        if not get_service().delete_run(run_id):
+        if _pg_read():
+            from services.protocols import pg_runs
+
+            ok = pg_runs.delete_run(run_id)
+        else:
+            ok = get_service().delete_run(run_id)
+        if not ok:
             return jsonify({"ok": False, "error": "run not found"}), 404
         return jsonify({"ok": True})
 
