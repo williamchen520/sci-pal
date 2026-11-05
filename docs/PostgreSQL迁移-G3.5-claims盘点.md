@@ -182,6 +182,38 @@ oppose 的 semantic retriever 仍只接受 SQLite conn
 tests.test_claims_pg_search 1 OK
 ```
 
+## 6e. G3.5d/e 完成
+
+生产：
+
+```text
+SCIPAL_CLAIMS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+create temp claim
+add_evidence  1
+decide        accepted
+add_note      events 3
+list          3
+```
+
+数据校验：
+
+```text
+claim_cards          10/10
+claim_card_evidence  17/17
+claim_card_events    55/55
+```
+
+API：
+
+```text
+GET /api/claims 200
+```
+
 ## 7. 下一步
 
 ```text
