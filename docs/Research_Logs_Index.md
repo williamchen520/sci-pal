@@ -461,6 +461,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10f3 qa citations PG | read-only; 8 sentence ids | [Plan](PostgreSQL迁移-G3.10f-SQLite残余.md) |
 
+| 2026-11-05 | G3.10f4 watch PG read | profiles/runs/items smoke | [Plan](PostgreSQL迁移-G3.10f-SQLite残余.md) |
+
 ## Rules
 
 ```text

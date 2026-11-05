@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from flask import Blueprint, Response, g, jsonify, request, session
 
-from services.watch import discovery, repo, runner
+from services.watch import discovery, pg_read, repo, runner
 
 
 def build_watch_blueprint(*, db_path, log) -> Blueprint:
@@ -18,7 +18,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
         return getattr(g, "owner", "default")
 
     def _owned_run(conn, run_id: int):
-        row = repo.get_run(conn, run_id)
+        row = pg_read.get_run(run_id) if pg_read.enabled() else repo.get_run(conn, run_id)
         if row and (row.get("owner") or "default") != _owner():
             return None
         return row
@@ -29,7 +29,13 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
         try:
             owner = getattr(g, "owner", "default")
             if request.method == "GET":
-                return jsonify({"profiles": repo.list_profiles(conn, owner)})
+                return jsonify(
+                    {
+                        "profiles": pg_read.list_profiles(owner)
+                        if pg_read.enabled()
+                        else repo.list_profiles(conn, owner)
+                    }
+                )
             data = request.get_json(silent=True) or {}
             if not (data.get("name") or "").strip():
                 return jsonify({"error": "name required"}), 400
@@ -44,7 +50,11 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
         conn = repo.connect(db_path)
         try:
             owner = getattr(g, "owner", "default")
-            row = repo.get_profile(conn, profile_id, owner)
+            row = (
+                pg_read.get_profile(profile_id, owner)
+                if pg_read.enabled()
+                else repo.get_profile(conn, profile_id, owner)
+            )
             if not row:
                 return jsonify({"error": "profile not found"}), 404
             if request.method == "GET":
@@ -110,6 +120,10 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
     def runs(profile_id: int):
         conn = repo.connect(db_path)
         try:
+            if pg_read.enabled():
+                if not pg_read.get_profile(profile_id, _owner()):
+                    return jsonify({"error": "profile not found"}), 404
+                return jsonify({"runs": pg_read.list_runs(profile_id)})
             if not repo.get_profile(conn, profile_id, _owner()):
                 return jsonify({"error": "profile not found"}), 404
             return jsonify({"runs": repo.list_runs(conn, profile_id)})
@@ -123,7 +137,14 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             row = _owned_run(conn, run_id)
             if not row:
                 return jsonify({"error": "run not found"}), 404
-            return jsonify({"run": row, "items": repo.list_items(conn, run_id)})
+            return jsonify(
+                {
+                    "run": row,
+                    "items": pg_read.list_items(run_id)
+                    if pg_read.enabled()
+                    else repo.list_items(conn, run_id),
+                }
+            )
         finally:
             conn.close()
 

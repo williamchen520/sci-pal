@@ -122,6 +122,24 @@ services/qa/citations.py
 para -> 8 sentence ids
 ```
 
+## 4f. G3.10f4 watch read
+
+```text
+services/watch/pg_read.py
+  profiles / runs / items
+SCIPAL_WATCH_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+profiles 1
+get      HCC 免疫治疗
+runs     9
+```
+
+写路径仍 SQLite，默认关闭。
+
 ## 5. 当前生产
 
 ```text
