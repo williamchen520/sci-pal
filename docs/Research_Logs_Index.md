@@ -451,6 +451,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10e4 systematic cutover | all reports 200; PG enabled | [Plan](PostgreSQL迁移-G3.10e4-review系统盘点.md) |
 
+| 2026-11-05 | G3.10f SQLite residual | tasks/references/qa/watch remain | [Report](PostgreSQL迁移-G3.10f-SQLite残余.md) |
+
 ## Rules
 
 ```text
