@@ -242,7 +242,12 @@ def build_protocols_blueprint(
 
     @bp.get("/protocols/<protocol_id>/export")
     def export_protocol(protocol_id: str):
-        content = get_service().export_markdown(protocol_id)
+        if _pg_read():
+            from services.protocols import pg_export
+
+            content = pg_export.export_markdown(protocol_id)
+        else:
+            content = get_service().export_markdown(protocol_id)
         if content is None:
             return jsonify({"ok": False, "error": "protocol not found"}), 404
         from flask import Response

@@ -209,10 +209,10 @@ patch / delete run  ✅
 cleanup             ✅
 ```
 
-已知缺口：
+export 已补：
 
 ```text
-export_markdown 仍读 SQLite
+services/protocols/pg_export.py
 ```
 
 ## 6. 当前生产
