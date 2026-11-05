@@ -198,6 +198,22 @@ PDF/DOCX 已补：
 services/review/pg_pdf.py
 ```
 
+## 5g. 报告路由修复
+
+brief/html/pdf/docx 的预检查仍查 SQLite，已改为按 flag 查 PG。
+
+共修复 5 处。
+
+API 冒烟：
+
+```text
+papers 1
+screen included
+evidence 1
+```
+
+brief/pdf 待部署后复测。
+
 ## 6. 下一步
 
 ```text

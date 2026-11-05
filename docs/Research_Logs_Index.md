@@ -447,6 +447,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10e4e PDF/DOCX PG | pdf 3629 / docx 37227 | [Plan](PostgreSQL迁移-G3.10e4-review系统盘点.md) |
 
+| 2026-11-05 | G3.10e4f report prechecks fix | 5 SQLite checks -> PG | [Plan](PostgreSQL迁移-G3.10e4-review系统盘点.md) |
+
 ## Rules
 
 ```text
