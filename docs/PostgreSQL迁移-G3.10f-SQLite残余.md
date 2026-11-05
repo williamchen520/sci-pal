@@ -107,6 +107,21 @@ list 1
 api 1
 ```
 
+## 4e. G3.10f3 qa citations
+
+```text
+services/qa/citations.py
+  SCIPAL_QA_CITATIONS_BACKEND=postgres
+```
+
+只读查询，不写 SQLite。
+
+冒烟：
+
+```text
+para -> 8 sentence ids
+```
+
 ## 5. 当前生产
 
 ```text

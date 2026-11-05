@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 from typing import Dict, List
@@ -14,6 +15,23 @@ def paragraph_citation(
 ) -> Dict[str, object]:
     if not para_id:
         return {}
+    if os.environ.get("SCIPAL_QA_CITATIONS_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }:
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            rows = pg.execute(
+                "SELECT sentence_id FROM sentences WHERE para_id = %s ORDER BY sequence",
+                (para_id,),
+            ).fetchall()
+            return {
+                "paragraph_id": para_id,
+                "sentence_ids": [row["sentence_id"] for row in rows],
+            }
+        finally:
+            pg.close()
     conn = sqlite3.connect(str(db_path))
     try:
         rows = conn.execute(
