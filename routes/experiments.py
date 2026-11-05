@@ -143,6 +143,20 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "workspace access denied"}), 403
         body = request.get_json(silent=True) or {}
         try:
+            if _pg_read():
+                from services.experiments import pg_write
+
+                row = pg_write.update_experiment(
+                    experiment_id,
+                    workspace_id,
+                    user_id,
+                    title=body.get("title"),
+                    status=body.get("status"),
+                    content=body.get("content"),
+                )
+                if not row:
+                    return jsonify({"error": "Experiment not found"}), 404
+                return jsonify(row)
             row = update_experiment(
                 experiment_id,
                 workspace_id,
@@ -201,7 +215,18 @@ def build_experiments_blueprint(*, db_path: str | Path, log: Any = None) -> Blue
             return jsonify({"error": "workspace access denied"}), 403
         body = request.get_json(silent=True) or {}
         try:
-            signature = sign_experiment(
+            if _pg_read():
+                from services.experiments import pg_write
+
+                signature = pg_write.sign_experiment(
+                    experiment_id,
+                    workspace_id,
+                    user_id,
+                    str(body.get("password") or ""),
+                    meaning=str(body.get("meaning") or "author"),
+                )
+            else:
+                signature = sign_experiment(
                 experiment_id,
                 workspace_id,
                 user_id,
