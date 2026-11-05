@@ -11,6 +11,14 @@ from services.watch import pg_read, pg_writes
 from services.watch.repo import now_iso
 
 
+def enabled() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_WATCH_PG_STORE", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
 def connect(db_path=None):
     return None
 
@@ -226,3 +234,11 @@ def set_item_feedback(conn, item_id: int, feedback: str) -> None:
 
 def delete_journal(conn, profile_id: int, issn_l: str) -> None:
     pg_writes.delete_journal(profile_id, issn_l)
+
+def get_item(conn, item_id: int):
+    pg = pg_connection()
+    try:
+        row = pg.execute("SELECT * FROM watch_items WHERE id = %s", (item_id,)).fetchone()
+        return dict(row) if row else None
+    finally:
+        pg.close()

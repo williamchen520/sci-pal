@@ -389,6 +389,27 @@ cleanup ✅
 tests.test_watch_discovery_store 2 OK
 ```
 
+## 10f. P5 完成
+
+```text
+routes/watch.py -> _store()
+  profiles CRUD
+  journals
+  discover / run
+  runs / items
+  read / feedback
+```
+
+默认 repo；`SCIPAL_WATCH_PG_STORE=1` 时全走 pg_store。
+
+测试：
+
+```text
+tests/test_watch*.py 25 OK
+```
+
+未启用生产。
+
 ## 11. 执行顺序
 
 ```text
