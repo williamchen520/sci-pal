@@ -169,24 +169,44 @@ def build_protocols_blueprint(
         if upload is None:
             return jsonify({"ok": False, "error": "file is required"}), 400
         try:
-            record = get_service().add_attachment(
-                run_id,
-                upload.filename or "file",
-                upload.mimetype or "application/octet-stream",
-                upload.read(),
-            )
+            if _pg_read():
+                from services.protocols import pg_attachments
+
+                record = pg_attachments.add_attachment(
+                    run_id,
+                    upload.filename or "file",
+                    upload.mimetype or "application/octet-stream",
+                    upload.read(),
+                )
+            else:
+                record = get_service().add_attachment(
+                    run_id,
+                    upload.filename or "file",
+                    upload.mimetype or "application/octet-stream",
+                    upload.read(),
+                )
         except ValueError as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
         return jsonify({"ok": True, "file": record})
 
     @bp.get("/experiments/<run_id>/attachments")
     def list_attachments(run_id: str):
-        rows = get_service().list_attachments(run_id)
+        if _pg_read():
+            from services.protocols import pg_attachments
+
+            rows = pg_attachments.list_attachments(run_id)
+        else:
+            rows = get_service().list_attachments(run_id)
         return jsonify({"ok": True, "count": len(rows), "files": rows})
 
     @bp.get("/experiments/<run_id>/attachments/<file_id>")
     def download_attachment(run_id: str, file_id: str):
-        path = get_service().attachment_path(run_id, file_id)
+        if _pg_read():
+            from services.protocols import pg_attachments
+
+            path = pg_attachments.attachment_path(run_id, file_id)
+        else:
+            path = get_service().attachment_path(run_id, file_id)
         if path is None:
             return jsonify({"ok": False, "error": "file not found"}), 404
         from flask import send_file
@@ -195,7 +215,13 @@ def build_protocols_blueprint(
 
     @bp.delete("/experiments/<run_id>/attachments/<file_id>")
     def delete_attachment(run_id: str, file_id: str):
-        if not get_service().delete_attachment(run_id, file_id):
+        if _pg_read():
+            from services.protocols import pg_attachments
+
+            ok = pg_attachments.delete_attachment(run_id, file_id)
+        else:
+            ok = get_service().delete_attachment(run_id, file_id)
+        if not ok:
             return jsonify({"ok": False, "error": "file not found"}), 404
         return jsonify({"ok": True})
 
