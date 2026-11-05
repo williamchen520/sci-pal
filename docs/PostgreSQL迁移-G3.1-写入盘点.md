@@ -390,6 +390,36 @@ tests.test_notes_pg 3 OK
 全量 883 tests OK
 ```
 
+## 9i. G3.8 gate
+
+```text
+scripts/g3_outbox_gate.py
+```
+
+检查：
+
+```text
+outbox pending
+9 张核心表 SQLite/PG 行数
+```
+
+生产结果：
+
+```text
+pending 0
+papers / sections / paragraphs / sentences
+figures / tables / citations / sentence_links / paper_links
+全部一致
+```
+
+结论：
+
+```text
+可以进入 G3.8
+但当前核心写入仍走 SQLite
+因此暂不删除 trigger
+```
+
 ## 10. 当前生产
 
 ```text
