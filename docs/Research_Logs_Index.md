@@ -427,6 +427,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10e2 protocols cutover | API import/run smoke; export gap | [Plan](PostgreSQL迁移-G3.10e2-protocols盘点.md) |
 
+| 2026-11-05 | G3.10e2 export PG | 15 steps md smoke | [Plan](PostgreSQL迁移-G3.10e2-protocols盘点.md) |
+
 ## Rules
 
 ```text
