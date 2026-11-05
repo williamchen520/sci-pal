@@ -56,6 +56,19 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
         direction = str(data.get("direction") or "support")
         if direction not in {"support", "oppose"}:
             return jsonify({"error": "direction must be support or oppose"}), 400
+        if _pg_read():
+            from services.claims import pg_search
+
+            try:
+                return jsonify(
+                    {
+                        "candidates": pg_search.search_candidates(
+                            claim_id, direction=direction
+                        )
+                    }
+                )
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 404
         conn = service.connect(db_path)
         try:
             return jsonify(
@@ -75,6 +88,21 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
         use_llm = bool(data.get("use_llm"))
         client = get_llm() if (use_llm and get_llm) else None
         retriever = get_retriever() if get_retriever else None
+        if _pg_read():
+            from services.claims import pg_search
+
+            try:
+                candidates = pg_search.interrogate(
+                    claim_id,
+                    direction=direction,
+                    use_llm=use_llm,
+                    llm_client=client,
+                    retriever=retriever,
+                    limit=min(int(data.get("limit") or 5), 8),
+                )
+                return jsonify({"candidates": candidates, "use_llm": use_llm})
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 404
         conn = service.connect(db_path)
         try:
             candidates = service.interrogate(
@@ -99,6 +127,24 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
         relation = str(data.get("relation") or "supports").strip()
         if not sentence_id:
             return jsonify({"error": "sentence_id required"}), 400
+        if _pg_read():
+            from services.claims import pg_write
+
+            try:
+                return (
+                    jsonify(
+                        pg_write.add_evidence(
+                            claim_id,
+                            sentence_id,
+                            relation,
+                            rationale=str(data.get("rationale") or ""),
+                            strength=float(data.get("strength") or 0.5),
+                        )
+                    ),
+                    201,
+                )
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 400
         conn = service.connect(db_path)
         try:
             result = service.add_evidence(
@@ -118,6 +164,19 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
     @bp.post("/<claim_id>/decision")
     def decision(claim_id: str):
         data = request.get_json(silent=True) or {}
+        if _pg_read():
+            from services.claims import pg_write
+
+            try:
+                return jsonify(
+                    pg_write.decide(
+                        claim_id,
+                        str(data.get("decision") or ""),
+                        note=str(data.get("note") or ""),
+                    )
+                )
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 400
         try:
             claim = service.decide(
                 conn := service.connect(db_path),
@@ -140,6 +199,13 @@ def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=Non
         text = str(data.get("note") or "").strip()
         if not text:
             return jsonify({"error": "note required"}), 400
+        if _pg_read():
+            from services.claims import pg_write
+
+            try:
+                return jsonify(pg_write.add_note(claim_id, text))
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 404
         conn = service.connect(db_path)
         try:
             return jsonify(service.add_note(conn, claim_id, text))
