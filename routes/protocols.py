@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
+import os
+
 from flask import Blueprint, jsonify, request
+
+
+def _pg_read() -> bool:
+    return os.environ.get("SCIPAL_PROTOCOLS_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
 
 
 def build_protocols_blueprint(
@@ -46,15 +54,26 @@ def build_protocols_blueprint(
             offset = 0
         query = str(request.args.get("q") or "").strip()
         service = get_service()
-        rows = service.list(limit, offset, query)
-        total = service.count(query) if hasattr(service, "count") else len(rows)
+        if _pg_read():
+            from services.protocols import pg_read
+
+            rows = pg_read.list_protocols(limit, offset, query)
+            total = pg_read.count_protocols(query)
+        else:
+            rows = service.list(limit, offset, query)
+            total = service.count(query) if hasattr(service, "count") else len(rows)
         return jsonify(
             {"ok": True, "count": len(rows), "total": total, "offset": offset, "protocols": rows}
         )
 
     @bp.get("/protocols/<protocol_id>")
     def get_protocol(protocol_id: str):
-        record = get_service().get(protocol_id)
+        if _pg_read():
+            from services.protocols import pg_read
+
+            record = pg_read.get_protocol(protocol_id)
+        else:
+            record = get_service().get(protocol_id)
         if record is None:
             return jsonify({"ok": False, "error": "protocol not found"}), 404
         return jsonify({"ok": True, "protocol": record})
