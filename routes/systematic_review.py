@@ -18,7 +18,15 @@ from services.review import pdf_report
 from services.review import prisma_svg
 from services.review import report as report_mod
 from services.review import risk_of_bias
-from services.review import pico, systematic
+from services.review import pico, pg_systematic, systematic
+
+
+def _pg_projects() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_SYSTEMATIC_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
 
 
 def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
@@ -53,14 +61,22 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             if request.method == "GET":
+                if _pg_projects():
+                    return jsonify({"projects": pg_systematic.list_projects(_owner())})
                 return jsonify({"projects": systematic.list_projects(conn, _owner())})
             data = request.get_json(silent=True) or {}
             name = (data.get("name") or "").strip()
             if not name:
                 return jsonify({"error": "name required"}), 400
-            project_id = systematic.create_project(
-                conn, name, data.get("field_text", ""), data.get("pico") or {},
-                owner=_owner(),
+            project_id = (
+                pg_systematic.create_project(
+                    name, data.get("field_text", ""), data.get("pico") or {}, owner=_owner()
+                )
+                if _pg_projects()
+                else systematic.create_project(
+                    conn, name, data.get("field_text", ""), data.get("pico") or {},
+                    owner=_owner(),
+                )
             )
             _audit(conn, project_id, "project_created", project_id, name)
             return jsonify({"project_id": project_id}), 201
@@ -71,8 +87,17 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def project(project_id: str):
         conn = _conn()
         try:
-            row = systematic.get_project(conn, project_id)
-            if not systematic.can_access(conn, project_id, _owner()):
+            row = (
+                pg_systematic.get_project(project_id)
+                if _pg_projects()
+                else systematic.get_project(conn, project_id)
+            )
+            allowed = (
+                pg_systematic.can_access(project_id, _owner())
+                if _pg_projects()
+                else systematic.can_access(conn, project_id, _owner())
+            )
+            if not allowed:
                 return jsonify({"error": "project not found"}), 404
             return jsonify(row)
         finally:
@@ -82,12 +107,24 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def papers(project_id: str):
         conn = _conn()
         try:
-            project_row = systematic.get_project(conn, project_id)
-            if not systematic.can_access(conn, project_id, _owner()):
+            project_row = (
+                pg_systematic.get_project(project_id)
+                if _pg_projects()
+                else systematic.get_project(conn, project_id)
+            )
+            allowed = (
+                pg_systematic.can_access(project_id, _owner())
+                if _pg_projects()
+                else systematic.can_access(conn, project_id, _owner())
+            )
+            if not allowed:
                 return jsonify({"error": "project not found"}), 404
             data = request.get_json(silent=True) or {}
             paper_ids = data.get("paper_ids") or []
-            systematic.add_papers(conn, project_id, paper_ids)
+            if _pg_projects():
+                pg_systematic.add_papers(project_id, paper_ids)
+            else:
+                systematic.add_papers(conn, project_id, paper_ids)
             _audit(conn, project_id, "papers_added", "", str(len(paper_ids)))
             return jsonify({"added": len(paper_ids)})
         finally:
