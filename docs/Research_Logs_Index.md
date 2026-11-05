@@ -493,6 +493,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10f4 tenancy audit PG | PG audit; SQLite unchanged; PG_ONLY enabled | [Plan](PostgreSQL迁移-G3.10f-SQLite残余.md) |
 
+| 2026-11-06 | G4 vector decision | Chroma .75 / BM25 .625 / pgvector shadow .70 | [G4](PostgreSQL迁移-G4-向量决策.md) |
+
 ## Rules
 
 ```text
