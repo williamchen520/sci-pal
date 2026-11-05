@@ -179,6 +179,28 @@ evidence_rows
 tasks
 ```
 
+## 5e. reviews 切流
+
+```text
+SCIPAL_REVIEWS_BACKEND=postgres
+```
+
+冒烟：
+
+```text
+list 3
+reviews 29/29
+```
+
+仍未迁移：
+
+```text
+review_projects
+screening_decisions
+evidence_rows
+tasks
+```
+
 ## 6. 当前生产
 
 ```text

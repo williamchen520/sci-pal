@@ -431,6 +431,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10e3 review repo PG | 29/29; save/list/get smoke | [Plan](PostgreSQL迁移-G3.10e-剩余写入盘点.md) |
 
+| 2026-11-05 | G3.10e3 reviews cutover | backend enabled; 29/29 | [Plan](PostgreSQL迁移-G3.10e-剩余写入盘点.md) |
+
 ## Rules
 
 ```text
