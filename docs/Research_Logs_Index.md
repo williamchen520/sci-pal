@@ -487,6 +487,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.10f4 P6 fulltext pass | run 13 full=1; watch PG enabled | [Plan](PostgreSQL迁移-G3.10f4-watch-PG计划.md) |
 
+| 2026-11-05 | G3.10f4 tenancy PG-only mirrors | SQLite users unchanged | [Plan](PostgreSQL迁移-G3.10f-SQLite残余.md) |
+
 ## Rules
 
 ```text

@@ -164,6 +164,30 @@ SCIPAL_WATCH_BACKEND removed
 
 先回滚读，等 runner/writes PG 完成后再切。
 
+## 4i. tenancy PG-only
+
+```text
+SCIPAL_TENANCY_PG_ONLY=1
+  create_user      skip SQLite mirror
+  create_workspace skip SQLite mirror
+  add_member       skip SQLite mirror
+```
+
+冒烟：
+
+```text
+create user / workspace / member
+SQLite users 2 -> 2
+cleanup ✅
+```
+
+仍未覆盖：
+
+```text
+bootstrap_default_workspace
+role 管理 / 其他 tenancy admin
+```
+
 ## 5. 当前生产
 
 ```text
