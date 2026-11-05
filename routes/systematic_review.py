@@ -609,7 +609,12 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def review_report_docx(project_id: str):
         conn = _conn()
         try:
-            if not systematic.can_access(conn, project_id, _owner()):
+            allowed = (
+                pg_systematic.can_access(project_id, _owner())
+                if _pg_projects()
+                else systematic.can_access(conn, project_id, _owner())
+            )
+            if not allowed:
                 return jsonify({"error": "project not found"}), 404
             payload = (
                 pg_pdf.render_docx(project_id)
