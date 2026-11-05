@@ -377,6 +377,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-05 | G3.6 experiments inventory | PG read/write split; 4 subtasks | [Report](PostgreSQL迁移-G3.6-experiments盘点.md) |
 
+| 2026-11-05 | G3.6a experiments PG read | list/get/rev/audit smoke; flag off | [Plan](PostgreSQL迁移-G3.6-experiments盘点.md) |
+
 ## Rules
 
 ```text
