@@ -240,8 +240,17 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def extract_pico(project_id: str):
         conn = _conn()
         try:
-            row = systematic.get_project(conn, project_id)
-            if not systematic.can_access(conn, project_id, _owner()):
+            row = (
+                pg_systematic.get_project(project_id)
+                if _pg_projects()
+                else systematic.get_project(conn, project_id)
+            )
+            allowed = (
+                pg_systematic.can_access(project_id, _owner())
+                if _pg_projects()
+                else systematic.can_access(conn, project_id, _owner())
+            )
+            if not row or not allowed:
                 return jsonify({"error": "project not found"}), 404
             result = pico.auto_pico(conn, project_id)
             _audit(conn, project_id, "pico_extracted")
@@ -305,8 +314,17 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def from_watch(project_id: str):
         conn = _conn()
         try:
-            row = systematic.get_project(conn, project_id)
-            if not systematic.can_access(conn, project_id, _owner()):
+            row = (
+                pg_systematic.get_project(project_id)
+                if _pg_projects()
+                else systematic.get_project(conn, project_id)
+            )
+            allowed = (
+                pg_systematic.can_access(project_id, _owner())
+                if _pg_projects()
+                else systematic.can_access(conn, project_id, _owner())
+            )
+            if not row or not allowed:
                 return jsonify({"error": "project not found"}), 404
             data = request.get_json(silent=True) or {}
             run_id = int(data.get("run_id") or 0)
@@ -322,8 +340,17 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def review_brief(project_id: str):
         conn = _conn()
         try:
-            row = systematic.get_project(conn, project_id)
-            if not systematic.can_access(conn, project_id, _owner()):
+            row = (
+                pg_systematic.get_project(project_id)
+                if _pg_projects()
+                else systematic.get_project(conn, project_id)
+            )
+            allowed = (
+                pg_systematic.can_access(project_id, _owner())
+                if _pg_projects()
+                else systematic.can_access(conn, project_id, _owner())
+            )
+            if not row or not allowed:
                 return jsonify({"error": "project not found"}), 404
             text = (
                 pg_report.build_brief(project_id)
@@ -338,8 +365,17 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def review_report(project_id: str):
         conn = _conn()
         try:
-            row = systematic.get_project(conn, project_id)
-            if not systematic.can_access(conn, project_id, _owner()):
+            row = (
+                pg_systematic.get_project(project_id)
+                if _pg_projects()
+                else systematic.get_project(conn, project_id)
+            )
+            allowed = (
+                pg_systematic.can_access(project_id, _owner())
+                if _pg_projects()
+                else systematic.can_access(conn, project_id, _owner())
+            )
+            if not row or not allowed:
                 return jsonify({"error": "project not found"}), 404
             html_body = (
                 pg_report.render_html(project_id)
@@ -357,8 +393,17 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def review_report_pdf(project_id: str):
         conn = _conn()
         try:
-            row = systematic.get_project(conn, project_id)
-            if not systematic.can_access(conn, project_id, _owner()):
+            row = (
+                pg_systematic.get_project(project_id)
+                if _pg_projects()
+                else systematic.get_project(conn, project_id)
+            )
+            allowed = (
+                pg_systematic.can_access(project_id, _owner())
+                if _pg_projects()
+                else systematic.can_access(conn, project_id, _owner())
+            )
+            if not row or not allowed:
                 return jsonify({"error": "project not found"}), 404
             pdf = (
                 pg_pdf.render_pdf(project_id)
