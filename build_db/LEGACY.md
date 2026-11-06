@@ -48,7 +48,8 @@
 | `build_db/db_writer.py` | `SCIPAL_INGEST_PG_ONLY=1` 时只写 PG |
 | `build_db/parse_service.py` | 通过 DatabaseWriter，PG-only 可用 |
 | `build_db/build_sections_tree.py` | PG-only 模式可读 PG |
-| `build_db/import_jats.py` | 仍含 SQLite 路径，待迁移 |
+| `build_db/import_jats.py` | `SCIPAL_INGEST_PG_ONLY=1` 时直接写 PG |
+| `build_db/import_jats_pg.py` | JATS 生产 PG 导入 |
 
 ### C. PG / v2
 
@@ -75,7 +76,7 @@
 ## 4. 后续迁移优先级
 
 ```text
-P1 import_jats.py        JATS 生产 PG 导入
+P1 import_jats.py        JATS 生产 PG 导入（完成）
 P1 build_sections_tree   PG-only 默认
 P2 build_fts / build_xml_fts   ParadeDB 替代
 P2 build_unified_index   PG 索引
