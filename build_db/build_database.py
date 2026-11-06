@@ -1,3 +1,4 @@
+# LEGACY SQLite build path. Do not run in PG-only app/cron; see build_db/LEGACY.md.
 """LEGACY full-rebuild script. Do not run on production.
 
 Superseded by import_jats / parse_service / DatabaseWriter.

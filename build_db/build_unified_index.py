@@ -1,3 +1,4 @@
+# LEGACY SQLite build path. Do not run in PG-only app/cron; see build_db/LEGACY.md.
 #!/usr/bin/env python3
 """
 建联合索引 V1.0

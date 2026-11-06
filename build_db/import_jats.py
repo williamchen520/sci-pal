@@ -1,3 +1,4 @@
+# LEGACY SQLite build path. Do not run in PG-only app/cron; see build_db/LEGACY.md.
 """Import JATS XML into the structured schema (no bbox, authoritative xrefs).
 
 Usage:
