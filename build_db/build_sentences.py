@@ -8,6 +8,7 @@ ID 命名规则：
 - abstracts.db: sentence_id = {pmid}_sent_{3位序号}
 """
 
+import os
 import re
 import sqlite3
 from pathlib import Path

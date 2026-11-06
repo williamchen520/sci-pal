@@ -337,3 +337,30 @@ paragraphs 167388
 sentences  862677
 papers      3315
 ```
+
+
+---
+
+## 16. sections / sentences PG
+
+新增：
+
+```text
+build_db/build_sentences_pg.py
+```
+
+接入：
+
+```text
+SCIPAL_INGEST_PG_ONLY=1
+build_sentences -> build_sentences_pg
+```
+
+冒烟：
+
+```text
+sections 2
+paragraphs 3
+bound 3
+sentences 3
+```
