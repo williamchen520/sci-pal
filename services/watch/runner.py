@@ -20,11 +20,7 @@ _STOP = {
 
 
 def _pg_mode() -> bool:
-    import os
-
-    return os.environ.get("SCIPAL_WATCH_PG_STORE", "").strip().lower() in {
-        "postgres", "postgresql", "pg", "1", "true"
-    }
+    return not pg_store.sqlite_repo_allowed()
 
 
 def _store():

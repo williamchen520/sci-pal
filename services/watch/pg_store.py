@@ -11,12 +11,16 @@ from services.watch import pg_read, pg_writes
 from services.watch.repo import now_iso
 
 
-def enabled() -> bool:
+def sqlite_repo_allowed() -> bool:
     import os
 
-    return os.environ.get("SCIPAL_WATCH_PG_STORE", "").strip().lower() in {
-        "postgres", "postgresql", "pg", "1", "true"
+    return os.environ.get("SCIPAL_WATCH_ALLOW_SQLITE_REPO", "").strip().lower() in {
+        "1", "true", "yes", "on"
     }
+
+
+def enabled() -> bool:
+    return not sqlite_repo_allowed()
 
 
 def connect(db_path=None):

@@ -97,13 +97,7 @@ def openalex_topic_search(query: str, limit: int = 10) -> List[Dict[str, Any]]:
 
 
 def _store():
-    import os
-
-    if os.environ.get("SCIPAL_WATCH_PG_STORE", "").strip().lower() in {
-        "postgres", "postgresql", "pg", "1", "true"
-    }:
-        return pg_store
-    return repo
+    return pg_store if pg_store.enabled() else repo
 
 
 def discover_journals(conn, profile: Dict[str, Any]) -> List[Dict[str, Any]]:

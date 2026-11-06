@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import os
+
+os.environ.setdefault("SCIPAL_WATCH_ALLOW_SQLITE_REPO", "1")
+
 import unittest
 
 from services.watch.pg_store import dedup_key
