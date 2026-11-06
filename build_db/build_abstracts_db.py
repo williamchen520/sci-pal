@@ -1,3 +1,4 @@
+# DEPRECATED: abstracts now live in PostgreSQL; do not rebuild abstracts.db.
 #!/usr/bin/env python3
 """
 摘要数据库建索引脚本 V1.0

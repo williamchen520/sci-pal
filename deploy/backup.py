@@ -20,7 +20,10 @@ from pathlib import Path
 def _exclude_live_db(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
     """Do not archive the live SQLite file; the snapshot is added instead."""
     name = tarinfo.name.replace("\\", "/")
-    if name in {"data/research.db", "data/research.db-wal", "data/research.db-shm"}:
+    if name in {
+        "data/research.db", "data/research.db-wal", "data/research.db-shm",
+        "data/abstracts.db", "data/abstracts.db-wal", "data/abstracts.db-shm",
+    }:
         return None
     return tarinfo
 
