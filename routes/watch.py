@@ -28,7 +28,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
 
     @bp.route("/profiles", methods=["GET", "POST"])
     def profiles():
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             owner = getattr(g, "owner", "default")
             if request.method == "GET":
@@ -46,11 +46,12 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             profile_id = _store().create_profile(conn, data)
             return jsonify({"profile_id": profile_id}), 201
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/profiles/<int:profile_id>", methods=["GET", "PUT", "DELETE"])
     def profile(profile_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             owner = getattr(g, "owner", "default")
             row = (
@@ -68,11 +69,12 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             _store().delete_profile(conn, profile_id)
             return jsonify({"ok": True})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/profiles/<int:profile_id>/journals", methods=["GET", "PUT"])
     def journals(profile_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             if not _store().get_profile(conn, profile_id, getattr(g, "owner", "default")):
                 return jsonify({"error": "profile not found"}), 404
@@ -85,11 +87,12 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             _store().set_journals(conn, profile_id, entries)
             return jsonify({"journals": _store().list_journals(conn, profile_id)})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/profiles/<int:profile_id>/discover", methods=["POST"])
     def discover(profile_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             profile = _store().get_profile(conn, profile_id, getattr(g, "owner", "default"))
             if not profile:
@@ -100,16 +103,18 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             log.exception("watch discover failed")
             return jsonify({"error": str(exc)[:300]}), 502
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/profiles/<int:profile_id>/run", methods=["POST"])
     def run(profile_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             if not _store().get_profile(conn, profile_id, getattr(g, "owner", "default")):
                 return jsonify({"error": "profile not found"}), 404
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
         try:
             result = runner.run_profile(db_path, profile_id)
         except ValueError as exc:
@@ -121,7 +126,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
 
     @bp.route("/profiles/<int:profile_id>/runs", methods=["GET"])
     def runs(profile_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             if pg_read.enabled():
                 if not pg_read.get_profile(profile_id, _owner()):
@@ -131,11 +136,12 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
                 return jsonify({"error": "profile not found"}), 404
             return jsonify({"runs": _store().list_runs(conn, profile_id)})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/runs/<int:run_id>", methods=["GET"])
     def run_detail(run_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             row = _owned_run(conn, run_id)
             if not row:
@@ -149,22 +155,24 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
                 }
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/runs/<int:run_id>/digest.md", methods=["GET"])
     def digest(run_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             row = _owned_run(conn, run_id)
             if not row:
                 return jsonify({"error": "run not found"}), 404
             return Response(row.get("digest_md") or "", mimetype="text/markdown")
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/profiles/<int:profile_id>/latest", methods=["GET"])
     def latest_profile(profile_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             if not _store().get_profile(conn, profile_id, _owner()):
                 return jsonify({"error": "profile not found"}), 404
@@ -176,11 +184,12 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
                 {"run": latest_run, "items": _store().list_items(conn, latest_run["id"])}
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/runs/<int:run_id>/latest", methods=["GET"])
     def latest(run_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             row = _owned_run(conn, run_id)
             if not row:
@@ -191,7 +200,8 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             items = _store().list_items(conn, latest_run["id"]) if latest_run else []
             return jsonify({"run": latest_run, "items": items})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/topics", methods=["GET"])
     def topics():
@@ -205,7 +215,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
 
     @bp.route("/items/<int:item_id>/read", methods=["POST"])
     def read_item(item_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             if pg_store.enabled():
                 item = pg_store.get_item(conn, item_id)
@@ -221,11 +231,12 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             _store().mark_item_read(conn, item_id)
             return jsonify({"ok": True})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/items/<int:item_id>/feedback", methods=["POST"])
     def feedback(item_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             if pg_store.enabled():
                 item = pg_store.get_item(conn, item_id)
@@ -249,11 +260,12 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             _store().set_item_feedback(conn, item_id, value)
             return jsonify({"ok": True, "feedback": value})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/runs/<int:run_id>/read-all", methods=["POST"])
     def read_all(run_id: int):
-        conn = repo.connect(db_path)
+        conn = _store().connect(db_path)
         try:
             if not _owned_run(conn, run_id):
                 return jsonify({"error": "run not found"}), 404
@@ -261,6 +273,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
                 _store().mark_item_read(conn, item["id"])
             return jsonify({"ok": True})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     return bp
