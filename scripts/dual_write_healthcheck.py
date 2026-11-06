@@ -87,12 +87,29 @@ def collect(conn: sqlite3.Connection, pg, tables=None) -> dict:
         ).fetchone()[0]
         row = pg.execute(f"SELECT COUNT(*) FROM {quote_ident(spec.name)}").fetchone()
         pg_count = int(next(iter(row.values())) if isinstance(row, dict) else row[0])
+        expected_pg_only = 0
+        match = sqlite_count == pg_count
+        if not match and spec.name == "papers":
+            sqlite_ids = {
+                row[0] for row in conn.execute("SELECT paper_id FROM papers")
+            }
+            pg_ids = {
+                row[0]
+                for row in pg.execute("SELECT paper_id FROM papers").fetchall()
+            }
+            only_pg = pg_ids - sqlite_ids
+            if not (sqlite_ids - pg_ids) and only_pg and all(
+                str(pid).startswith("paper_watch_") for pid in only_pg
+            ):
+                match = True
+                expected_pg_only = len(only_pg)
         counts.append(
             {
                 "table": spec.name,
                 "sqlite": sqlite_count,
                 "postgres": pg_count,
-                "match": sqlite_count == pg_count,
+                "match": match,
+                "expected_pg_only": expected_pg_only,
             }
         )
     pending = conn.execute(

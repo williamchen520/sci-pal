@@ -242,3 +242,24 @@ docker-compose.yml
 watch-cron  -> watch scheduler started
 health-cron -> health report
 ```
+
+
+---
+
+## 12. health 预期差异
+
+`papers`：
+
+```text
+sqlite 3313
+postgres 3315
+expected_pg_only 2
+```
+
+2 篇为：
+
+```text
+paper_watch_*
+```
+
+健康检查现在允许“仅 PG 的 watch 论文”，不再 degraded。
