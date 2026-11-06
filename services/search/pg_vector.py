@@ -17,8 +17,8 @@ def vector_literal(values) -> str:
 
 class PGVectorParagraphSearch:
     def __init__(self, dsn: Optional[str] = None, *, connector=None):
-        self.dsn = dsn or os.environ.get("SCIPAL_PARADEDB_DSN") or os.environ.get(
-            "SCIPAL_PG_DSN", ""
+        self.dsn = dsn or os.environ.get("SCIPAL_PG_DSN", "") or os.environ.get(
+            "SCIPAL_PARADEDB_DSN", ""
         )
         self._connector = connector
 
