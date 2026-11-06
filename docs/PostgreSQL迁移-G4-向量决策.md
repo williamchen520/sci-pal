@@ -168,3 +168,42 @@ G4b2 用 PG 快照重建干净 Chroma
 G4b3 同一语料上比较 Chroma / pgvector
 G4b4 接入公开 qrels
 ```
+
+
+## 19. 生产 pgvector 复测
+
+HNSW：
+
+```text
+maintenance_work_mem 128MB
+max_parallel_maintenance_workers 0
+paragraph_embeddings_hnsw 已建
+```
+
+20 题：
+
+| 方案 | Recall@10 | MRR | nDCG@10 |
+|---|---:|---:|---:|
+| Chroma | 0.7500 | 0.4392 | 0.4961 |
+| pgvector 生产 | 0.7250 | 0.4471 | 0.4847 |
+
+差距：
+
+```text
+Recall -0.025
+nDCG   -0.0114
+```
+
+结论：
+
+```text
+pgvector 接近但仍低于 Chroma
+不切生产
+```
+
+当前：
+
+```text
+Chroma 生产
+pgvector 索引与向量已就绪
+```
