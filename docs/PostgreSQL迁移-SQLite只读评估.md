@@ -263,3 +263,18 @@ paper_watch_*
 ```
 
 健康检查现在允许“仅 PG 的 watch 论文”，不再 degraded。
+
+
+---
+
+## 13. 启动期 migrate 移除
+
+`api_server.py` 不再：
+
+```text
+import migrate_watch
+import migrate_claim_pilot
+call 两者
+```
+
+PG-only 应用启动不再触碰 SQLite schema。

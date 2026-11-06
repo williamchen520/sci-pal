@@ -25,8 +25,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from services.review.task_manager import task_manager
 
 # B2b 试点：统一响应契约（仅这两个只读路由使用，其余路由暂不动）
-from build_db.claim_pilot_schema import migrate as migrate_claim_pilot
-from build_db.watch_schema import migrate as migrate_watch
 from contracts import InternalError, fail, ok
 from routes.abstracts import build_abstracts_blueprint
 from routes.core import build_core_blueprint
@@ -68,9 +66,6 @@ app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
 app.secret_key = os.environ.get("SCIPAL_SECRET_KEY") or os.urandom(32)
 try:
     bootstrap_default_workspace(db_path=DB_PATH)
-    if not sqlite_readonly.enabled():
-        migrate_watch(DB_PATH)
-        migrate_claim_pilot(DB_PATH)
 except Exception:
     app.logger.exception("tenancy bootstrap failed")
 
