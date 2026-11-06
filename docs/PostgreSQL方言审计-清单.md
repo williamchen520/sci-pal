@@ -635,3 +635,34 @@ year>=2024 + journal=cancer
 其它 self.conn 元数据读取
 SQLite FTS fallback 默认仍开
 ```
+
+
+---
+
+## 17. watch repo 降为 test-only
+
+运行时：
+
+```text
+pg_store.enabled() 默认 True
+runner._pg_mode()  默认 True
+```
+
+只有显式：
+
+```text
+SCIPAL_WATCH_ALLOW_SQLITE_REPO=1
+```
+
+才回退 `services/watch/repo.py`。
+
+测试：
+
+```text
+tests/__init__.py 设置 allow=1
+watch 测试继续用 SQLite 夹具
+```
+
+生产不再依赖 `SCIPAL_WATCH_PG_STORE`。
+
+未删除 repo 文件，保留回滚/测试用途。
