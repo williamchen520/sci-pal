@@ -531,3 +531,39 @@ NULL
 ```
 
 下一步先做 **SQL 提取 + sqlglot 解析**，把“模式命中”收敛成“真实不可执行 SQL 清单”。
+
+
+---
+
+## 14. P0 tasks 修复
+
+已实施：
+
+```text
+create_task -> queued
+claim_task  -> queued -> running CAS
+cancel      -> queued/running 都可取消
+get_running -> queued/running
+```
+
+冒烟：
+
+```text
+created queued
+claim1  True  -> running
+claim2  False
+cancel  True  -> cancelled
+```
+
+仍未做：
+
+```text
+启动时回收超时 running/queued
+heartbeat / lease_expires_at
+```
+
+下一步：
+
+```text
+recover_stale_tasks
+```

@@ -134,13 +134,26 @@ class TaskManager:
                 "INSERT INTO tasks ("
                 "  task_id, type, status, progress_text, result, error, "
                 "  created_at, started_at, progress_pct, params"
-                ") VALUES (?, ?, 'running', '初始化中...', NULL, NULL, ?, ?, 0, ?)",
-                (task_id, task_type, now, now, params_text),
+                ") VALUES (?, ?, 'queued', '排队中...', NULL, NULL, ?, NULL, 0, ?)",
+                (task_id, task_type, now, params_text),
             )
             conn.commit()
         finally:
             conn.close()
         return task_id
+
+    def claim_task(self, task_id: str) -> bool:
+        conn = _connect()
+        try:
+            cursor = conn.execute(
+                "UPDATE tasks SET status='running', started_at=?, progress_text='初始化中...' "
+                "WHERE task_id=? AND status='queued'",
+                (_now(), task_id),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+        finally:
+            conn.close()
 
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         """获取任务（7 键副本）；不存在返回 None。"""
@@ -159,7 +172,7 @@ class TaskManager:
         try:
             cursor = conn.execute(
                 "UPDATE tasks SET status='cancelled', finished_at=? "
-                "WHERE task_id = ? AND status = 'running'",
+                "WHERE task_id = ? AND status IN ('queued','running')",
                 (_now(), task_id),
             )
             conn.commit()
@@ -248,7 +261,7 @@ class TaskManager:
         try:
             row = conn.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM tasks "
-                f"WHERE status = 'running' AND type IN ({placeholders}) "
+                f"WHERE status IN ('queued','running') AND type IN ({placeholders}) "
                 "ORDER BY created_at ASC LIMIT 1",
                 PERSISTED_TASK_TYPES,
             ).fetchone()

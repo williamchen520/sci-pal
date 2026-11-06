@@ -30,13 +30,26 @@ class PGTaskManager:
             pg.execute(
                 "INSERT INTO tasks (task_id, type, status, progress_text, result, error, "
                 "created_at, started_at, progress_pct, params) "
-                "VALUES (%s, %s, 'running', '初始化中...', NULL, NULL, %s, %s, 0, %s)",
-                (task_id, task_type, now, now, params_text),
+                "VALUES (%s, %s, 'queued', '排队中...', NULL, NULL, %s, NULL, 0, %s)",
+                (task_id, task_type, now, params_text),
             )
             pg.commit()
         finally:
             pg.close()
         return task_id
+
+    def claim_task(self, task_id: str) -> bool:
+        pg = pg_connection()
+        try:
+            row = pg.execute(
+                "UPDATE tasks SET status='running', started_at=%s, progress_text='初始化中...' "
+                "WHERE task_id=%s AND status='queued' RETURNING task_id",
+                (_now(), task_id),
+            ).fetchone()
+            pg.commit()
+            return bool(row)
+        finally:
+            pg.close()
 
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         pg = pg_connection()
@@ -53,7 +66,7 @@ class PGTaskManager:
         try:
             row = pg.execute(
                 "UPDATE tasks SET status='cancelled', finished_at=%s "
-                "WHERE task_id = %s AND status = 'running' RETURNING task_id",
+                "WHERE task_id = %s AND status IN ('queued','running') RETURNING task_id",
                 (_now(), task_id),
             ).fetchone()
             pg.commit()
@@ -115,7 +128,7 @@ class PGTaskManager:
         try:
             row = pg.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM tasks "
-                f"WHERE status = 'running' AND type IN ({placeholders}) "
+                f"WHERE status IN ('queued','running') AND type IN ({placeholders}) "
                 "ORDER BY created_at ASC LIMIT 1",
                 PERSISTED_TASK_TYPES,
             ).fetchone()
