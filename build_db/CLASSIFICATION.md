@@ -11,6 +11,7 @@
 | 脚本 | 说明 |
 |---|---|
 | `build_fts_pg.py` | GIN 索引维护 |
+| `build_sentences_pg.py` | 句子 PG 重建 |
 | `build_unified_index_pg.py` | unified_papers 视图 |
 | `import_jats_pg.py` | JATS 直接写 PG |
 | `generate_postgres_schema.py` | PG schema 生成 |
@@ -28,8 +29,8 @@
 |---|---|
 | `db_writer.py` | `SCIPAL_INGEST_PG_ONLY=1` 只写 PG |
 | `parse_service.py` | 走 DatabaseWriter，PG-only 可用 |
-| `build_sections_tree.py` | PG-only 读 PG |
-| `build_sentences.py` | 有 PG 分支 |
+| `build_sections_tree.py` | PG-only 读 PG（冒烟通过） |
+| `build_sentences.py` | PG_ONLY -> `build_sentences_pg.py` |
 | `import_jats.py` | PG_ONLY 转 `import_jats_pg` |
 
 ---
