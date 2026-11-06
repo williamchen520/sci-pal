@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from services.watch import repo, runner
+from services.watch import pg_store, repo, runner
 
 
 def due_profiles(
@@ -16,6 +16,20 @@ def due_profiles(
 ) -> List[Dict[str, Any]]:
     now = now or datetime.now(timezone.utc)
     stamp = now.isoformat()
+    if pg_store.enabled():
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            rows = pg.execute(
+                "SELECT * FROM watch_profiles "
+                "WHERE enabled = 1 AND (next_run_at IS NULL OR next_run_at <= %s) "
+                "ORDER BY COALESCE(next_run_at, '') ASC, id ASC LIMIT %s",
+                (stamp, limit),
+            ).fetchall()
+            return [dict(row) for row in rows]
+        finally:
+            pg.close()
     rows = conn.execute(
         "SELECT * FROM watch_profiles "
         "WHERE enabled = 1 AND (next_run_at IS NULL OR next_run_at <= ?) "
@@ -32,11 +46,14 @@ def run_due(
     run_profile=None,
 ) -> List[Dict[str, Any]]:
     """Run every due profile once; failures do not stop the batch."""
-    conn = repo.connect(db_path)
-    try:
-        profiles = due_profiles(conn, now=now, limit=limit)
-    finally:
-        conn.close()
+    if pg_store.enabled():
+        profiles = due_profiles(None, now=now, limit=limit)
+    else:
+        conn = repo.connect(db_path)
+        try:
+            profiles = due_profiles(conn, now=now, limit=limit)
+        finally:
+            conn.close()
     runner_fn = run_profile or runner.run_profile
     results: List[Dict[str, Any]] = []
     for profile in profiles:
