@@ -17,6 +17,8 @@ For each paper it replaces the previous XML import and writes:
 
 from __future__ import annotations
 
+import os
+
 import hashlib
 import json
 import re
@@ -78,6 +80,12 @@ def _clear_paper(conn: sqlite3.Connection, paper_id: str) -> None:
 def import_file(
     conn: sqlite3.Connection, xml_path: Path, paper_id: str | None = None
 ) -> Dict[str, int]:
+    if os.environ.get("SCIPAL_INGEST_PG_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }:
+        from build_db.import_jats_pg import import_file as import_pg
+
+        return import_pg(xml_path, paper_id)
     data = parse_file(xml_path)
     paper_id = paper_id or _paper_id_for(xml_path, conn)
     if not paper_id:
@@ -365,6 +373,20 @@ def import_dir(
 ) -> Dict[str, int]:
     directory = Path(directory)
     files = sorted(directory.glob("*.xml"))
+    if os.environ.get("SCIPAL_INGEST_PG_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }:
+        from build_db.import_jats_pg import import_file as import_pg
+
+        totals = {"papers": 0, "sections": 0, "paragraphs": 0, "sentences": 0, "links": 0}
+        for xml_path in files:
+            stats = import_pg(xml_path)
+            if not stats:
+                continue
+            totals["papers"] += 1
+            for key in ("sections", "paragraphs", "sentences", "links"):
+                totals[key] += stats.get(key, 0)
+        return totals
     conn = sqlite3.connect(str(db_path))
     conn.execute("PRAGMA busy_timeout=60000")
     conn.execute("PRAGMA synchronous=NORMAL")

@@ -278,3 +278,38 @@ call 两者
 ```
 
 PG-only 应用启动不再触碰 SQLite schema。
+
+
+---
+
+## 14. JATS PG 导入
+
+新增：
+
+```text
+build_db/import_jats_pg.py
+```
+
+覆盖：
+
+```text
+paper / sections / paragraphs / sentences
+figures / tables / citations / sentence_links
+```
+
+接入：
+
+```text
+SCIPAL_INGEST_PG_ONLY=1
+import_jats.import_file -> import_jats_pg
+import_dir -> PG-only
+```
+
+冒烟：
+
+```text
+19 paragraphs
+87 sentences
+39 links
+cleanup ✅
+```
