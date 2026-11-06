@@ -16,6 +16,12 @@ class WatchRunnerStoreTests(unittest.TestCase):
         with mock.patch.dict(os.environ, {"SCIPAL_WATCH_ALLOW_SQLITE_REPO": "1"}):
             self.assertIs(runner._store(), repo)
 
+    def test_repo_fail_closed(self):
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("SCIPAL_WATCH_ALLOW_SQLITE_REPO", None)
+            with self.assertRaises(RuntimeError):
+                repo.connect("unused.db")
+
     def test_pg_store_flag(self):
         with mock.patch.dict(os.environ, {}, clear=False):
             os.environ.pop("SCIPAL_WATCH_ALLOW_SQLITE_REPO", None)

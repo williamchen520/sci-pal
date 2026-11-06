@@ -666,3 +666,31 @@ watch 测试继续用 SQLite 夹具
 生产不再依赖 `SCIPAL_WATCH_PG_STORE`。
 
 未删除 repo 文件，保留回滚/测试用途。
+
+
+---
+
+## 18. watch repo fail-closed
+
+`repo.connect()`：
+
+```text
+无 SCIPAL_WATCH_ALLOW_SQLITE_REPO
+-> RuntimeError
+```
+
+生产：
+
+```text
+enabled True
+runner pg_store
+discovery pg_store
+SQLite mtime 不变
+```
+
+测试：
+
+```text
+allow=1
+fail-closed 单测
+```

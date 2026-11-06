@@ -19,6 +19,12 @@ def now_iso() -> str:
 
 
 def connect(db_path: Path | str = DEFAULT_DB) -> sqlite3.Connection:
+    import os
+
+    if os.environ.get("SCIPAL_WATCH_ALLOW_SQLITE_REPO", "").strip().lower() not in {
+        "1", "true", "yes", "on"
+    }:
+        raise RuntimeError("watch SQLite repo disabled; use pg_store")
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA busy_timeout=60000")
