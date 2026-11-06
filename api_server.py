@@ -55,6 +55,9 @@ from routes.tasks import build_tasks_blueprint
 from routes.tenancy import build_tenancy_blueprint
 from routes.watch import build_watch_blueprint
 from services.tenancy import bootstrap_default_workspace
+from services.db import sqlite_readonly
+
+sqlite_readonly.install()
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -65,8 +68,9 @@ app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
 app.secret_key = os.environ.get("SCIPAL_SECRET_KEY") or os.urandom(32)
 try:
     bootstrap_default_workspace(db_path=DB_PATH)
-    migrate_watch(DB_PATH)
-    migrate_claim_pilot(DB_PATH)
+    if not sqlite_readonly.enabled():
+        migrate_watch(DB_PATH)
+        migrate_claim_pilot(DB_PATH)
 except Exception:
     app.logger.exception("tenancy bootstrap failed")
 

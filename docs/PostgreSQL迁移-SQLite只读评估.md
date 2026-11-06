@@ -102,3 +102,53 @@ SQLite 仍可写
 生产健康
 检索无回退
 ```
+
+
+---
+
+## 7. 已启用 query_only
+
+生产：
+
+```text
+SCIPAL_SQLITE_QUERY_ONLY=1
+```
+
+实现：
+
+```text
+services/db/sqlite_readonly.py
+  仅对 research.db 加 PRAGMA query_only
+  Chroma/其它 db 不受影响
+```
+
+启动时：
+
+```text
+跳过 migrate_watch / migrate_claim_pilot
+```
+
+验证：
+
+```text
+health 200
+watch profiles 200
+review-projects 200
+create/delete watch profile 成功（PG）
+research.db mtime 不变
+```
+
+结论：
+
+```text
+research.db 运行时只读
+写入全部走 PG
+```
+
+## 8. 注意
+
+```text
+SQLite 文件本身仍可写
+query_only 是连接级
+脚本/构建进程不受影响
+```
