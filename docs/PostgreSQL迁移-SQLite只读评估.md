@@ -396,3 +396,29 @@ API：
 GET /api/abstracts/list -> 200, total 3923
 GET /api/abstracts/<pmid> -> 200
 ```
+
+
+---
+
+## 18. abstracts 构建/备份停用
+
+构建：
+
+```text
+build_db/build_abstracts_db.py -> DEPRECATED
+```
+
+备份：
+
+```text
+deploy/backup.py
+  exclude data/abstracts.db
+  exclude -wal/-shm
+```
+
+生产：
+
+```text
+abstracts 只读 PG
+abstracts.db 不再备份
+```

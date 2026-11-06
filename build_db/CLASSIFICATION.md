@@ -42,7 +42,7 @@
 |---|---|
 | `build_xml_db.py` | XML -> SQLite，PG 替代 `build_xml_db_pg.py` |
 | `build_database.py` | 主库重建 |
-| `build_abstracts_db.py` | abstracts.db |
+| `build_abstracts_db.py` | DEPRECATED; abstracts 已迁 PG |
 | `build_citation_index.py` | 引用索引 |
 | `build_communities.py` | 社区 |
 | `build_external_edges.py` | 外部边 |
