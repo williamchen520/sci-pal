@@ -1,0 +1,2884 @@
+{
+  "IFNULL": [],
+  "INSERT_OR": [
+    {
+      "file": "build_abstracts_db.py",
+      "line": 116,
+      "text": "INSERT OR REPLACE INTO papers"
+    },
+    {
+      "file": "build_db/backfill_grobid_mentions.py",
+      "line": 66,
+      "text": "\"INSERT OR REPLACE INTO citation_mentions \""
+    },
+    {
+      "file": "build_db/backfill_jats_figure_links.py",
+      "line": 77,
+      "text": "\"INSERT OR REPLACE INTO sentence_links \""
+    },
+    {
+      "file": "build_db/backfill_jats_figure_links.py",
+      "line": 98,
+      "text": "\"INSERT OR REPLACE INTO sentence_links \""
+    },
+    {
+      "file": "build_db/backfill_xml_figures.py",
+      "line": 48,
+      "text": "\"INSERT OR IGNORE INTO figures \""
+    },
+    {
+      "file": "build_db/build_abstracts_db.py",
+      "line": 146,
+      "text": "INSERT OR REPLACE INTO papers"
+    },
+    {
+      "file": "build_db/build_chunks.py",
+      "line": 118,
+      "text": "INSERT OR REPLACE INTO chunks"
+    },
+    {
+      "file": "build_db/build_citation_index.py",
+      "line": 203,
+      "text": "INSERT OR IGNORE INTO paper_index"
+    },
+    {
+      "file": "build_db/build_claims.py",
+      "line": 78,
+      "text": "\"INSERT OR IGNORE INTO claims \""
+    },
+    {
+      "file": "build_db/build_claims.py",
+      "line": 87,
+      "text": "\"INSERT OR REPLACE INTO claim_evidence \""
+    },
+    {
+      "file": "build_db/build_communities.py",
+      "line": 303,
+      "text": "INSERT OR REPLACE INTO paper_communities"
+    },
+    {
+      "file": "build_db/build_communities.py",
+      "line": 310,
+      "text": "INSERT OR REPLACE INTO community_members"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 915,
+      "text": "INSERT OR REPLACE INTO paragraphs"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 995,
+      "text": "INSERT OR REPLACE INTO figures"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1027,
+      "text": "INSERT OR REPLACE INTO tables"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1043,
+      "text": "INSERT OR REPLACE INTO citations"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1064,
+      "text": "INSERT OR REPLACE INTO citations"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1113,
+      "text": "INSERT OR REPLACE INTO paper_index"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1126,
+      "text": "INSERT OR REPLACE INTO paper_index"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1138,
+      "text": "INSERT OR REPLACE INTO paper_index"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1160,
+      "text": "INSERT OR REPLACE INTO paper_index"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1231,
+      "text": "INSERT OR REPLACE INTO papers"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1307,
+      "text": "INSERT OR REPLACE INTO cross_paper_index"
+    },
+    {
+      "file": "build_db/build_domain_profiles.py",
+      "line": 37,
+      "text": "\"INSERT OR REPLACE INTO domain_profiles \""
+    },
+    {
+      "file": "build_db/build_domain_profiles.py",
+      "line": 49,
+      "text": "\"INSERT OR REPLACE INTO domain_profiles \""
+    },
+    {
+      "file": "build_db/build_domain_profiles.py",
+      "line": 60,
+      "text": "\"INSERT OR REPLACE INTO paper_domains (paper_id, domain_id, confidence, source) \""
+    },
+    {
+      "file": "build_db/build_external_edges.py",
+      "line": 57,
+      "text": "\"INSERT OR REPLACE INTO paper_links \""
+    },
+    {
+      "file": "build_db/build_figure_links.py",
+      "line": 219,
+      "text": "INSERT OR IGNORE INTO paper_index"
+    },
+    {
+      "file": "build_db/build_paper_graph.py",
+      "line": 272,
+      "text": "INSERT OR REPLACE INTO cross_paper_index"
+    },
+    {
+      "file": "build_db/build_sentences.py",
+      "line": 108,
+      "text": "INSERT OR REPLACE INTO sentences"
+    },
+    {
+      "file": "build_db/build_sentences.py",
+      "line": 179,
+      "text": "INSERT OR REPLACE INTO sentences"
+    },
+    {
+      "file": "build_db/build_sentence_links.py",
+      "line": 180,
+      "text": "INSERT OR REPLACE INTO sentence_links"
+    },
+    {
+      "file": "build_db/build_summaries.py",
+      "line": 75,
+      "text": "\"INSERT OR REPLACE INTO summaries \""
+    },
+    {
+      "file": "build_db/build_unified_index.py",
+      "line": 72,
+      "text": "INSERT OR IGNORE INTO unified_papers ("
+    },
+    {
+      "file": "build_db/build_unified_index.py",
+      "line": 93,
+      "text": "INSERT OR IGNORE INTO unified_papers ("
+    },
+    {
+      "file": "build_db/build_unified_index.py",
+      "line": 114,
+      "text": "INSERT OR IGNORE INTO unified_papers ("
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 145,
+      "text": "INSERT OR REPLACE INTO papers (pmcid, pmid, doi, title, journal, publish_date)"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 176,
+      "text": "query = f\"INSERT OR REPLACE INTO papers ({columns}) VALUES ({placeholders})\""
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 199,
+      "text": "INSERT OR REPLACE INTO parse_provenance"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 242,
+      "text": "f\"INSERT OR REPLACE INTO paragraphs ({', '.join(columns)}) \""
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 254,
+      "text": "INSERT OR REPLACE INTO figures"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 294,
+      "text": "f\"INSERT OR REPLACE INTO citations ({', '.join(columns)}) \""
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 319,
+      "text": "\"INSERT OR REPLACE INTO citation_mentions \""
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 340,
+      "text": "INSERT OR REPLACE INTO tables"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 379,
+      "text": "INSERT OR REPLACE INTO supplementary_files"
+    },
+    {
+      "file": "build_db/extract_captions.py",
+      "line": 55,
+      "text": "INSERT OR REPLACE INTO figure_captions"
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 101,
+      "text": "\"INSERT OR REPLACE INTO papers \""
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 292,
+      "text": "\"INSERT OR REPLACE INTO sentence_links \""
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 317,
+      "text": "\"INSERT OR REPLACE INTO sentence_links \""
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 337,
+      "text": "\"INSERT OR REPLACE INTO sentence_links \""
+    },
+    {
+      "file": "build_db/rebuild_sentence_links.py",
+      "line": 120,
+      "text": "\"INSERT OR REPLACE INTO sentence_links \""
+    },
+    {
+      "file": "build_db/sentence_geometry.py",
+      "line": 171,
+      "text": "INSERT OR REPLACE INTO sentences"
+    },
+    {
+      "file": "build_db/sync_paper_links.py",
+      "line": 61,
+      "text": "\"INSERT OR REPLACE INTO paper_links \""
+    },
+    {
+      "file": "scripts/backfill_paper_summary_vectors.py",
+      "line": 157,
+      "text": "\"INSERT OR REPLACE INTO summaries \""
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 94,
+      "text": "INSERT OR REPLACE INTO papers (pmcid, pmid, doi, title)"
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 126,
+      "text": "\"INSERT OR REPLACE INTO claim_cards \""
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 220,
+      "text": "\"INSERT OR REPLACE INTO claim_card_evidence \""
+    },
+    {
+      "file": "services/protocols/service.py",
+      "line": 223,
+      "text": "INSERT OR REPLACE INTO protocol_imports"
+    },
+    {
+      "file": "services/review/review_repository.py",
+      "line": 102,
+      "text": "INSERT OR REPLACE INTO reviews"
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 118,
+      "text": "\"INSERT OR REPLACE INTO review_project_members (project_id, member, role, added_at) \""
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 137,
+      "text": "\"INSERT OR IGNORE INTO review_project_papers (project_id, paper_id, added_at) \""
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 367,
+      "text": "INSERT OR REPLACE INTO papers"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 416,
+      "text": "INSERT OR REPLACE INTO paragraphs"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 439,
+      "text": "\"INSERT OR REPLACE INTO sentences \""
+    },
+    {
+      "file": "services/search/online_downloader.py",
+      "line": 571,
+      "text": "# INSERT OR REPLACE：如果已存在就更新，不存在就插入"
+    },
+    {
+      "file": "services/search/online_downloader.py",
+      "line": 586,
+      "text": "INSERT OR REPLACE INTO papers"
+    },
+    {
+      "file": "services/search/online_downloader.py",
+      "line": 609,
+      "text": "INSERT OR REPLACE INTO paragraphs"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 194,
+      "text": "\"INSERT OR REPLACE INTO users (user_id, username, email, display_name, password_hash, status, is_admin) \""
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 205,
+      "text": "\"INSERT OR REPLACE INTO workspaces (workspace_id, name, owner_user_id) VALUES (?, ?, ?)\","
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 209,
+      "text": "\"INSERT OR REPLACE INTO memberships (workspace_id, user_id, role) VALUES (?, ?, 'owner')\","
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 409,
+      "text": "\"INSERT OR IGNORE INTO memberships (workspace_id, user_id, role) VALUES (?, ?, ?)\","
+    },
+    {
+      "file": "services/trust/retraction.py",
+      "line": 70,
+      "text": "\"INSERT OR REPLACE INTO paper_flags \""
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 137,
+      "text": "\"INSERT OR REPLACE INTO watch_profile_journals \""
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 152,
+      "text": "\"INSERT OR REPLACE INTO journal_catalog \""
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 329,
+      "text": "\"INSERT OR IGNORE INTO watch_seen (profile_id, dedup_key, paper_id, first_seen_at, status) \""
+    },
+    {
+      "file": "services/watch/runner.py",
+      "line": 98,
+      "text": "\"INSERT OR IGNORE INTO papers \""
+    },
+    {
+      "file": "services/watch/runner.py",
+      "line": 184,
+      "text": "\"INSERT OR IGNORE INTO papers \""
+    }
+  ],
+  "AUTOINCREMENT": [
+    {
+      "file": "build_abstracts_db.py",
+      "line": 54,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_abstracts_db.py",
+      "line": 47,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 48,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 58,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 68,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 79,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 90,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 101,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 114,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 127,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/generate_postgres_schema.py",
+      "line": 74,
+      "text": "autoincrement = \"AUTOINCREMENT\" in (sql or \"\").upper()"
+    },
+    {
+      "file": "build_db/review_schema.py",
+      "line": 34,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/review_schema.py",
+      "line": 44,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/review_schema.py",
+      "line": 57,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/review_schema.py",
+      "line": 68,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/review_schema.py",
+      "line": 78,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/review_schema.py",
+      "line": 87,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 24,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 57,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 75,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 28,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 39,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 50,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 63,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 76,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "services/data_sandbox/audit.py",
+      "line": 16,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "services/db/dual_write.py",
+      "line": 90,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 75,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    },
+    {
+      "file": "services/tenancy/schema.py",
+      "line": 33,
+      "text": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    }
+  ],
+  "PRAGMA": [
+    {
+      "file": "api_server.py",
+      "line": 576,
+      "text": "cursor.execute(\"PRAGMA table_info(papers)\")"
+    },
+    {
+      "file": "import_zotero_metadata.py",
+      "line": 128,
+      "text": "cursor.execute(\"PRAGMA table_info(papers)\")"
+    },
+    {
+      "file": "build_db/backfill_grobid_mentions.py",
+      "line": 33,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "build_db/build_external_edges.py",
+      "line": 83,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 121,
+      "text": "与 `PRAGMA table_info(paragraphs_fts)` 比对，只要出现 FTS 表里不存在的列"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 132,
+      "text": "row[1] for row in cursor.execute(\"PRAGMA table_info(paragraphs_fts)\").fetchall()"
+    },
+    {
+      "file": "build_db/build_llm_summaries.py",
+      "line": 20,
+      "text": "cols = {row[1] for row in conn.execute(\"PRAGMA table_info(summaries)\")}"
+    },
+    {
+      "file": "build_db/citation_intent_schema.py",
+      "line": 16,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "build_db/citation_intent_schema.py",
+      "line": 19,
+      "text": "cols = {row[1] for row in conn.execute(\"PRAGMA table_info(sentence_links)\")}"
+    },
+    {
+      "file": "build_db/claim_pilot_schema.py",
+      "line": 68,
+      "text": "cols = {row[1] for row in conn.execute(\"PRAGMA table_info(claim_cards)\")}"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 28,
+      "text": "cursor.execute(f\"PRAGMA table_info({table_name})\")"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 38,
+      "text": "conn.execute(\"PRAGMA foreign_keys = ON;\")"
+    },
+    {
+      "file": "build_db/generate_postgres_schema.py",
+      "line": 71,
+      "text": "columns = conn.execute(f'PRAGMA table_info(\"{name}\")').fetchall()"
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 368,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 369,
+      "text": "conn.execute(\"PRAGMA synchronous=NORMAL\")"
+    },
+    {
+      "file": "build_db/rebuild_sentence_links.py",
+      "line": 56,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "build_db/structure_v2.py",
+      "line": 29,
+      "text": "existing = {row[1] for row in conn.execute(f\"PRAGMA table_info({table})\")}"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 26,
+      "text": "existing = {row[1] for row in conn.execute(f\"PRAGMA table_info({table})\")}"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 111,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 112,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 116,
+      "text": "cols = {row[1] for row in conn.execute(f\"PRAGMA table_info({table})\")}"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 119,
+      "text": "item_cols = {row[1] for row in conn.execute(\"PRAGMA table_info(watch_items)\")}"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 127,
+      "text": "run_cols = {row[1] for row in conn.execute(\"PRAGMA table_info(watch_runs)\")}"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 130,
+      "text": "cols = {row[1] for row in conn.execute(\"PRAGMA table_info(papers)\")}"
+    },
+    {
+      "file": "contracts/envelope.py",
+      "line": 43,
+      "text": "else:  # pragma: no cover - defensive"
+    },
+    {
+      "file": "contracts/errors.py",
+      "line": 85,
+      "text": "def __repr__(self) -> str:  # pragma: no cover - debugging aid"
+    },
+    {
+      "file": "contracts/errors.py",
+      "line": 140,
+      "text": "try:  # pragma: no cover - import guarded for non-Flask use"
+    },
+    {
+      "file": "database/init_db.py",
+      "line": 26,
+      "text": "cursor.execute(\"PRAGMA journal_mode=WAL;\")"
+    },
+    {
+      "file": "database/init_db.py",
+      "line": 27,
+      "text": "cursor.execute(\"PRAGMA foreign_keys = ON;\")"
+    },
+    {
+      "file": "scripts/backup_sqlite.py",
+      "line": 49,
+      "text": "integrity = conn.execute(\"PRAGMA integrity_check\").fetchone()[0]"
+    },
+    {
+      "file": "scripts/backup_sqlite.py",
+      "line": 55,
+      "text": "backup_integrity = check.execute(\"PRAGMA integrity_check\").fetchone()[0]"
+    },
+    {
+      "file": "scripts/rebuild_fts_porter.py",
+      "line": 104,
+      "text": "integrity = conn.execute(\"PRAGMA integrity_check\").fetchone()[0]"
+    },
+    {
+      "file": "scripts/schema_parity.py",
+      "line": 22,
+      "text": "out[name] = {row[1] for row in conn.execute(f'PRAGMA table_info(\"{name}\")')}"
+    },
+    {
+      "file": "scripts/sciPal_watchdog.py",
+      "line": 157,
+      "text": "else:  # pragma: no cover - 仅 Windows 使用"
+    },
+    {
+      "file": "scripts/self_check.py",
+      "line": 115,
+      "text": "cols = [r[1] for r in conn.execute(\"PRAGMA table_info(papers)\").fetchall()]"
+    },
+    {
+      "file": "scripts/setup_dual_write.py",
+      "line": 45,
+      "text": "report[\"integrity\"] = conn.execute(\"PRAGMA integrity_check\").fetchone()[0]"
+    },
+    {
+      "file": "scripts/verify_backup.py",
+      "line": 6,
+      "text": "* PRAGMA integrity_check == ok"
+    },
+    {
+      "file": "scripts/verify_backup.py",
+      "line": 43,
+      "text": "integrity = conn.execute(\"PRAGMA integrity_check\").fetchone()[0]"
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 35,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "services/data_sandbox/audit.py",
+      "line": 47,
+      "text": "conn.execute(\"PRAGMA busy_timeout=30000\")"
+    },
+    {
+      "file": "services/db/adapter.py",
+      "line": 92,
+      "text": "conn.execute(\"PRAGMA foreign_keys = ON\")"
+    },
+    {
+      "file": "services/db/dual_write.py",
+      "line": 55,
+      "text": "return tuple(row[1] for row in conn.execute(f\"PRAGMA table_info({quote_ident(table)})\"))"
+    },
+    {
+      "file": "services/db/dual_write.py",
+      "line": 59,
+      "text": "rows = conn.execute(f\"PRAGMA table_info({quote_ident(table)})\").fetchall()"
+    },
+    {
+      "file": "services/db/etl.py",
+      "line": 51,
+      "text": "return [row[1] for row in conn.execute(f\"PRAGMA table_info({quote_ident(table)})\")]"
+    },
+    {
+      "file": "services/db/shadow_read.py",
+      "line": 73,
+      "text": "return [row[1] for row in conn.execute(f\"PRAGMA table_info({quote_ident(table)})\")]"
+    },
+    {
+      "file": "services/experiments/runs.py",
+      "line": 51,
+      "text": "columns = {row[1] for row in conn.execute(\"PRAGMA table_info(experiment_runs)\")}"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 107,
+      "text": "columns = {row[1] for row in conn.execute(\"PRAGMA table_info(experiments)\")}"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 127,
+      "text": "row = conn.execute(\"PRAGMA database_list\").fetchone()"
+    },
+    {
+      "file": "services/notes/service.py",
+      "line": 43,
+      "text": "columns = {row[1] for row in conn.execute(\"PRAGMA table_info(notes)\")}"
+    },
+    {
+      "file": "services/notes/service.py",
+      "line": 60,
+      "text": "columns = {row[1] for row in conn.execute(\"PRAGMA table_info(papers)\")}"
+    },
+    {
+      "file": "services/projects/service.py",
+      "line": 48,
+      "text": "columns = {row[1] for row in conn.execute(\"PRAGMA table_info(projects)\")}"
+    },
+    {
+      "file": "services/projects/service.py",
+      "line": 62,
+      "text": "row = conn.execute(\"PRAGMA database_list\").fetchone()"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 332,
+      "text": "paper_cols = {row[1] for row in conn.execute(\"PRAGMA table_info(papers)\")}"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 580,
+      "text": "conn.execute(\"PRAGMA journal_mode=WAL\")"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 581,
+      "text": "conn.execute(\"PRAGMA synchronous=NORMAL\")"
+    },
+    {
+      "file": "services/tenancy/schema.py",
+      "line": 55,
+      "text": "return {row[1] for row in conn.execute(f\"PRAGMA table_info({table})\")}"
+    },
+    {
+      "file": "services/tenancy/schema.py",
+      "line": 64,
+      "text": "row = conn.execute(\"PRAGMA database_list\").fetchone()"
+    },
+    {
+      "file": "services/tenancy/scoping.py",
+      "line": 28,
+      "text": "columns = {row[1] for row in conn.execute(\"PRAGMA table_info(papers)\")}"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 63,
+      "text": "conn.execute(\"PRAGMA busy_timeout = 30000\")"
+    },
+    {
+      "file": "services/tenancy/web.py",
+      "line": 29,
+      "text": "columns = {row[1] for row in conn.execute(f\"PRAGMA table_info({table})\")}"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 24,
+      "text": "conn.execute(\"PRAGMA busy_timeout=60000\")"
+    },
+    {
+      "file": "services/workflow/run.py",
+      "line": 153,
+      "text": "if __name__ == \"__main__\":  # pragma: no cover - exercised through main()"
+    },
+    {
+      "file": "services/workflow/worker.py",
+      "line": 180,
+      "text": "if __name__ == \"__main__\":  # pragma: no cover"
+    }
+  ],
+  "SQLITE_DATETIME": [
+    {
+      "file": "api_server.py",
+      "line": 601,
+      "text": "created_at TEXT DEFAULT (datetime('now')),"
+    },
+    {
+      "file": "download_bioinformatics_methods.py",
+      "line": 668,
+      "text": "\"download_time\": time.strftime(\"%Y-%m-%d %H:%M:%S\"),"
+    },
+    {
+      "file": "self_check.py",
+      "line": 1000,
+      "text": "print(\"║           检查时间: \" + datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\") + \"                          ║\")"
+    },
+    {
+      "file": "build_db/build_communities.py",
+      "line": 36,
+      "text": "created_at      TEXT DEFAULT (datetime('now'))"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 354,
+      "text": "created_at TEXT DEFAULT (datetime('now')),"
+    },
+    {
+      "file": "build_db/generate_postgres_schema.py",
+      "line": 44,
+      "text": "if lower in {\"current_timestamp\", \"datetime('now')\", \"date('now')\"}:"
+    },
+    {
+      "file": "deploy/backup.py",
+      "line": 42,
+      "text": "stamp = datetime.now(timezone.utc).strftime(\"%Y%m%d-%H%M%S\")"
+    },
+    {
+      "file": "deploy/build_offline_bundle.py",
+      "line": 72,
+      "text": "stamp = datetime.now(timezone.utc).strftime(\"%Y%m%d-%H%M%S\")"
+    },
+    {
+      "file": "scripts/backup_sqlite.py",
+      "line": 41,
+      "text": "stamp = datetime.now().strftime(\"%Y%m%d_%H%M%S\")"
+    },
+    {
+      "file": "scripts/collect_milestones.py",
+      "line": 216,
+      "text": "generated = datetime.now().strftime(\"%Y-%m-%d %H:%M\")"
+    },
+    {
+      "file": "scripts/dual_write_healthcheck.py",
+      "line": 108,
+      "text": "f\"SELECT (julianday('now') - julianday(MIN(created_at))) * 86400 \""
+    },
+    {
+      "file": "scripts/precheck_dsh_bundle.py",
+      "line": 108,
+      "text": "stamp = time.strftime(\"%Y%m%d-%H%M%S\", time.localtime())"
+    },
+    {
+      "file": "scripts/sciPal_watchdog.py",
+      "line": 217,
+      "text": "line = f\"[{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}] {message}\""
+    },
+    {
+      "file": "scripts/sciPal_watchdog.py",
+      "line": 282,
+      "text": "script_mtime = time.strftime(\"%Y-%m-%d %H:%M:%S\", time.localtime(stat.st_mtime))"
+    },
+    {
+      "file": "services/plugins/contracts.py",
+      "line": 39,
+      "text": "return datetime.now(timezone.utc).strftime(\"%Y-%m-%dT%H:%M:%SZ\")"
+    },
+    {
+      "file": "services/review/export_manager.py",
+      "line": 363,
+      "text": "lines.append(f\"*导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\")"
+    },
+    {
+      "file": "services/review/export_manager.py",
+      "line": 427,
+      "text": "f\"导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\""
+    },
+    {
+      "file": "services/review/export_manager.py",
+      "line": 538,
+      "text": "f\"导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\", meta_style"
+    },
+    {
+      "file": "services/review/outline_store.py",
+      "line": 74,
+      "text": "now = time.strftime(\"%Y-%m-%d %H:%M:%S\")"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 39,
+      "text": "return time.strftime(\"%Y-%m-%dT%H:%M:%SZ\", time.gmtime())"
+    },
+    {
+      "file": "services/search/online_downloader.py",
+      "line": 111,
+      "text": "\"created_at\": time.strftime(\"%Y-%m-%d %H:%M:%S\", time.localtime(self.start_time)),"
+    },
+    {
+      "file": "services/search/online_downloader.py",
+      "line": 197,
+      "text": "\"updated_at\": time.strftime(\"%Y-%m-%d %H:%M:%S\"),"
+    }
+  ],
+  "GROUP_CONCAT": [
+    {
+      "file": "build_db/build_summaries.py",
+      "line": 64,
+      "text": "\"GROUP_CONCAT(p.text, '|||') AS body \""
+    }
+  ],
+  "IIF": [],
+  "GLOB": [
+    {
+      "file": "build_abstracts_db.py",
+      "line": 90,
+      "text": "for json_file in ABSTRACTS_DIR.glob(\"*.json\"):"
+    },
+    {
+      "file": "self_check.py",
+      "line": 245,
+      "text": "collections = list(chroma_dir.glob(\"*\"))"
+    },
+    {
+      "file": "build_db/batch_download_from_snapshot.py",
+      "line": 90,
+      "text": "parquet_files = sorted(SNAPSHOT_DIR.glob(\"*.parquet\"))"
+    },
+    {
+      "file": "build_db/batch_parse_all.py",
+      "line": 39,
+      "text": "pdf_files = sorted(list(input_path.glob(\"*.pdf\")))"
+    },
+    {
+      "file": "build_db/build_abstracts_db.py",
+      "line": 106,
+      "text": "for json_file in ABSTRACTS_DIR.glob(\"*.json\"):"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 248,
+      "text": "xml_files = list(input_dir.glob(\"*.xml\"))"
+    },
+    {
+      "file": "build_db/check_pdf_bookmarks.py",
+      "line": 37,
+      "text": "for pdf in sorted(pdf_dir.glob(\"*.pdf\")):"
+    },
+    {
+      "file": "build_db/explore_docling_structure.py",
+      "line": 204,
+      "text": "pdfs = sorted(pdf_dir.glob(\"*.pdf\"))"
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 366,
+      "text": "files = sorted(directory.glob(\"*.xml\"))"
+    },
+    {
+      "file": "build_db/pg_v2_import_missing.py",
+      "line": 33,
+      "text": "files = {path.name for path in Path(args.xml_dir).glob(\"*.xml\")}"
+    },
+    {
+      "file": "build_db/pg_v2_import_xml.py",
+      "line": 343,
+      "text": "for path in sorted(Path(args.xml_dir).glob(\"*.xml\")):"
+    },
+    {
+      "file": "build_db/test_docling.py",
+      "line": 104,
+      "text": "pdf_files = list(documents_dir.glob(\"*.pdf\"))"
+    },
+    {
+      "file": "build_db/test_hierarchical_pdf.py",
+      "line": 101,
+      "text": "for p in sorted(pdf_dir.glob(\"*.pdf\")):"
+    },
+    {
+      "file": "build_db/test_image_export.py",
+      "line": 93,
+      "text": "images = list(images_dir.glob(\"*.png\")) + list(images_dir.glob(\"*.jpg\"))"
+    },
+    {
+      "file": "build_db/test_intext_citations.py",
+      "line": 15,
+      "text": "pdfs = sorted(pdf_dir.glob(\"*.pdf\"))"
+    },
+    {
+      "file": "build_db/verify_database.py",
+      "line": 51,
+      "text": "actual_files = list(images_dir.glob(\"*.png\"))"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 166,
+      "text": "xml_files = list(input_dir.glob(\"*.xml\"))"
+    },
+    {
+      "file": "scripts/p3_shadow_report.py",
+      "line": 52,
+      "text": "(p for p in backups.glob(\"*.db\") if p.is_file()),"
+    },
+    {
+      "file": "scripts/run_backup_loop.py",
+      "line": 61,
+      "text": "for archive in sorted(out.glob(f\"scipal-{scope}-*.tar.gz\")):"
+    },
+    {
+      "file": "build_db/parsers/grobid_parser.py",
+      "line": 441,
+      "text": "pdfs = sorted(pdf_dir.glob(\"*.pdf\"))[:3]"
+    },
+    {
+      "file": "services/plugins/registry.py",
+      "line": 51,
+      "text": "for path in sorted(ports_dir.glob(\"*.json\")):"
+    },
+    {
+      "file": "services/plugins/registry.py",
+      "line": 59,
+      "text": "for path in sorted(manifests_dir.glob(\"*.yaml\")):"
+    },
+    {
+      "file": "services/review/outline_store.py",
+      "line": 113,
+      "text": "for filepath in self.data_dir.glob(\"*.json\"):"
+    },
+    {
+      "file": "services/review/user_feedback.py",
+      "line": 717,
+      "text": "for f in self.storage_dir.glob(\"*.json\"):"
+    },
+    {
+      "file": "services/search/retrieval_observability.py",
+      "line": 574,
+      "text": "for f in self.storage_dir.glob(\"*.json\"):"
+    },
+    {
+      "file": "services/workflow/worker.py",
+      "line": 42,
+      "text": "for job_path in sorted(queue.glob(\"*.job.json\")):"
+    }
+  ],
+  "NOCASE": [],
+  "lastrowid": [
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 194,
+      "text": "para_id = cursor.lastrowid"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 211,
+      "text": "para_id = cursor.lastrowid"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 103,
+      "text": "paper_id = cursor.lastrowid"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 112,
+      "text": "para_id = cursor.lastrowid"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 129,
+      "text": "para_id = cursor.lastrowid"
+    },
+    {
+      "file": "services/review/notifications.py",
+      "line": 24,
+      "text": "return int(cursor.lastrowid)"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 87,
+      "text": "return int(cur.lastrowid or pg_id)"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 211,
+      "text": "return int(cur.lastrowid or pg_id)"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 259,
+      "text": "return int(cur.lastrowid or pg_id)"
+    }
+  ],
+  "rowid": [
+    {
+      "file": "build_db/build_fts.py",
+      "line": 31,
+      "text": "#   1. 删除/更新只能按 `para_id` 定位 —— `paragraphs_fts.rowid` 与"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 32,
+      "text": "#      `paragraphs.rowid` 对齐率仅 11246/50950（22%），按 rowid 删会删错别人的行。"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 108,
+      "text": "#   rowid          —— 隐式列"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 109,
+      "text": "_FTS_PSEUDO_COLUMNS = {\"paragraphs_fts\", \"rowid\"}"
+    },
+    {
+      "file": "build_db/build_unified_index.py",
+      "line": 138,
+      "text": "content_rowid='rowid'"
+    },
+    {
+      "file": "build_db/build_unified_index.py",
+      "line": 144,
+      "text": "INSERT INTO unified_papers_fts (rowid, paper_id, title, journal, abstract)"
+    },
+    {
+      "file": "build_db/build_unified_index.py",
+      "line": 145,
+      "text": "SELECT rowid, paper_id, title, journal, abstract FROM unified_papers"
+    },
+    {
+      "file": "build_db/build_xml_fts.py",
+      "line": 40,
+      "text": "INSERT INTO abstract_paragraphs_fts (rowid, paper_id, text)"
+    },
+    {
+      "file": "build_db/build_xml_fts.py",
+      "line": 64,
+      "text": "INSERT INTO body_paragraphs_fts (rowid, paper_id, section_title, text)"
+    },
+    {
+      "file": "build_db/build_xml_fts.py",
+      "line": 89,
+      "text": "INSERT INTO sentences_fts (rowid, paper_id, paragraph_type, paragraph_id, text)"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 8,
+      "text": "rowid-based triggers"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 82,
+      "text": "content='sentences', content_rowid='rowid'"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 89,
+      "text": "INSERT INTO sentences_fts(rowid, sentence_id, paper_id, section_id, text)"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 90,
+      "text": "VALUES (new.rowid, new.sentence_id, new.paper_id, new.section_id, new.text);"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 93,
+      "text": "INSERT INTO sentences_fts(sentences_fts, rowid, sentence_id, paper_id, section_id, text)"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 94,
+      "text": "VALUES ('delete', old.rowid, old.sentence_id, old.paper_id, old.section_id, old.text);"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 97,
+      "text": "INSERT INTO sentences_fts(sentences_fts, rowid, sentence_id, paper_id, section_id, text)"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 98,
+      "text": "VALUES ('delete', old.rowid, old.sentence_id, old.paper_id, old.section_id, old.text);"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 99,
+      "text": "INSERT INTO sentences_fts(rowid, sentence_id, paper_id, section_id, text)"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 100,
+      "text": "VALUES (new.rowid, new.sentence_id, new.paper_id, new.section_id, new.text);"
+    },
+    {
+      "file": "eval/build_gold_expansion.py",
+      "line": 103,
+      "text": "\"AND text NOT LIKE '%et al%' ORDER BY rowid LIMIT 40\","
+    },
+    {
+      "file": "scripts/diagnose_claim_retrieval.py",
+      "line": 59,
+      "text": "\"SELECT sentence_id, text FROM sentences WHERE para_id = ? ORDER BY rowid\","
+    },
+    {
+      "file": "scripts/retrieval_bias_audit.py",
+      "line": 26,
+      "text": "f\"SELECT rowid, * FROM {table} WHERE {table} MATCH ? \""
+    },
+    {
+      "file": "scripts/soft_cap_mmr_audit.py",
+      "line": 24,
+      "text": "\"SELECT rowid, * FROM paragraphs_fts WHERE paragraphs_fts MATCH ? \""
+    },
+    {
+      "file": "services/claims/semantic.py",
+      "line": 103,
+      "text": "\"WHERE para_id = ? ORDER BY rowid\","
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 264,
+      "text": "\"FROM sentences_fts f JOIN sentences s ON s.rowid = f.rowid \""
+    }
+  ],
+  "json_extract": [],
+  "json_each": [],
+  "LIKE": [
+    {
+      "file": "download_pmc_xml.py",
+      "line": 51,
+      "text": "\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\","
+    },
+    {
+      "file": "download_protocols.py",
+      "line": 211,
+      "text": "\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\","
+    },
+    {
+      "file": "download_pubmed_abstracts.py",
+      "line": 37,
+      "text": "\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\","
+    },
+    {
+      "file": "build_db/analyze_quality.py",
+      "line": 112,
+      "text": "WHERE p.filename LIKE '%s41467%'"
+    },
+    {
+      "file": "build_db/backfill_grobid_mentions.py",
+      "line": 40,
+      "text": "\"WHERE filename LIKE '%.pdf' AND COALESCE(parse_engine, '') != 'mineru'\""
+    },
+    {
+      "file": "build_db/backfill_xml_figures.py",
+      "line": 29,
+      "text": "\"SELECT paper_id, filename FROM papers WHERE filename LIKE '%.xml'\""
+    },
+    {
+      "file": "build_db/backfill_xml_figures.py",
+      "line": 60,
+      "text": "\"SELECT DISTINCT paper_id, fig_id FROM figures WHERE fig_id LIKE '%_xmlfig_%'\""
+    },
+    {
+      "file": "build_db/batch_download_from_snapshot.py",
+      "line": 121,
+      "text": "# work_id_url is like https://openalex.org/W2353297661"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 162,
+      "text": "# Spaced out text (like \"a r t i c l e i n f o\")"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 193,
+      "text": "# Spaced out single letters (like \"a b s t r a c t\")"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 612,
+      "text": "\"\"\"Extract figure references like 'Fig. 1', 'Figure 2', 'Fig.3'\"\"\""
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 832,
+      "text": "# Strip leading symbols (like †, *, #) before checking"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 834,
+      "text": "# Check if this looks like a real paper title (not a section)"
+    },
+    {
+      "file": "build_db/download_test_papers.py",
+      "line": 35,
+      "text": "BROWSER_UA = \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\""
+    },
+    {
+      "file": "build_db/explore_docling_structure.py",
+      "line": 66,
+      "text": "# 3. Section headers - what do they look like?"
+    },
+    {
+      "file": "build_db/generate_postgres_schema.py",
+      "line": 58,
+      "text": "WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    },
+    {
+      "file": "build_db/generate_postgres_schema.py",
+      "line": 59,
+      "text": "AND name NOT LIKE '%_fts%'"
+    },
+    {
+      "file": "build_db/match_captions_to_figures.py",
+      "line": 7,
+      "text": "1. Find paragraphs that look like figure captions (start with \"Fig. N.\")"
+    },
+    {
+      "file": "build_db/match_captions_to_figures.py",
+      "line": 65,
+      "text": "# Get all paragraphs that look like captions"
+    },
+    {
+      "file": "build_db/pg_v2_import_pdf.py",
+      "line": 47,
+      "text": "\"journal, year, doi FROM papers WHERE filename LIKE '%.pdf'\""
+    },
+    {
+      "file": "build_db/sentence_geometry.py",
+      "line": 211,
+      "text": "\"WHERE p.filename LIKE '%.pdf' ORDER BY p.paper_id\""
+    },
+    {
+      "file": "eval/build_gold_expansion.py",
+      "line": 91,
+      "text": "\"AND p.title NOT LIKE '%Abstract%' AND p.title NOT LIKE '%Correction%' \""
+    },
+    {
+      "file": "eval/build_gold_expansion.py",
+      "line": 102,
+      "text": "\"AND text NOT LIKE 'Figure%' AND text NOT LIKE 'Table%' \""
+    },
+    {
+      "file": "eval/build_gold_expansion.py",
+      "line": 103,
+      "text": "\"AND text NOT LIKE '%et al%' ORDER BY rowid LIMIT 40\","
+    },
+    {
+      "file": "routes/abstracts.py",
+      "line": 29,
+      "text": "\"SELECT COUNT(*) as total FROM papers WHERE title LIKE ? OR abstract LIKE ?\","
+    },
+    {
+      "file": "routes/abstracts.py",
+      "line": 40,
+      "text": "\"WHERE title LIKE ? OR abstract LIKE ? ORDER BY year DESC LIMIT ? OFFSET ?\","
+    },
+    {
+      "file": "scripts/domain_coverage_audit.py",
+      "line": 106,
+      "text": "\"(lower(coalesce(title,'')) LIKE ? OR lower(coalesce(abstract,'')) LIKE ? OR lower(coalesce(keywords,'')) LIKE ?)\""
+    },
+    {
+      "file": "scripts/domain_coverage_audit.py",
+      "line": 116,
+      "text": "title_clause = \" OR \".join(\"lower(coalesce(title,'')) LIKE ?\" for _ in terms)"
+    },
+    {
+      "file": "scripts/download_pmc.py",
+      "line": 46,
+      "text": "\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\","
+    },
+    {
+      "file": "scripts/dual_write_healthcheck.py",
+      "line": 112,
+      "text": "\"SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND name LIKE 'dualwrite_%'\""
+    },
+    {
+      "file": "scripts/remove_tenancy_outbox.py",
+      "line": 25,
+      "text": "\"SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'dualwrite_%'\""
+    },
+    {
+      "file": "scripts/remove_tenancy_outbox.py",
+      "line": 58,
+      "text": "\"SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'dualwrite_%'\""
+    },
+    {
+      "file": "scripts/retire_claims_reviews_outbox.py",
+      "line": 26,
+      "text": "\"SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'dualwrite_%'\""
+    },
+    {
+      "file": "scripts/retire_claims_reviews_outbox.py",
+      "line": 52,
+      "text": "\"SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'dualwrite_%'\""
+    },
+    {
+      "file": "scripts/retire_watch_outbox.py",
+      "line": 24,
+      "text": "\"SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'dualwrite_%'\""
+    },
+    {
+      "file": "scripts/retire_watch_outbox.py",
+      "line": 50,
+      "text": "\"SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'dualwrite_%'\""
+    },
+    {
+      "file": "scripts/schema_parity.py",
+      "line": 18,
+      "text": "\"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'\""
+    },
+    {
+      "file": "scripts/self_check.py",
+      "line": 179,
+      "text": "WHERE fig_number IS NOT NULL AND fig_number LIKE 'Fig %'"
+    },
+    {
+      "file": "build_db/parsers/grobid_parser.py",
+      "line": 41,
+      "text": "#    so trailing words like \"for details\" are naturally excluded."
+    },
+    {
+      "file": "build_db/parsers/journal_optimizer.py",
+      "line": 325,
+      "text": "# Partial match (heading may have numbering like \"1. Introduction\" or \"Results and Discussion\")"
+    },
+    {
+      "file": "services/ai/ai_service.py",
+      "line": 122,
+      "text": "\"content\": \"You are a professional research assistant. Answer questions based ONLY on the provided sources. Always cite source IDs like [T01], [P01] for every claim.\""
+    },
+    {
+      "file": "services/ai/envelope_builder.py",
+      "line": 143,
+      "text": "lines.append(\"(Remember to cite item IDs like [T01] for every claim)\")"
+    },
+    {
+      "file": "services/ai/rag_validator.py",
+      "line": 62,
+      "text": "# Match patterns like [T1], [P02], [F3], [C04], [R7], [G6]"
+    },
+    {
+      "file": "services/claims/retrieval.py",
+      "line": 4,
+      "text": "direction cues so that \"same topic\" sentences do not automatically look like"
+    },
+    {
+      "file": "services/db/dual_write.py",
+      "line": 70,
+      "text": "\"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'\""
+    },
+    {
+      "file": "services/db/etl.py",
+      "line": 43,
+      "text": "WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '%_fts%'"
+    },
+    {
+      "file": "services/protocols/from_review.py",
+      "line": 3,
+      "text": "The draft is intentionally conservative: only sentences that look like method"
+    },
+    {
+      "file": "services/protocols/service.py",
+      "line": 279,
+      "text": "where = \"WHERE p.title LIKE ? OR p.doi LIKE ?\""
+    },
+    {
+      "file": "services/protocols/service.py",
+      "line": 301,
+      "text": "\"SELECT COUNT(*) FROM protocol_imports WHERE title LIKE ? OR doi LIKE ?\","
+    },
+    {
+      "file": "services/qa/llm_grounding.py",
+      "line": 24,
+      "text": "\"Return ONLY a JSON array like \""
+    },
+    {
+      "file": "services/qa/qa_service.py",
+      "line": 288,
+      "text": "\"2. Every factual statement must cite its source using IDs like [P1], [F2], [R3].\\n\""
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 54,
+      "text": "WHERE p.text LIKE ?"
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 86,
+      "text": "WHERE f.caption LIKE ?"
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 118,
+      "text": "c.authors LIKE ? OR"
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 119,
+      "text": "c.title LIKE ? OR"
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 120,
+      "text": "c.journal LIKE ? OR"
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 121,
+      "text": "c.raw_text LIKE ?"
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 151,
+      "text": "p.title LIKE ? OR"
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 152,
+      "text": "p.authors LIKE ? OR"
+    },
+    {
+      "file": "services/query/search_service.py",
+      "line": 153,
+      "text": "p.journal LIKE ?"
+    },
+    {
+      "file": "services/review/conflict_detector.py",
+      "line": 385,
+      "text": "- summary: objective statement (academic review style, do not use words like \"controversy\", \"contradiction\", \"inconsistency\"; instead say \"under condition A, X was observed; under condition B, Y was observed\")"
+    },
+    {
+      "file": "services/review/outline_generator.py",
+      "line": 41,
+      "text": "A narrative review is organized by logical threads, progressing from background to mechanisms to evidence to controversies to outlook, like telling a story layer by layer."
+    },
+    {
+      "file": "services/review/review_generator.py",
+      "line": 63,
+      "text": "4. Do not write vague phrases like \"Studies have shown\", \"It is well known\", \"A large body of research confirms\" without specific evidence"
+    },
+    {
+      "file": "services/review/review_generator.py",
+      "line": 88,
+      "text": "- Avoid hyperbolic language. Do not use words like \"novel,\" \"unprecedented,\" or \"remarkable.\""
+    },
+    {
+      "file": "services/review/review_generator.py",
+      "line": 108,
+      "text": "【Wrong examples — never write like this】"
+    },
+    {
+      "file": "services/search/agentic_search.py",
+      "line": 208,
+      "text": "# Only add if it looks like a content word (not a common verb/adj)"
+    },
+    {
+      "file": "services/search/boilerplate_filter.py",
+      "line": 9,
+      "text": "because the first paragraph of many papers looks like:"
+    },
+    {
+      "file": "services/search/europe_pmc_batch.py",
+      "line": 58,
+      "text": "\"SELECT filename FROM papers WHERE filename LIKE 'PMC%.xml'\""
+    },
+    {
+      "file": "services/search/fts_query_builder.py",
+      "line": 168,
+      "text": "# 1. Weighted entities (single-word entities like STAT1, JAK)"
+    },
+    {
+      "file": "services/search/hybrid_search.py",
+      "line": 149,
+      "text": "clauses.append(\"journal LIKE ?\")"
+    },
+    {
+      "file": "services/search/hybrid_search.py",
+      "line": 458,
+      "text": "sql += \" AND p.journal LIKE ?\""
+    }
+  ],
+  "ILIKE": [
+    {
+      "file": "services/protocols/pg_read.py",
+      "line": 16,
+      "text": "where = \"WHERE p.title ILIKE %s OR p.doi ILIKE %s\""
+    },
+    {
+      "file": "services/protocols/pg_read.py",
+      "line": 41,
+      "text": "\"SELECT COUNT(*) AS n FROM protocol_imports WHERE title ILIKE %s OR doi ILIKE %s\","
+    }
+  ],
+  "FOR_UPDATE": [
+    {
+      "file": "services/trust/retraction.py",
+      "line": 47,
+      "text": "for update in message.get(\"update-to\") or []:"
+    }
+  ],
+  "SKIP_LOCKED": [],
+  "COMMIT": [
+    {
+      "file": "api_server.py",
+      "line": 586,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "api_server.py",
+      "line": 605,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "api_server.py",
+      "line": 629,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "api_server.py",
+      "line": 656,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "api_server.py",
+      "line": 719,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_abstracts_db.py",
+      "line": 80,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_abstracts_db.py",
+      "line": 132,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_abstracts_db.py",
+      "line": 142,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_abstracts_db.py",
+      "line": 162,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "fetch_from_ncbi.py",
+      "line": 318,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "fetch_metadata.py",
+      "line": 534,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "import_zotero_metadata.py",
+      "line": 303,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/audit_structure.py",
+      "line": 88,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/backfill_grobid_mentions.py",
+      "line": 78,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/backfill_jats_figure_links.py",
+      "line": 116,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/backfill_metadata.py",
+      "line": 108,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/backfill_xml_figures.py",
+      "line": 62,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_abstracts_db.py",
+      "line": 96,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_abstracts_db.py",
+      "line": 162,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_abstracts_db.py",
+      "line": 172,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_abstracts_db.py",
+      "line": 192,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_chunks.py",
+      "line": 128,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_citation_index.py",
+      "line": 213,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_claims.py",
+      "line": 94,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_communities.py",
+      "line": 317,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1237,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_database.py",
+      "line": 1312,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_domain_profiles.py",
+      "line": 65,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_external_edges.py",
+      "line": 157,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_figure_links.py",
+      "line": 263,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 170,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 184,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 209,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 217,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 231,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_fts.py",
+      "line": 239,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_llm_summaries.py",
+      "line": 25,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_llm_summaries.py",
+      "line": 51,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_llm_summaries.py",
+      "line": 52,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_llm_summaries.py",
+      "line": 58,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_paper_graph.py",
+      "line": 276,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_sections_tree.py",
+      "line": 185,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_sentences.py",
+      "line": 112,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_sentences.py",
+      "line": 183,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_sentence_links.py",
+      "line": 184,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_summaries.py",
+      "line": 86,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_unified_index.py",
+      "line": 123,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_unified_index.py",
+      "line": 150,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 135,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_xml_db.py",
+      "line": 227,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_xml_fts.py",
+      "line": 118,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/build_xml_indexes.py",
+      "line": 92,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/citation_intent_schema.py",
+      "line": 35,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/claims_schema.py",
+      "line": 37,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/claim_pilot_schema.py",
+      "line": 73,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 109,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 391,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/db_writer.py",
+      "line": 438,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/dedup_papers.py",
+      "line": 142,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/extract_captions.py",
+      "line": 61,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/fix_figure_numbers.py",
+      "line": 41,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/fix_missing_dois.py",
+      "line": 193,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/fix_missing_dois.py",
+      "line": 230,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 383,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/import_jats.py",
+      "line": 415,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/match_captions_to_figures.py",
+      "line": 140,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/pg_v2_import_missing.py",
+      "line": 86,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "build_db/pg_v2_import_pdf.py",
+      "line": 328,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/pg_v2_import_xml.py",
+      "line": 361,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/pg_v2_import_xml.py",
+      "line": 376,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/rebuild_sentence_links.py",
+      "line": 176,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/resolve_ref_dois.py",
+      "line": 226,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/resolve_ref_dois.py",
+      "line": 298,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/resolve_ref_dois.py",
+      "line": 304,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/resolve_ref_dois.py",
+      "line": 312,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/review_schema.py",
+      "line": 104,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/sentence_geometry.py",
+      "line": 196,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/structure_v2.py",
+      "line": 138,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/structure_v3.py",
+      "line": 128,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/sync_paper_links.py",
+      "line": 136,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/trust_schema.py",
+      "line": 28,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "build_db/watch_schema.py",
+      "line": 133,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "database/init_db.py",
+      "line": 322,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "eval/litqa2_benchmark.py",
+      "line": 207,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "eval/scifact_benchmark.py",
+      "line": 102,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "eval/scifact_scipal_eval.py",
+      "line": 113,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "routes/papers_actions.py",
+      "line": 98,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/apply_openalex_domains.py",
+      "line": 106,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/apply_pg_migration.py",
+      "line": 39,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "scripts/backfill_claim_corpus.py",
+      "line": 25,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/backfill_paper_summary_vectors.py",
+      "line": 165,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/backfill_pg_embeddings.py",
+      "line": 46,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/backfill_pg_embeddings.py",
+      "line": 84,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/backfill_phase0.py",
+      "line": 86,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 84,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/build_xml_db.py",
+      "line": 145,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/create_pg_v2.py",
+      "line": 73,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/fts_alignment.py",
+      "line": 158,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/g4_backfill_embeddings.py",
+      "line": 74,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "scripts/p4_staging_soak.py",
+      "line": 76,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/p4_staging_soak.py",
+      "line": 114,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/rebuild_fts_porter.py",
+      "line": 103,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/remove_tenancy_outbox.py",
+      "line": 54,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/repair_abstract_fts.py",
+      "line": 50,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/repair_fts_coverage.py",
+      "line": 85,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/retire_claims_reviews_outbox.py",
+      "line": 48,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/retire_watch_outbox.py",
+      "line": 46,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "scripts/seed_claim_pilot.py",
+      "line": 42,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/unified_task_manager.py",
+      "line": 40,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/unified_task_manager.py",
+      "line": 56,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/unified_task_manager.py",
+      "line": 69,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/unified_task_manager.py",
+      "line": 82,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/unified_task_manager.py",
+      "line": 95,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 144,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 233,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 330,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 357,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/claims/service.py",
+      "line": 445,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/data_sandbox/audit.py",
+      "line": 86,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/data_sandbox/audit.py",
+      "line": 109,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/db/adapter.py",
+      "line": 71,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/db/dual_write.py",
+      "line": 230,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/db/dual_write.py",
+      "line": 247,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/db/dual_write.py",
+      "line": 255,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/db/pg_pool.py",
+      "line": 82,
+      "text": "self._conn.commit()"
+    },
+    {
+      "file": "services/experiments/pg_runs.py",
+      "line": 71,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/experiments/pg_runs.py",
+      "line": 132,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/experiments/pg_write.py",
+      "line": 268,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/experiments/pg_write.py",
+      "line": 311,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/experiments/runs.py",
+      "line": 64,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/experiments/runs.py",
+      "line": 138,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/experiments/runs.py",
+      "line": 205,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 112,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 373,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 493,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 592,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 672,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/experiments/service.py",
+      "line": 770,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/notes/pg_service.py",
+      "line": 70,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/notes/pg_service.py",
+      "line": 98,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/notes/pg_service.py",
+      "line": 112,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/notes/service.py",
+      "line": 46,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/notes/service.py",
+      "line": 63,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/notes/service.py",
+      "line": 127,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/notes/service.py",
+      "line": 160,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/notes/service.py",
+      "line": 190,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/papers/pg_links.py",
+      "line": 60,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/papers/pg_links.py",
+      "line": 141,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/papers/pg_writes.py",
+      "line": 72,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/papers/pg_writes.py",
+      "line": 114,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/projects/pg_service.py",
+      "line": 115,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/projects/pg_service.py",
+      "line": 158,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/projects/pg_service.py",
+      "line": 190,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/projects/pg_service.py",
+      "line": 232,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/projects/service.py",
+      "line": 51,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/projects/service.py",
+      "line": 180,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/projects/service.py",
+      "line": 228,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/projects/service.py",
+      "line": 264,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/projects/service.py",
+      "line": 324,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/protocols/pg_attachments.py",
+      "line": 52,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/protocols/pg_attachments.py",
+      "line": 100,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/protocols/pg_import.py",
+      "line": 92,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/protocols/pg_runs.py",
+      "line": 51,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/protocols/pg_runs.py",
+      "line": 87,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/protocols/pg_runs.py",
+      "line": 99,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/protocols/service.py",
+      "line": 586,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/references/library.py",
+      "line": 86,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/references/library.py",
+      "line": 167,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/export.py",
+      "line": 153,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/notifications.py",
+      "line": 23,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/notifications.py",
+      "line": 44,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/pg_systematic.py",
+      "line": 31,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_systematic.py",
+      "line": 107,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_systematic.py",
+      "line": 133,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_systematic.py",
+      "line": 154,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_systematic.py",
+      "line": 174,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_systematic.py",
+      "line": 265,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_systematic.py",
+      "line": 283,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_tasks.py",
+      "line": 36,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_tasks.py",
+      "line": 59,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_tasks.py",
+      "line": 73,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_tasks.py",
+      "line": 86,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_tasks.py",
+      "line": 108,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pg_tasks.py",
+      "line": 143,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/pico.py",
+      "line": 72,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/review_repository.py",
+      "line": 95,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/review/review_repository.py",
+      "line": 170,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/risk_of_bias.py",
+      "line": 88,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 60,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 122,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 141,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 160,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 177,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 292,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/systematic.py",
+      "line": 363,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/task_manager.py",
+      "line": 140,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/task_manager.py",
+      "line": 165,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/task_manager.py",
+      "line": 192,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/task_manager.py",
+      "line": 211,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/task_manager.py",
+      "line": 235,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/review/task_manager.py",
+      "line": 281,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/search/europe_pmc.py",
+      "line": 129,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 102,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 463,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 570,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/search/ingest.py",
+      "line": 597,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/search/online_downloader.py",
+      "line": 628,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/search/preprint_ingest.py",
+      "line": 46,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/permissions.py",
+      "line": 47,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/schema.py",
+      "line": 102,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/scoping.py",
+      "line": 31,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 199,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 213,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 224,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 276,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 364,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 413,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 465,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/service.py",
+      "line": 515,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/tenancy/web.py",
+      "line": 36,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/trust/retraction.py",
+      "line": 81,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/discovery.py",
+      "line": 176,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/pg_fulltext.py",
+      "line": 65,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/watch/pg_store.py",
+      "line": 105,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/watch/pg_writes.py",
+      "line": 72,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 86,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 108,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 116,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 147,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 210,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 225,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 258,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 293,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/repo.py",
+      "line": 304,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/runner.py",
+      "line": 93,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/watch/runner.py",
+      "line": 114,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/runner.py",
+      "line": 189,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/runner.py",
+      "line": 197,
+      "text": "conn.commit()"
+    },
+    {
+      "file": "services/watch/runner.py",
+      "line": 249,
+      "text": "pg.commit()"
+    },
+    {
+      "file": "services/watch/runner.py",
+      "line": 256,
+      "text": "conn.commit()"
+    }
+  ],
+  "AUTOCOMMIT": [
+    {
+      "file": "scripts/create_pg_v2.py",
+      "line": 53,
+      "text": "with psycopg.connect(admin, autocommit=True) as conn:"
+    },
+    {
+      "file": "scripts/g4_backfill_embeddings.py",
+      "line": 36,
+      "text": "pg.autocommit = False"
+    },
+    {
+      "file": "scripts/p4_staging_soak.py",
+      "line": 39,
+      "text": "with __import__(\"psycopg\").connect(admin, autocommit=True) as conn:"
+    }
+  ]
+}
