@@ -1,3 +1,4 @@
+# LEGACY SQLite build path. Do not run in PG-only app/cron; see build_db/LEGACY.md.
 """
 Build FTS5 full-text search index for paragraphs.
 V21.0 - Full-text search layer

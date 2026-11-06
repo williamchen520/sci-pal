@@ -1,3 +1,4 @@
+# LEGACY SQLite build path. Do not run in PG-only app/cron; see build_db/LEGACY.md.
 """Structure v3: materialized section paths + lookup indexes + sentence FTS.
 
 Adds:

@@ -1,3 +1,4 @@
+# LEGACY SQLite build path. Do not run in PG-only app/cron; see build_db/LEGACY.md.
 """Sync existing article-level relations into the unified ``paper_links`` table.
 
 Reads what already exists (no embedding / no network):
