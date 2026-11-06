@@ -12,8 +12,22 @@ from services.db.pg_pool import pg_connection
 MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 
 
+def _device() -> str:
+    requested = os.environ.get("SCIPAL_EMBEDDING_DEVICE", "").strip().lower()
+    if requested:
+        return requested
+    try:
+        import torch
+
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except Exception:  # noqa: BLE001
+        return "cpu"
+
+
 def build(limit: int = 0, batch_size: int = 64, model_name: str = "") -> dict:
-    model = SentenceTransformer(model_name or MODEL)
+    device = _device()
+    model = SentenceTransformer(model_name or MODEL, device=device)
+    print(f"embedding device: {device}", flush=True)
     pg = pg_connection()
     try:
         rows = pg.execute(
