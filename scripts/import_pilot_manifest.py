@@ -29,7 +29,10 @@ def main() -> int:
         for line in Path(args.manifest).read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
-    rows = [row for row in rows if row.get("status") == "ok"]
+    rows = [
+        row for row in rows
+        if row.get("status") == "ok" and row.get("dedup_status", "kept") == "kept"
+    ]
     if args.limit:
         rows = rows[: args.limit]
     pg = pg_connection()
