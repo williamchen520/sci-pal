@@ -13,6 +13,7 @@
 | `build_fts_pg.py` | GIN 索引维护 |
 | `build_xml_db_pg.py` | XML 目录 PG 导入 |
 | `build_database_pg.py` | PDF 目录 PG 解析导入 |
+| `build_embeddings_pg.py` | 段落 embedding 写 pgvector |
 | `build_sentences_pg.py` | 句子 PG 重建 |
 | `build_unified_index_pg.py` | unified_papers 视图 |
 | `import_jats_pg.py` | JATS 直接写 PG |
@@ -91,7 +92,7 @@
 
 | 脚本 | 说明 |
 |---|---|
-| `build_embeddings.py` | 段落 embedding |
+| `build_embeddings.py` | 段落 embedding；`SCIPAL_VECTOR_BUILD_BACKEND=pgvector` -> `build_embeddings_pg.py` |
 | `build_contextual_paragraph_index.py` | contextual 集合 |
 | `build_summary_vector_index.py` | summary 集合 |
 | `build_chunks.py` | chunk 集合 |
