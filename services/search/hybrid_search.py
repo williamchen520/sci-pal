@@ -210,13 +210,15 @@ class HybridSearch:
         if os.environ.get("SCIPAL_VECTOR_ENABLED", "1").strip().lower() in {"0", "false", "off", "no"}:
             _trace("vector_disabled")
             return []
+        section_filter = (filters or {}).get("section_l1")
+        fetch_k = min(top_k * 4, 200) if (EXCLUDE_REFERENCE_ENTRIES or section_filter) else top_k
         if backend in {"pgvector", "pg_vec", "postgres"}:
             if getattr(self, "_pg_vector", None) is None:
                 from services.search.pg_vector import PGVectorParagraphSearch
 
                 self._pg_vector = PGVectorParagraphSearch()
             query_emb = self.model.encode([query], normalize_embeddings=True)[0]
-            pg_hits = self._pg_vector.search(query_emb, top_k=top_k, paper_id=paper_id or "")
+            pg_hits = self._pg_vector.search(query_emb, top_k=fetch_k, paper_id=paper_id or "")
             ids = [hit.para_id for hit in pg_hits]
             _trace("vector_pg", count=len(ids), ids=ids[:50])
             allowed = self._get_filtered_paper_ids(filters)
@@ -272,8 +274,6 @@ class HybridSearch:
         where = where if where else None
 
         # Over-fetch so filtering bibliography + section doesn't shrink recall.
-        section_filter = (filters or {}).get("section_l1")
-        fetch_k = min(top_k * 4, 200) if (EXCLUDE_REFERENCE_ENTRIES or section_filter) else top_k
         target_collection = collection or self.para_collection
         results = target_collection.query(
             query_embeddings=query_emb,
