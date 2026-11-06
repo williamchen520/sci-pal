@@ -10,10 +10,10 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-SciPal is a locally deployable system for searching scientific literature, parsing papers into structured evidence, and producing traceable literature reviews. Its core is a **deterministic retrieval layer** — vector search, FTS5/BM25, reciprocal-rank fusion (RRF), cross-encoder reranking, query routing, and adaptive context expansion. For generation, we recommend a **small local model for orchestration plus a cloud or DSH model for reasoning**.
+SciPal is a locally deployable system for searching scientific literature, parsing papers into structured evidence, and producing traceable literature reviews. Its core is a **deterministic retrieval layer** — vector search, PostgreSQL full-text/BM25, reciprocal-rank fusion (RRF), cross-encoder reranking, query routing, and adaptive context expansion. For generation, we recommend a **small local model for orchestration plus a cloud or DSH model for reasoning**.
 
-> Current version: **V33.96** (2026-11-02)  
-> Python 3.12 · Flask · PostgreSQL 16 (read/tenancy writes) · SQLite FTS mirror · ChromaDB · OpenAI-compatible cloud APIs / Ollama  
+> Current version: **V33.97** (2026-11-06)  
+> Python 3.12 · Flask · PostgreSQL · ChromaDB · SQLite read-only legacy · OpenAI-compatible cloud APIs / Ollama  
 > Vanilla HTML/CSS/JS frontend (no framework); DSH can serve as an optional reasoning layer.
 
 ---
@@ -41,20 +41,20 @@ SciPal is a locally deployable system for searching scientific literature, parsi
 ## Current Engineering Status (2026-11-02)
 
 ```text
-Paper read path / detail / graph / tenancy reads   PostgreSQL
-Tenancy writes                                    PostgreSQL primary + SQLite mirror
-Runtime writes                                    PostgreSQL primary (legacy outbox bridge remains)
-FTS / Chroma                                      SQLite / Chroma
-Production paper ranking                          paragraph FTS
+Paper / graph / tenancy / tasks / webhooks        PostgreSQL
+Runtime writes                                    PostgreSQL
+FTS / BM25                                        PostgreSQL (GIN / ParadeDB path)
+Vector                                            ChromaDB (pgvector not production)
+SQLite                                            query-only runtime snapshot
 Domain routing / topic penalty                    disabled
-Tests                                             800
+Tests                                             917
 ```
 
 Operational notes:
 
-- `deploy-health-cron-1` checks outbox and tenancy SQLite/PG drift every 300s.
+- `deploy-health-cron-1` checks SQLite/PG drift every 300s; SQLite is read-only at runtime.
 - OpenAlex/AI domain labels are **provisional**; no production routing yet.
-- HybridSearch, sentence FTS, near-duplicate suppression, soft cap, and MMR remain experimental.
+- HybridSearch, sentence seeds, near-duplicate suppression, soft cap, and MMR remain experimental.
 - Remaining work is tracked in [Work summary and backlog](docs/工作总结-2026-11-02.md).
 
 ---
@@ -87,7 +87,7 @@ $env:SCIPAL_BENCH_ALLOW_SQLITE = "1"
 Notes:
 
 - Production paper reads, detail, graph, and tenancy reads run on PostgreSQL.
-- Tenancy writes are PostgreSQL-primary with a SQLite mirror; other writes still use SQLite plus the P4 outbox.
+- All runtime writes are PostgreSQL; SQLite is query-only and retained for legacy reads/backups.
 - The policy is **fail-fast**: large or concurrent benchmarks fail instead of silently falling back to SQLite.
 - See [docs/benchmark-PostgreSQL策略.md](docs/benchmark-PostgreSQL策略.md) (Chinese) for details.
 
@@ -150,7 +150,7 @@ services/* (retrieval, QA, reviews, guard, tenancy, source adapters)
 ## Technology Stack
 
 - Backend: Python 3.12 · Flask 3 · flask-cors · pydantic 2 · networkx
-- Retrieval: ChromaDB · sentence-transformers · FTS5 (BM25) · RRF · bge-reranker
+- Retrieval: ChromaDB · sentence-transformers · PostgreSQL FTS/BM25 · RRF · bge-reranker
 - PDF: PyMuPDF · Docling · GROBID · MinerU (on demand, with quality gates)
 - XML: PMC / Europe PMC JATS (`<sec>` / `<ref-list>` / `<xref>`)
 - LLMs: OpenAI-compatible cloud API (recommended for reasoning) + local Ollama (orchestration/fallback); DSH can take over reasoning
