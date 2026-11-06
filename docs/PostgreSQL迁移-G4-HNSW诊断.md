@@ -111,3 +111,26 @@ Chroma 生产
 pgvector 索引存在但未启用
 app healthy
 ```
+
+
+## 9. GPU 与 HNSW
+
+```text
+HNSW 图构建：CPU 算法，pgvector 无 GPU 路径
+embedding 生成：可用 CUDA
+```
+
+本机：
+
+```text
+torch.cuda.is_available() True
+RTX 4060 8GB
+```
+
+新增：
+
+```text
+SCIPAL_EMBEDDING_DEVICE=cuda
+```
+
+仅加速 embedding 生成，不加速 `CREATE INDEX ... USING hnsw`。
