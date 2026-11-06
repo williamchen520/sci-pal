@@ -495,6 +495,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-06 | G4 vector decision | Chroma .75 / BM25 .625 / pgvector shadow .70 | [G4](PostgreSQL迁移-G4-向量决策.md) |
 
+| 2026-11-06 | G4a embeddings backfill | 166470 rows; HNSW blocked by shm | [G4](PostgreSQL迁移-G4-向量决策.md) |
+
 ## Rules
 
 ```text

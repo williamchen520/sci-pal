@@ -71,3 +71,51 @@ SCIPAL_VECTOR_ENABLED=0
 ```
 
 仅用于 BM25-only 评估，默认开启。
+
+
+## 7. G4a 进度
+
+```text
+deploy/sql/006_paragraph_embeddings.sql
+scipal_bench.paragraph_embeddings
+```
+
+回填：
+
+```text
+166,470 / 166,470
+```
+
+HNSW：
+
+```text
+CREATE INDEX 因 /dev/shm 不足失败
+```
+
+当前索引：
+
+```text
+pkey
+paper_idx
+无 HNSW
+```
+
+pgvector 连接：
+
+```text
+改为 SCIPAL_PG_DSN 优先
+```
+
+生产：
+
+```text
+Chroma 保持
+```
+
+## 8. 下一步
+
+```text
+G4a1 调整 shared memory 或 maintenance_work_mem
+G4a2 建 HNSW
+G4b  pgvector 同口径复测
+```
