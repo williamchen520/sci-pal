@@ -137,23 +137,49 @@ class HybridSearch:
         if paper_ids is not None and not paper_ids:
             return set()
 
-        clauses = []
-        params = []
-        if year_min is not None:
-            clauses.append("year >= ?")
-            params.append(year_min)
-        if year_max is not None:
-            clauses.append("year <= ?")
-            params.append(year_max)
-        if journal:
-            clauses.append("journal LIKE ?")
-            params.append(f"%{journal}%")
+        if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
+            "postgres", "postgresql", "pg", "1", "true"
+        }:
+            from services.db.pg_pool import pg_connection
 
-        where = " AND ".join(clauses)
-        rows = self.conn.execute(
-            f"SELECT paper_id FROM papers WHERE {where}", params
-        ).fetchall()
-        result = [r["paper_id"] for r in rows]
+            pg = pg_connection()
+            try:
+                clauses = []
+                params = []
+                if year_min is not None:
+                    clauses.append("year >= %s")
+                    params.append(year_min)
+                if year_max is not None:
+                    clauses.append("year <= %s")
+                    params.append(year_max)
+                if journal:
+                    clauses.append("lower(journal) LIKE lower(%s)")
+                    params.append(f"%{journal}%")
+                where = " AND ".join(clauses)
+                rows = pg.execute(
+                    f"SELECT paper_id FROM papers WHERE {where}", params
+                ).fetchall()
+                result = [r["paper_id"] for r in rows]
+            finally:
+                pg.close()
+        else:
+            clauses = []
+            params = []
+            if year_min is not None:
+                clauses.append("year >= ?")
+                params.append(year_min)
+            if year_max is not None:
+                clauses.append("year <= ?")
+                params.append(year_max)
+            if journal:
+                clauses.append("journal LIKE ?")
+                params.append(f"%{journal}%")
+
+            where = " AND ".join(clauses)
+            rows = self.conn.execute(
+                f"SELECT paper_id FROM papers WHERE {where}", params
+            ).fetchall()
+            result = [r["paper_id"] for r in rows]
         if paper_ids is not None:
             result = [pid for pid in result if pid in set(paper_ids)]
         return result
