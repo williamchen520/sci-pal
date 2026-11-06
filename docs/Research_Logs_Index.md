@@ -497,6 +497,8 @@ topic 错误可能传导到 coverage audit
 
 | 2026-11-06 | G4a embeddings backfill | 166470 rows; HNSW blocked by shm | [G4](PostgreSQL迁移-G4-向量决策.md) |
 
+| 2026-11-06 | G4b1 corpus parity | 918 missing, 124/5000 text drift | [G4](PostgreSQL迁移-G4-向量决策.md) |
+
 ## Rules
 
 ```text

@@ -1,0 +1,143 @@
+{
+  "chroma_total": 166470,
+  "pg_total": 167388,
+  "chroma_unique_ids": 166470,
+  "duplicate_chroma_ids": 0,
+  "missing_metadata_paper_id": 0,
+  "missing_in_pg": 0,
+  "extra_in_pg": 918,
+  "missing_in_pg_sample": [],
+  "extra_in_pg_sample": [
+    "paper_PMC12589235_6a82439d_xml_para_00004",
+    "paper_PMC12589235_6a82439d_xml_para_00007",
+    "paper_PMC12589235_6a82439d_xml_para_00010",
+    "paper_PMC12589235_6a82439d_xml_para_00013",
+    "paper_PMC12755186_9e9b5efb_xml_para_00027",
+    "paper_PMC12755186_9e9b5efb_xml_para_00031",
+    "paper_PMC13127472_848d9c7e_mineru_para_00029",
+    "paper_PMC13127472_848d9c7e_mineru_para_00031",
+    "paper_PMC13127472_848d9c7e_mineru_para_00042",
+    "paper_PMC13127472_848d9c7e_mineru_para_00047",
+    "paper_PMC13127472_848d9c7e_mineru_para_00049",
+    "paper_PMC13127472_848d9c7e_mineru_para_00051",
+    "paper_PMC13127472_848d9c7e_mineru_para_00059",
+    "paper_PMC13127472_848d9c7e_mineru_para_00061",
+    "paper_PMC13127472_848d9c7e_mineru_para_00072",
+    "paper_PMC13127472_848d9c7e_mineru_para_00077",
+    "paper_PMC13127472_848d9c7e_mineru_para_00079",
+    "paper_PMC13127472_848d9c7e_mineru_para_00086",
+    "paper_PMC13127472_848d9c7e_mineru_para_00088",
+    "paper_PMC13127472_848d9c7e_mineru_para_00090"
+  ],
+  "paper_id_mismatch": 0,
+  "paper_id_mismatch_sample": [],
+  "text_checked": 5000,
+  "text_mismatch": 124,
+  "text_mismatch_sample": [
+    "paper_PMC11649735_c5072470_xml_para_00003",
+    "paper_PMC11649735_c5072470_xml_para_00004",
+    "paper_PMC11649735_c5072470_xml_para_00005",
+    "paper_PMC11649735_c5072470_xml_para_00006",
+    "paper_PMC11649735_c5072470_xml_para_00007",
+    "paper_PMC11649735_c5072470_xml_para_00008",
+    "paper_PMC11649735_c5072470_xml_para_00009",
+    "paper_PMC11649735_c5072470_xml_para_00010",
+    "paper_PMC11649735_c5072470_xml_para_00011",
+    "paper_PMC11649735_c5072470_xml_para_00012",
+    "paper_PMC11649735_c5072470_xml_para_00013",
+    "paper_PMC11649735_c5072470_xml_para_00014",
+    "paper_PMC11649735_c5072470_xml_para_00015",
+    "paper_PMC11649735_c5072470_xml_para_00016",
+    "paper_PMC11649735_c5072470_xml_para_00017",
+    "paper_PMC11649735_c5072470_xml_para_00018",
+    "paper_PMC12493300_06b5d034_xml_para_00001",
+    "paper_PMC12493300_06b5d034_xml_para_00002",
+    "paper_PMC12493300_06b5d034_xml_para_00003",
+    "paper_PMC12493300_06b5d034_xml_para_00004"
+  ],
+  "orphan_embeddings": 0,
+  "paragraphs_without_embedding": 918,
+  "paper_count_diff_count": 101,
+  "paper_count_diff_sample": {
+    "paper_PMC13436839_468eec59_xml": [
+      27,
+      28
+    ],
+    "paper_PMC13605533_5363994a_xml": [
+      135,
+      138
+    ],
+    "paper_PMC13615334_6c65c789_xml": [
+      40,
+      42
+    ],
+    "paper_PMC13614859_4365efbf_xml": [
+      94,
+      95
+    ],
+    "paper_PMC13694517_ca28c018_xml": [
+      61,
+      62
+    ],
+    "paper_PMC13615055_b9d17cde_xml": [
+      99,
+      152
+    ],
+    "paper_PMC13601429_512fe291_xml": [
+      96,
+      98
+    ],
+    "paper_PMC13613097_d30b16b8_mineru": [
+      153,
+      192
+    ],
+    "paper_PMC13613348_c0e09ee2_xml": [
+      73,
+      74
+    ],
+    "paper_PMC13614618_589608e0_mineru": [
+      94,
+      103
+    ],
+    "paper_PMC13689548_073aa6b0_xml": [
+      46,
+      48
+    ],
+    "paper_PMC13612213_fed615ad_mineru": [
+      152,
+      162
+    ],
+    "paper_PMC13612242_9dfbc467_mineru": [
+      122,
+      147
+    ],
+    "paper_PMC13613326_d3c1248f_mineru": [
+      143,
+      158
+    ],
+    "paper_PMC13602791_d3e5a7f8_xml": [
+      39,
+      53
+    ],
+    "paper_PMC13612245_e033782d_mineru": [
+      43,
+      46
+    ],
+    "paper_PMC13629826_22b43931_xml": [
+      35,
+      37
+    ],
+    "paper_PMC13451858_f5ad4113_xml": [
+      76,
+      77
+    ],
+    "paper_PMC13613605_494c9181_mineru": [
+      96,
+      111
+    ],
+    "paper_PMC13683362_d3d65551_xml": [
+      61,
+      63
+    ]
+  }
+}
