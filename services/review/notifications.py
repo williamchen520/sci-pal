@@ -12,13 +12,16 @@ from typing import Callable, Dict, List, Optional
 DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
 
 
-def _pg_enabled() -> bool:
+def _sqlite_allowed() -> bool:
     import os
 
-    backend = os.environ.get("SCIPAL_SYSTEMATIC_BACKEND", "").strip().lower()
-    return backend in {"postgres", "postgresql", "pg", "1", "true"} and bool(
-        os.environ.get("SCIPAL_PG_DSN", "").strip()
-    )
+    return os.environ.get("SCIPAL_REVIEW_WEBHOOKS_ALLOW_SQLITE", "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
+def _pg_enabled() -> bool:
+    return not _sqlite_allowed()
 
 
 def _pg():

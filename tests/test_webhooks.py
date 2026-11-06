@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import os
+
+os.environ.setdefault("SCIPAL_REVIEW_WEBHOOKS_ALLOW_SQLITE", "1")
+
 import sqlite3
 import tempfile
 import unittest

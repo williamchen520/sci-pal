@@ -694,3 +694,16 @@ SQLite mtime 不变
 allow=1
 fail-closed 单测
 ```
+
+
+---
+
+## 19. webhooks default PG
+
+```text
+_pg_enabled() 默认 True
+SCIPAL_REVIEW_WEBHOOKS_ALLOW_SQLITE=1
+  仅测试使用
+```
+
+生产不再依赖 `SCIPAL_SYSTEMATIC_BACKEND` 才走 PG。
