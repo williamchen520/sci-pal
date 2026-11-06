@@ -14,7 +14,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from build_db.watch_schema import migrate
 from services.watch import scheduler
 
 
@@ -26,7 +25,6 @@ def main() -> int:
     parser.add_argument("--interval", type=int, default=300)
     parser.add_argument("--limit", type=int, default=20)
     args = parser.parse_args()
-    migrate(args.db)
     if not args.loop:
         results = scheduler.run_due(args.db, limit=args.limit)
         for result in results:

@@ -152,3 +152,30 @@ SQLite 文件本身仍可写
 query_only 是连接级
 脚本/构建进程不受影响
 ```
+
+
+---
+
+## 9. watch cron 残留
+
+发现：
+
+```text
+scripts/run_watch_due.py
+  build_db.watch_schema.migrate(db)
+services/watch/scheduler.py
+  repo.connect(db)
+```
+
+已修：
+
+```text
+scheduler.due_profiles -> PG when pg_store
+run_watch_due 不再 SQLite migrate
+```
+
+冒烟：
+
+```text
+due_profiles -> 0
+```
