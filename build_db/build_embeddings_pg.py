@@ -24,7 +24,7 @@ def _device() -> str:
         return "cpu"
 
 
-def build(limit: int = 0, batch_size: int = 64, model_name: str = "") -> dict:
+def build(limit: int = 0, batch_size: int = 128, model_name: str = "") -> dict:
     device = _device()
     model = SentenceTransformer(model_name or MODEL, device=device)
     print(f"embedding device: {device}", flush=True)
@@ -65,7 +65,7 @@ def build(limit: int = 0, batch_size: int = 64, model_name: str = "") -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--batch", type=int, default=64)
+    parser.add_argument("--batch", type=int, default=128)
     parser.add_argument("--model", default="")
     args = parser.parse_args()
     print(build(args.limit, args.batch, args.model))
