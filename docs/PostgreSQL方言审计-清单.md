@@ -603,3 +603,35 @@ services/search/hybrid_search.py
 ```
 
 后续仍需把 `_get_filtered_paper_ids` 等元数据读取切到 PG。
+
+
+---
+
+## 16. hybrid 元数据过滤 PG
+
+新增：
+
+```text
+SCIPAL_SEARCH_META_BACKEND=postgres
+```
+
+`_get_filtered_paper_ids`：
+
+```text
+year_min/year_max -> PG
+journal           -> lower(journal) LIKE lower(%s)
+```
+
+冒烟：
+
+```text
+year>=2024 + journal=cancer
+133 papers
+```
+
+仍未覆盖：
+
+```text
+其它 self.conn 元数据读取
+SQLite FTS fallback 默认仍开
+```
