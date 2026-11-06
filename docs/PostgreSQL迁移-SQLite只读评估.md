@@ -313,3 +313,27 @@ import_dir -> PG-only
 39 links
 cleanup ✅
 ```
+
+
+---
+
+## 15. PG FTS / unified index
+
+新增：
+
+```text
+build_db/build_fts_pg.py
+  GIN paragraphs/sentences/papers
+  ANALYZE
+
+build_db/build_unified_index_pg.py
+  unified_papers 视图
+```
+
+冒烟：
+
+```text
+paragraphs 167388
+sentences  862677
+papers      3315
+```
