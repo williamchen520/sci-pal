@@ -38,6 +38,19 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def _audit(conn, project_id, action, target="", detail=""):
         if _pg_projects():
             pg_systematic.log_event(project_id, _owner(), action, target, detail)
+            try:
+                threading.Thread(
+                    target=notifications.notify,
+                    args=(
+                        db_path,
+                        project_id,
+                        action,
+                        {"actor": _owner(), "target": target, "detail": detail},
+                    ),
+                    daemon=True,
+                ).start()
+            except Exception:
+                pass
             return
         systematic.log_event(conn, project_id, _owner(), action, target, detail)
         try:
@@ -573,6 +586,19 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
 
     @bp.route("/<project_id>/webhooks", methods=["GET", "POST"])
     def webhooks(project_id: str):
+        if _pg_projects():
+            if not pg_systematic.can_access(project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            if request.method == "GET":
+                return jsonify({"webhooks": notifications.list_webhooks(None, project_id)})
+            data = request.get_json(silent=True) or {}
+            url = (data.get("url") or "").strip()
+            if not url.startswith(("http://", "https://")):
+                return jsonify({"error": "http(s) url required"}), 400
+            webhook_id = notifications.add_webhook(
+                None, project_id, url, data.get("events", "*"), data.get("secret", "")
+            )
+            return jsonify({"id": webhook_id}), 201
         conn = _conn()
         try:
             if not systematic.can_access(conn, project_id, _owner()):
@@ -584,11 +610,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             if not url.startswith(("http://", "https://")):
                 return jsonify({"error": "http(s) url required"}), 400
             webhook_id = notifications.add_webhook(
-                conn,
-                project_id,
-                url,
-                data.get("events", "*"),
-                data.get("secret", ""),
+                conn, project_id, url, data.get("events", "*"), data.get("secret", "")
             )
             return jsonify({"id": webhook_id}), 201
         finally:
@@ -596,6 +618,11 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
 
     @bp.route("/<project_id>/webhooks/<int:webhook_id>", methods=["DELETE"])
     def delete_webhook(project_id: str, webhook_id: int):
+        if _pg_projects():
+            if not pg_systematic.can_access(project_id, _owner()):
+                return jsonify({"error": "project not found"}), 404
+            notifications.delete_webhook(None, project_id, webhook_id)
+            return jsonify({"deleted": webhook_id})
         conn = _conn()
         try:
             if not systematic.can_access(conn, project_id, _owner()):

@@ -12,9 +12,36 @@ from typing import Callable, Dict, List, Optional
 DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
 
 
+def _pg_enabled() -> bool:
+    import os
+
+    backend = os.environ.get("SCIPAL_SYSTEMATIC_BACKEND", "").strip().lower()
+    return backend in {"postgres", "postgresql", "pg", "1", "true"} and bool(
+        os.environ.get("SCIPAL_PG_DSN", "").strip()
+    )
+
+
+def _pg():
+    from services.db.pg_pool import pg_connection
+
+    return pg_connection()
+
+
 def add_webhook(
     conn: sqlite3.Connection, project_id: str, url: str, events: str = "*", secret: str = ""
 ) -> int:
+    if _pg_enabled():
+        pg = _pg()
+        try:
+            row = pg.execute(
+                "INSERT INTO review_webhooks (project_id, url, events, secret, active, created_at) "
+                "VALUES (%s, %s, %s, %s, 1, %s) RETURNING id",
+                (project_id, url, events, secret, datetime.now(timezone.utc).isoformat()),
+            ).fetchone()
+            pg.commit()
+            return int(row["id"])
+        finally:
+            pg.close()
     cursor = conn.execute(
         "INSERT INTO review_webhooks (project_id, url, events, secret, active, created_at) "
         "VALUES (?, ?, ?, ?, 1, ?)",
@@ -25,6 +52,20 @@ def add_webhook(
 
 
 def list_webhooks(conn: sqlite3.Connection, project_id: str) -> List[Dict]:
+    if _pg_enabled():
+        pg = _pg()
+        try:
+            rows = pg.execute(
+                "SELECT id, url, events, active FROM review_webhooks "
+                "WHERE project_id = %s ORDER BY id",
+                (project_id,),
+            ).fetchall()
+            return [
+                {"id": row["id"], "url": row["url"], "events": row["events"], "active": bool(row["active"])}
+                for row in rows
+            ]
+        finally:
+            pg.close()
     rows = conn.execute(
         "SELECT id, url, events, active FROM review_webhooks "
         "WHERE project_id = ? ORDER BY id",
@@ -37,6 +78,17 @@ def list_webhooks(conn: sqlite3.Connection, project_id: str) -> List[Dict]:
 
 
 def delete_webhook(conn: sqlite3.Connection, project_id: str, webhook_id: int) -> None:
+    if _pg_enabled():
+        pg = _pg()
+        try:
+            pg.execute(
+                "DELETE FROM review_webhooks WHERE project_id = %s AND id = %s",
+                (project_id, webhook_id),
+            )
+            pg.commit()
+        finally:
+            pg.close()
+        return
     conn.execute(
         "DELETE FROM review_webhooks WHERE project_id = ? AND id = ?",
         (project_id, webhook_id),
@@ -65,6 +117,28 @@ def notify(
     payload: Dict,
     sender: Optional[Callable[[Dict, Dict], None]] = None,
 ) -> int:
+    if _pg_enabled():
+        pg = _pg()
+        try:
+            hooks = pg.execute(
+                "SELECT id, url, events, secret FROM review_webhooks "
+                "WHERE project_id = %s AND active = 1",
+                (project_id,),
+            ).fetchall()
+        finally:
+            pg.close()
+        body = {"project_id": project_id, "event": event, "data": payload}
+        delivered = 0
+        for hook in hooks:
+            allowed = {item.strip() for item in (hook["events"] or "*").split(",")}
+            if "*" not in allowed and event not in allowed:
+                continue
+            try:
+                (sender or _post)(dict(hook), body)
+                delivered += 1
+            except Exception:  # noqa: BLE001
+                pass
+        return delivered
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     delivered = 0
