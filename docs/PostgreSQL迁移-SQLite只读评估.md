@@ -179,3 +179,66 @@ run_watch_due 不再 SQLite migrate
 ```text
 due_profiles -> 0
 ```
+
+
+---
+
+## 10. 发现：WAL/SHM 缺失
+
+现象：
+
+```text
+app 运行时新开 sqlite3.connect(research.db)
+-> unable to open database file
+immutable=1 可读
+app 停止后可正常打开
+```
+
+根因：
+
+```text
+research.db journal_mode=wal
+但 -wal / -shm 缺失
+新连接无法建立
+```
+
+修复：
+
+```text
+停止 app
+PRAGMA journal_mode=DELETE
+启动 app
+```
+
+验证：
+
+```text
+app 运行时新连接可读
+papers 3313
+health 200
+watch profiles 1
+```
+
+## 11. cron entrypoint
+
+发现：
+
+```text
+watch-cron / health-cron / backup-cron
+entrypoint 忽略 command
+实际都在跑 Flask
+```
+
+修复：
+
+```text
+docker-compose.yml
+  entrypoint: []
+```
+
+验证：
+
+```text
+watch-cron  -> watch scheduler started
+health-cron -> health report
+```

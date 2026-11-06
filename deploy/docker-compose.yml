@@ -35,6 +35,7 @@ services:
 
   watch-cron:
     image: scipal-app:latest
+    entrypoint: []
     command: ["python", "scripts/run_watch_due.py", "--loop", "--interval", "300"]
     env_file:
       - .env
@@ -52,6 +53,7 @@ services:
 
   health-cron:
     image: scipal-app:latest
+    entrypoint: []
     command:
       - sh
       - -c
@@ -72,6 +74,7 @@ services:
 
   backup-cron:
     image: scipal-app:latest
+    entrypoint: []
     command:
       - python
       - scripts/run_backup_loop.py
