@@ -134,3 +134,55 @@ SCIPAL_EMBEDDING_DEVICE=cuda
 ```
 
 仅加速 embedding 生成，不加速 `CREATE INDEX ... USING hnsw`。
+
+
+## 10. 4G shm + 4 workers 结果
+
+PG 镜像：
+
+```text
+scipal-pg:16-vector
+```
+
+容器：
+
+```text
+shm-size 4G
+```
+
+构建：
+
+```text
+maintenance_work_mem 512MB
+max_parallel_maintenance_workers 4
+CREATE INDEX CONCURRENTLY
+```
+
+结果：
+
+```text
+v2 索引 valid
+642MB
+```
+
+20 题：
+
+```text
+Recall@10 0.725
+MRR       0.4471
+nDCG      0.4847
+```
+
+与 ef_construction=64 完全一致。
+
+over-fetch 对齐 Chroma 后也无变化。
+
+结论：
+
+```text
+不是 HNSW 参数
+不是 over-fetch
+差异来自 Chroma/pgvector 图实现或数据分布
+```
+
+生产仍 Chroma。
