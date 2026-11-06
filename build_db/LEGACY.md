@@ -24,9 +24,9 @@
 |---|---|---|
 | `build_db/build_xml_db.py` | XML -> SQLite | legacy |
 | `build_db/build_database.py` | 主库重建 | legacy |
-| `build_db/build_fts.py` | SQLite FTS5 | legacy |
+| `build_db/build_fts.py` | SQLite FTS5 | legacy -> `build_fts_pg.py` |
 | `build_db/build_xml_fts.py` | XML FTS | legacy |
-| `build_db/build_unified_index.py` | 统一索引 | legacy |
+| `build_db/build_unified_index.py` | 统一索引 | legacy -> `build_unified_index_pg.py` |
 | `build_db/build_chunks.py` | chunk 索引 | legacy |
 | `build_db/build_summaries.py` | 摘要 | legacy |
 | `build_db/build_llm_summaries.py` | LLM 摘要 | legacy |
@@ -78,7 +78,8 @@
 ```text
 P1 import_jats.py        JATS 生产 PG 导入（完成）
 P1 build_sections_tree   PG-only 默认
-P2 build_fts / build_xml_fts   ParadeDB 替代
+P2 build_fts_pg.py              GIN 索引维护（完成）
+P2 build_unified_index_pg.py    unified_papers 视图（完成）
 P2 build_unified_index   PG 索引
 P3 其余 build_*          归档或重写
 ```
