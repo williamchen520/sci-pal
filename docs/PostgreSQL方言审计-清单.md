@@ -154,11 +154,13 @@ review_webhooks 表仍在 SQLite
 add_webhook 使用 cursor.lastrowid
 ```
 
-影响：
+已修（2026-11-06）：
 
 ```text
-SQLite 不能只读
-webhook 数据不在 PG
+add/list/delete -> PG
+notify -> PG
+routes 按 _pg_projects() 分支
+PG audit 也触发 notify
 ```
 
 ### 4.2 hybrid_search 元数据过滤
