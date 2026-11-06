@@ -119,3 +119,52 @@ G4a1 调整 shared memory 或 maintenance_work_mem
 G4a2 建 HNSW
 G4b  pgvector 同口径复测
 ```
+
+
+## 9. G4b1 语料审计
+
+```text
+chroma_total        166470
+pg_total            167388
+missing_in_pg       0
+extra_in_pg         918
+orphan_embeddings   0
+paragraphs_no_emb   918
+paper_id_mismatch   0
+text_checked        5000
+text_mismatch       124
+paper_count_diff    101
+```
+
+结论：
+
+```text
+Chroma 索引的是旧 SQLite 语料
+PG 有 918 段未被 Chroma 索引
+5000 段抽样中 124 段正文不一致
+```
+
+样例：
+
+```text
+paper_PMC11649735_c5072470_xml_para_00004
+chroma 199 chars
+pg     1273 chars
+```
+
+文本差异不是单纯空白，是解析/清洗版本漂移。
+
+因此：
+
+```text
+Chroma .75 是旧语料上的分数
+不能直接作为 pgvector 的公平基准
+```
+
+下一步：
+
+```text
+G4b2 用 PG 快照重建干净 Chroma
+G4b3 同一语料上比较 Chroma / pgvector
+G4b4 接入公开 qrels
+```
