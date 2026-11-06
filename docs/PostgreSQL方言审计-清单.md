@@ -555,15 +555,17 @@ claim2  False
 cancel  True  -> cancelled
 ```
 
+已补：
+
+```text
+recover_stale_tasks(120min)
+  queued/running 超时 -> failed
+启动时自动执行
+cleanup_old_tasks 只删终态
+```
+
 仍未做：
 
 ```text
-启动时回收超时 running/queued
 heartbeat / lease_expires_at
-```
-
-下一步：
-
-```text
-recover_stale_tasks
 ```

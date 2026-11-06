@@ -136,6 +136,22 @@ class PGTaskManager:
         finally:
             pg.close()
 
+    def recover_stale_tasks(self, max_age_minutes: int = 120) -> int:
+        from datetime import datetime, timedelta
+
+        cutoff = (datetime.now() - timedelta(minutes=max_age_minutes)).isoformat(timespec="seconds")
+        pg = pg_connection()
+        try:
+            rows = pg.execute(
+                "UPDATE tasks SET status='failed', error='stale task recovery', finished_at=%s "
+                "WHERE status IN ('queued','running') AND created_at < %s RETURNING task_id",
+                (_now(), cutoff),
+            ).fetchall()
+            pg.commit()
+            return len(rows)
+        finally:
+            pg.close()
+
     def cleanup_old_tasks(self, max_count: int = 100) -> None:
         placeholders = ",".join("%s" for _ in PERSISTED_TASK_TYPES)
         pg = pg_connection()

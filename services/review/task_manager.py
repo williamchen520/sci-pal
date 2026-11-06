@@ -269,6 +269,22 @@ class TaskManager:
             conn.close()
         return _row_to_task(row) if row else None
 
+    def recover_stale_tasks(self, max_age_minutes: int = 120) -> int:
+        from datetime import datetime, timedelta
+
+        cutoff = (datetime.now() - timedelta(minutes=max_age_minutes)).isoformat(timespec="seconds")
+        conn = _connect()
+        try:
+            cursor = conn.execute(
+                "UPDATE tasks SET status='failed', error='stale task recovery', finished_at=? "
+                "WHERE status IN ('queued','running') AND created_at < ?",
+                (_now(), cutoff),
+            )
+            conn.commit()
+            return cursor.rowcount
+        finally:
+            conn.close()
+
     def cleanup_old_tasks(self, max_count: int = 100) -> None:
         """超出 max_count 时删最早的（全仓库无调用方，保留签名）。
 
@@ -279,7 +295,8 @@ class TaskManager:
         conn = _connect()
         try:
             total = conn.execute(
-                f"SELECT COUNT(*) FROM tasks WHERE type IN ({placeholders})",
+                f"SELECT COUNT(*) FROM tasks WHERE type IN ({placeholders}) "
+                "AND status IN ('completed','failed','cancelled')",
                 PERSISTED_TASK_TYPES,
             ).fetchone()[0]
             if total <= max_count:
@@ -287,6 +304,7 @@ class TaskManager:
             conn.execute(
                 "DELETE FROM tasks WHERE task_id IN ("
                 f"  SELECT task_id FROM tasks WHERE type IN ({placeholders}) "
+                "  AND status IN ('completed','failed','cancelled') "
                 "  ORDER BY created_at ASC LIMIT ?"
                 ")",
                 (*PERSISTED_TASK_TYPES, total - max_count),
@@ -305,3 +323,8 @@ if os.environ.get("SCIPAL_REVIEW_TASKS_BACKEND", "").strip().lower() in {
     task_manager = PGTaskManager()
 else:
     task_manager = TaskManager()
+
+try:
+    task_manager.recover_stale_tasks()
+except Exception:
+    pass
