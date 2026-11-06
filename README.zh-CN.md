@@ -12,8 +12,8 @@
 （向量 + FTS5/BM25 + RRF 融合 + Cross-Encoder 重排 + 查询路由 + 自适应上下文扩展），
 生成层推荐**本地小模型做调度 + 云端/DSH 模型做推理**。
 
-> 当前版本：**V33.96**（2026-10-31）
-> Python 3.12 · Flask · ChromaDB · SQLite · OpenAI 兼容云端 / Ollama
+> 当前版本：**V33.97**（2026-11-06）
+> Python 3.12 · Flask · PostgreSQL · ChromaDB · SQLite 只读兼容 · OpenAI 兼容云端 / Ollama
 > 原生 HTML/CSS/JS 前端（无框架），DSH 可作为可选推理层
 
 ---
@@ -54,7 +54,7 @@ $env:SCIPAL_BENCH_ALLOW_SQLITE = "1"
 
 说明：
 
-- 当前业务数据库仍是 SQLite；PostgreSQL 业务后端尚未实现。
+- 当前业务数据库为 PostgreSQL；SQLite 仅作 query-only 兼容/legacy 构建。
 - 本策略是 **fail-fast**：没有 PostgreSQL 后端时，大规模/并发 benchmark 会直接失败，而不是悄悄退回 SQLite。
 - 详见 [docs/benchmark-PostgreSQL策略.md](docs/benchmark-PostgreSQL策略.md)。
 
@@ -109,18 +109,18 @@ services/*（检索、问答、综述、guard、源适配）
    │
 build_db/*（解析、JATS 导入、结构重建、写库）
    │
-SQLite research.db + ChromaDB + documents/ + documents_xml/
+PostgreSQL + ChromaDB + query-only SQLite 兼容层 + documents/ + documents_xml/
 ```
 
 ## 技术栈
 
 - 后端：Python 3.12 · Flask 3 · flask-cors · pydantic 2 · networkx
-- 检索：ChromaDB · sentence-transformers · FTS5(BM25) · RRF · bge-reranker
+- 检索：ChromaDB · sentence-transformers · PostgreSQL FTS/BM25 · RRF · bge-reranker
 - PDF：PyMuPDF · Docling · GROBID · MinerU（按需，质量门兜底）
 - XML：PMC / Europe PMC JATS（`<sec>` / `<ref-list>` / `<xref>`）
 - LLM：云端 OpenAI 兼容 API（推荐推理）+ 本地 Ollama（调度/兜底）；DSH 可接管推理
 - 前端：原生 HTML/CSS/JS + PDF.js（viewer / compare / trace / projects / reviews / watch / packs / claims）
-- 部署：Docker Compose（app + watch-cron + Caddy）· SQLite 单节点 · G 盘数据卷
+- 部署：Docker Compose（app + watch-cron + Caddy）· PostgreSQL + Chroma · G 盘数据卷
 
 ### 模型
 
@@ -385,7 +385,7 @@ sci-pal/
 3. 旧 PDF 的 GROBID 位置已回填 42 篇，个别 PDF 无正文引用标记；
 4. Europe PMC 搜索服务 503 时无法继续扩量；
 5. PDF 章节树来自解析推断，XML 才是原生结构；
-6. 多用户/隔离已实现，但仍是 SQLite 单节点；1000 账号/100 并发需 PostgreSQL + Redis + 多 worker；
+6. 多用户/隔离已实现，当前为 PostgreSQL 单节点；1000 账号/100 并发需 PostgreSQL 调优 + Redis + 多 worker；
 7. 100 题中 69 题是 auto 生成题，coverage 0.686，仍是主要拖累；
 8. DSH 插件化仍为方案，尚未实现 MCP evidence / validate 工具；
 9. 云端评测/生成会把论文文本发送到外部 provider，正式使用前需确认数据合规；
