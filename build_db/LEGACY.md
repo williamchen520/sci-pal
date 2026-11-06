@@ -23,7 +23,7 @@
 | 脚本 | 作用 | 状态 |
 |---|---|---|
 | `build_db/build_xml_db.py` | XML -> SQLite | legacy -> `build_xml_db_pg.py` |
-| `build_db/build_database.py` | 主库重建 | legacy |
+| `build_db/build_database.py` | 主库重建 | legacy -> `build_database_pg.py` |
 | `build_db/build_fts.py` | SQLite FTS5 | legacy -> `build_fts_pg.py` |
 | `build_db/build_xml_fts.py` | XML FTS | legacy |
 | `build_db/build_unified_index.py` | 统一索引 | legacy -> `build_unified_index_pg.py` |

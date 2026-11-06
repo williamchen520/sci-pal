@@ -12,6 +12,7 @@
 |---|---|
 | `build_fts_pg.py` | GIN 索引维护 |
 | `build_xml_db_pg.py` | XML 目录 PG 导入 |
+| `build_database_pg.py` | PDF 目录 PG 解析导入 |
 | `build_sentences_pg.py` | 句子 PG 重建 |
 | `build_unified_index_pg.py` | unified_papers 视图 |
 | `import_jats_pg.py` | JATS 直接写 PG |
@@ -41,7 +42,7 @@
 | 脚本 | 作用 |
 |---|---|
 | `build_xml_db.py` | XML -> SQLite，PG 替代 `build_xml_db_pg.py` |
-| `build_database.py` | 主库重建 |
+| `build_database.py` | 主库重建，PG 替代 `build_database_pg.py` |
 | `build_abstracts_db.py` | DEPRECATED; abstracts 已迁 PG |
 | `build_citation_index.py` | 引用索引 |
 | `build_communities.py` | 社区 |
