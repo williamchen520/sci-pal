@@ -8,6 +8,20 @@ from pathlib import Path
 from flask import Blueprint, jsonify, request
 
 
+def _pg_enabled() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_ABSTRACTS_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
+def _pg():
+    from services.db.pg_pool import pg_connection
+
+    return pg_connection()
+
+
 def build_abstracts_blueprint(*, db_path: Path) -> Blueprint:
     bp = Blueprint("abstracts", __name__, url_prefix="/api")
     abstract_db = Path(db_path)

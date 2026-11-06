@@ -364,3 +364,35 @@ paragraphs 3
 bound 3
 sentences 3
 ```
+
+
+---
+
+## 17. abstracts.db 去 SQLite
+
+新增：
+
+```text
+deploy/sql/007_abstracts.sql
+scripts/import_abstracts_pg.py
+```
+
+路由：
+
+```text
+SCIPAL_ABSTRACTS_BACKEND=postgres
+```
+
+导入：
+
+```text
+source 3923
+postgres 3923
+```
+
+API：
+
+```text
+GET /api/abstracts/list -> 200, total 3923
+GET /api/abstracts/<pmid> -> 200
+```
