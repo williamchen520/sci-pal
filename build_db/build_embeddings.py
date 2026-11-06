@@ -19,6 +19,12 @@ EMBEDDING_MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.
 
 def build_embeddings():
     """Generate embeddings for all paragraphs and store in Chroma."""
+    if os.environ.get("SCIPAL_VECTOR_BUILD_BACKEND", "").strip().lower() in {
+        "pgvector", "postgres", "postgresql", "pg"
+    }:
+        from build_db.build_embeddings_pg import build
+
+        return build()
     print("=" * 60)
     print("🧠 Building Vector Embeddings")
     print("=" * 60)

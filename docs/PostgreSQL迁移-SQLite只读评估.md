@@ -422,3 +422,23 @@ deploy/backup.py
 abstracts 只读 PG
 abstracts.db 不再备份
 ```
+
+
+---
+
+## 19. embeddings PG 构建
+
+新增：
+
+```text
+build_db/build_embeddings_pg.py
+SCIPAL_VECTOR_BUILD_BACKEND=pgvector
+```
+
+冒烟：
+
+```text
+candidates 3
+existing   166470
+inserted   0
+```
