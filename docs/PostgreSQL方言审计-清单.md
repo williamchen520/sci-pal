@@ -571,3 +571,35 @@ cleanup_old_tasks 只删终态
 ```text
 heartbeat / lease_expires_at
 ```
+
+
+---
+
+## 15. hybrid_search SQLite FTS fallback
+
+已加开关：
+
+```text
+SCIPAL_FTS_SQLITE_FALLBACK=0
+```
+
+行为：
+
+```text
+ParadeDB/PG FTS 不可用时不回落 SQLite FTS
+直接返回空
+```
+
+同时：
+
+```text
+journal LIKE -> lower(p.journal) LIKE lower(?)
+```
+
+仍是 SQLite 连接上的元数据过滤：
+
+```text
+services/search/hybrid_search.py
+```
+
+后续仍需把 `_get_filtered_paper_ids` 等元数据读取切到 PG。

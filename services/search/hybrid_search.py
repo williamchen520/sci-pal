@@ -382,6 +382,10 @@ class HybridSearch:
             pg_results = self._pg_fts_search(query, top_k, paper_id, filters)
             if pg_results is not None:
                 return pg_results
+        if os.environ.get("SCIPAL_FTS_SQLITE_FALLBACK", "1").strip().lower() in {
+            "0", "false", "off", "no"
+        }:
+            return []
         # V25.19: use enhanced FTS query builder or fall back to simple
         if ENHANCED_FTS and hasattr(self, "fts_builder"):
             fts_query = self.fts_builder.build(query)
@@ -455,7 +459,7 @@ class HybridSearch:
                 sql += " AND p.year <= ?"
                 params.append(filters["year_max"])
             if filters.get("journal"):
-                sql += " AND p.journal LIKE ?"
+                sql += " AND lower(p.journal) LIKE lower(?)"
                 params.append(f"%{filters['journal']}%")
 
         sql += " ORDER BY score LIMIT ?"
