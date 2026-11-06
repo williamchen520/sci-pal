@@ -363,6 +363,9 @@ def build_papers_actions_blueprint(
 
         def run_task():
             try:
+                task_manager = get_task_manager()
+                if hasattr(task_manager, "claim_task") and not task_manager.claim_task(task_id):
+                    return
                 if get_task_manager().is_cancelled(task_id):
                     get_task_manager().cancel_task(task_id)
                     return

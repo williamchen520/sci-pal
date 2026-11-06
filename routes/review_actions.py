@@ -64,6 +64,9 @@ def build_review_actions_blueprint(
         # V26.3: 在后台线程里运行生成大纲的任务
         def run_task():
             try:
+                task_manager = get_task_manager()
+                if hasattr(task_manager, "claim_task") and not task_manager.claim_task(task_id):
+                    return
                 llm = get_llm_client()
                 if not llm.is_available():
                     get_task_manager().fail_task(task_id, "LLM not available")
@@ -406,6 +409,9 @@ def build_review_actions_blueprint(
 
         def run_task():
             try:
+                task_manager = get_task_manager()
+                if hasattr(task_manager, "claim_task") and not task_manager.claim_task(task_id):
+                    return
                 llm = get_llm_client()
                 if not llm.is_available():
                     get_task_manager().fail_task(task_id, "LLM not available")
