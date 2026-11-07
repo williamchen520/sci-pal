@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from services.claims import pg_writes
+from services.claims import pg_read, pg_writes
 
 import hashlib
 import json
@@ -52,7 +52,17 @@ def _keywords(text: str, limit: int = 8) -> List[str]:
     return seen
 
 
+def _pg_read_enabled() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_CLAIMS_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
 def list_claims(conn: sqlite3.Connection, limit: int = 50) -> List[Dict[str, Any]]:
+    if _pg_read_enabled():
+        return pg_read.list_claims(limit)
     rows = conn.execute(
         "SELECT * FROM claim_cards ORDER BY updated_at DESC, claim_id LIMIT ?", (limit,)
     ).fetchall()
@@ -60,6 +70,8 @@ def list_claims(conn: sqlite3.Connection, limit: int = 50) -> List[Dict[str, Any
 
 
 def get_claim(conn: sqlite3.Connection, claim_id: str) -> Optional[Dict[str, Any]]:
+    if _pg_read_enabled():
+        return pg_read.get_claim(claim_id)
     card = _row(conn.execute("SELECT * FROM claim_cards WHERE claim_id = ?", (claim_id,)).fetchone())
     if not card:
         return None
