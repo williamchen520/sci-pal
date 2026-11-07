@@ -352,7 +352,12 @@ def get_ingest_service():
                 else PROJECT_ROOT / "data" / "chroma"
             ),
             # inline 模式复用 Flask 已加载的嵌入模型（不新建 CUDA 上下文）
-            embed_client=get_embed_rows() if inline else None,
+            embed_client=(
+                None
+                if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower()
+                in {"pgvector", "pg_vec", "postgres"}
+                else (get_embed_rows() if inline else None)
+            ),
             # 默认交给常驻 worker，Flask 进程只负责提交与查询
             queue_dir=None if inline else PROJECT_ROOT / "data" / "runs" / "_queue",
             log=app.logger.info,
