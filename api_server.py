@@ -591,6 +591,10 @@ def static_files(path):
 
 def run_db_migrations():
     """启动时自动检查并添加缺失的数据库字段，幂等安全。"""
+    if os.environ.get("SCIPAL_SQLITE_QUERY_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }:
+        return
     if not DB_PATH.exists():
         return
     # V33.17: 函数内局部导入（项目风格）。此前缺失导致 name 'sqlite3' is not defined，
@@ -724,6 +728,10 @@ def reconcile_stale_review_tasks() -> int:
     幂等：没有 running 行时 rowcount=0，什么也不做；重复启动不报错。
     返回：被收掉的条数。
     """
+    if os.environ.get("SCIPAL_SQLITE_QUERY_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }:
+        return 0
     if not DB_PATH.exists():
         return 0
 
