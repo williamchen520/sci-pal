@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sqlite3
 from pathlib import Path
@@ -27,6 +28,30 @@ class SummarySearch:
         if not terms:
             return []
         match = " OR ".join(f'"{term}"' for term in terms)
+        if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
+            "postgres", "postgresql", "pg", "1", "true"
+        }:
+            from services.db.pg_pool import pg_connection
+
+            ts_query = " | ".join(terms)
+            pg = pg_connection()
+            try:
+                rows = pg.execute(
+                    "SELECT summary_id, paper_id, section_id, level, title, text, "
+                    "ts_rank(to_tsvector('english', coalesce(title,'') || ' ' || coalesce(text,'')), "
+                    "to_tsquery('english', %s)) AS rank "
+                    "FROM summaries "
+                    "WHERE to_tsvector('english', coalesce(title,'') || ' ' || coalesce(text,'')) "
+                    "@@ to_tsquery('english', %s) "
+                    + ("AND paper_id = %s " if paper_id else "")
+                    + "ORDER BY rank DESC LIMIT %s",
+                    (ts_query, ts_query, paper_id, top_k) if paper_id else (ts_query, ts_query, top_k),
+                ).fetchall()
+                return [dict(row) for row in rows]
+            except Exception:
+                return []
+            finally:
+                pg.close()
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         try:
