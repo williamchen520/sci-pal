@@ -285,7 +285,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def screening_kappa(project_id: str):
         conn = _conn()
         try:
-            return jsonify(kappa_mod.kappa(conn, project_id))
+            return jsonify(kappa_mod.kappa_pg(project_id) if _pg_projects() else kappa_mod.kappa(conn, project_id))
         finally:
             if conn is not None:
                 conn.close()
@@ -294,10 +294,10 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def prisma_diagram(project_id: str):
         conn = _conn()
         try:
-            row = systematic.get_project(conn, project_id)
+            row = pg_systematic.get_project(project_id) if _pg_projects() else systematic.get_project(conn, project_id)
             if not row:
                 return jsonify({"error": "project not found"}), 404
-            counts = systematic.prisma(conn, project_id)
+            counts = pg_systematic.prisma(project_id) if _pg_projects() else systematic.prisma(conn, project_id)
             svg = prisma_svg.render(row.get("name") or project_id, counts)
             return Response(svg, mimetype="image/svg+xml")
         finally:
@@ -308,6 +308,14 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def rob(project_id: str):
         conn = _conn()
         try:
+            if _pg_projects():
+                if request.method == "POST":
+                    return jsonify({"error": "FEATURE_OFFLINE_PG_ONLY"}), 410
+                rows = risk_of_bias.list_rows_pg(project_id)
+                by_paper = {}
+                for row in rows:
+                    by_paper.setdefault(row["paper_id"], []).append(row)
+                return jsonify({"rows": rows, "overall": {paper: risk_of_bias.overall(items) for paper, items in by_paper.items()}})
             if request.method == "POST":
                 papers = conn.execute(
                     "SELECT p.paper_id, p.title, p.abstract FROM review_project_papers rp "
@@ -454,7 +462,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def screening_conflicts(project_id: str):
         conn = _conn()
         try:
-            return jsonify({"conflicts": systematic.conflicts(conn, project_id)})
+            return jsonify({"conflicts": pg_systematic.conflicts(project_id) if _pg_projects() else systematic.conflicts(conn, project_id)})
         finally:
             if conn is not None:
                 conn.close()
@@ -489,13 +497,15 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def project_members(project_id: str):
         conn = _conn()
         try:
-            row = systematic.get_project(conn, project_id)
+            row = pg_systematic.get_project(project_id) if _pg_projects() else systematic.get_project(conn, project_id)
             if not row:
                 return jsonify({"error": "project not found"}), 404
             if request.method == "GET":
-                if not systematic.can_access(conn, project_id, _owner()):
+                allowed = pg_systematic.can_access(project_id, _owner()) if _pg_projects() else systematic.can_access(conn, project_id, _owner())
+                if not allowed:
                     return jsonify({"error": "forbidden"}), 403
-                return jsonify({"members": systematic.members(conn, project_id)})
+                members = pg_systematic.members(project_id) if _pg_projects() else systematic.members(conn, project_id)
+                return jsonify({"members": members})
             if row.get("owner") != _owner():
                 return jsonify({"error": "only owner can add members"}), 403
             data = request.get_json(silent=True) or {}
@@ -513,7 +523,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def review_events(project_id: str):
         conn = _conn()
         try:
-            if not systematic.can_access(conn, project_id, _owner()):
+            allowed = pg_systematic.can_access(project_id, _owner()) if _pg_projects() else systematic.can_access(conn, project_id, _owner())
+            if not allowed:
                 return jsonify({"error": "project not found"}), 404
             return jsonify(
                 {"events": pg_systematic.list_events(project_id)}
@@ -544,6 +555,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def export_project(project_id: str):
         conn = _conn()
         try:
+            if _pg_projects():
+                return jsonify({"error": "FEATURE_OFFLINE_PG_ONLY"}), 410
             if not systematic.can_access(conn, project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             data = export_mod.export_project(conn, project_id)

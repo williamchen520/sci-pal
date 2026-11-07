@@ -98,3 +98,18 @@ def list_rows(conn: sqlite3.Connection, project_id: str) -> List[Dict]:
         {"paper_id": row[0], "domain": row[1], "judgement": row[2], "support": row[3]}
         for row in rows
     ]
+
+
+def list_rows_pg(project_id: str) -> List[Dict]:
+    from services.db.pg_pool import pg_connection
+
+    pg = pg_connection()
+    try:
+        rows = pg.execute(
+            "SELECT paper_id, domain, judgement, support FROM risk_of_bias "
+            "WHERE project_id = %s ORDER BY paper_id, domain",
+            (project_id,),
+        ).fetchall()
+    finally:
+        pg.close()
+    return [dict(row) for row in rows]
