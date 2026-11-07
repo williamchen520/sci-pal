@@ -119,6 +119,10 @@ class AbstractSearch:
     
     def search(self, query: str, top_k: int = 10) -> List[Dict]:
         """混合搜索：向量 + FTS，RRF 融合"""
+        if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower() in {
+            "pgvector", "pg_vec", "postgres"
+        }:
+            return []
         vector_hits = self.vector_search(query, top_k * 2)
         fts_hits = self.fts_search(query, top_k * 2)
         
