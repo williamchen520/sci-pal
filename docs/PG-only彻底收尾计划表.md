@@ -304,3 +304,41 @@ SQLite 收尾靠逐模块迁读路径
 ```
 
 两条都完成，才叫运行时 PG-only。
+
+
+---
+
+## 9. Phase A 执行状态（2026-11-07）
+
+| ID | 状态 | 结果 |
+|---|---|---|
+| A1 | 完成 | AbstractSearch PG-only 返回空；abstracts 走 PG |
+| A2 | 完成 | get_embed_rows PG-only no-op |
+| A3 | 完成 | build_embeddings 默认 pgvector |
+| A4 | 阻塞 | base 导出 20+ 分钟，已中止 |
+| A5 | 完成 | abstracts.db 归档 I 盘 |
+| A6 | 完成 | README/架构文档更新 |
+
+额外修复：
+
+```text
+routes/abstracts.py 定义了 PG 开关但未使用
+已改为 PG 主路径
+```
+
+验证：
+
+```text
+/api/abstracts/list 200
+app health 200
+20 题 0.675 / 0.461
+```
+
+A4 遗留：
+
+```text
+当前镜像 base 层仍含 chromadb
+需维护窗口重建 scipal-base
+```
+
+Phase B（SQLite 读路径）尚未开始。
