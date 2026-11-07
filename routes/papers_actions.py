@@ -1042,7 +1042,8 @@ def build_papers_actions_blueprint(
             return jsonify({"error": "sentence not found"}), 404
         if not payload.get("bbox") or not payload.get("page"):
             return jsonify({"error": "该句子没有 bbox（XML 或扫描件）"}), 404
-        pdf_path = DOCUMENTS_DIR / conn_filename(db_path, paper_id)
+        filename_row = _paper_filename(paper_id)
+        pdf_path = DOCUMENTS_DIR / (filename_row["filename"] if filename_row else "")
         if not pdf_path.exists():
             return jsonify({"error": "PDF not found"}), 404
         try:
