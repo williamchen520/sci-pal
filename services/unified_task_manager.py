@@ -4,6 +4,7 @@ V33.12 - 统一任务管理器
 重启不丢失，前端可查询历史。
 """
 
+import os
 import sqlite3
 import json
 import uuid
@@ -18,6 +19,18 @@ DB_PATH = Path("data/research.db")
 # In-memory event subscribers for SSE
 _subscribers: Dict[str, List] = {}  # task_id -> list of queue.Queue
 _lock = threading.Lock()
+
+
+def _pg_enabled() -> bool:
+    return os.environ.get("SCIPAL_TASKS_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
+def _pg_conn():
+    from services.db.pg_pool import pg_connection
+
+    return pg_connection()
 
 
 def _get_conn() -> sqlite3.Connection:
@@ -99,6 +112,15 @@ def cancel_task(task_id: str):
 
 def get_task(task_id: str) -> Optional[Dict]:
     """Get task by ID."""
+    if _pg_enabled():
+        pg = _pg_conn()
+        try:
+            row = pg.execute(
+                "SELECT * FROM tasks WHERE task_id = %s", (task_id,)
+            ).fetchone()
+            return dict(row) if row else None
+        finally:
+            pg.close()
     conn = _get_conn()
     row = conn.execute("SELECT * FROM tasks WHERE task_id = ?", (task_id,)).fetchone()
     conn.close()
@@ -109,6 +131,22 @@ def get_task(task_id: str) -> Optional[Dict]:
 
 def list_tasks(task_type: Optional[str] = None, status: Optional[str] = None, limit: int = 50) -> List[Dict]:
     """List tasks with optional filters."""
+    if _pg_enabled():
+        pg = _pg_conn()
+        try:
+            query = "SELECT * FROM tasks WHERE 1=1"
+            args = []
+            if task_type:
+                query += " AND type = %s"
+                args.append(task_type)
+            if status:
+                query += " AND status = %s"
+                args.append(status)
+            query += " ORDER BY created_at DESC LIMIT %s"
+            args.append(limit)
+            return [dict(row) for row in pg.execute(query, args).fetchall()]
+        finally:
+            pg.close()
     conn = _get_conn()
     query = "SELECT * FROM tasks WHERE 1=1"
     args = []

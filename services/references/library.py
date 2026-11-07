@@ -41,6 +41,8 @@ class ReferenceLibrary:
         }
 
     def ensure_schema(self) -> None:
+        if self._pg_backend():
+            return
         with self._session() as conn:
             for statement in SCHEMA:
                 conn.execute(statement)
