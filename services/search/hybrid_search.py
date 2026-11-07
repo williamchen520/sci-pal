@@ -78,10 +78,11 @@ def chroma_paper_filter(paper_ids) -> Dict[str, List[str]]:
 class HybridSearch:
     def __init__(self, hyde_generate: Optional[Callable[[str], str]] = None,
                  diagnostics: bool = False):
-        self.conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
-
         backend = os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower()
+        self.conn = None
+        if backend not in {"pgvector", "pg_vec", "postgres"}:
+            self.conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
+            self.conn.row_factory = sqlite3.Row
         self.client = None
         self.para_collection = None
         self.contextual_collection = None
@@ -420,6 +421,8 @@ class HybridSearch:
             pg_results = self._pg_fts_search(query, top_k, paper_id, filters)
             if pg_results is not None:
                 return pg_results
+        if self.conn is None:
+            return []
         if os.environ.get("SCIPAL_FTS_SQLITE_FALLBACK", "1").strip().lower() in {
             "0", "false", "off", "no"
         }:
@@ -841,6 +844,8 @@ class HybridSearch:
                 ).fetchone()
             finally:
                 pg.close()
+        if self.conn is None:
+            return None
         return self.conn.execute(
             "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)
         ).fetchone()
@@ -953,6 +958,8 @@ class HybridSearch:
             chunk_id = results["ids"][0][i]
             # Look up source paragraph IDs from SQLite
             para_ids = []
+            if self.conn is None:
+                continue
             try:
                 row = self.conn.execute(
                     "SELECT start_para_id, end_para_id FROM chunks WHERE chunk_id = ?",
