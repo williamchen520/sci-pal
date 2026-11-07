@@ -447,4 +447,10 @@ def decide(
 
 
 def ensure_schema(db_path: Path | str = DEFAULT_DB) -> None:
+    import os
+
+    if os.environ.get("SCIPAL_SQLITE_QUERY_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }:
+        return
     migrate(db_path)
