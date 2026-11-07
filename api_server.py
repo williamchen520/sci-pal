@@ -366,7 +366,12 @@ def get_ingest_service():
 
 
 def get_embed_rows():
-    """Flask owns Chroma writes: the worker posts paragraphs here to be embedded."""
+    """Legacy Chroma writer; disabled in PG-only mode."""
+
+    if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower() in {
+        "pgvector", "pg_vec", "postgres"
+    }:
+        return None
 
     def embed(rows: list[dict]) -> int:
         import chromadb

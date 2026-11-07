@@ -5,8 +5,6 @@ V21.0 - Embedding layer
 import os
 import sqlite3
 from pathlib import Path
-import chromadb
-from chromadb.config import Settings
 
 # Project paths
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -19,12 +17,13 @@ EMBEDDING_MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.
 
 def build_embeddings():
     """Generate embeddings for all paragraphs and store in Chroma."""
-    if os.environ.get("SCIPAL_VECTOR_BUILD_BACKEND", "").strip().lower() in {
-        "pgvector", "postgres", "postgresql", "pg"
-    }:
+    backend = os.environ.get("SCIPAL_VECTOR_BUILD_BACKEND", "pgvector").strip().lower()
+    if backend in {"pgvector", "postgres", "postgresql", "pg"}:
         from build_db.build_embeddings_pg import build
 
         return build()
+    if backend not in {"chroma", "chromadb"}:
+        raise SystemExit(f"unknown SCIPAL_VECTOR_BUILD_BACKEND: {backend}")
     print("=" * 60)
     print("🧠 Building Vector Embeddings")
     print("=" * 60)
@@ -44,6 +43,8 @@ def build_embeddings():
 
     # Initialize Chroma
     print(f"\n🗄️  Initializing Chroma at {CHROMA_PATH}...")
+    import chromadb
+
     client = chromadb.PersistentClient(path=str(CHROMA_PATH))
 
     # Create or get collection
