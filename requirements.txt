@@ -12,7 +12,6 @@ flask-cors==4.0.1
 Werkzeug==3.1.8
 
 # 向量数据库
-chromadb==1.5.9
 
 # 向量嵌入 + 重排序（自动附带 torch / transformers / numpy / scikit-learn）
 sentence-transformers==6.1.0
@@ -36,7 +35,7 @@ tqdm==4.66.5
 # 环境变量加载
 python-dotenv==1.0.1
 
-# 数据处理（chromadb / docling 依赖）
+# 数据处理（docling 依赖）
 pyarrow>=17.0.0
 
 # ── 可选依赖（重新建库 / 深度解析 PDF 时需要）──────────────────

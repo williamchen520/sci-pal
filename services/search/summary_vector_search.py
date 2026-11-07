@@ -8,7 +8,6 @@ import sqlite3
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import chromadb
 
 DEFAULT_CHROMA = Path(__file__).resolve().parent.parent.parent / "data" / "chroma"
 DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
@@ -27,6 +26,8 @@ class SummaryVectorSearch:
         }:
             return False
         try:
+            import chromadb
+
             client = chromadb.PersistentClient(path=self.chroma_path)
             client.get_collection("section_summaries")
             return True
@@ -41,6 +42,7 @@ class SummaryVectorSearch:
         if self._model is not None and self._collection is not None:
             return True
         try:
+            import chromadb
             from sentence_transformers import SentenceTransformer
 
             client = chromadb.PersistentClient(path=self.chroma_path)

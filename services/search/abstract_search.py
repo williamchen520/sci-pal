@@ -7,7 +7,6 @@ import re
 import sqlite3
 from pathlib import Path
 from typing import List, Dict, Optional
-import chromadb
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 ABSTRACT_DB_PATH = PROJECT_ROOT / "data" / "abstracts.db"
