@@ -10,6 +10,7 @@ Edges:
   - cites:    directed, A cites B (source_paper_id -> target_paper_id)
   - similar:  undirected (stored both directions), cosine > threshold
 """
+import os
 import sqlite3
 from collections import deque
 from pathlib import Path
@@ -22,8 +23,15 @@ DB_PATH = PROJECT_ROOT / "data" / "research.db"
 class GraphTraverser:
     def __init__(self, db_path: Optional[str] = None):
         self.db_path = str(db_path or DB_PATH)
-        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
+        if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
+            "postgres", "postgresql", "pg", "1", "true"
+        }:
+            from services.db.pg_sqlite_compat import PGReadCompat
+
+            self.conn = PGReadCompat()
+        else:
+            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            self.conn.row_factory = sqlite3.Row
 
     # ------------------------------------------------------------------
     # Core: neighbor lookup
