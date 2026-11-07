@@ -80,6 +80,45 @@ def build_papers_actions_blueprint(
     globals()["db_path_for_lookup"] = lambda: db_path
     globals()["DOCUMENTS_DIR"] = project_root / "documents"
 
+    def _paper_exists(paper_id: str) -> bool:
+        if _papers_pg_enabled():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                return bool(pg.execute(
+                    "SELECT 1 FROM papers WHERE paper_id = %s", (paper_id,)
+                ).fetchone())
+            finally:
+                pg.close()
+        conn = sqlite3.connect(str(db_path))
+        try:
+            return bool(conn.execute(
+                "SELECT 1 FROM papers WHERE paper_id = ?", (paper_id,)
+            ).fetchone())
+        finally:
+            conn.close()
+
+    def _paper_filename(paper_id: str):
+        if _papers_pg_enabled():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                return pg.execute(
+                    "SELECT filename FROM papers WHERE paper_id = %s", (paper_id,)
+                ).fetchone()
+            finally:
+                pg.close()
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        try:
+            return conn.execute(
+                "SELECT filename FROM papers WHERE paper_id = ?", (paper_id,)
+            ).fetchone()
+        finally:
+            conn.close()
+
     @bp.before_request
     def scope_paper_routes():
         paper_id = (request.view_args or {}).get("paper_id")
@@ -482,11 +521,7 @@ def build_papers_actions_blueprint(
         elif os.environ.get("SCIPAL_REQUIRE_SIGNED_PDF") == "1":
             return jsonify({"error": "signed URL required"}), 403
 
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        row = conn.execute(
-            "SELECT filename FROM papers WHERE paper_id = ?", (paper_id,)).fetchone()
-        conn.close()
+        row = _paper_filename(paper_id)
         if not row or not row["filename"]:
             return jsonify({"error": "PDF not found"}), 404
 
@@ -533,11 +568,7 @@ def build_papers_actions_blueprint(
             return jsonify({"error": "Empty filename"}), 400
 
         # Verify paper exists
-        import sqlite3
-        conn = sqlite3.connect(str(db_path))
-        row = conn.execute("SELECT paper_id FROM papers WHERE paper_id = ?", (paper_id,)).fetchone()
-        conn.close()
-        if not row:
+        if not _paper_exists(paper_id):
             return jsonify({"error": f"Paper {paper_id} not found"}), 404
 
         # Save file to documents directory
@@ -793,14 +824,7 @@ def build_papers_actions_blueprint(
         if not page or not annot_type or not rect:
             return jsonify({"error": "ç¼ºå°‘å¿…è¦å‚æ•°: page, type, rect"}), 400
 
-        conn = sqlite3.connect(str(db_path))
-        try:
-            exists = conn.execute(
-                "SELECT 1 FROM papers WHERE paper_id = ?", (paper_id,)
-            ).fetchone()
-        finally:
-            conn.close()
-        if not exists:
+        if not _paper_exists(paper_id):
             return jsonify({"error": "paper not found"}), 404
 
         annotator = PdfAnnotator(str(db_path), str(DOCUMENTS_DIR))
@@ -828,14 +852,7 @@ def build_papers_actions_blueprint(
 
         page = request.args.get("page", type=int)
 
-        conn = sqlite3.connect(str(db_path))
-        try:
-            exists = conn.execute(
-                "SELECT 1 FROM papers WHERE paper_id = ?", (paper_id,)
-            ).fetchone()
-        finally:
-            conn.close()
-        if not exists:
+        if not _paper_exists(paper_id):
             return jsonify({"error": "paper not found"}), 404
 
         annotator = PdfAnnotator(str(db_path), str(DOCUMENTS_DIR))
