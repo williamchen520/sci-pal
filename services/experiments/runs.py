@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 
 from config.settings import DATABASE_PATH
+from services.experiments import pg_runs
 from services.experiments.service import get_experiment
 from services.experiments.service import ensure_experiments_schema
 
@@ -78,6 +79,8 @@ def list_runs(
     *,
     db_path: str | Path = DATABASE_PATH,
 ) -> list[dict] | None:
+    if pg_runs.enabled():
+        return pg_runs.list_runs(experiment_id, workspace_id, user_id)
     if not get_experiment(experiment_id, workspace_id, user_id, db_path=db_path):
         return None
     conn = _connect(db_path)
@@ -110,6 +113,12 @@ def create_run(
         raise ValueError("title is required")
     if status not in RUN_STATUSES:
         raise ValueError("invalid status")
+    if pg_runs.enabled():
+        return pg_runs.create_run(
+            experiment_id, workspace_id, user_id, title,
+            status=status, planned=planned, actual=actual,
+            observations=observations, result=result,
+        )
     experiment = get_experiment(experiment_id, workspace_id, user_id, db_path=db_path)
     if not experiment or experiment["owner_user_id"] != user_id:
         raise PermissionError("experiment access denied")
@@ -151,6 +160,8 @@ def get_run(
     *,
     db_path: str | Path = DATABASE_PATH,
 ) -> dict | None:
+    if pg_runs.enabled():
+        return pg_runs.get_run(run_id, workspace_id, user_id)
     conn = _connect(db_path)
     try:
         row = conn.execute(
@@ -176,6 +187,12 @@ def update_run(
     result: str | None = None,
     db_path: str | Path = DATABASE_PATH,
 ) -> dict | None:
+    if pg_runs.enabled():
+        return pg_runs.update_run(
+            run_id, workspace_id, user_id,
+            title=title, status=status, planned=planned,
+            actual=actual, observations=observations, result=result,
+        )
     conn = _connect(db_path)
     try:
         fields = {}
