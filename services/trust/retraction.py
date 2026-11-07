@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import urllib.parse
 import urllib.request
@@ -59,11 +60,38 @@ def check_doi(doi: str, get_json: Optional[Callable[[str], Dict[str, Any]]] = No
     return flags
 
 
+def _pg_enabled() -> bool:
+    return os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
 def flag_paper(
     conn: sqlite3.Connection,
     paper_id: str,
     flags: List[Dict],
 ) -> int:
+    if _pg_enabled():
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            for flag in flags:
+                pg.execute(
+                    "INSERT INTO paper_flags (paper_id,flag_type,source,detail,checked_at) "
+                    "VALUES (%s,%s,%s,%s,%s)",
+                    (
+                        paper_id,
+                        flag["flag_type"],
+                        flag["source"],
+                        flag.get("detail", ""),
+                        datetime.now(timezone.utc).isoformat(),
+                    ),
+                )
+            pg.commit()
+        finally:
+            pg.close()
+        return len(flags)
     inserted = 0
     for flag in flags:
         conn.execute(
@@ -85,6 +113,24 @@ def flag_paper(
 def flags_for_papers(conn: sqlite3.Connection, paper_ids: List[str]) -> Dict[str, List[Dict]]:
     if not paper_ids:
         return {}
+    if _pg_enabled():
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            rows = pg.execute(
+                "SELECT paper_id, flag_type, source, detail FROM paper_flags "
+                "WHERE paper_id = ANY(%s)",
+                (paper_ids,),
+            ).fetchall()
+        finally:
+            pg.close()
+        out = {}
+        for row in rows:
+            out.setdefault(row["paper_id"], []).append(
+                {"flag_type": row["flag_type"], "source": row["source"], "detail": row["detail"]}
+            )
+        return out
     marks = ",".join("?" * len(paper_ids))
     rows = conn.execute(
         f"SELECT paper_id, flag_type, source, detail FROM paper_flags "
