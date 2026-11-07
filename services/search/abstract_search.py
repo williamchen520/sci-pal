@@ -2,6 +2,7 @@
 摘要库检索：vector + FTS，跟全文库并列。
 V30.0 - Abstract search layer
 """
+import os
 import re
 import sqlite3
 from pathlib import Path
@@ -21,6 +22,11 @@ class AbstractSearch:
     def __init__(self):
         self.db_path = ABSTRACT_DB_PATH
         self.chroma_path = ABSTRACT_CHROMA_PATH
+        self.collection = None
+        if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower() in {
+            "pgvector", "pg_vec", "postgres"
+        }:
+            return
         
         # 加载 embedding 模型
         from sentence_transformers import SentenceTransformer
@@ -32,6 +38,8 @@ class AbstractSearch:
     
     def vector_search(self, query: str, top_k: int = 10) -> List[Dict]:
         """向量搜索摘要库"""
+        if self.collection is None:
+            return []
         query_embedding = self.model.encode([query])
         
         results = self.collection.query(
