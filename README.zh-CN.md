@@ -13,7 +13,7 @@
 生成层推荐**本地小模型做调度 + 云端/DSH 模型做推理**。
 
 > 当前版本：**V33.97**（2026-11-06）
-> Python 3.12 · Flask · PostgreSQL · ChromaDB · SQLite 只读兼容 · OpenAI 兼容云端 / Ollama
+> Python 3.12 · Flask · PostgreSQL · pgvector · SQLite 只读兼容 · OpenAI 兼容云端 / Ollama
 > 原生 HTML/CSS/JS 前端（无框架），DSH 可作为可选推理层
 
 ---
@@ -109,18 +109,18 @@ services/*（检索、问答、综述、guard、源适配）
    │
 build_db/*（解析、JATS 导入、结构重建、写库）
    │
-PostgreSQL + ChromaDB + query-only SQLite 兼容层 + documents/ + documents_xml/
+PostgreSQL + pgvector + query-only SQLite 兼容层 + documents/ + documents_xml/
 ```
 
 ## 技术栈
 
 - 后端：Python 3.12 · Flask 3 · flask-cors · pydantic 2 · networkx
-- 检索：ChromaDB · sentence-transformers · PostgreSQL FTS/BM25 · RRF · bge-reranker
+- 检索：pgvector · sentence-transformers · PostgreSQL FTS/BM25 · RRF · bge-reranker
 - PDF：PyMuPDF · Docling · GROBID · MinerU（按需，质量门兜底）
 - XML：PMC / Europe PMC JATS（`<sec>` / `<ref-list>` / `<xref>`）
 - LLM：云端 OpenAI 兼容 API（推荐推理）+ 本地 Ollama（调度/兜底）；DSH 可接管推理
 - 前端：原生 HTML/CSS/JS + PDF.js（viewer / compare / trace / projects / reviews / watch / packs / claims）
-- 部署：Docker Compose（app + watch-cron + Caddy）· PostgreSQL + Chroma · G 盘数据卷
+- 部署：Docker Compose（app + watch-cron + Caddy）· PostgreSQL + pgvector · G 盘数据卷
 
 ### 模型
 
@@ -140,14 +140,13 @@ PostgreSQL + ChromaDB + query-only SQLite 兼容层 + documents/ + documents_xml
 
 | 表 | 数量 |
 |---|---|
-| papers | 3,297（JATS XML 3,214 + PDF 83） |
-| paragraphs | 167,283 |
-| sentences | 862,114（PDF 句级 bbox 58,648） |
-| sections | 69,097 |
-| citations | 182,758（91.5% 有句级位置） |
-| figures / tables | 13,458 / 4,920 |
-| sentence_links | 296,867（JATS 291,857 + GROBID 3,292） |
-| paper_links | 164,802 |
+| papers | 10,102 |
+| paragraphs | 331,263 |
+| sentences | 1,492,661 |
+| sections | 124,216 |
+| citations | 305,025 |
+| figures / tables | 25,511 / 12,299 |
+| sentence_links | 502,733 |
 
 ## 数据审计与入库前闸门
 
@@ -292,7 +291,7 @@ sci-pal/
 ├─ tests/                    747 项测试
 ├─ documents/                PDF
 ├─ documents_xml/            JATS XML
-├─ data/                     research.db、chroma
+├─ data/                     research.db、pgvector
 └─ scripts/                  服务启动脚本
 ```
 
