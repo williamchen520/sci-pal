@@ -9,7 +9,7 @@ from pathlib import Path
 from config.settings import DATABASE_PATH
 from services.tenancy.permissions import audit, pi_can_copy
 from services.tenancy.service import get_membership
-from services.projects import pg_writes
+from services.projects import pg_service, pg_writes
 
 STATUSES = ("planning", "active", "paused", "completed", "archived")
 
@@ -90,6 +90,8 @@ def _project_role(conn: sqlite3.Connection, project_id: str, user_id: str) -> st
 
 
 def list_projects(workspace_id: str, user_id: str, *, db_path: str | Path = DATABASE_PATH) -> list[dict]:
+    if pg_service.enabled():
+        return pg_service.list_projects(workspace_id, user_id)
     conn = _connect(db_path)
     try:
         role = _workspace_role(conn, workspace_id, user_id)
@@ -118,6 +120,8 @@ def get_project(
     *,
     db_path: str | Path = DATABASE_PATH,
 ) -> dict | None:
+    if pg_service.enabled():
+        return pg_service.get_project(project_id, workspace_id, user_id)
     conn = _connect(db_path)
     try:
         role = _workspace_role(conn, workspace_id, user_id)
