@@ -148,7 +148,13 @@ def run_ingest_job(task_id: str) -> str:
             in {"pgvector", "pg_vec", "postgres"}
             else root / "data" / "chroma"
         ),
-        embed_client=None if local_embed else HttpEmbedder(),
+        embed_client=(
+            None
+            if local_embed
+            or os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower()
+            in {"pgvector", "pg_vec", "postgres"}
+            else HttpEmbedder()
+        ),
     )
     task = service.execute(task_id)
     return (task or {}).get("status", "unknown")
