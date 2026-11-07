@@ -8,6 +8,7 @@ import os
 from sentence_transformers import SentenceTransformer
 
 from services.db.pg_pool import pg_connection
+from services.ingest_quality.paragraph_filter import index_skip_reason
 
 MODEL = os.environ.get("SCIPAL_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 
@@ -31,7 +32,7 @@ def build(limit: int = 0, batch_size: int = 128, model_name: str = "") -> dict:
     pg = pg_connection()
     try:
         rows = pg.execute(
-            "SELECT para_id, paper_id, text FROM paragraphs "
+            "SELECT para_id, paper_id, text, section_level1, section_level2 FROM paragraphs "
             "WHERE text IS NOT NULL AND length(btrim(text)) >= 10 "
             "ORDER BY paper_id, sequence"
         ).fetchall()
@@ -40,7 +41,15 @@ def build(limit: int = 0, batch_size: int = 128, model_name: str = "") -> dict:
         existing = {
             row["para_id"] for row in pg.execute("SELECT para_id FROM paragraph_embeddings")
         }
-        pending = [row for row in rows if row["para_id"] not in existing]
+        skipped = [
+            row for row in rows
+            if index_skip_reason(row["text"], row["section_level1"] or "", row["section_level2"] or "")
+        ]
+        skipped_ids = {row["para_id"] for row in skipped}
+        pending = [
+            row for row in rows
+            if row["para_id"] not in existing and row["para_id"] not in skipped_ids
+        ]
         inserted = 0
         for start in range(0, len(pending), batch_size):
             batch = pending[start:start + batch_size]
@@ -57,7 +66,12 @@ def build(limit: int = 0, batch_size: int = 128, model_name: str = "") -> dict:
                 )
             pg.commit()
             inserted += len(batch)
-        return {"candidates": len(rows), "inserted": inserted, "existing": len(existing)}
+        return {
+            "candidates": len(rows),
+            "inserted": inserted,
+            "existing": len(existing),
+            "skipped": len(skipped),
+        }
     finally:
         pg.close()
 
