@@ -18,8 +18,10 @@ from services.ingest_quality.paragraph_filter import index_skip_reason
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--reasons", default="")
     parser.add_argument("--out", default="G:/runs/vector_index_audit.json")
     args = parser.parse_args()
+    selected = {part.strip() for part in args.reasons.split(",") if part.strip()}
     pg = pg_connection()
     try:
         rows = pg.execute(
@@ -34,7 +36,8 @@ def main() -> int:
             )
             if reason:
                 reasons[reason] += 1
-                flagged.append((row["para_id"], reason))
+                if not selected or reason in selected:
+                    flagged.append((row["para_id"], reason))
         report = {
             "total": len(rows),
             "flagged": len(flagged),
