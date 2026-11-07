@@ -517,6 +517,42 @@ class IngestService:
         }
 
     def _default_embed(self, rows: Sequence[Mapping[str, Any]]) -> int:
+        if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower() in {
+            "pgvector", "pg_vec", "postgres"
+        }:
+            from sentence_transformers import SentenceTransformer
+            from services.db.pg_pool import pg_connection
+
+            model_path = Path(EMBEDDING_MODEL)
+            model = getattr(self, "_model", None)
+            if model is None:
+                device = os.environ.get("SCIPAL_INGEST_DEVICE", "cpu").strip() or "cpu"
+                model = SentenceTransformer(str(model_path), device=device)
+                self._model = model
+            vectors = model.encode(
+                [row["text"] for row in rows],
+                normalize_embeddings=True,
+                show_progress_bar=False,
+            )
+            pg = pg_connection()
+            try:
+                with pg.cursor() as cur:
+                    cur.executemany(
+                        "INSERT INTO paragraph_embeddings (para_id,paper_id,embedding) "
+                        "VALUES (%s,%s,%s::vector) ON CONFLICT (para_id) DO NOTHING",
+                        [
+                            (
+                                row["para_id"],
+                                row.get("paper_id"),
+                                "[" + ",".join(f"{float(v):.6f}" for v in vec) + "]",
+                            )
+                            for row, vec in zip(rows, vectors)
+                        ],
+                    )
+                pg.commit()
+            finally:
+                pg.close()
+            return len(rows)
         if not self.chroma_path:
             return 0
         import chromadb
