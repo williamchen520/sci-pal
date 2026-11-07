@@ -13,7 +13,7 @@
 SciPal is a locally deployable system for searching scientific literature, parsing papers into structured evidence, and producing traceable literature reviews. Its core is a **deterministic retrieval layer** — vector search, PostgreSQL full-text/BM25, reciprocal-rank fusion (RRF), cross-encoder reranking, query routing, and adaptive context expansion. For generation, we recommend a **small local model for orchestration plus a cloud or DSH model for reasoning**.
 
 > Current version: **V33.97** (2026-11-06)  
-> Python 3.12 · Flask · PostgreSQL · ChromaDB · SQLite read-only legacy · OpenAI-compatible cloud APIs / Ollama  
+> Python 3.12 · Flask · PostgreSQL · pgvector · SQLite read-only legacy · OpenAI-compatible cloud APIs / Ollama  
 > Vanilla HTML/CSS/JS frontend (no framework); DSH can serve as an optional reasoning layer.
 
 ---
@@ -44,7 +44,7 @@ SciPal is a locally deployable system for searching scientific literature, parsi
 Paper / graph / tenancy / tasks / webhooks        PostgreSQL
 Runtime writes                                    PostgreSQL
 FTS / BM25                                        PostgreSQL (GIN / ParadeDB path)
-Vector                                            ChromaDB (pgvector not production)
+Vector                                            pgvector (production)
 SQLite                                            query-only runtime snapshot
 Domain routing / topic penalty                    disabled
 Tests                                             917
@@ -142,7 +142,7 @@ Flask API (26 blueprints under routes/*, ~180 routes)
 services/* (retrieval, QA, reviews, guard, tenancy, source adapters)
    │
    ├─ PostgreSQL: paper read path + tenancy writes
-   ├─ SQLite mirror + FTS5 + ChromaDB
+   ├─ SQLite read-only snapshot + PostgreSQL FTS
    ├─ watch-cron / health-cron
    └─ build_db/* (parsing, JATS/PDF rebuild, database writes)
 ```
@@ -150,12 +150,12 @@ services/* (retrieval, QA, reviews, guard, tenancy, source adapters)
 ## Technology Stack
 
 - Backend: Python 3.12 · Flask 3 · flask-cors · pydantic 2 · networkx
-- Retrieval: ChromaDB · sentence-transformers · PostgreSQL FTS/BM25 · RRF · bge-reranker
+- Retrieval: pgvector · sentence-transformers · PostgreSQL FTS/BM25 · RRF · bge-reranker
 - PDF: PyMuPDF · Docling · GROBID · MinerU (on demand, with quality gates)
 - XML: PMC / Europe PMC JATS (`<sec>` / `<ref-list>` / `<xref>`)
 - LLMs: OpenAI-compatible cloud API (recommended for reasoning) + local Ollama (orchestration/fallback); DSH can take over reasoning
 - Frontend: vanilla HTML/CSS/JS + PDF.js (viewer / compare / trace / projects / reviews / watch / packs / claims)
-- Deployment: Docker Compose (app + watch-cron + Caddy) · single-node SQLite · persistent data volume
+- Deployment: Docker Compose (app + watch-cron + Caddy) · single-node PostgreSQL · persistent data volume
 
 ### Models
 
@@ -175,14 +175,13 @@ services/* (retrieval, QA, reviews, guard, tenancy, source adapters)
 
 | Table | Rows |
 |---|---:|
-| papers | 3,312 (production; JATS XML 3,218 + PDF 83 + others) |
-| paragraphs | 167,388 |
-| sentences | 862,677 (PDF sentence bbox: 61,739) |
-| sections | 69,128 |
-| citations | 182,817 (91.5% with sentence-level locations) |
-| figures / tables | 13,471 / 4,922 |
-| sentence_links | 296,867 (JATS 291,857 + GROBID 3,292) |
-| paper_links | 164,802 |
+| papers | 10,102 |
+| paragraphs | 331,263 |
+| sentences | 1,492,661 |
+| sections | 124,216 |
+| citations | 305,025 |
+| figures / tables | 25,511 / 12,299 |
+| sentence_links | 502,733 |
 
 ## Data Audit and Pre-Ingest Gate
 
@@ -334,7 +333,7 @@ sci-pal/
 ├─ tests/                    800 tests
 ├─ documents/                PDFs
 ├─ documents_xml/            JATS XML
-├─ data/                     research.db, Chroma
+├─ data/                     research.db, pgvector
 └─ scripts/                  service and maintenance scripts
 ```
 
