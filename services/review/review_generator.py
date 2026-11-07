@@ -1746,6 +1746,23 @@ class ReviewGenerator:
         if not paper_ids:
             return metadata_map
 
+        if _pg_metadata_enabled():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                rows = pg.execute(
+                    "SELECT paper_id, title, authors, journal, year, doi "
+                    "FROM papers WHERE paper_id = ANY(%s)",
+                    (list(paper_ids),),
+                ).fetchall()
+            finally:
+                pg.close()
+            for row in rows:
+                metadata = build_metadata_from_db_row(dict(row))
+                metadata_map[metadata.paper_id] = metadata
+            return metadata_map
+
         try:
             conn = sqlite3.connect(self.db_path)
             conn.row_factory = sqlite3.Row
@@ -2028,6 +2045,14 @@ def _research_db_path() -> Optional[Path]:
     return path if path.exists() else None
 
 
+def _pg_metadata_enabled() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_REVIEWS_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
 def _title_recall_limits() -> tuple[int, int]:
     """(title-match candidates, extra papers per section), env-tunable."""
     import os
@@ -2042,17 +2067,31 @@ def _paper_titles(paper_ids: list[str]) -> dict[str, str]:
     missing = [pid for pid in paper_ids if pid not in _PAPER_TITLE_CACHE]
     if missing:
         try:
-            db_path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
-            if db_path.exists():
-                conn = sqlite3.connect(str(db_path))
-                placeholders = ",".join("?" for _ in missing)
-                rows = conn.execute(
-                    f"SELECT paper_id, title FROM papers WHERE paper_id IN ({placeholders})",
-                    missing,
-                ).fetchall()
-                conn.close()
-                for paper_id, title in rows:
-                    _PAPER_TITLE_CACHE[paper_id] = title or ""
+            if _pg_metadata_enabled():
+                from services.db.pg_pool import pg_connection
+
+                pg = pg_connection()
+                try:
+                    rows = pg.execute(
+                        "SELECT paper_id, title FROM papers WHERE paper_id = ANY(%s)",
+                        (missing,),
+                    ).fetchall()
+                finally:
+                    pg.close()
+                for row in rows:
+                    _PAPER_TITLE_CACHE[row["paper_id"]] = row["title"] or ""
+            else:
+                db_path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
+                if db_path.exists():
+                    conn = sqlite3.connect(str(db_path))
+                    placeholders = ",".join("?" for _ in missing)
+                    rows = conn.execute(
+                        f"SELECT paper_id, title FROM papers WHERE paper_id IN ({placeholders})",
+                        missing,
+                    ).fetchall()
+                    conn.close()
+                    for paper_id, title in rows:
+                        _PAPER_TITLE_CACHE[paper_id] = title or ""
         except Exception:
             pass
     return {pid: _PAPER_TITLE_CACHE.get(pid, "") for pid in paper_ids}
@@ -2069,16 +2108,30 @@ def _get_fulltext_doi_map() -> dict[str, str]:
     if _FULLTEXT_DOI_MAP is None:
         doi_map: dict[str, str] = {}
         try:
-            db_path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
-            if db_path.exists():
-                conn = sqlite3.connect(str(db_path))
-                rows = conn.execute(
-                    "SELECT paper_id, doi FROM papers "
-                    "WHERE doi IS NOT NULL AND TRIM(doi) != ''"
-                ).fetchall()
-                conn.close()
-                for paper_id, doi in rows:
-                    doi_map[doi.strip().lower()] = paper_id
+            if _pg_metadata_enabled():
+                from services.db.pg_pool import pg_connection
+
+                pg = pg_connection()
+                try:
+                    rows = pg.execute(
+                        "SELECT paper_id, doi FROM papers "
+                        "WHERE doi IS NOT NULL AND btrim(doi) <> ''"
+                    ).fetchall()
+                finally:
+                    pg.close()
+                for row in rows:
+                    doi_map[row["doi"].strip().lower()] = row["paper_id"]
+            else:
+                db_path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
+                if db_path.exists():
+                    conn = sqlite3.connect(str(db_path))
+                    rows = conn.execute(
+                        "SELECT paper_id, doi FROM papers "
+                        "WHERE doi IS NOT NULL AND TRIM(doi) != ''"
+                    ).fetchall()
+                    conn.close()
+                    for paper_id, doi in rows:
+                        doi_map[doi.strip().lower()] = paper_id
         except Exception as e:
             print(f"⚠️  V33.17: 加载全文 DOI 映射失败: {e}")
         _FULLTEXT_DOI_MAP = doi_map
