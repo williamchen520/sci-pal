@@ -219,3 +219,43 @@ Chroma 冻结后清理
 
 这是一次**能力收缩**，不是检索算法变更；  
 先保证主链路稳定，再决定是否用 PG 重建图表/块向量。
+
+
+---
+
+## 11. 执行结果
+
+```text
+P1/P2  已合并 #464
+P3     已合并 #467
+P5     Chroma 数据归档到 I 盘
+```
+
+Chroma：
+
+```text
+G:\sciPal_deploy\data\chroma
+-> I:\_archive\chroma-20261107\chroma
+```
+
+依赖：
+
+```text
+requirements.txt 移除 chromadb
+顶层 import 改为 lazy
+```
+
+验证：
+
+```text
+app health 200
+20 题 0.675 / 0.461
+Chroma path 不存在
+```
+
+剩余：
+
+```text
+辅助搜索保持下线
+前端无独立入口
+```
