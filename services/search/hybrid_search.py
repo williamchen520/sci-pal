@@ -828,6 +828,23 @@ class HybridSearch:
 
         return result
 
+    def _paper_row(self, paper_id: str):
+        if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
+            "postgres", "postgresql", "pg", "1", "true"
+        }:
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                return pg.execute(
+                    "SELECT * FROM papers WHERE paper_id = %s", (paper_id,)
+                ).fetchone()
+            finally:
+                pg.close()
+        return self.conn.execute(
+            "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)
+        ).fetchone()
+
     def search_papers(self, query: str, top_k: int = 5) -> List[Dict]:
         """Search across papers by title/abstract."""
         if self.paper_collection is None:
@@ -845,9 +862,7 @@ class HybridSearch:
         for i in range(len(results["ids"][0])):
             paper_id = results["ids"][0][i]
             # Get full paper info
-            paper = self.conn.execute(
-                "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)
-            ).fetchone()
+            paper = self._paper_row(paper_id)
             if paper:
                 hits.append({
                     "paper_id": paper_id,
@@ -875,9 +890,7 @@ class HybridSearch:
                 best[paper_id] = score
         results = []
         for paper_id, score in sorted(best.items(), key=lambda item: item[1], reverse=True)[:top_k]:
-            paper = self.conn.execute(
-                "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)
-            ).fetchone()
+            paper = self._paper_row(paper_id)
             if paper:
                 results.append(
                     {
