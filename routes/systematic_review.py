@@ -68,6 +68,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             pass
 
     def _conn():
+        if _pg_projects():
+            return None
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         return conn
@@ -97,7 +99,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             _audit(conn, project_id, "project_created", project_id, name)
             return jsonify({"project_id": project_id}), 201
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>", methods=["GET"])
     def project(project_id: str):
@@ -117,7 +120,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 return jsonify({"error": "project not found"}), 404
             return jsonify(row)
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/papers", methods=["POST"])
     def papers(project_id: str):
@@ -144,7 +148,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             _audit(conn, project_id, "papers_added", "", str(len(paper_ids)))
             return jsonify({"added": len(paper_ids)})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/screen", methods=["POST"])
     def screen(project_id: str):
@@ -179,7 +184,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 else systematic.prisma(conn, project_id)
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/prisma", methods=["GET"])
     def prisma(project_id: str):
@@ -191,7 +197,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 else systematic.prisma(conn, project_id)
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/evidence", methods=["GET", "POST"])
     def evidence(project_id: str):
@@ -231,7 +238,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             _audit(conn, project_id, "evidence_extracted", "", str(added))
             return jsonify({"added": added, "rows": systematic.list_evidence(conn, project_id)})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/evidence.csv", methods=["GET"])
     def evidence_csv(project_id: str):
@@ -247,7 +255,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 },
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/pico", methods=["POST"])
     def extract_pico(project_id: str):
@@ -269,7 +278,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             _audit(conn, project_id, "pico_extracted")
             return jsonify(result)
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/kappa", methods=["GET"])
     def screening_kappa(project_id: str):
@@ -277,7 +287,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         try:
             return jsonify(kappa_mod.kappa(conn, project_id))
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/prisma.svg", methods=["GET"])
     def prisma_diagram(project_id: str):
@@ -290,7 +301,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             svg = prisma_svg.render(row.get("name") or project_id, counts)
             return Response(svg, mimetype="image/svg+xml")
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/risk-of-bias", methods=["GET", "POST"])
     def rob(project_id: str):
@@ -321,7 +333,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 }
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/from-watch", methods=["POST"])
     def from_watch(project_id: str):
@@ -347,7 +360,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             _audit(conn, project_id, "watch_imported", str(run_id), str(added))
             return jsonify({"added": added})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/brief", methods=["GET"])
     def review_brief(project_id: str):
@@ -372,7 +386,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             )
             return Response(text, mimetype="text/markdown; charset=utf-8")
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/report.html", methods=["GET"])
     def review_report(project_id: str):
@@ -400,7 +415,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 mimetype="text/html; charset=utf-8",
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/report.pdf", methods=["GET"])
     def review_report_pdf(project_id: str):
@@ -431,7 +447,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 },
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/conflicts", methods=["GET"])
     def screening_conflicts(project_id: str):
@@ -439,7 +456,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         try:
             return jsonify({"conflicts": systematic.conflicts(conn, project_id)})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/adjudicate", methods=["POST"])
     def adjudicate(project_id: str):
@@ -464,7 +482,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 }
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/members", methods=["GET", "POST"])
     def project_members(project_id: str):
@@ -487,7 +506,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             _audit(conn, project_id, "member_added", member, data.get("role", "reviewer"))
             return jsonify({"members": systematic.members(conn, project_id)})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/events", methods=["GET"])
     def review_events(project_id: str):
@@ -501,7 +521,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 else {"events": systematic.list_events(conn, project_id)}
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/import", methods=["POST"])
     def import_project():
@@ -516,7 +537,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             )
             return jsonify(result), 201
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/export.json", methods=["GET"])
     def export_project(project_id: str):
@@ -533,7 +555,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 },
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/import-records", methods=["POST"])
     def import_records(project_id: str):
@@ -553,7 +576,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             )
             return jsonify(result)
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/import-file", methods=["POST"])
     def import_file(project_id: str):
@@ -582,7 +606,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             )
             return jsonify(result)
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/webhooks", methods=["GET", "POST"])
     def webhooks(project_id: str):
@@ -614,7 +639,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             )
             return jsonify({"id": webhook_id}), 201
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/webhooks/<int:webhook_id>", methods=["DELETE"])
     def delete_webhook(project_id: str, webhook_id: int):
@@ -630,7 +656,8 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             notifications.delete_webhook(conn, project_id, webhook_id)
             return jsonify({"deleted": webhook_id})
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @bp.route("/<project_id>/report.docx", methods=["GET"])
     def review_report_docx(project_id: str):
@@ -656,6 +683,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
                 },
             )
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     return bp
