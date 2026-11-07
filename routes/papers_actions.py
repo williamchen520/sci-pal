@@ -32,8 +32,28 @@ _PARSED_PAPER_ORDER = (
 )
 
 
+def _papers_pg_enabled() -> bool:
+    return os.environ.get("SCIPAL_PAPERS_READ_BACKEND", "").strip().lower() in {
+        "postgres", "postgresql", "pg", "1", "true"
+    }
+
+
 def _find_parsed_paper(filename: str, conn: sqlite3.Connection | None = None):
     """Return the best paper row for a filename (most paragraphs wins)."""
+    if conn is None and _papers_pg_enabled():
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            row = pg.execute(
+                "SELECT paper_id, filename, title, authors, year, total_paragraphs "
+                "FROM papers WHERE filename = %s "
+                "ORDER BY (total_paragraphs IS NULL) ASC, total_paragraphs DESC LIMIT 1",
+                (filename,),
+            ).fetchone()
+            return dict(row) if row else None
+        finally:
+            pg.close()
     own_conn = conn is None
     if conn is None:
         conn = sqlite3.connect(str(db_path_for_lookup()))  # type: ignore[name-defined]
@@ -68,15 +88,27 @@ def build_papers_actions_blueprint(
         workspace_id = resolve_workspace(db_path=db_path)
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 401
-        conn = sqlite3.connect(str(db_path))
-        try:
-            ensure_workspace_scoping(conn)
-            row = conn.execute(
-                "SELECT 1 FROM papers WHERE paper_id = ? AND workspace_id = ?",
-                (paper_id, workspace_id),
-            ).fetchone()
-        finally:
-            conn.close()
+        if _papers_pg_enabled():
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                row = pg.execute(
+                    "SELECT 1 FROM papers WHERE paper_id = %s AND workspace_id = %s",
+                    (paper_id, workspace_id),
+                ).fetchone()
+            finally:
+                pg.close()
+        else:
+            conn = sqlite3.connect(str(db_path))
+            try:
+                ensure_workspace_scoping(conn)
+                row = conn.execute(
+                    "SELECT 1 FROM papers WHERE paper_id = ? AND workspace_id = ?",
+                    (paper_id, workspace_id),
+                ).fetchone()
+            finally:
+                conn.close()
         if not row:
             return jsonify({"error": "Paper not found"}), 404
         return None
