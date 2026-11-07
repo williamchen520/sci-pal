@@ -176,3 +176,55 @@ B2 W1：tenancy 读路径迁 PG
 ```
 
 这是最小、最独立、权限最敏感的模块，适合作为第一刀。
+
+
+---
+
+## 9. 完成度复核（2026-11-07）
+
+不是“都做过”。逐个核对代码与生产 env：
+
+| 波次 | 模块 | 状态 | 依据 |
+|---|---|---|---|
+| W1 | tenancy | 基本完成 | `TENANCY_PG_ONLY=1` / `TENANCY_READ_BACKEND=postgres` |
+| W2 | projects | 部分 | 写 PG；读仍走 `service.py` SQLite |
+| W3 | experiments/runs | 部分 | experiments 路由 PG；runs 仍 SQLite |
+| W4 | watch | 基本完成 | `WATCH_PG_STORE=1`，`pg_store` 接管 |
+| W5 | review | 部分 | `REVIEWS_BACKEND=postgres` 管 reviews CRUD；generator 仍读 SQLite |
+| W6 | papers_actions | 未完成 | 仍 `sqlite3.connect` 读 papers/sections/附件 |
+| W7 | hybrid/search 过滤器 | 部分 | 段落向量 PG；过滤/辅助仍可能读 SQLite |
+| W8 | 归档 research.db | 未完成 | 仍被上述模块读取 |
+
+### 特别说明
+
+```text
+projects/pg_service.py 存在
+但 service.py 没有调用
+所以不能因为“有 PG 模块”就认为已迁移
+```
+
+```text
+experiments/pg_read.py 存在
+但只被部分路由使用
+runs 仍走 SQLite
+```
+
+### 结论
+
+```text
+W1/W4：基本完成，剩 fallback 清理
+W2/W3/W5/W7：读路径只迁了一部分
+W6/W8：未完成
+```
+
+所以下一步不是“重做 W1”，而是：
+
+```text
+W1 验证 fallback
+W2 把 projects 读接到 pg_service
+W3 把 runs 读迁 PG
+W5 把 generator 的 papers 读取迁 PG
+W6 papers_actions
+W7 search 过滤器
+W8 归档
+```
