@@ -8,7 +8,6 @@ import os
 import sqlite3
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Callable
-import chromadb
 
 from services.search.reference_filter import is_reference_entry
 from services.search.boilerplate_filter import clean_boilerplate
@@ -82,14 +81,25 @@ class HybridSearch:
         self.conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
 
-        self.client = chromadb.PersistentClient(path=str(CHROMA_PATH))
-        collection_name = os.environ.get("SCIPAL_PARAGRAPH_COLLECTION", "paragraphs")
-        self.para_collection = self.client.get_collection(collection_name)
-        self.contextual_collection = self._get_collection("paragraphs_contextual")
-        self.paper_collection = self._get_collection("papers")
-        self.fig_collection = self._get_collection("figures")
-        self.table_collection = self._get_collection("tables")
-        self.chunk_collection = self._get_collection("chunks")  # V24.1
+        backend = os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower()
+        self.client = None
+        self.para_collection = None
+        self.contextual_collection = None
+        self.paper_collection = None
+        self.fig_collection = None
+        self.table_collection = None
+        self.chunk_collection = None
+        if backend not in {"pgvector", "pg_vec", "postgres"}:
+            import chromadb
+
+            self.client = chromadb.PersistentClient(path=str(CHROMA_PATH))
+            collection_name = os.environ.get("SCIPAL_PARAGRAPH_COLLECTION", "paragraphs")
+            self.para_collection = self.client.get_collection(collection_name)
+            self.contextual_collection = self._get_collection("paragraphs_contextual")
+            self.paper_collection = self._get_collection("papers")
+            self.fig_collection = self._get_collection("figures")
+            self.table_collection = self._get_collection("tables")
+            self.chunk_collection = self._get_collection("chunks")  # V24.1
 
         from sentence_transformers import SentenceTransformer
         self.model = SentenceTransformer(EMBEDDING_MODEL)
@@ -114,6 +124,8 @@ class HybridSearch:
 
     def _get_collection(self, name):
         """Get a collection if it exists, else None."""
+        if self.client is None:
+            return None
         try:
             return self.client.get_collection(name)
         except Exception:

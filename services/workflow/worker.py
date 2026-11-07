@@ -142,7 +142,12 @@ def run_ingest_job(task_id: str) -> str:
     service = IngestService(
         db_path=root / "data" / "research.db",
         xml_dir=root / "documents_xml",
-        chroma_path=root / "data" / "chroma",
+        chroma_path=(
+            None
+            if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower()
+            in {"pgvector", "pg_vec", "postgres"}
+            else root / "data" / "chroma"
+        ),
         embed_client=None if local_embed else HttpEmbedder(),
     )
     task = service.execute(task_id)
