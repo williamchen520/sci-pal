@@ -411,6 +411,29 @@ def upsert_supplementary(row: dict) -> bool:
     return True
 
 
+def list_supplementary(paper_id: str) -> list[dict]:
+    if not enabled():
+        return []
+    with _pg_connection() as pg:
+        rows = pg.execute(
+            "SELECT supp_id,paper_id,filename,file_type,file_path,file_size,description,created_at "
+            "FROM supplementary_files WHERE paper_id=%s ORDER BY created_at",
+            (paper_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def delete_supplementary(supp_id: str) -> bool:
+    if not enabled():
+        return False
+    with _pg_connection() as pg:
+        result = pg.execute(
+            "DELETE FROM supplementary_files WHERE supp_id=%s", (supp_id,)
+        )
+        pg.commit()
+        return result.rowcount > 0
+
+
 def replace_sections(paper_id: str, rows: list[tuple], para_map: list[tuple[str, str | None]]) -> bool:
     """PG mirror for build_sections_tree before SQLite mirror."""
     if not enabled():

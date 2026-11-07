@@ -399,6 +399,8 @@ class DatabaseWriter:
 
     def get_supplementary_files(self, paper_id: str) -> List[Dict[str, Any]]:
         """Get all supplementary files for a paper."""
+        if paper_pg_writes.enabled():
+            return paper_pg_writes.list_supplementary(paper_id)
         conn = self._get_connection()
         cursor = conn.cursor()
         try:
@@ -431,6 +433,8 @@ class DatabaseWriter:
 
     def delete_supplementary_file(self, supp_id: str) -> bool:
         """Delete a supplementary file record (does NOT delete the actual file)."""
+        if paper_pg_writes.enabled():
+            return paper_pg_writes.delete_supplementary(supp_id)
         conn = self._get_connection()
         cursor = conn.cursor()
         try:
