@@ -17,6 +17,11 @@ class DatabaseWriter:
     def __init__(self, db_path: str = None):
         self.db_path = db_path or DATABASE_PATH
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        if os.environ.get("SCIPAL_INGEST_PG_ONLY", "").strip().lower() in {
+            "1", "true", "yes", "on"
+        } or paper_pg_writes.enabled():
+            self.paper_columns = set()
+            return
         # V25.18: 缓存 papers 表实际字段，避免插入不存在的列报错
         self.paper_columns = self._get_table_columns('papers')
 
