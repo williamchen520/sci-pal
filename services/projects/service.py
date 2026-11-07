@@ -58,6 +58,14 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
     return conn
 
 
+def _sqlite_mirror_enabled() -> bool:
+    import os
+
+    return os.environ.get("SCIPAL_SQLITE_QUERY_ONLY", "").strip().lower() not in {
+        "1", "true", "yes", "on"
+    }
+
+
 def _conn_db_path(conn: sqlite3.Connection) -> str:
     row = conn.execute("PRAGMA database_list").fetchone()
     return row[2] if row and row[2] else DATABASE_PATH
@@ -163,6 +171,10 @@ def create_project(
         raise ValueError("name is required")
     if status not in STATUSES:
         raise ValueError("invalid status")
+    if pg_service.enabled() and not _sqlite_mirror_enabled():
+        return pg_service.create_project(
+            workspace_id, owner_user_id, name, description, status=status
+        )
     conn = _connect(db_path)
     try:
         if not _workspace_role(conn, workspace_id, owner_user_id):
@@ -197,6 +209,11 @@ def update_project(
     status: str | None = None,
     db_path: str | Path = DATABASE_PATH,
 ) -> dict | None:
+    if pg_service.enabled() and not _sqlite_mirror_enabled():
+        return pg_service.update_project(
+            project_id, workspace_id, user_id,
+            name=name, description=description, status=status,
+        )
     conn = _connect(db_path)
     try:
         project = conn.execute(
@@ -246,6 +263,10 @@ def add_member(
 ) -> dict | None:
     if role not in {"owner", "member", "viewer"}:
         raise ValueError("invalid role")
+    if pg_service.enabled() and not _sqlite_mirror_enabled():
+        return pg_service.add_member(
+            project_id, workspace_id, actor_user_id, target_user_id, role
+        )
     conn = _connect(db_path)
     try:
         project = conn.execute(
