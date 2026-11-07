@@ -44,6 +44,22 @@ class PdfAnnotator:
 
     def get_pdf_path(self, paper_id: str) -> Optional[Path]:
         """根据 paper_id 查询 PDF 文件路径。"""
+        if os.environ.get("SCIPAL_PAPERS_READ_BACKEND", "").strip().lower() in {
+            "postgres", "postgresql", "pg", "1", "true"
+        }:
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                row = pg.execute(
+                    "SELECT filename FROM papers WHERE paper_id = %s", (paper_id,)
+                ).fetchone()
+            finally:
+                pg.close()
+            if not row or not row["filename"]:
+                return None
+            pdf_path = self.documents_dir / row["filename"]
+            return pdf_path if pdf_path.exists() else None
         try:
             conn = sqlite3.connect(str(self.db_path))
             conn.row_factory = sqlite3.Row  # V25.13 修复：否则 row["filename"] 报 TypeError
