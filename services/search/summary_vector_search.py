@@ -22,6 +22,10 @@ class SummaryVectorSearch:
         self._collection = None
 
     def available(self) -> bool:
+        if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower() in {
+            "pgvector", "pg_vec", "postgres"
+        }:
+            return False
         try:
             client = chromadb.PersistentClient(path=self.chroma_path)
             client.get_collection("section_summaries")
@@ -30,6 +34,10 @@ class SummaryVectorSearch:
             return False
 
     def _ensure(self) -> bool:
+        if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower() in {
+            "pgvector", "pg_vec", "postgres"
+        }:
+            return False
         if self._model is not None and self._collection is not None:
             return True
         try:
