@@ -686,8 +686,15 @@ class UnifiedRetriever:
         citations/figures/tables.
         """
         env = self.retrieve(query, paper_id, **kwargs)
-        conn = sqlite3.connect(str(STRUCT_DB))
-        conn.row_factory = sqlite3.Row
+        if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
+            "postgres", "postgresql", "pg", "1", "true"
+        }:
+            from services.db.pg_sqlite_compat import PGReadCompat
+
+            conn = PGReadCompat()
+        else:
+            conn = sqlite3.connect(str(STRUCT_DB))
+            conn.row_factory = sqlite3.Row
         meta_cache: Dict[str, Dict] = {}
         try:
             def paper_meta(pid: str) -> Dict:
