@@ -170,45 +170,51 @@ def build_papers_actions_blueprint(
         finally:
             conn.close()
 
-    @bp.route("/api/papers/local", methods=["GET"])
-    def list_local_papers():
-        """æ‰«æ documents ç›®å½•ä¸‹æ‰€æœ‰ PDF æ–‡ä»¶ï¼Œäº¤å‰æŸ¥ papers è¡¨æ ‡è®°è§£æžçŠ¶æ€ã€‚
+    def _supplementary_counts() -> dict:
+        counts = {}
+        if _papers_pg_enabled():
+            from services.db.pg_pool import pg_connection
 
-        Returns:
-          papers: [{filename, file_size, modified_at, parsed, paper_id, title, authors, year, paragraph_count}]
-        """
-        import sqlite3
-
-        if not DOCUMENTS_DIR.exists():
-            # âš ï¸ çŠ¶æ€ç **ä¿æŒ 200**ï¼šå‰ç«¯ä¹Ÿåœ¨ç”¨è¿™ä¸ªè·¯ç”±ï¼Œè¿”å›ž 4xx å¯èƒ½è®©é¡µé¢æŠ¥é”™ã€‚
-            # ã€Œç›®å½•ä¸å­˜åœ¨ã€ç”± MCP ä¾§ï¼ˆsearch_server.list_local_papersï¼‰æ® error å­—æ®µ
-            # å¦‚å®žä¸ŠæŠ¥æˆ {"ok": false, ...}ï¼Œä¸å†ä¼ªè£…æˆã€Œ0 ç¯‡ã€ã€‚
-            return jsonify({"papers": [], "error": "documents directory not found"}), 200
-
+            pg = pg_connection()
+            try:
+                rows = pg.execute(
+                    "SELECT paper_id, COUNT(*) AS cnt FROM supplementary_files GROUP BY paper_id"
+                ).fetchall()
+            except Exception:
+                rows = []
+            finally:
+                pg.close()
+            return {row["paper_id"]: row["cnt"] for row in rows}
         conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-
-        # V25.17: æŸ¥è¯¢æ¯ç¯‡è®ºæ–‡çš„è¡¥å……ææ–™æ•°é‡
-        supp_counts = {}
         try:
-            supp_rows = conn.execute(
+            rows = conn.execute(
                 "SELECT paper_id, COUNT(*) as cnt FROM supplementary_files GROUP BY paper_id"
             ).fetchall()
-            for r in supp_rows:
-                supp_counts[r["paper_id"]] = r["cnt"]
+            return {row[0]: row[1] for row in rows}
         except Exception:
-            pass  # è¡¨å¯èƒ½è¿˜ä¸å­˜åœ¨ï¼ˆæ—§æ•°æ®åº“ï¼‰ï¼Œè¿ç§»ä¼šåœ¨å¯åŠ¨æ—¶åˆ›å»º
+            return counts
+        finally:
+            conn.close()
 
-        # æ‰«æ documents ç›®å½•ã€‚æ¯ä¸ªæ–‡ä»¶åéƒ½èµ° _find_parsed_paperï¼ˆç»Ÿä¸€å£å¾„ï¼‰ï¼Œ
-        # ä¸å†ç”¨ã€ŒåŽå†™è¦†ç›–ã€çš„ parsed_map â€”â€” å¦åˆ™ _mineru ç©ºå£³è¡Œä¼šæŠŠ 224 æ®µè¦†ç›–æˆ 0ã€‚
-        result = []
+    @bp.route("/api/papers/local", methods=["GET"])
+    def list_local_papers():
+        """List PDFs in documents/ and join papers parse status."""
+        if not DOCUMENTS_DIR.exists():
+            return jsonify({"papers": [], "error": "documents directory not found"}), 200
+
+        conn = None
+        if not _papers_pg_enabled():
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
         try:
+            supp_counts = _supplementary_counts()
+            result = []
             for entry in sorted(DOCUMENTS_DIR.iterdir()):
                 if not entry.is_file() or entry.suffix.lower() != ".pdf":
                     continue
                 filename = entry.name
                 stat = entry.stat()
-                info = _find_parsed_paper(filename, conn=conn)
+                info = _find_parsed_paper(filename, conn=conn) if conn is not None else _find_parsed_paper(filename)
                 result.append({
                     "filename": filename,
                     "file_size": stat.st_size,
@@ -223,12 +229,15 @@ def build_papers_actions_blueprint(
                     "supp_count": supp_counts.get(info["paper_id"], 0) if info else 0,
                 })
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
-        # å·²è§£æžçš„æŽ’å‰é¢ï¼Œç„¶åŽæŒ‰æ–‡ä»¶å
         result.sort(key=lambda x: (not x["parsed"], x["filename"].lower()))
-        return jsonify({"papers": result, "total": len(result), "parsed_count": sum(1 for p in result if p["parsed"])})
-
+        return jsonify({
+            "papers": result,
+            "total": len(result),
+            "parsed_count": sum(1 for p in result if p["parsed"]),
+        })
 
     # ============================================================
     # V33.2: åœ¨çº¿æ–‡çŒ®ä¸‹è½½ APIï¼ˆå¼‚æ­¥ä¸‹è½½+å¢žé‡å¯¼å…¥+å¢žé‡å»ºç´¢å¼•ï¼‰
