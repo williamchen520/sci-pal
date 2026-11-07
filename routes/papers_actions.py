@@ -851,8 +851,81 @@ def build_papers_actions_blueprint(
     # Trace: sentence -> page/bbox -> citation/figure/table (for highlighting)
     # ---------------------------------------------------------------------------
 
+    def _trace_payload_pg(paper_id: str, sentence_id: str):
+        from services.security.signed_url import sign_path
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
+        try:
+            row = pg.execute(
+                "SELECT s.sentence_id, s.text, s.page, s.bbox, s.section_id, "
+                "       p.filename, p.title "
+                "FROM sentences s JOIN papers p ON p.paper_id = s.paper_id "
+                "WHERE s.paper_id = %s AND s.sentence_id = %s",
+                (paper_id, sentence_id),
+            ).fetchone()
+            if not row:
+                return None
+            section_path = []
+            current = row["section_id"]
+            seen = set()
+            while current and current not in seen:
+                seen.add(current)
+                section = pg.execute(
+                    "SELECT title, parent_id FROM sections WHERE section_id = %s",
+                    (current,),
+                ).fetchone()
+                if not section:
+                    break
+                section_path.append(section["title"])
+                current = section["parent_id"]
+            section_path.reverse()
+
+            links = []
+            for link in pg.execute(
+                "SELECT target_type, target_id, relation, source, confidence, page, bbox "
+                "FROM sentence_links WHERE sentence_id = %s",
+                (sentence_id,),
+            ):
+                item = dict(link)
+                if item["target_type"] == "citation":
+                    detail = pg.execute(
+                        "SELECT raw_text, doi, title FROM citations WHERE citation_id = %s",
+                        (item["target_id"],),
+                    ).fetchone()
+                elif item["target_type"] == "figure":
+                    detail = pg.execute(
+                        "SELECT fig_number, caption, page, bbox FROM figures WHERE fig_id = %s",
+                        (item["target_id"],),
+                    ).fetchone()
+                else:
+                    detail = pg.execute(
+                        "SELECT table_number, caption FROM tables WHERE table_id = %s",
+                        (item["target_id"],),
+                    ).fetchone()
+                item["detail"] = dict(detail) if detail else {}
+                links.append(item)
+
+            return {
+                "paper_id": paper_id,
+                "title": row["title"],
+                "sentence_id": sentence_id,
+                "sentence": row["text"],
+                "page": row["page"],
+                "bbox": row["bbox"],
+                "section_path": section_path,
+                "links": links,
+                "pdf_url": sign_path(f"/api/papers/{paper_id}/pdf"),
+                "pdf_url_unsigned": f"/api/papers/{paper_id}/pdf",
+                "image_url": f"/api/papers/{paper_id}/trace.png?sentence_id={sentence_id}",
+            }
+        finally:
+            pg.close()
+
     def _trace_payload(paper_id: str, sentence_id: str):
         from services.security.signed_url import sign_path
+        if _papers_pg_enabled():
+            return _trace_payload_pg(paper_id, sentence_id)
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
