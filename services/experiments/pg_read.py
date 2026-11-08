@@ -6,11 +6,14 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from services.db.pg_pool import main_read_connection
+
+# Backward-compatible alias used by tests and older callers.
+pg_connection = main_read_connection
 from services.db.tenant_pilot import set_search_path
 
 
 def _pg():
-    pg = main_read_connection()
+    pg = pg_connection()
     set_search_path(pg, "experiments")
     return pg
 
