@@ -50,6 +50,7 @@ class PGVectorParagraphSearch:
                    p.text, 1 - (e.embedding <=> %s::vector) AS rank
             FROM paragraph_embeddings e
             JOIN paragraphs p ON p.para_id = e.para_id
+            JOIN papers pp ON pp.paper_id = e.paper_id AND pp.duplicate_of IS NULL
             WHERE {where}
             ORDER BY e.embedding <=> %s::vector
             LIMIT %s

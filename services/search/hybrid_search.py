@@ -157,7 +157,7 @@ class HybridSearch:
 
             pg = pg_connection()
             try:
-                clauses = []
+                clauses = ["duplicate_of IS NULL"]
                 params = []
                 if year_min is not None:
                     clauses.append("year >= %s")
