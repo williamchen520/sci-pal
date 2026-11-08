@@ -12,12 +12,42 @@ The same test failing on two consecutive invocations aborts immediately with
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+
+SQLITE_MODULES = [
+    "test_review_repository",
+    "test_reviews_routes",
+    "test_systematic_review",
+    "test_tasks_routes",
+]
+PG_MODULES = [
+    "test_pg_pool",
+    "test_pg_schema_v2",
+    "test_db_writer_pg_only",
+    "test_task_lookup",
+    "test_pg_fts",
+    "test_pg_vector",
+    "test_pg_paragraph_retriever",
+    "test_claims_pg_read",
+    "test_projects_pg",
+    "test_tenancy_pg_writes",
+    "test_watch_pg_store",
+]
+BACKEND_KEYS = [
+    "SCIPAL_REVIEWS_BACKEND",
+    "SCIPAL_PROJECTS_BACKEND",
+    "SCIPAL_EXPERIMENTS_BACKEND",
+    "SCIPAL_CLAIMS_BACKEND",
+    "SCIPAL_TASKS_BACKEND",
+    "SCIPAL_SYSTEMATIC_BACKEND",
+    "SCIPAL_WATCH_PG_STORE",
+]
 
 from services.quality.stop_loss import StopLossGuard, StopLossTriggered
 
@@ -37,9 +67,23 @@ def main() -> int:
     parser.add_argument("--state-file", default=str(ROOT / "logs" / "stop_loss_state.json"))
     parser.add_argument("--limit", type=int, default=2)
     parser.add_argument("--verbosity", type=int, default=2)
+    parser.add_argument("--group", choices=["sqlite", "pg"], default=None)
     args = parser.parse_args()
 
-    suite = unittest.defaultTestLoader.discover(args.start_dir, pattern=args.pattern)
+    if args.group:
+        for key in BACKEND_KEYS:
+            os.environ.pop(key, None)
+        if args.group == "sqlite":
+            modules = SQLITE_MODULES
+        else:
+            modules = PG_MODULES
+            for key in BACKEND_KEYS:
+                os.environ[key] = "postgres"
+        suite = unittest.TestSuite(
+            unittest.defaultTestLoader.loadTestsFromName(f"tests.{name}") for name in modules
+        )
+    else:
+        suite = unittest.defaultTestLoader.discover(args.start_dir, pattern=args.pattern)
     test_ids = [test.id() for test in iter_tests(suite)]
     result = unittest.TextTestRunner(verbosity=args.verbosity).run(suite)
 
