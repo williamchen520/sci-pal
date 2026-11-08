@@ -57,9 +57,6 @@ from routes.tasks import build_tasks_blueprint
 from routes.tenancy import build_tenancy_blueprint
 from routes.watch import build_watch_blueprint
 from services.tenancy import bootstrap_default_workspace
-from services.db import sqlite_readonly
-
-sqlite_readonly.install()
 
 DB_PATH = PROJECT_ROOT / "data" / "research.db"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
