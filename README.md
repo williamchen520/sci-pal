@@ -1,419 +1,282 @@
-# SciPal — A Retrieval-Augmented Research Workbench
+# SciPal — Retrieval-Augmented Research Workbench
 
-> 🚀 **Developer quick start:** [Modules and Routes](docs/en/Modules-and-Routes.md) — find module responsibilities, routes, entry points, and tests; use Architecture and Routes for cross-module flow.
->
-> 🚀 **开发者极速接入**：[开发-模块手册](docs/开发-模块手册.md) — 按模块找职责、路由、入口和测试；跨模块数据流再看架构与路由图。
-
-> Machine-readable architecture: [ARCHITECTURE.json](ARCHITECTURE.json)  
-> **Read-only constitution**: changes require human “批准修改” and `[APPROVED_BY_HUMAN]`.  
-> Architecture-as-code workflow: [development workflow](docs/开发流程规范.md)
+> **Status: active development / PG-only.** No stable release.  
+> Do not use for clinical or regulated decisions.
 
 **English** | [简体中文](README.zh-CN.md)
 
-SciPal is a locally deployable system for searching scientific literature, parsing papers into structured evidence, and producing traceable literature reviews. Its core is a **deterministic retrieval layer** — vector search, PostgreSQL full-text/BM25, reciprocal-rank fusion (RRF), cross-encoder reranking, query routing, and adaptive context expansion. For generation, we recommend a **small local model for orchestration plus a cloud or DSH model for reasoning**.
+SciPal is a locally deployable system for literature search, structured evidence extraction, systematic review and traceable writing. Its core is a deterministic retrieval layer: pgvector recall, PostgreSQL full-text search, reciprocal-rank fusion (RRF), cross-encoder reranking and adaptive context expansion.
 
-> Current version: **V33.97** (2026-11-06)  
-> Python 3.12 · Flask · PostgreSQL · pgvector · SQLite read-only legacy · OpenAI-compatible cloud APIs / Ollama  
-> Vanilla HTML/CSS/JS frontend (no framework); DSH can serve as an optional reasoning layer.
+Generation is optional and pluggable: a small local model for orchestration, a cloud or DSH model for reasoning.
 
 ---
-
-## ⚠️ Work in Progress
-
-1. SciPal is under active development. No stable release has been published.
-2. The main branch contains known bugs, unstable APIs, and code paths that have not been fully tested.
-3. **Do not deploy the current code in production**, in clinical or regulated research workflows, or anywhere data loss would matter.
-4. If you ignore this warning and use development code in production, you are responsible for any resulting data loss, service failure, or other damage. The authors accept no liability.
-
----
-
-## TODO: v1.0 Release Gate
-
-> [!IMPORTANT]
-> **Before tagging v1.0 and publishing for public deployment, the Flask development server MUST be replaced by a production WSGI server (Waitress/Gunicorn).**
->
-> `python api_server.py` is for development only. Set `APP_MODE=PROD_MODE` to run
-> under gunicorn. This gate applies when algorithms are settled, tests are green,
-> and the `v1.0` tag is about to be pushed to GitHub for public download/deploy.
-
----
-
-## Current Engineering Status (2026-11-02)
-
-```text
-Paper / graph / tenancy / tasks / webhooks        PostgreSQL
-Runtime writes                                    PostgreSQL
-FTS / BM25                                        PostgreSQL (GIN / ParadeDB path)
-Vector                                            pgvector (production)
-SQLite                                            query-only runtime snapshot
-Domain routing / topic penalty                    disabled
-Tests                                             917
-```
-
-Operational notes:
-
-- `deploy-health-cron-1` checks SQLite/PG drift every 300s; SQLite is read-only at runtime.
-- OpenAlex/AI domain labels are **provisional**; no production routing yet.
-- HybridSearch, sentence seeds, near-duplicate suppression, soft cap, and MMR remain experimental.
-- Remaining work is tracked in [Work summary and backlog](docs/工作总结-2026-11-02.md).
-
----
-
-## Large-Scale and Concurrent Testing Policy
-
-> **Use PostgreSQL for any benchmark with more than 100 papers or with concurrent workers. Do not use SQLite for high-concurrency testing.**
->
-> SQLite is allowed only for small, single-process local checks (≤100 papers), and only when `SCIPAL_BENCH_ALLOW_SQLITE=1` is set explicitly.
-
-Default benchmark connection string:
-
-```text
-postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench
-```
-
-Override it with:
-
-```powershell
-$env:SCIPAL_BENCH_DATABASE_URL = "postgresql://user:pass@host:5432/db"
-```
-
-Small local checks only:
-
-```powershell
-$env:SCIPAL_BENCH_DATABASE_URL = "sqlite:///data/bench_local.db"
-$env:SCIPAL_BENCH_ALLOW_SQLITE = "1"
-```
-
-Notes:
-
-- Production paper reads, detail, graph, and tenancy reads run on PostgreSQL.
-- All runtime writes are PostgreSQL; SQLite is query-only and retained for legacy reads/backups.
-- The policy is **fail-fast**: large or concurrent benchmarks fail instead of silently falling back to SQLite.
-- See [docs/benchmark-PostgreSQL策略.md](docs/benchmark-PostgreSQL策略.md) (Chinese) for details.
-
----
-
-## What It Does
-
-| Capability | Description |
-|---|---|
-| Literature search | Dual recall with vectors and FTS5, RRF fusion, cross-encoder reranking, paragraph-to-section expansion |
-| Structured parsing | Three PDF engines (Docling / GROBID / MinerU) plus native JATS XML import |
-| Section / paragraph / sentence tree | Explicit `sections.parent_id`, `paragraphs.section_id`, and sentence-level page/bbox metadata |
-| Citation and figure/table links | Sentence ↔ citation/figure/table links with provenance and confidence |
-| Sentence traceability | `/api/papers/<id>/trace`, highlighted page crops, and `frontend/trace.html` |
-| RAG question answering | Evidence envelopes, citations, and switchable local 7B or cloud models |
-| Adaptive contextual retrieval | Original paragraph index for simple questions; contextual index for complex ones; enabled by default |
-| Sentence seeds | `sentences_fts` supplies paragraph candidates; `SCIPAL_SENTENCE_SEEDS=1` improves recall at roughly 3.6× latency |
-| Domain adaptation | `domain_profiles` + `paper_domains` + soft routing; off by default |
-| Answer-level evaluation | Async QA with coverage, citation, and refusal metrics; 100-question cloud run: coverage 0.7733, refusal 1.00 |
-| External evaluation | SciFact 100 claims: doc recall 0.97 / sentence recall 0.97 / MRR 0.828; LitQA2 20-question smoke test |
-| Refusal and grounding | Domain-aware refusal; token-overlap, cross-encoder, and LLM grounding remain experimental switches |
-| QA budget adaptation | Simple and complex questions default to top-10; `SCIPAL_QA_COMPLEX_TOPK=20` raises complex coverage |
-| Review generation | Outline → section-level retrieval allocation → section drafting → evidence/claim matrix → iterative scoring |
-| Online search and ingest | PubMed / PMC search, async download, incremental ingest, queue/history/retry |
-| Literature sources | Europe PMC batch, arXiv/bioRxiv/medRxiv, Crossref/OpenAlex/Unpaywall |
-| Metadata backfill | Crossref DOI → Crossref title → OpenAlex title; 99.9%+ coverage |
-| Citation graph | `paper_links`: cites / cited_by / similar |
-| Literature monitoring | Multiple profiles, journal discovery, incremental fetch, deduplication, weekly digests, item feedback, and `watch-cron` scheduling |
-| Multi-user isolation | users / workspaces / memberships; roles owner/pi/member/viewer; isolation for papers, notes, projects, and experiments |
-| Projects and experiments | Project members, experiments, two-level runs, revisions, field audit, electronic signatures, and PI access requests |
-| Domain packs | Declarative packs (taxonomy / section types / evidence schema / prompts); `/packs.html` |
-| Claim pilot | Claim cards, qualifiers, supporting/opposing evidence, FTS/semantic retrieval, NLI, verdict events, writing briefs |
-| Plugin ports M0/M1/M2 | `services/plugins` + `plugins/` manifest/port schema/adapter; JSONL provenance; ClaimVerifier and Retriever ports |
-| Benchmark DB policy | PostgreSQL by default; SQLite disabled above 100 papers or under concurrency; explicit opt-in for small runs |
-| PostgreSQL migration | Paper/detail/graph/tenancy reads on PG; tenancy writes PG-primary + SQLite mirror; P4 outbox for remaining writes |
-| Health and drift | `/api/health`; `dual_write_healthcheck.py`; `health-cron` every 300s; tenancy row-level SQLite/PG drift |
-| Deployment | Docker Compose (app + watch-cron + Caddy), backups, offline bundle |
-| Experimental protocols | Protocols.io search/import; Dockstore / bio.tools / nf-core |
 
 ## Architecture
 
-![SciPal architecture](docs/图-SciPal芯片架构.png)
+```text
+Browser / DSH
+    │ HTTP / MCP
+    ▼
+Flask API (26 blueprints, 186 routes)
+    │
+    ├─ services/search        pgvector + PG FTS + RRF + rerank
+    ├─ services/review        reviews + systematic review
+    ├─ services/claims        claim cards + evidence
+    ├─ services/projects      projects / experiments / runs
+    ├─ services/watch         monitoring + digest
+    └─ build_db/*             parsing, JATS import, PG writes
+    │
+    ▼
+PostgreSQL 16 + pgvector
+    + documents/ (PDF / XML)
+    + packs/
+```
 
-For module, route, and data-flow diagrams, see **[Architecture and Routes](docs/en/Architecture-and-Routes.md)** (English) or [架构与路由图](docs/架构与路由图.md) (Chinese).
+Retired from runtime:
 
 ```text
-DSH desktop / browser
-   │ MCP / HTTPS
-   ▼
-Flask API (26 blueprints under routes/*, ~180 routes)
-   │
-services/* (retrieval, QA, reviews, guard, tenancy, source adapters)
-   │
-   ├─ PostgreSQL: paper read path + tenancy writes
-   ├─ SQLite read-only snapshot + PostgreSQL FTS
-   ├─ watch-cron / health-cron
-   └─ build_db/* (parsing, JATS/PDF rebuild, database writes)
+SQLite research.db    archived, not mounted, not created
+Chroma                archived, not initialized
 ```
+
+---
 
 ## Technology Stack
 
-- Backend: Python 3.12 · Flask 3 · flask-cors · pydantic 2 · networkx
-- Retrieval: pgvector · sentence-transformers · PostgreSQL FTS/BM25 · RRF · bge-reranker
-- PDF: PyMuPDF · Docling · GROBID · MinerU (on demand, with quality gates)
-- XML: PMC / Europe PMC JATS (`<sec>` / `<ref-list>` / `<xref>`)
-- LLMs: OpenAI-compatible cloud API (recommended for reasoning) + local Ollama (orchestration/fallback); DSH can take over reasoning
-- Frontend: vanilla HTML/CSS/JS + PDF.js (viewer / compare / trace / projects / reviews / watch / packs / claims)
-- Deployment: Docker Compose (app + watch-cron + Caddy) · single-node PostgreSQL · persistent data volume
-
-### Models
-
-| Model | Role |
+| Layer | Choice |
 |---|---|
-| `deepseek-chat` (cloud) | Recommended: QA, reviews, claim verification |
-| `qwen2.5:3b` | Local lightweight: intent, routing, orchestration |
-| `qwen2.5:7b-instruct-q4_K_M` | Local fallback: offline QA/reviews (Q4 quantized) |
-| `BAAI/bge-base-en-v1.5` | Embeddings |
-| `BAAI/bge-reranker-base` | Cross-encoder reranking |
-| `scispacy en_ner_bionlp13cg_md` | Biomedical entity recognition |
-| Docling / TableFormer | Layout, tables, sections |
-| MinerU 4.x | Scanned/complex-layout fallback |
-| GROBID (CRF/Full) | Metadata, structured citations, in-text citation locations |
+| Runtime | Python 3.12, Flask 3 |
+| Primary store | PostgreSQL 16 |
+| Vector | pgvector + HNSW |
+| Full text | PostgreSQL GIN `tsvector`; optional ParadeDB path |
+| Embeddings | `BAAI/bge-base-en-v1.5` |
+| Reranker | `BAAI/bge-reranker-base` |
+| Parsing | PyMuPDF, Docling, GROBID, MinerU, JATS XML |
+| Generation | OpenAI-compatible cloud API, Ollama fallback, DSH optional |
+| Frontend | vanilla HTML/CSS/JS + PDF.js |
+| Deployment | Docker Compose: app + watch-cron + Caddy + PostgreSQL |
 
-## Data Scale (`research.db`)
+---
 
-| Table | Rows |
+## Current Data
+
+| Item | Value |
 |---|---:|
 | papers | 10,102 |
 | paragraphs | 331,263 |
 | sentences | 1,492,661 |
 | sections | 124,216 |
-| citations | 305,025 |
-| figures / tables | 25,511 / 12,299 |
-| sentence_links | 502,733 |
+| paragraph embeddings | 320,928 |
+| summaries | 69,128 |
+| HNSW index | 1.235 GB, valid |
+| PostgreSQL size | ~5.4 GB |
 
-## Data Audit and Pre-Ingest Gate
-
-SciPal now audits data **before** it reaches the paper graph, not only after a large database has been built.
-
-### Existing database audit
-
-```powershell
-python scripts/audit_id_vector_contract.py ^
-  --sqlite data/research.db ^
-  --pg-dsn "postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench" ^
-  --chroma data/chroma ^
-  --out eval/results/id_vector_contract_audit.json
-```
-
-It checks:
+Archived:
 
 ```text
-Chroma id -> SQLite row resolution
-SQLite/PG id consistency
-section / paragraph / sentence hierarchy
-metadata completeness
-per-collection vector coverage
-gold-sentence text/ID mapping
+research.db   I:\_archive\research.db-20261107
+Chroma        I:\_archive\chroma-20261107
 ```
 
-Repair scripts (run with `--dry-run` first, stop the API before applying):
+---
 
-```text
-scripts/repair_paragraph_vectors.py
-scripts/backfill_paper_summary_vectors.py
-scripts/backfill_figure_table_vectors.py
-```
+## Capabilities
 
-### Pre-ingest audit and repair
+| Capability | Description |
+|---|---|
+| Literature search | pgvector + PG FTS, RRF, rerank, section expansion |
+| Structured parsing | PDF engines + native JATS XML |
+| Section / paragraph / sentence tree | explicit IDs, page and bbox |
+| Citation / figure / table links | sentence-level provenance |
+| Sentence traceability | `/api/papers/<id>/trace`, page crops |
+| Evidence envelopes | parent context + matched sentences + links |
+| RAG QA | citations, refusal, local or cloud models |
+| Review generation | outline → section retrieval → drafting → verification |
+| Systematic review | screening, PRISMA, evidence, risk of bias, reports |
+| Claims | claim cards, qualifiers, supporting/opposing evidence |
+| Projects / experiments | members, runs, revisions, audit, signatures |
+| Literature monitoring | profiles, journals, runs, digests |
+| Multi-user isolation | users, workspaces, roles |
+| Domain packs | taxonomy / section types / evidence schema |
+| Plugins | ingest tracking, ports, experimental GraphRAG/RAPTOR |
 
-Every parsed paper now passes `services/papers/preflight.py` before any write:
-
-```text
-PDF upload / parse -> DatabaseWriter -> preflight
-PMC / JATS ingest  -> import_jats    -> preflight
-Batch ingest       -> ingest._write_batch -> preflight
-```
-
-It repairs identity/shape issues:
-
-```text
-missing or duplicate para_id / section_id / fig_id / table_id / citation_id
-empty paragraphs (dropped)
-dangling section parents (detached)
-missing title (set to Untitled)
-```
-
-It blocks ingestion only for hard errors:
-
-```text
-missing paper_id
-paragraphs / sections / figures / tables not a list
-metadata not an object
-```
-
-Disable only for debugging:
-
-```powershell
-$env:SCIPAL_INGEST_PREFLIGHT = "0"
-```
-
-The goal is fail-fast: broken input should be rejected or repaired at the boundary, not discovered after 100k+ rows have been written.
+---
 
 ## Quick Start
 
-```powershell
-# 1. Dependencies
-python -m venv venv_sciPal_py312
-venv_sciPal_py312\Scripts\pip install -r requirements.txt
-
-# 2. Start Flask on port 5000
-venv_sciPal_py312\Scripts\python.exe api_server.py
-
-# 3. Optional parser services (three PDF engines)
-powershell -ExecutionPolicy Bypass -File scripts\start_parser_services.ps1
-
-# 4. Tests (with consecutive-failure stop)
-venv_sciPal_py312\Scripts\python.exe scripts\run_tests_guarded.py
-
-# Equivalent standard command (no stop-loss)
-venv_sciPal_py312\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"
-```
-
-Production-like Docker stack:
+### Docker Compose
 
 ```bash
 cp deploy/.env.example deploy/.env
-# Edit deploy/.env: SCIPAL_SECRET_KEY, LLM, and SCIPAL_PG_DSN
+# edit SCIPAL_PG_DSN, SCIPAL_SECRET_KEY
 docker compose -f deploy/docker-compose.yml up -d --build
-docker compose -f deploy/docker-compose.yml ps
-curl -fsS http://127.0.0.1/api/health
+curl http://127.0.0.1/api/health
 ```
 
-The stack starts `app`, `watch-cron`, `health-cron`, and `caddy`.
-PostgreSQL 16 is an external dependency; point `SCIPAL_PG_DSN` at it.
+Services:
 
-Common environment variables:
-
-```powershell
-# Recommended: cloud reasoning
-$env:SCIPAL_LLM_PROVIDER = "openai"
-$env:SCIPAL_LLM_BASE_URL = "https://api.deepseek.com/v1"
-$env:SCIPAL_LLM_MODEL = "deepseek-chat"
-$env:SCIPAL_LLM_API_KEY = "sk-..."
-
-# Or local Ollama (offline/orchestration)
-$env:SCIPAL_LLM_PROVIDER = "ollama"
-$env:SCIPAL_LLM_MODEL = "qwen2.5:7b-instruct-q4_K_M"
-
-$env:SCIPAL_GROBID_URL = "http://127.0.0.1:8070"
-$env:SCIPAL_GROBID_URL_FULL = "http://127.0.0.1:8071"
-$env:MINERU_HOME = "D:\mineru_home"
+```text
+app         Flask API
+postgres    PostgreSQL 16 + pgvector
+watch-cron  literature monitoring scheduler
+caddy       reverse proxy
 ```
 
-On Linux/macOS, use `python3` and the corresponding `venv/bin/python` paths. The project currently targets Windows first; cross-platform notes are in [Windows开发警示与跨平台规范.md](docs/Windows开发警示与跨平台规范.md) (Chinese).
+### Local Development
+
+```bash
+python -m venv venv
+venv\Scripts\activate          # Windows
+pip install -r requirements.txt
+set SCIPAL_PG_DSN=postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench
+python api_server.py
+```
+
+Development server only. For production use:
+
+```text
+APP_MODE=PROD_MODE  -> gunicorn
+```
+
+---
+
+## Configuration
+
+Required:
+
+```text
+SCIPAL_PG_DSN=postgresql://user:pass@host:5432/scipal_bench
+SCIPAL_SECRET_KEY=<random>
+```
+
+PG-only defaults:
+
+```text
+SCIPAL_VECTOR_BACKEND=pgvector
+SCIPAL_FTS_BACKEND=postgres
+SCIPAL_SEARCH_META_BACKEND=postgres
+SCIPAL_SQLITE_QUERY_ONLY=1
+SCIPAL_ABSTRACTS_BACKEND=postgres
+SCIPAL_PROJECTS_BACKEND=postgres
+SCIPAL_RUNS_BACKEND=postgres
+SCIPAL_EXPERIMENTS_BACKEND=postgres
+SCIPAL_REVIEWS_BACKEND=postgres
+SCIPAL_SYSTEMATIC_BACKEND=postgres
+SCIPAL_CLAIMS_BACKEND=postgres
+SCIPAL_NOTES_BACKEND=postgres
+SCIPAL_TASKS_BACKEND=postgres
+SCIPAL_PAPERS_READ_BACKEND=postgres
+SCIPAL_INGEST_PG_ONLY=1
+SCIPAL_TENANCY_PG_ONLY=1
+```
+
+Auth:
+
+```text
+SCIPAL_AUTH_REQUIRED=1
+```
+
+---
+
+## API Examples
+
+```bash
+curl http://127.0.0.1/api/health
+
+curl -X POST http://127.0.0.1/api/evidence/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"hepatocellular carcinoma","top_paragraphs":5}'
+
+curl "http://127.0.0.1/api/papers?limit=5"
+```
+
+Main groups:
+
+```text
+/api/papers
+/api/search
+/api/evidence
+/api/qa
+/api/reviews
+/api/review-projects
+/api/projects
+/api/experiments
+/api/claims
+/api/watch
+/api/workspaces
+/api/tasks
+```
+
+---
 
 ## Repository Layout
 
 ```text
-sci-pal/
-├─ api_server.py             Flask entry point (blueprints; static routes only)
-├─ routes/                   26 blueprints: core/search/papers/reviews/qa/watch/claims/...
-├─ services/
-│  ├─ search/                hybrid retrieval, rerank, context expansion, source adapters
-│  ├─ qa/                    QA and evidence envelopes
-│  ├─ review/                review generation, LLM client, tasks
-│  ├─ watch/                 profile / run / digest / scheduler
-│  ├─ domain_packs/          pack loader / validator / CLI
-│  ├─ claims/                retrieval / semantic / NLI / service
-│  ├─ plugins/               contracts / registry / runner
-│  ├─ tenancy/               users / workspaces / roles
-│  ├─ projects/ experiments/ projects / experiments / runs / audit / signatures
-│  ├─ quality/               guard, terminology checks
-│  └─ pdf/ workflow/ utils/
-├─ build_db/                 parsers, JATS import, structure rebuild, DB writers
-├─ mcp_server/               search / generate / guard (thin MCP forwarding)
-├─ packs/                    domain packs (biomed-oncoimmuno)
-├─ plugins/                  plugin manifests / port schemas / adapters
-├─ eval/                     retrieval, QA, and plugin benchmark scripts
-├─ frontend/                 viewer / compare / trace / projects / reviews / watch / packs / claims
-├─ docs/                     architecture, data, and design documents
-├─ deploy/                   Dockerfile, compose, health-cron
-├─ tests/                    800 tests
-├─ documents/                PDFs
-├─ documents_xml/            JATS XML
-├─ data/                     research.db, pgvector
-└─ scripts/                  service and maintenance scripts
+api_server.py              Flask app and blueprint registration
+routes/                    26 blueprints
+services/                  search, review, claims, projects, watch, ...
+build_db/                  parsers, JATS import, PG writers
+plugins/                   optional plugins
+frontend/                  HTML/CSS/JS
+docs/                      architecture, migration, operations
+scripts/                   smoke tests, audits, backfills
+deploy/                    Dockerfile, compose, env
+tests/                     pytest suites
 ```
 
-## API Groups
+---
 
-| Group | Prefix |
-|---|---|
-| Auth / workspaces | `/api/auth/*` `/api/workspaces/*` |
-| Retrieval | `/api/retrieve` `/api/search/*` |
-| Papers | `/api/papers/*` (parse, PDF, attachments, annotations, trace) |
-| QA | `/api/qa/*` `/api/agentic/*` |
-| Reviews | `/api/review/*` `/api/reviews/*` |
-| Literature monitoring | `/api/watch/*` |
-| Domain packs | `/api/domain-packs/*` |
-| Claims | `/api/claims/*` |
-| Projects / experiments | `/api/projects/*` `/api/experiments/*` `/api/runs/*` |
-| Quality | `/api/guard/*` |
-| Ingest / tasks | `/api/ingest/*` `/api/tasks/*` |
-| Other | `/api/protocols/*` `/api/references/*` `/api/abstracts/*` |
+## Testing
 
-The source of truth is `routes/` and `api_server.py`. See [API Reference](docs/en/API-Reference.md) (English) or [接口明细](docs/接口明细.md) (Chinese).
+```bash
+pytest
 
-## Tests
+python scripts/smoke_http.py        # A: 31 light GETs
+python scripts/smoke_group_b.py     # B: 14 medium GETs
+python scripts/smoke_group_c.py     # C: 5 heavy GETs
+```
+
+Current smoke result:
 
 ```text
-800 tests, ~70s
+50 routes / 0 5xx
+research.db absent
 ```
 
-Coverage includes retrieval, routing, guard, structure, JATS import, watch, domain packs, claim pilot, multi-user isolation, projects/experiments/runs, and plugin ports.
+Retrieval:
+
+```text
+20-question regression   Recall@10 0.675 / nDCG@10 0.461
+SciFact 300              Recall@10 0.8669 / nDCG@10 0.7458
+```
+
+---
+
+## Known Limitations
+
+```text
+12 title-duplicate groups with different PMCIDs are not merged
+300-question full-text gold set is deferred
+GraphRAG / RAPTOR remain plugin experiments
+Client ingest tracking is not wired to the real import UI
+Base image still contains chromadb package although runtime does not use it
+Some cold POST endpoints are not covered by automated smoke tests
+```
+
+---
 
 ## Documentation
 
-- [Work summary and backlog (2026-11-02)](docs/工作总结-2026-11-02.md)
-- [Status and thresholds (2026-11-03)](docs/状态与阈值-2026-11-03.md)
-- [SQLite retirement conditions](docs/架构-SQLite退役条件.md)
-- [PG purification roadmap](docs/架构-PG纯净化路线.md)
-- [Handover guide](docs/HANDOVER.md)
-- [Research logs index](docs/Research_Logs_Index.md)
-- [PostgreSQL write-path design](docs/设计-PostgreSQL写路径生产化.md)
-- [Retrieval SLO design](docs/设计-检索SLO与冗余控制.md)
+| Document | Purpose |
+|---|---|
+| [Architecture and Routes](docs/架构与路由图.md) | system flow and route map |
+| [Module Manual](docs/开发-模块手册.md) | module responsibilities and entry points |
+| [PG-only Final Report](docs/PG-only迁移总报告-2026-11-08.md) | migration decisions and verification |
+| [ARCHITECTURE.json](ARCHITECTURE.json) | machine-readable architecture |
+| [Smoke Plan](docs/全站端点分层烟测计划.md) | layered endpoint testing |
 
-English:
-
-- [Documentation index](docs/en/README.md)
-- [Architecture overview](docs/en/Architecture-Overview.md)
-- [Architecture and routes](docs/en/Architecture-and-Routes.md)
-- [API reference](docs/en/API-Reference.md)
-- [PostgreSQL migration plan](docs/en/plans/PostgreSQL-Migration.md)
-- [Multi-user and data isolation plan](docs/en/plans/Multi-User-and-Data-Isolation.md)
-- [Domain packs and distribution](docs/en/plans/Domain-Packs-and-Distribution.md)
-- [Plugin ports and benchmarks](docs/en/plans/Plugin-Ports-and-Benchmarks.md)
-- [Argument workbench plan](docs/en/plans/Argument-Workbench.md)
-- [Adaptive retrieval and literature intelligence](docs/en/plans/Adaptive-Retrieval-and-Literature-Intelligence.md)
-- [DSH integration and plugins](docs/en/plans/DSH-Integration-and-Plugins.md)
-- [Project tracking and ELN](docs/en/plans/Project-Tracking-and-ELN.md)
-
-Chinese:
-
-- [架构与路由图](docs/架构与路由图.md)
-- [PDF 三引擎联合解析](docs/PDF解析-三引擎联合.md)
-- [P4 sentence-level FTS](docs/数据重建-P4-句子级FTS.md)
-- [Legacy archive (do not use)](docs/archive_legacy/README.md)
-- [文献源与 JATS 导入](docs/文献源-JATS与外部源.md)
-- [多用户与数据隔离计划](docs/工作计划-多用户与数据隔离.md)
-- [去学科化与领域包分发计划](docs/工作计划-去学科化与领域包分发.md)
-- [自适应与文献情报计划](docs/工作计划-自适应与文献情报.md)
-- [项目跟踪与实验记录计划](docs/工作计划-项目跟踪与实验记录.md)
-- [DSH 适配与插件化计划](docs/工作计划-DSH适配与插件化.md)
-- [论证工作台改造计划](docs/工作计划-论证工作台改造.md)
-
-## Contributing
-
-Start with [HANDOVER.md](docs/HANDOVER.md) if you are taking over the project.
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. **Open an issue first**, and make sure the unit tests pass.
-
-## Security
-
-Please do **not** open a public issue for security vulnerabilities. Report them privately to **chenwei-ucas@outlook.com**; see [SECURITY.md](SECURITY.md).
+---
 
 ## License
 
-AGPL-3.0-only. See [LICENSE](LICENSE) and [docs/许可证说明.md](docs/许可证说明.md) (Chinese).
+See [LICENSE](LICENSE).
