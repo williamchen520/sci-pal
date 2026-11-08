@@ -43,6 +43,7 @@ class SummarySearch:
                     "FROM summaries "
                     "WHERE to_tsvector('english', coalesce(title,'') || ' ' || coalesce(text,'')) "
                     "@@ to_tsquery('english', %s) "
+                    "AND paper_id IN (SELECT paper_id FROM papers WHERE duplicate_of IS NULL) "
                     + ("AND paper_id = %s " if paper_id else "")
                     + "ORDER BY rank DESC LIMIT %s",
                     (ts_query, ts_query, paper_id, top_k) if paper_id else (ts_query, ts_query, top_k),

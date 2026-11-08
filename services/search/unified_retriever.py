@@ -689,6 +689,27 @@ class UnifiedRetriever:
         if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
             "postgres", "postgresql", "pg", "1", "true"
         }:
+            pids = [p.get("paper_id") for p in env.get("parent_contexts") or [] if p.get("paper_id")]
+            if pids:
+                from services.db.pg_pool import pg_connection
+
+                pg = pg_connection()
+                try:
+                    dup = {
+                        row["paper_id"]
+                        for row in pg.execute(
+                            "SELECT paper_id FROM papers "
+                            "WHERE duplicate_of IS NOT NULL AND paper_id = ANY(%s)",
+                            (pids,),
+                        ).fetchall()
+                    }
+                finally:
+                    pg.close()
+                if dup:
+                    env["parent_contexts"] = [
+                        p for p in env.get("parent_contexts") or []
+                        if p.get("paper_id") not in dup
+                    ]
             from services.db.pg_sqlite_compat import PGReadCompat
 
             conn = PGReadCompat()
