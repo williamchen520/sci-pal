@@ -6,6 +6,13 @@ import os
 from typing import Any, Dict, List, Optional
 
 from services.db.pg_pool import main_read_connection
+from services.db.tenant_pilot import set_search_path
+
+
+def _pg():
+    pg = main_read_connection()
+    set_search_path(pg, "watch")
+    return pg
 
 
 def enabled() -> bool:
@@ -15,7 +22,7 @@ def enabled() -> bool:
 
 
 def list_profiles(owner: Optional[str] = None) -> List[Dict]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         if owner:
             rows = pg.execute(
@@ -29,7 +36,7 @@ def list_profiles(owner: Optional[str] = None) -> List[Dict]:
 
 
 def get_profile(profile_id: int, owner: Optional[str] = None) -> Optional[Dict]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         row = pg.execute(
             "SELECT * FROM watch_profiles WHERE id = %s", (profile_id,)
@@ -42,7 +49,7 @@ def get_profile(profile_id: int, owner: Optional[str] = None) -> Optional[Dict]:
 
 
 def list_runs(profile_id: int, limit: int = 20) -> List[Dict]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM watch_runs WHERE profile_id = %s ORDER BY id DESC LIMIT %s",
@@ -54,7 +61,7 @@ def list_runs(profile_id: int, limit: int = 20) -> List[Dict]:
 
 
 def get_run(run_id: int) -> Optional[Dict]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         row = pg.execute("SELECT * FROM watch_runs WHERE id = %s", (run_id,)).fetchone()
         return dict(row) if row else None
@@ -63,7 +70,7 @@ def get_run(run_id: int) -> Optional[Dict]:
 
 
 def list_items(run_id: int) -> List[Dict]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM watch_items WHERE run_id = %s ORDER BY id", (run_id,)

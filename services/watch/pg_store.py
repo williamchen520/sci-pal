@@ -9,6 +9,13 @@ from typing import Any, Dict, List, Optional
 from services.db.pg_pool import pg_connection
 from services.watch import pg_read, pg_writes
 from services.watch.repo import now_iso
+from services.db.tenant_pilot import set_search_path
+
+
+def _pg():
+    pg = pg_connection()
+    set_search_path(pg, "watch")
+    return pg
 
 
 def sqlite_repo_allowed() -> bool:
@@ -73,7 +80,7 @@ def delete_profile(conn, profile_id: int) -> None:
 
 
 def list_journals(conn, profile_id: int) -> List[Dict]:
-    pg = pg_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM watch_profile_journals WHERE profile_id = %s ORDER BY issn_l",
@@ -89,7 +96,7 @@ def set_journals(conn, profile_id: int, entries: List[Dict]) -> None:
 
 
 def upsert_journal(conn, journal: Dict) -> None:
-    pg = pg_connection()
+    pg = _pg()
     try:
         pg.execute(
             "INSERT INTO journal_catalog "
@@ -115,7 +122,7 @@ def journal_metrics(conn, issns: List[str]) -> Dict[str, Dict]:
     if not issns:
         return {}
     marks = ",".join("%s" for _ in issns)
-    pg = pg_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             f"SELECT * FROM journal_catalog WHERE issn_l IN ({marks})", issns
@@ -133,7 +140,7 @@ def dedup_key(doi: Optional[str], title: Optional[str]) -> str:
 
 
 def seen(conn, profile_id: int, key: str) -> bool:
-    pg = pg_connection()
+    pg = _pg()
     try:
         return pg.execute(
             "SELECT 1 FROM watch_seen WHERE profile_id = %s AND dedup_key = %s",
@@ -157,7 +164,7 @@ def mark_seen(conn, profile_id: int, key: str, paper_id: Optional[str]) -> None:
 def paper_exists(conn, doi: Optional[str]) -> Optional[str]:
     if not doi:
         return None
-    pg = pg_connection()
+    pg = _pg()
     try:
         row = pg.execute(
             "SELECT paper_id FROM papers WHERE lower(doi) = lower(%s) LIMIT 1", (doi,)
@@ -217,7 +224,7 @@ def add_item(conn, run_id: int, profile_id: int, item: Dict) -> int:
 
 
 def list_items(conn, run_id: int) -> List[Dict]:
-    pg = pg_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM watch_items WHERE run_id = %s ORDER BY score DESC", (run_id,)
@@ -240,7 +247,7 @@ def delete_journal(conn, profile_id: int, issn_l: str) -> None:
     pg_writes.delete_journal(profile_id, issn_l)
 
 def get_item(conn, item_id: int):
-    pg = pg_connection()
+    pg = _pg()
     try:
         row = pg.execute("SELECT * FROM watch_items WHERE id = %s", (item_id,)).fetchone()
         return dict(row) if row else None
