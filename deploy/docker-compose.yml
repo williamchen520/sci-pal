@@ -51,27 +51,6 @@ services:
       disable: true
     restart: unless-stopped
 
-  health-cron:
-    image: scipal-app:latest
-    entrypoint: []
-    command:
-      - sh
-      - -c
-      - "while true; do python scripts/dual_write_healthcheck.py; sleep 300; done"
-    env_file:
-      - .env
-    environment:
-      SCIPAL_AUTH_REQUIRED: "1"
-    volumes:
-      - ../data:/app/data
-      - ../logs:/app/logs
-    depends_on:
-      app:
-        condition: service_healthy
-    healthcheck:
-      disable: true
-    restart: unless-stopped
-
   backup-cron:
     image: scipal-app:latest
     entrypoint: []
