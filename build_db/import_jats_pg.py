@@ -227,6 +227,20 @@ def import_file(xml_path: Path, paper_id: str | None = None) -> Dict[str, int]:
                 )
                 stats["links"] += 1
         pg.commit()
+        try:
+            from services.papers import library_identity
+
+            library_identity.ensure_identity(
+                paper_id,
+                xml_path.name,
+                doi=meta.get("doi") or "",
+                title=meta.get("title") or "",
+                year=meta.get("year"),
+                parser="jats",
+                source_path=xml_path,
+            )
+        except Exception as exc:  # noqa: BLE001 - identity is best-effort
+            print(f"⚠️ library identity skipped for {paper_id}: {exc}")
         return stats
     except Exception:
         pg.rollback()

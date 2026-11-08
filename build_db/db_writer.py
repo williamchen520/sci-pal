@@ -66,6 +66,12 @@ class DatabaseWriter:
                 pg_links.build_links_for(parsed_result["paper_id"])
             except Exception as exc:  # noqa: BLE001 - links are post-processing
                 print(f"⚠️ PG link build skipped: {exc}")
+            try:
+                from services.papers import library_identity
+
+                library_identity.ensure_from_parsed(parsed_result)
+            except Exception as exc:  # noqa: BLE001 - identity is best-effort
+                print(f"⚠️ library identity skipped: {exc}")
             return True
 
         conn = self._get_connection()
@@ -113,6 +119,12 @@ class DatabaseWriter:
             
             conn.commit()
             print(f"✅ Paper {paper_id} inserted successfully!")
+            try:
+                from services.papers import library_identity
+
+                library_identity.ensure_from_parsed(parsed_result)
+            except Exception as exc:  # noqa: BLE001 - identity is best-effort
+                print(f"⚠️ library identity skipped: {exc}")
             return True
             
         except Exception as e:
