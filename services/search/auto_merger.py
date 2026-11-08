@@ -1,12 +1,10 @@
-"""Auto-merging: expand multi-hit sections into parent context."""
+"""Auto-merging: expand multi-hit sections into parent context (PostgreSQL)."""
 
 from __future__ import annotations
 
-import sqlite3
-from pathlib import Path
 from typing import Dict, List
 
-DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
+from services.db.pg_pool import main_read_connection
 
 
 def _estimate(text: str) -> int:
@@ -14,8 +12,9 @@ def _estimate(text: str) -> int:
 
 
 class AutoMerger:
-    def __init__(self, db_path: Path | str = DB_PATH):
-        self.db_path = str(db_path)
+    def __init__(self, db_path=None) -> None:
+        # Kept for call-site compatibility; the store is PostgreSQL now.
+        self.db_path = db_path
 
     def merge(
         self,
@@ -25,8 +24,7 @@ class AutoMerger:
     ) -> List[Dict]:
         if not contexts:
             return contexts
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        pg = main_read_connection()
         used = 0
         try:
             for context in contexts:
@@ -36,9 +34,9 @@ class AutoMerger:
                 section_id = context.get("section_id")
                 if not section_id:
                     continue
-                rows = conn.execute(
+                rows = pg.execute(
                     "SELECT para_id, text, page, sequence FROM paragraphs "
-                    "WHERE section_id = ? ORDER BY sequence",
+                    "WHERE section_id = %s ORDER BY sequence",
                     (section_id,),
                 ).fetchall()
                 existing = {
@@ -65,4 +63,4 @@ class AutoMerger:
                 context["auto_merged"] = True
             return contexts
         finally:
-            conn.close()
+            pg.close()
