@@ -32,7 +32,7 @@ Chroma               archived, not initialized
 
 ```text
 Browser / DSH
-    -> Flask API (26 blueprints, 186 routes)
+    -> Flask API (26 blueprints, 185 API routes)
        -> services/search, review, claims, projects, watch, ...
        -> build_db/* parsing and writes
     -> PostgreSQL + pgvector

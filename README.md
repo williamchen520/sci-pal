@@ -17,7 +17,7 @@ Generation is optional and pluggable: a small local model for orchestration, a c
 Browser / DSH
     │ HTTP / MCP
     ▼
-Flask API (26 blueprints, 186 routes)
+Flask API (26 blueprints, 185 API routes)
     │
     ├─ services/search        pgvector + PG FTS + RRF + rerank
     ├─ services/review        reviews + systematic review
