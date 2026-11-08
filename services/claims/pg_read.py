@@ -6,6 +6,13 @@ import json
 from typing import Any, Dict, List, Optional
 
 from services.db.pg_pool import main_read_connection
+from services.db.tenant_pilot import set_search_path
+
+
+def _pg():
+    pg = main_read_connection()
+    set_search_path(pg, "claims")
+    return pg
 
 
 def _card(row) -> Dict[str, Any]:
@@ -26,7 +33,7 @@ def _card(row) -> Dict[str, Any]:
 
 
 def list_claims(limit: int = 50) -> List[Dict[str, Any]]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM claim_cards ORDER BY updated_at DESC, claim_id LIMIT %s",
@@ -38,7 +45,7 @@ def list_claims(limit: int = 50) -> List[Dict[str, Any]]:
 
 
 def get_claim(claim_id: str) -> Optional[Dict[str, Any]]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         card_row = pg.execute(
             "SELECT * FROM claim_cards WHERE claim_id = %s", (claim_id,)

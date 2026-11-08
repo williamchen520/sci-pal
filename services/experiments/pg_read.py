@@ -6,6 +6,13 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from services.db.pg_pool import main_read_connection
+from services.db.tenant_pilot import set_search_path
+
+
+def _pg():
+    pg = main_read_connection()
+    set_search_path(pg, "experiments")
+    return pg
 
 
 def _now() -> str:
@@ -46,7 +53,7 @@ def _active_approval(pg, experiment_id: str, workspace_id: str, user_id: str):
 
 
 def list_experiments(project_id: str, workspace_id: str, user_id: str) -> Optional[List[Dict[str, Any]]]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         if not _project_access(pg, project_id, workspace_id, user_id):
             return None
@@ -61,7 +68,7 @@ def list_experiments(project_id: str, workspace_id: str, user_id: str) -> Option
 
 
 def get_experiment(experiment_id: str, workspace_id: str, user_id: str) -> Optional[Dict[str, Any]]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         row = pg.execute(
             "SELECT * FROM experiments WHERE experiment_id = %s AND workspace_id = %s",
@@ -79,7 +86,7 @@ def get_experiment(experiment_id: str, workspace_id: str, user_id: str) -> Optio
 def list_revisions(experiment_id: str, workspace_id: str, user_id: str) -> Optional[List[Dict[str, Any]]]:
     if not get_experiment(experiment_id, workspace_id, user_id):
         return None
-    pg = main_read_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT revision_id, revision, hash, created_by, created_at, content "
@@ -95,7 +102,7 @@ def list_revisions(experiment_id: str, workspace_id: str, user_id: str) -> Optio
 def get_audit(experiment_id: str, workspace_id: str, user_id: str) -> Optional[List[Dict[str, Any]]]:
     if not get_experiment(experiment_id, workspace_id, user_id):
         return None
-    pg = main_read_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT id, actor_user_id, action, revision, detail, created_at "
@@ -110,7 +117,7 @@ def get_audit(experiment_id: str, workspace_id: str, user_id: str) -> Optional[L
 def list_signatures(experiment_id: str, workspace_id: str, user_id: str) -> Optional[List[Dict[str, Any]]]:
     if not get_experiment(experiment_id, workspace_id, user_id):
         return None
-    pg = main_read_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM experiment_signatures WHERE experiment_id = %s AND workspace_id = %s "
@@ -125,7 +132,7 @@ def list_signatures(experiment_id: str, workspace_id: str, user_id: str) -> Opti
 def list_access_requests(experiment_id: str, workspace_id: str, user_id: str) -> Optional[List[Dict[str, Any]]]:
     if not get_experiment(experiment_id, workspace_id, user_id):
         return None
-    pg = main_read_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM experiment_access_requests WHERE experiment_id = %s AND workspace_id = %s "
@@ -138,7 +145,7 @@ def list_access_requests(experiment_id: str, workspace_id: str, user_id: str) ->
 
 
 def list_workspace_requests(workspace_id: str, user_id: str) -> List[Dict[str, Any]]:
-    pg = main_read_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM experiment_access_requests WHERE workspace_id = %s "

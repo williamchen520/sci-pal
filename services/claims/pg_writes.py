@@ -21,8 +21,11 @@ def enabled() -> bool:
 
 def _pg():
     from services.db.pg_pool import pg_connection
+    from services.db.tenant_pilot import set_search_path
 
-    return pg_connection(os.environ["SCIPAL_PG_DSN"])
+    pg = pg_connection(os.environ["SCIPAL_PG_DSN"])
+    set_search_path(pg, "claims")
+    return pg
 
 
 def create_claim(card: dict, event: dict) -> None:

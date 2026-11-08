@@ -16,6 +16,15 @@ def enabled() -> bool:
     }
 
 
+def _pg():
+    from services.db.pg_pool import pg_connection
+    from services.db.tenant_pilot import set_search_path
+
+    pg = pg_connection()
+    set_search_path(pg, "projects")
+    return pg
+
+
 def _workspace_role(pg, workspace_id: str, user_id: str) -> Optional[str]:
     row = pg.execute(
         "SELECT role FROM memberships WHERE workspace_id = %s AND user_id = %s AND status = 'active'",
@@ -37,7 +46,7 @@ def _project_role(pg, project_id: str, user_id: str) -> Optional[str]:
 
 
 def list_projects(workspace_id: str, user_id: str) -> List[Dict[str, Any]]:
-    pg = pg_connection()
+    pg = _pg()
     try:
         role = _workspace_role(pg, workspace_id, user_id)
         if not role:
@@ -59,7 +68,7 @@ def list_projects(workspace_id: str, user_id: str) -> List[Dict[str, Any]]:
 
 
 def get_project(project_id: str, workspace_id: str, user_id: str) -> Optional[Dict[str, Any]]:
-    pg = pg_connection()
+    pg = _pg()
     try:
         role = _workspace_role(pg, workspace_id, user_id)
         if not role:
@@ -98,7 +107,7 @@ def create_project(
     name = (name or "").strip()
     if not name:
         raise ValueError("name is required")
-    pg = pg_connection()
+    pg = _pg()
     try:
         if not _workspace_role(pg, workspace_id, owner_user_id):
             raise PermissionError("workspace access denied")
@@ -127,7 +136,7 @@ def update_project(
     description: Optional[str] = None,
     status: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
-    pg = pg_connection()
+    pg = _pg()
     try:
         project = pg.execute(
             "SELECT * FROM projects WHERE project_id = %s AND workspace_id = %s",
@@ -170,7 +179,7 @@ def add_member(
 ) -> Optional[Dict[str, Any]]:
     if role not in {"owner", "member", "viewer"}:
         raise ValueError("invalid role")
-    pg = pg_connection()
+    pg = _pg()
     try:
         project = pg.execute(
             "SELECT 1 FROM projects WHERE project_id = %s AND workspace_id = %s",
@@ -197,7 +206,7 @@ def copy_project(
     workspace_id: str,
     actor_user_id: str,
 ) -> Optional[Dict[str, Any]]:
-    pg = pg_connection()
+    pg = _pg()
     try:
         role = _workspace_role(pg, workspace_id, actor_user_id)
         if role not in {"owner", "pi"}:

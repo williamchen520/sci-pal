@@ -19,6 +19,15 @@ from services.experiments.service import (
 )
 
 
+def _pg():
+    from services.db.pg_pool import pg_connection
+    from services.db.tenant_pilot import set_search_path
+
+    pg = pg_connection()
+    set_search_path(pg, "experiments")
+    return pg
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -52,7 +61,7 @@ def create_experiment(
     if status not in STATUSES:
         raise ValueError("invalid status")
 
-    pg = pg_connection()
+    pg = _pg()
     try:
         if not pg_read._project_access(pg, project_id, workspace_id, user_id):
             raise PermissionError("project access denied")
@@ -114,7 +123,7 @@ def update_experiment(
     status: str | None = None,
     content: str | None = None,
 ) -> dict | None:
-    pg = pg_connection()
+    pg = _pg()
     try:
         current = pg.execute(
             "SELECT * FROM experiments WHERE experiment_id = %s AND workspace_id = %s "
@@ -176,7 +185,7 @@ def sign_experiment(
 ) -> dict | None:
     if meaning not in {"author", "reviewer", "approver"}:
         raise ValueError("invalid signature meaning")
-    pg = pg_connection()
+    pg = _pg()
     try:
         experiment = pg.execute(
             "SELECT * FROM experiments WHERE experiment_id = %s AND workspace_id = %s "
@@ -231,7 +240,7 @@ def create_access_request(
     workspace_id: str,
     requester_user_id: str,
 ) -> dict | None:
-    pg = pg_connection()
+    pg = _pg()
     try:
         if pg_read._workspace_role(pg, workspace_id, requester_user_id) != "pi":
             return None
@@ -280,7 +289,7 @@ def decide_access_request(
     *,
     hours: int = 24,
 ) -> dict | None:
-    pg = pg_connection()
+    pg = _pg()
     try:
         experiment = pg.execute(
             "SELECT 1 FROM experiments WHERE experiment_id = %s AND workspace_id = %s "
