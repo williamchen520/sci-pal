@@ -14,6 +14,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from services.db.sqlite_guard import install_sqlite_guard
+
+install_sqlite_guard()
+
 from services.watch import scheduler
 
 

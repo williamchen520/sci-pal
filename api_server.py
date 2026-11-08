@@ -21,6 +21,10 @@ from flask import Flask, g, jsonify, request, send_from_directory, Response
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from services.db.sqlite_guard import install_sqlite_guard
+
+install_sqlite_guard()
+
 # V26.3: 导入任务管理器
 from services.review.task_manager import task_manager
 

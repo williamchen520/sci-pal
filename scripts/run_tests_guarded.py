@@ -27,6 +27,7 @@ SQLITE_MODULES = [
     "test_tasks_routes",
     "test_federated_retriever",
     "test_ingest_tracking_routes",
+    "test_sqlite_guard",
 ]
 PG_MODULES = [
     "test_pg_pool",
