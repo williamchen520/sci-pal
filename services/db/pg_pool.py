@@ -116,6 +116,17 @@ def main_read_connection():
     return pg_connection(dsn)
 
 
+def owner_connection():
+    """Owner connection for papers/ingest/admin writes."""
+    dsn = os.environ.get("SCIPAL_PG_OWNER_DSN", "").strip()
+    if not dsn:
+        logging.getLogger(__name__).warning(
+            "SCIPAL_PG_OWNER_DSN missing; falling back to default DSN"
+        )
+        return pg_connection()
+    return pg_connection(dsn)
+
+
 def tenant_write_connection():
     """Tenant-writer connection (P4b1; used only by tenant-aware paths)."""
     dsn = os.environ.get("SCIPAL_PG_TENANT_WRITE_DSN", "").strip()

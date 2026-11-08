@@ -521,7 +521,7 @@ class IngestService:
             "pgvector", "pg_vec", "postgres"
         }:
             from sentence_transformers import SentenceTransformer
-            from services.db.pg_pool import pg_connection
+            from services.db.pg_pool import owner_connection
 
             model_path = Path(EMBEDDING_MODEL)
             model = getattr(self, "_model", None)
@@ -534,7 +534,7 @@ class IngestService:
                 normalize_embeddings=True,
                 show_progress_bar=False,
             )
-            pg = pg_connection()
+            pg = owner_connection()
             try:
                 with pg.cursor() as cur:
                     cur.executemany(

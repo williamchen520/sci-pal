@@ -56,9 +56,9 @@ class ReferenceLibrary:
         self.ensure_schema()
         added = skipped = 0
         if self._pg_backend():
-            from services.db.pg_pool import pg_connection
+            from services.db.pg_pool import owner_connection
 
-            pg = pg_connection()
+            pg = owner_connection()
             try:
                 for reference in references:
                     doi = _clean(getattr(reference, "doi", "") or _dict(reference).get("doi"))
@@ -125,9 +125,9 @@ class ReferenceLibrary:
     def list(self, limit: int = 50) -> list[dict[str, Any]]:
         self.ensure_schema()
         if self._pg_backend():
-            from services.db.pg_pool import pg_connection
+            from services.db.pg_pool import owner_connection
 
-            pg = pg_connection()
+            pg = owner_connection()
             try:
                 rows = pg.execute(
                     "SELECT * FROM reference_library ORDER BY created_at DESC LIMIT %s",
@@ -146,9 +146,9 @@ class ReferenceLibrary:
     def count(self) -> int:
         self.ensure_schema()
         if self._pg_backend():
-            from services.db.pg_pool import pg_connection
+            from services.db.pg_pool import owner_connection
 
-            pg = pg_connection()
+            pg = owner_connection()
             try:
                 return int(pg.execute("SELECT COUNT(*) AS n FROM reference_library").fetchone()["n"])
             finally:

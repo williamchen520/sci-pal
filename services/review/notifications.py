@@ -25,9 +25,9 @@ def _pg_enabled() -> bool:
 
 
 def _pg():
-    from services.db.pg_pool import pg_connection
+    from services.db.pg_pool import owner_connection
 
-    return pg_connection()
+    return owner_connection()
 
 
 def add_webhook(
