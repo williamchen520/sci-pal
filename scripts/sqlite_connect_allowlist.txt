@@ -56,7 +56,6 @@ services/tenancy/permissions.py
 services/tenancy/scoping.py
 services/tenancy/service.py
 services/unified_task_manager.py
-services/watch/pg_sync.py
 services/watch/pg_writes.py
 services/watch/repo.py
 services/workflow/stages.py
