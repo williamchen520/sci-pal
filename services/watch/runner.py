@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 
 from services.watch import discovery, pg_store, repo
 from services.watch.pg_writes import enabled as watch_pg_enabled, delete_paper_best_effort
-from services.watch.pg_sync import sync_pending as sync_watch_pending
 
 _TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fff]")
 _STOP = {
@@ -422,7 +421,6 @@ def run_profile(
             if heartbeat:
                 profile_updates["last_heartbeat_at"] = now.isoformat()
         store.update_profile(conn, profile_id, profile_updates)
-        sync_watch_pending(db_path)
         return {
             "run_id": run_id,
             "profile_id": profile_id,
