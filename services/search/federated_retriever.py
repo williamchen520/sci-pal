@@ -49,22 +49,33 @@ class FederatedRetriever:
         top_k: int = 10,
         scopes: Iterable[str] = ("main", "bench"),
         per_scope_k: int = 20,
+        quota_per_scope: int = 0,
     ) -> list[dict]:
         query = (query or "").strip()
         if not query:
             return []
-        hits: list[FederatedHit] = []
+        scope_hits: list[list[FederatedHit]] = []
         for scope in scopes:
             if scope == "main":
-                hits.extend(self._search_main(query, per_scope_k))
+                scope_hits.append(self._search_main(query, per_scope_k))
             elif scope == "bench":
-                hits.extend(self._search_bench(query, per_scope_k))
+                scope_hits.append(self._search_bench(query, per_scope_k))
             elif scope == "own":
                 # Tenant libraries are introduced in P6; keep the contract now.
-                continue
+                scope_hits.append([])
             else:
                 raise ValueError(f"unknown library scope: {scope}")
-        return self._merge(hits)[:top_k]
+        if quota_per_scope > 0:
+            reserved: list[FederatedHit] = []
+            rest: list[FederatedHit] = []
+            for hits in scope_hits:
+                reserved.extend(hits[:quota_per_scope])
+                rest.extend(hits[quota_per_scope:])
+            primary = self._merge(reserved)
+            seen = {row["identity"] for row in primary}
+            secondary = [row for row in self._merge(rest) if row["identity"] not in seen]
+            return (primary + secondary)[:top_k]
+        return self._merge([hit for hits in scope_hits for hit in hits])[:top_k]
 
     def _search_main(self, query: str, limit: int) -> list[FederatedHit]:
         sql = """
