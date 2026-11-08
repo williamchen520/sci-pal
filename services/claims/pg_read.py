@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional
 
-from services.db.pg_pool import pg_connection
+from services.db.pg_pool import main_read_connection
 
 
 def _card(row) -> Dict[str, Any]:
@@ -26,7 +26,7 @@ def _card(row) -> Dict[str, Any]:
 
 
 def list_claims(limit: int = 50) -> List[Dict[str, Any]]:
-    pg = pg_connection()
+    pg = main_read_connection()
     try:
         rows = pg.execute(
             "SELECT * FROM claim_cards ORDER BY updated_at DESC, claim_id LIMIT %s",
@@ -38,7 +38,7 @@ def list_claims(limit: int = 50) -> List[Dict[str, Any]]:
 
 
 def get_claim(claim_id: str) -> Optional[Dict[str, Any]]:
-    pg = pg_connection()
+    pg = main_read_connection()
     try:
         card_row = pg.execute(
             "SELECT * FROM claim_cards WHERE claim_id = %s", (claim_id,)
