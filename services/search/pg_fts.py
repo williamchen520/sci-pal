@@ -163,7 +163,9 @@ class PGParagraphFTS(_BasePG):
             WITH q AS (SELECT to_tsquery('english', %s) AS query)
             SELECT p.para_id, p.paper_id, p.section_level1, p.section_level2,
                    p.text, {self._rank_expr}(p.search_vector, q.query) AS rank
-            FROM paragraphs p CROSS JOIN q
+            FROM paragraphs p
+            JOIN papers pp ON pp.paper_id = p.paper_id AND pp.duplicate_of IS NULL
+            CROSS JOIN q
             WHERE {where}
             ORDER BY rank DESC, p.para_id
             LIMIT %s
@@ -208,7 +210,9 @@ class PGParagraphFTS(_BasePG):
             WITH q AS (SELECT to_tsquery('english', %s) AS query)
             SELECT p.para_id, p.paper_id, p.section_level1, p.section_level2,
                    p.text, 0.0::float8 AS rank
-            FROM paragraphs p CROSS JOIN q
+            FROM paragraphs p
+            JOIN papers pp ON pp.paper_id = p.paper_id AND pp.duplicate_of IS NULL
+            CROSS JOIN q
             WHERE {where}
             LIMIT %s
         """
@@ -249,7 +253,9 @@ class PGSummaryFTS(_BasePG):
             WITH q AS (SELECT to_tsquery('english', %s) AS query)
             SELECT s.summary_id, s.paper_id, s.section_id, s.level, s.title,
                    s.text, {self._rank_expr}(s.search_vector, q.query) AS rank
-            FROM summaries s CROSS JOIN q
+            FROM summaries s
+            JOIN papers pp ON pp.paper_id = s.paper_id AND pp.duplicate_of IS NULL
+            CROSS JOIN q
             WHERE {where}
             ORDER BY rank DESC, s.summary_id
             LIMIT %s
@@ -289,7 +295,9 @@ class PGSummaryFTS(_BasePG):
             WITH q AS (SELECT to_tsquery('english', %s) AS query)
             SELECT s.summary_id, s.paper_id, s.section_id, s.level, s.title,
                    s.text, 0.0::float8 AS rank
-            FROM summaries s CROSS JOIN q
+            FROM summaries s
+            JOIN papers pp ON pp.paper_id = s.paper_id AND pp.duplicate_of IS NULL
+            CROSS JOIN q
             WHERE {where}
             LIMIT %s
         """
