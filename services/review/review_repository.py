@@ -47,6 +47,14 @@ class ReviewRepository:
             "postgres", "postgresql", "pg", "1", "true"
         }
 
+    def _pg(self):
+        from services.db.pg_pool import pg_connection
+        from services.db.tenant_pilot import set_search_path
+
+        pg = pg_connection()
+        set_search_path(pg, "reviews")
+        return pg
+
     def ensure_schema(self) -> None:
         if self._pg_backend():
             return
@@ -75,7 +83,7 @@ class ReviewRepository:
         if self._pg_backend():
             from services.db.pg_pool import pg_connection
 
-            pg = pg_connection()
+            pg = self._pg()
             try:
                 pg.execute(
                     "INSERT INTO reviews "
@@ -125,7 +133,7 @@ class ReviewRepository:
         if self._pg_backend():
             from services.db.pg_pool import pg_connection
 
-            pg = pg_connection()
+            pg = self._pg()
             try:
                 row = pg.execute(
                     "SELECT * FROM reviews WHERE review_id = %s", (review_id,)
@@ -144,7 +152,7 @@ class ReviewRepository:
         if self._pg_backend():
             from services.db.pg_pool import pg_connection
 
-            pg = pg_connection()
+            pg = self._pg()
             try:
                 rows = pg.execute(
                     "SELECT * FROM reviews ORDER BY created_at DESC LIMIT %s",
