@@ -6,7 +6,14 @@ import json
 import uuid
 from typing import Any, Dict, List, Optional
 
-from services.db.pg_pool import owner_connection
+from services.db.pg_pool import pg_connection
+from services.db.tenant_pilot import set_search_path
+
+
+def _pg():
+    pg = pg_connection()
+    set_search_path(pg, "protocols")
+    return pg
 from services.protocols.service import _done_steps, _now, _run_row, _run_status, _text
 
 
@@ -38,7 +45,7 @@ def add_run(
         "created_at": now,
         "updated_at": now,
     }
-    pg = owner_connection()
+    pg = _pg()
     try:
         pg.execute(
             "INSERT INTO protocol_runs "
@@ -55,7 +62,7 @@ def add_run(
 
 
 def list_runs(protocol_id: str, limit: int = 50) -> List[Dict[str, Any]]:
-    pg = owner_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM protocol_runs WHERE protocol_id = %s "
@@ -77,7 +84,7 @@ def update_run(run_id: str, **fields: Any) -> Optional[Dict[str, Any]]:
     if not updates:
         return None
     assignments = ", ".join(f"{key} = %s" for key in updates)
-    pg = owner_connection()
+    pg = _pg()
     try:
         row = pg.execute(
             f"UPDATE protocol_runs SET {assignments}, updated_at = %s WHERE run_id = %s "
@@ -91,7 +98,7 @@ def update_run(run_id: str, **fields: Any) -> Optional[Dict[str, Any]]:
 
 
 def delete_run(run_id: str) -> bool:
-    pg = owner_connection()
+    pg = _pg()
     try:
         row = pg.execute(
             "DELETE FROM protocol_runs WHERE run_id = %s RETURNING run_id", (run_id,)
@@ -102,7 +109,7 @@ def delete_run(run_id: str) -> bool:
         pg.close()
 
 def recent_runs(limit: int = 20) -> List[Dict[str, Any]]:
-    pg = owner_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT r.*, p.title AS protocol_title FROM protocol_runs r "

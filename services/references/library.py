@@ -10,6 +10,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
+from services.db.pg_pool import pg_connection
+from services.db.tenant_pilot import set_search_path
+
+
+def _pg():
+    pg = pg_connection()
+    set_search_path(pg, "references")
+    return pg
+
+
 SCHEMA = (
     """
     CREATE TABLE IF NOT EXISTS reference_library (
@@ -56,9 +66,9 @@ class ReferenceLibrary:
         self.ensure_schema()
         added = skipped = 0
         if self._pg_backend():
-            from services.db.pg_pool import owner_connection
+            
 
-            pg = owner_connection()
+            pg = _pg()
             try:
                 for reference in references:
                     doi = _clean(getattr(reference, "doi", "") or _dict(reference).get("doi"))
@@ -125,9 +135,9 @@ class ReferenceLibrary:
     def list(self, limit: int = 50) -> list[dict[str, Any]]:
         self.ensure_schema()
         if self._pg_backend():
-            from services.db.pg_pool import owner_connection
+            
 
-            pg = owner_connection()
+            pg = _pg()
             try:
                 rows = pg.execute(
                     "SELECT * FROM reference_library ORDER BY created_at DESC LIMIT %s",
@@ -146,9 +156,9 @@ class ReferenceLibrary:
     def count(self) -> int:
         self.ensure_schema()
         if self._pg_backend():
-            from services.db.pg_pool import owner_connection
+            
 
-            pg = owner_connection()
+            pg = _pg()
             try:
                 return int(pg.execute("SELECT COUNT(*) AS n FROM reference_library").fetchone()["n"])
             finally:

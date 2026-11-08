@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-TABLES = {"reviews", "notes", "projects", "experiments", "claims", "tasks", "watch"}
+TABLES = {"reviews", "notes", "projects", "experiments", "claims", "tasks", "watch", "systematic", "references", "protocols"}
 
 
 def enabled_tables() -> set[str]:
