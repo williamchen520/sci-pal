@@ -1,5 +1,5 @@
 {
-  "schema_version": "4.0",
+  "schema_version": "4.1",
   "generated_for": "SciPal",
   "generated_at": "2026-11-08",
   "project": {
@@ -199,6 +199,28 @@
     "archived": {
       "sqlite": "I:\\_archive\\research.db-20261107 (SHA256 verified)",
       "chroma": "I:\\_archive\\chroma-20261107"
+    },
+    "data_layer": {
+      "status": "P0 contract",
+      "schemas": {
+        "catalog": [
+          "libraries",
+          "works"
+        ],
+        "library_main": [
+          "documents",
+          "source_nodes"
+        ]
+      },
+      "registered_libraries": [
+        "library_main"
+      ],
+      "work_identity": "DOI/PMID/PMCID + sha256 fallback",
+      "document_identity": "work_id + source_type + sha256",
+      "default_scope": "own",
+      "dedup": "query-time exact + offline near-duplicate",
+      "main_access": "read-only role planned in P4",
+      "md_support": "source_type reserved, parser pending"
     }
   },
   "data_scale": {
@@ -224,8 +246,8 @@
   ],
   "api": {
     "blueprints": 26,
-    "routes": 186,
-    "get_routes": 109,
+    "routes": 185,
+    "get_routes": 108,
     "groups": [
       {
         "name": "core/system",
@@ -331,6 +353,1839 @@
           "/api/ingest/<task_id>",
           "/api/guard/check",
           "/api/guard/term/<term>"
+        ]
+      }
+    ],
+    "endpoints": [
+      {
+        "rule": "/",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "index",
+        "status": "implemented"
+      },
+      {
+        "rule": "/<path:path>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "static_files",
+        "status": "implemented",
+        "parameters": [
+          "path"
+        ]
+      },
+      {
+        "rule": "/api/abstracts/<paper_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "abstracts.get_abstract",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/abstracts/list",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "abstracts.list_abstracts",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/agentic/search",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "qa.agentic_search",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/agentic/search_async",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "qa.agentic_search_async",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/auth/login",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "tenancy.login",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/auth/logout",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "tenancy.logout",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/auth/me",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "tenancy.me",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/auth/workspace",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "tenancy.switch_workspace",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/claims",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "claims.listing",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/claims/",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "claims.listing",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/claims/<claim_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "claims.detail",
+        "status": "implemented",
+        "parameters": [
+          "claim_id"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/decision",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "claims.decision",
+        "status": "implemented",
+        "parameters": [
+          "claim_id"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/events",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "claims.events",
+        "status": "implemented",
+        "parameters": [
+          "claim_id"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/evidence",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "claims.evidence",
+        "status": "implemented",
+        "parameters": [
+          "claim_id"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/interrogate",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "claims.interrogate",
+        "status": "implemented",
+        "parameters": [
+          "claim_id"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/note",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "claims.note",
+        "status": "implemented",
+        "parameters": [
+          "claim_id"
+        ]
+      },
+      {
+        "rule": "/api/claims/<claim_id>/search",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "claims.search",
+        "status": "implemented",
+        "parameters": [
+          "claim_id"
+        ]
+      },
+      {
+        "rule": "/api/communities",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "system.list_communities",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/aggregate",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "data.aggregate",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/artifacts",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "data.artifacts",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/artifacts/<artifact_id>",
+        "methods": [
+          "GET",
+          "PUT"
+        ],
+        "endpoint": "data.artifact",
+        "status": "implemented",
+        "parameters": [
+          "artifact_id"
+        ]
+      },
+      {
+        "rule": "/api/data/artifacts/<artifact_id>/validate",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "data.validate",
+        "status": "implemented",
+        "parameters": [
+          "artifact_id"
+        ]
+      },
+      {
+        "rule": "/api/data/audit",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "data.audit_log",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/classify",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "data.classify",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/cloud-gate",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "data.cloud_gate",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/cloud-send",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "data.cloud_send",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/profile",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "data.profile",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/projects",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "data.projects",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/sample",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "data.sample",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/data/session",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "data.open_session",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/domain-packs",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "domain_packs.packs",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/domain-packs/",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "domain_packs.packs",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/domain-packs/<pack_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "domain_packs.detail",
+        "status": "implemented",
+        "parameters": [
+          "pack_id"
+        ]
+      },
+      {
+        "rule": "/api/domain-packs/<pack_id>/validate",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "domain_packs.validate",
+        "status": "implemented",
+        "parameters": [
+          "pack_id"
+        ]
+      },
+      {
+        "rule": "/api/embed",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "ingest.embed",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/evidence/context",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "evidence.evidence_context",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/evidence/search",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "evidence.evidence_search",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/experiment-access-requests",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiments.experiment_access_requests",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/experiments",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "protocols.recent_runs",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiments.experiments_detail",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>",
+        "methods": [
+          "PUT"
+        ],
+        "endpoint": "experiments.experiments_update",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/access-requests",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiments.experiment_list_access",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/access-requests",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "experiments.experiment_request_access",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/access-requests/<request_id>/decide",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "experiments.experiment_decide_access",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id",
+          "request_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/audit",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiments.experiment_audit",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/revisions",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiments.experiment_revisions",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/runs",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiment_runs.runs_list",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/runs",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "experiment_runs.runs_create",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/sign",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "experiments.experiment_sign",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<experiment_id>/signatures",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiments.experiment_signatures",
+        "status": "implemented",
+        "parameters": [
+          "experiment_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>",
+        "methods": [
+          "DELETE"
+        ],
+        "endpoint": "protocols.delete_run",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>",
+        "methods": [
+          "PATCH"
+        ],
+        "endpoint": "protocols.update_run",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>/attachments",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "protocols.list_attachments",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>/attachments",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "protocols.upload_attachment",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>/attachments/<file_id>",
+        "methods": [
+          "DELETE"
+        ],
+        "endpoint": "protocols.delete_attachment",
+        "status": "implemented",
+        "parameters": [
+          "run_id",
+          "file_id"
+        ]
+      },
+      {
+        "rule": "/api/experiments/<run_id>/attachments/<file_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "protocols.download_attachment",
+        "status": "implemented",
+        "parameters": [
+          "run_id",
+          "file_id"
+        ]
+      },
+      {
+        "rule": "/api/graph/stats",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "system.graph_stats",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/guard/check",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "guard.check",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/guard/stats",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "guard.stats",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/guard/term/<term>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "guard.term",
+        "status": "implemented",
+        "parameters": [
+          "term"
+        ]
+      },
+      {
+        "rule": "/api/health",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "core.health",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/ingest",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "ingest.start_ingest",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/ingest/<task_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "ingest.ingest_status",
+        "status": "implemented",
+        "parameters": [
+          "task_id"
+        ]
+      },
+      {
+        "rule": "/api/ingest/<task_id>/cancel",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "ingest.cancel_ingest",
+        "status": "implemented",
+        "parameters": [
+          "task_id"
+        ]
+      },
+      {
+        "rule": "/api/notes",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "notes.notes_list",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/notes",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "notes.notes_create",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/notes/<note_id>",
+        "methods": [
+          "DELETE"
+        ],
+        "endpoint": "notes.notes_delete",
+        "status": "implemented",
+        "parameters": [
+          "note_id"
+        ]
+      },
+      {
+        "rule": "/api/notes/<note_id>",
+        "methods": [
+          "PUT"
+        ],
+        "endpoint": "notes.notes_update",
+        "status": "implemented",
+        "parameters": [
+          "note_id"
+        ]
+      },
+      {
+        "rule": "/api/papers",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers.list_papers",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers.paper_detail",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/annotate",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.annotate_pdf",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/annotations",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.list_pdf_annotations",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/graph",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers.paper_graph",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/pdf",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.serve_pdf",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.list_supplementary_files",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.upload_supplementary_file",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary/<supp_id>",
+        "methods": [
+          "DELETE"
+        ],
+        "endpoint": "papers_actions.delete_supplementary_file",
+        "status": "implemented",
+        "parameters": [
+          "paper_id",
+          "supp_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary/<supp_id>/download",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.download_supplementary_file",
+        "status": "implemented",
+        "parameters": [
+          "paper_id",
+          "supp_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/supplementary/link",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.link_supplementary_file",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/trace",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.sentence_trace",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/<paper_id>/trace.png",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.sentence_trace_image",
+        "status": "implemented",
+        "parameters": [
+          "paper_id"
+        ]
+      },
+      {
+        "rule": "/api/papers/import",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.import_paper",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/local",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.list_local_papers",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/parse",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.parse_local_paper",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/parse_async",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.parse_local_paper_async",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/projects",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "projects.projects_list",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/projects",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "projects.projects_create",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/projects/<project_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "projects.projects_detail",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>",
+        "methods": [
+          "PUT"
+        ],
+        "endpoint": "projects.projects_update",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>/copy",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "projects.projects_copy",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>/experiments",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiments.experiments_list",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>/experiments",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "experiments.experiments_create",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/projects/<project_id>/members",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "projects.projects_add_member",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/protocols",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "protocols.list_protocols",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/protocols/<protocol_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "protocols.get_protocol",
+        "status": "implemented",
+        "parameters": [
+          "protocol_id"
+        ]
+      },
+      {
+        "rule": "/api/protocols/<protocol_id>/export",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "protocols.export_protocol",
+        "status": "implemented",
+        "parameters": [
+          "protocol_id"
+        ]
+      },
+      {
+        "rule": "/api/protocols/<protocol_id>/runs",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "protocols.list_runs",
+        "status": "implemented",
+        "parameters": [
+          "protocol_id"
+        ]
+      },
+      {
+        "rule": "/api/protocols/<protocol_id>/runs",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "protocols.add_run",
+        "status": "implemented",
+        "parameters": [
+          "protocol_id"
+        ]
+      },
+      {
+        "rule": "/api/protocols/import",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "protocols.import_protocol",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/qa/ask",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "qa.qa_ask",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/qa/ask_async",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "qa.qa_ask_async",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/qa/status",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "qa.qa_status",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/references",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "references.list_references",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/references/import",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "references.import_references",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/retrieve",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "core.retrieve",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review-projects",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "review_projects.projects",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review-projects/<project_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.project",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/adjudicate",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_projects.adjudicate",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/brief",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.review_brief",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/conflicts",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.screening_conflicts",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/events",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.review_events",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/evidence",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "review_projects.evidence",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/evidence.csv",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.evidence_csv",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/export.json",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.export_project",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/from-watch",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_projects.from_watch",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/import-file",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_projects.import_file",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/import-records",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_projects.import_records",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/kappa",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.screening_kappa",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/members",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "review_projects.project_members",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/papers",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_projects.papers",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/pico",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_projects.extract_pico",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/prisma",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.prisma",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/prisma.svg",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.prisma_diagram",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/report.docx",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.review_report_docx",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/report.html",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.review_report",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/report.pdf",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_projects.review_report_pdf",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/risk-of-bias",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "review_projects.rob",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/screen",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_projects.screen",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/webhooks",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "review_projects.webhooks",
+        "status": "implemented",
+        "parameters": [
+          "project_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/<project_id>/webhooks/<int:webhook_id>",
+        "methods": [
+          "DELETE"
+        ],
+        "endpoint": "review_projects.delete_webhook",
+        "status": "implemented",
+        "parameters": [
+          "project_id",
+          "webhook_id"
+        ]
+      },
+      {
+        "rule": "/api/review-projects/import",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_projects.import_project",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/<review_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "reviews.review_detail",
+        "status": "implemented",
+        "parameters": [
+          "review_id"
+        ]
+      },
+      {
+        "rule": "/api/review/<review_id>/sentence/<sentence_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "reviews.review_sentence",
+        "status": "implemented",
+        "parameters": [
+          "review_id",
+          "sentence_id"
+        ]
+      },
+      {
+        "rule": "/api/review/assign_papers",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_actions.assign_papers_to_outline_route",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/cancel/<task_id>",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "reviews.review_cancel",
+        "status": "implemented",
+        "parameters": [
+          "task_id"
+        ]
+      },
+      {
+        "rule": "/api/review/generate",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "review_actions.generate_review",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/generate_async",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_actions.generate_review_async",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/llm_status",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "reviews.review_llm_status",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/outline",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "review_actions.generate_outline",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/outline/save",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_actions.save_outline",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/outline/saved",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_actions.list_saved_outlines",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/outline/saved/<name>",
+        "methods": [
+          "DELETE"
+        ],
+        "endpoint": "review_actions.delete_saved_outline",
+        "status": "implemented",
+        "parameters": [
+          "name"
+        ]
+      },
+      {
+        "rule": "/api/review/outline/saved/<name>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "review_actions.load_saved_outline",
+        "status": "implemented",
+        "parameters": [
+          "name"
+        ]
+      },
+      {
+        "rule": "/api/review/running_task",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "reviews.review_running_task",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/search_and_assign",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "review_actions.search_and_assign_route",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/review/task/<task_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "reviews.review_task",
+        "status": "implemented",
+        "parameters": [
+          "task_id"
+        ]
+      },
+      {
+        "rule": "/api/reviews",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "reviews.list_reviews",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/reviews/<review_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "reviews.get_review",
+        "status": "implemented",
+        "parameters": [
+          "review_id"
+        ]
+      },
+      {
+        "rule": "/api/reviews/<review_id>/to-protocol",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "protocols.review_to_protocol",
+        "status": "implemented",
+        "parameters": [
+          "review_id"
+        ]
+      },
+      {
+        "rule": "/api/runs/<run_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiment_runs.runs_detail",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/runs/<run_id>",
+        "methods": [
+          "PUT"
+        ],
+        "endpoint": "experiment_runs.runs_update",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/runs/<run_id>/comparison",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "experiment_runs.runs_comparison",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/search/clear_download_history",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "search_downloads.clear_download_history",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/search/download_history",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "search.download_history",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/search/download_online",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "search_downloads.download_online_papers",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/search/download_queue",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "search.download_queue_status",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/search/download_status",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "search.download_status",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/search/hybrid",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "search.hybrid_search",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/search/online",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "search.online_search",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/search/retry_download",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "search_downloads.retry_download",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/tasks",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "tasks.list_all",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/tasks/<task_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "tasks.detail",
+        "status": "implemented",
+        "parameters": [
+          "task_id"
+        ]
+      },
+      {
+        "rule": "/api/tasks/<task_id>/events",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "tasks.events",
+        "status": "implemented",
+        "parameters": [
+          "task_id"
+        ]
+      },
+      {
+        "rule": "/api/verify",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "evidence.verify",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/watch/items/<int:item_id>/feedback",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "watch.feedback",
+        "status": "implemented",
+        "parameters": [
+          "item_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/items/<int:item_id>/read",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "watch.read_item",
+        "status": "implemented",
+        "parameters": [
+          "item_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "watch.profiles",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>",
+        "methods": [
+          "DELETE",
+          "GET",
+          "PUT"
+        ],
+        "endpoint": "watch.profile",
+        "status": "implemented",
+        "parameters": [
+          "profile_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/discover",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "watch.discover",
+        "status": "implemented",
+        "parameters": [
+          "profile_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/journals",
+        "methods": [
+          "GET",
+          "PUT"
+        ],
+        "endpoint": "watch.journals",
+        "status": "implemented",
+        "parameters": [
+          "profile_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/latest",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "watch.latest_profile",
+        "status": "implemented",
+        "parameters": [
+          "profile_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/run",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "watch.run",
+        "status": "implemented",
+        "parameters": [
+          "profile_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/profiles/<int:profile_id>/runs",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "watch.runs",
+        "status": "implemented",
+        "parameters": [
+          "profile_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/runs/<int:run_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "watch.run_detail",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/runs/<int:run_id>/digest.md",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "watch.digest",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/runs/<int:run_id>/latest",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "watch.latest",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/runs/<int:run_id>/read-all",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "watch.read_all",
+        "status": "implemented",
+        "parameters": [
+          "run_id"
+        ]
+      },
+      {
+        "rule": "/api/watch/topics",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "watch.topics",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/workspaces",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "tenancy.workspaces",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/workspaces",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "tenancy.create",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/workspaces/<workspace_id>/members",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "tenancy.members",
+        "status": "implemented",
+        "parameters": [
+          "workspace_id"
+        ]
+      },
+      {
+        "rule": "/api/workspaces/<workspace_id>/members",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "tenancy.add",
+        "status": "implemented",
+        "parameters": [
+          "workspace_id"
+        ]
+      },
+      {
+        "rule": "/api/workspaces/<workspace_id>/role",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "tenancy.role",
+        "status": "implemented",
+        "parameters": [
+          "workspace_id"
         ]
       }
     ]

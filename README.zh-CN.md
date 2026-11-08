@@ -17,7 +17,7 @@ SciPal 是一个可本地部署的科研系统，用于文献检索、结构化�
 浏览器 / DSH
     │ HTTP / MCP
     ▼
-Flask API（26 个蓝图，186 条路由）
+Flask API（26 个蓝图，185 条 API 路由）
     │
     ├─ services/search        pgvector + PG FTS + RRF + rerank
     ├─ services/review        综述 + 系统综述
