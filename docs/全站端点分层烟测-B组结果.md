@@ -28,13 +28,13 @@ protocols/<id>/runs
 papers/<id>/supplementary
 ```
 
-## 明确未实现
+## 全部通过
 
 ```text
-review-projects/<id>/export.json  -> 410 FEATURE_OFFLINE_PG_ONLY
+review-projects/<id>/export.json  -> 200
 ```
 
-不是 500，是明确的能力缺口。
+已改为 PG 导出，不再返回 410。
 
 ## 修复
 
@@ -51,7 +51,7 @@ export.json 明确 410
 ```text
 B 组通过
 无 5xx
-export.json 待后续实现
+export.json 已实现
 ```
 
 C 组仍待执行。

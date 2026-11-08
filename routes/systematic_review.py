@@ -556,10 +556,13 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
         conn = _conn()
         try:
             if _pg_projects():
-                return jsonify({"error": "FEATURE_OFFLINE_PG_ONLY"}), 410
-            if not systematic.can_access(conn, project_id, _owner()):
-                return jsonify({"error": "project not found"}), 404
-            data = export_mod.export_project(conn, project_id)
+                if not pg_systematic.can_access(project_id, _owner()):
+                    return jsonify({"error": "project not found"}), 404
+                data = export_mod.export_project_pg(project_id)
+            else:
+                if not systematic.can_access(conn, project_id, _owner()):
+                    return jsonify({"error": "project not found"}), 404
+                data = export_mod.export_project(conn, project_id)
             return Response(
                 json.dumps(data, ensure_ascii=False, indent=2),
                 mimetype="application/json; charset=utf-8",

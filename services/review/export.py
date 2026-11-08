@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Dict
 
-from services.review import systematic
+from services.review import pg_systematic, systematic
 
 
 def export_project(conn: sqlite3.Connection, project_id: str) -> Dict:
@@ -156,4 +156,56 @@ def import_project(conn: sqlite3.Connection, data: Dict, owner: str) -> Dict:
         "papers": len(papers),
         "screening": len(data.get("screening") or []),
         "evidence": len(data.get("evidence") or []),
+    }
+
+
+def export_project_pg(project_id: str) -> Dict:
+    from services.db.pg_pool import pg_connection
+
+    project = pg_systematic.get_project(project_id)
+    if not project:
+        raise KeyError("project not found")
+    pg = pg_connection()
+    try:
+        papers = [row["paper_id"] for row in pg.execute(
+            "SELECT paper_id FROM review_project_papers WHERE project_id = %s ORDER BY paper_id",
+            (project_id,),
+        ).fetchall()]
+        screening = [dict(row) for row in pg.execute(
+            "SELECT paper_id, stage, decision, reason, reviewer, created_at "
+            "FROM screening_decisions WHERE project_id = %s ORDER BY id",
+            (project_id,),
+        ).fetchall()]
+        adjudications = [dict(row) for row in pg.execute(
+            "SELECT paper_id, decision, reason, editor, created_at "
+            "FROM adjudications WHERE project_id = %s ORDER BY id",
+            (project_id,),
+        ).fetchall()]
+        evidence = [dict(row) for row in pg.execute(
+            "SELECT paper_id, design, sample_size, intervention, comparator, outcomes, "
+            "effect, source_sentence FROM evidence_rows WHERE project_id = %s ORDER BY id",
+            (project_id,),
+        ).fetchall()]
+        rob = [dict(row) for row in pg.execute(
+            "SELECT paper_id, domain, judgement, support FROM risk_of_bias "
+            "WHERE project_id = %s ORDER BY id",
+            (project_id,),
+        ).fetchall()]
+    finally:
+        pg.close()
+    return {
+        "version": 1,
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "project": {
+            "name": project.get("name"),
+            "field_text": project.get("field_text"),
+            "pico": project.get("pico") or {},
+        },
+        "papers": papers,
+        "screening": screening,
+        "adjudications": adjudications,
+        "evidence": evidence,
+        "risk_of_bias": rob,
+        "members": pg_systematic.members(project_id),
+        "events": pg_systematic.list_events(project_id, limit=1000),
     }
