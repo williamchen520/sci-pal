@@ -32,10 +32,10 @@ def pg_only() -> bool:
     }
 
 
-def _pg_connection():
-    from services.db.pg_pool import owner_connection
+def _ingest_connection():
+    from services.db.pg_pool import ingest_connection
 
-    return owner_connection()
+    return ingest_connection()
 
 
 def update_workspace(paper_id: str, workspace_id: str, *, db_path: str | Path) -> bool:
@@ -47,7 +47,7 @@ def update_workspace(paper_id: str, workspace_id: str, *, db_path: str | Path) -
     if not enabled():
         return False
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             row = pg.execute(
                 "UPDATE papers SET workspace_id = %s WHERE paper_id = %s RETURNING paper_id",
                 (workspace_id, paper_id),
@@ -91,7 +91,7 @@ def update_metadata_if_exists(
     if not enabled():
         return False
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             row = pg.execute(
                 "UPDATE papers SET journal = %s, year = %s, doi = %s "
                 "WHERE paper_id = %s RETURNING paper_id",
@@ -180,7 +180,7 @@ def upsert_paper(row: dict) -> bool:
     if not enabled():
         return False
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             _upsert_paper_row(pg, row)
     except Exception as exc:  # noqa: BLE001
         LOGGER.error("PG paper upsert failed; refusing SQLite fallback: %s", exc)
@@ -197,7 +197,7 @@ def write_papers_batch(papers: list[dict], children: list[tuple[str, list[dict],
     if not enabled():
         return False
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             for paper in papers:
                 _upsert_paper_row(pg, paper)
             for paper_id, paragraphs, sentences in children:
@@ -238,7 +238,7 @@ def replace_children(paper_id: str, paragraphs: list[dict], sentences: list[dict
     if not enabled():
         return False
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             pg.execute("DELETE FROM sentences WHERE paper_id = %s", (paper_id,))
             pg.execute("DELETE FROM paragraphs WHERE paper_id = %s", (paper_id,))
             for row in paragraphs:
@@ -302,7 +302,7 @@ def write_parsed_paper(parsed_result: dict) -> bool:
         "total_citations": len(parsed_result.get("citations") or []),
     }
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             _upsert_paper_row(pg, paper)
             for para in paragraphs:
                 pg.execute(
@@ -397,7 +397,7 @@ def upsert_supplementary(row: dict) -> bool:
     if not enabled():
         return False
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             pg.execute(
                 "INSERT INTO supplementary_files (supp_id,paper_id,filename,file_type,file_path,file_size,description) "
                 "VALUES (%(supp_id)s,%(paper_id)s,%(filename)s,%(file_type)s,%(file_path)s,%(file_size)s,%(description)s) "
@@ -414,7 +414,7 @@ def upsert_supplementary(row: dict) -> bool:
 def list_supplementary(paper_id: str) -> list[dict]:
     if not enabled():
         return []
-    with _pg_connection() as pg:
+    with _ingest_connection() as pg:
         rows = pg.execute(
             "SELECT supp_id,paper_id,filename,file_type,file_path,file_size,description,created_at "
             "FROM supplementary_files WHERE paper_id=%s ORDER BY created_at",
@@ -426,7 +426,7 @@ def list_supplementary(paper_id: str) -> list[dict]:
 def delete_supplementary(supp_id: str) -> bool:
     if not enabled():
         return False
-    with _pg_connection() as pg:
+    with _ingest_connection() as pg:
         result = pg.execute(
             "DELETE FROM supplementary_files WHERE supp_id=%s", (supp_id,)
         )
@@ -439,7 +439,7 @@ def replace_sections(paper_id: str, rows: list[tuple], para_map: list[tuple[str,
     if not enabled():
         return False
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             pg.execute("DELETE FROM sections WHERE paper_id = %s", (paper_id,))
             for row in rows:
                 pg.execute(
@@ -464,7 +464,7 @@ def replace_all_sentences(rows: list[tuple]) -> bool:
     if not enabled():
         return False
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             pg.execute("DELETE FROM sentences")
             pg.executemany(
                 "INSERT INTO sentences (sentence_id,para_id,paper_id,text,sequence) "
@@ -497,7 +497,7 @@ def sync_paper_graph(conn, paper_id: str) -> bool:
     citations = [dict(r) for r in conn.execute("SELECT * FROM citations WHERE paper_id=?", (paper_id,))]
     links = [dict(r) for r in conn.execute("SELECT * FROM sentence_links WHERE paper_id=?", (paper_id,))]
     try:
-        with _pg_connection() as pg:
+        with _ingest_connection() as pg:
             for table in ("sentence_links", "sentences", "citations", "figures", "tables", "sections", "paragraphs"):
                 pg.execute(f'DELETE FROM "{table}" WHERE paper_id=%s', (paper_id,))
             _upsert_paper_row(

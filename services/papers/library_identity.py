@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from services.db.pg_pool import pg_connection
+from services.db.pg_pool import ingest_connection
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 PDF_DIR = Path(os.environ.get("SCIPAL_DOCUMENTS_DIR", str(ROOT / "documents")))
@@ -85,7 +85,7 @@ def ensure_identity(
     document_id = f"doc_{sha[:16]}_{source_type}_{work_id[-8:]}"
     rel = f"{'documents' if source_type == 'pdf' else 'documents_xml'}/{filename}"
 
-    pg = pg_connection()
+    pg = ingest_connection()
     try:
         pg.execute(
             "INSERT INTO catalog.works (work_id, primary_doi, pmcid, title, year) "

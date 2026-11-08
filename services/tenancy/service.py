@@ -77,14 +77,14 @@ def _pg_read_enabled() -> bool:
     )
 
 
-def _owner_connection():
-    from services.db.pg_pool import owner_connection
+def _admin_connection():
+    from services.db.pg_pool import admin_connection
 
-    return owner_connection()
+    return admin_connection()
 
 
 def _pg_authenticate(username: str, password: str):
-    with _owner_connection() as pg:
+    with _admin_connection() as pg:
         row = pg.execute(
             "SELECT user_id, username, email, display_name, password_hash, status, is_admin "
             "FROM users WHERE username = %s",
@@ -104,7 +104,7 @@ def _pg_authenticate(username: str, password: str):
 
 
 def _pg_membership(workspace_id: str, user_id: str):
-    with _owner_connection() as pg:
+    with _admin_connection() as pg:
         row = pg.execute(
             "SELECT workspace_id, user_id, role, status FROM memberships "
             "WHERE workspace_id = %s AND user_id = %s AND status = 'active'",
@@ -116,7 +116,7 @@ def _pg_membership(workspace_id: str, user_id: str):
 
 
 def _pg_list_workspaces(user_id: str):
-    with _owner_connection() as pg:
+    with _admin_connection() as pg:
         rows = pg.execute(
             "SELECT w.workspace_id, w.name, w.owner_user_id, m.role "
             "FROM workspaces w JOIN memberships m ON m.workspace_id = w.workspace_id "
@@ -128,7 +128,7 @@ def _pg_list_workspaces(user_id: str):
 
 
 def _pg_get_user(user_id: str):
-    with _owner_connection() as pg:
+    with _admin_connection() as pg:
         row = pg.execute(
             "SELECT user_id, username, display_name, email, status, is_admin "
             "FROM users WHERE user_id = %s",
@@ -138,7 +138,7 @@ def _pg_get_user(user_id: str):
 
 
 def _pg_get_user_by_username(username: str):
-    with _owner_connection() as pg:
+    with _admin_connection() as pg:
         row = pg.execute(
             "SELECT user_id, username, display_name, status FROM users WHERE username = %s",
             ((username or "").strip(),),
@@ -325,7 +325,7 @@ def bootstrap_default_workspace(
 ) -> dict[str, Any]:
     """Create the default workspace for existing single-user data."""
     if _pg_only():
-        pg = _owner_connection()
+        pg = _admin_connection()
         try:
             row = pg.execute(
                 "SELECT workspace_id, owner_user_id FROM workspaces WHERE workspace_id = %s",
@@ -621,7 +621,7 @@ def get_password_hash(
 ) -> str | None:
     if _pg_read_enabled() or pg_writes.enabled():
         try:
-            with _owner_connection() as pg:
+            with _admin_connection() as pg:
                 row = pg.execute(
                     "SELECT password_hash FROM users WHERE user_id = %s", (user_id,)
                 ).fetchone()

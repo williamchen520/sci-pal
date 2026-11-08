@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 from build_db.jats_parser import parse_file
 from build_db.sentence_geometry import split_sentences
-from services.db.pg_pool import owner_connection
+from services.db.pg_pool import ingest_connection
 from services.papers import pg_writes
 
 
@@ -55,7 +55,7 @@ def import_file(xml_path: Path, paper_id: str | None = None) -> Dict[str, int]:
         "tables": len(tables),
         "links": 0,
     }
-    pg = owner_connection()
+    pg = ingest_connection()
     try:
         paper_id = paper_id or _find_paper_id(pg, xml_path.name)
         if not paper_id:
