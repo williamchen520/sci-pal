@@ -101,9 +101,11 @@ def list_rows(conn: sqlite3.Connection, project_id: str) -> List[Dict]:
 
 
 def list_rows_pg(project_id: str) -> List[Dict]:
-    from services.db.pg_pool import owner_connection
+    from services.db.pg_pool import pg_connection
+    from services.db.tenant_pilot import set_search_path
 
-    pg = owner_connection()
+    pg = pg_connection()
+    set_search_path(pg, "systematic")
     try:
         rows = pg.execute(
             "SELECT paper_id, domain, judgement, support FROM risk_of_bias "
