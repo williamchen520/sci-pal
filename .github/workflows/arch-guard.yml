@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "ARCHITECTURE.json"
+      - "ARCH_CONTRACT.json"
+      - "scripts/guard.py"
       - "api_server.py"
       - "routes/**"
       - "scripts/validate_arch.py"
@@ -17,3 +19,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate ARCHITECTURE.json against Flask routes
         run: python scripts/validate_arch.py
+      - name: Run architecture guard
+        run: python scripts/guard.py --json

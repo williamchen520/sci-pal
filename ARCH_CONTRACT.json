@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "updated": "2026-11-09",
+  "rules": [
+    {
+      "id": "route-unique-owner",
+      "kind": "route_unique_blueprint",
+      "severity": "error",
+      "reason": "同一个 (URL, method) 不能由两个蓝图注册，否则边界重叠且行为不可预测"
+    },
+    {
+      "id": "deadline-todo",
+      "kind": "deadline_scan",
+      "severity": "error",
+      "params": {
+        "scope": "**/*.py",
+        "pattern": "TODO\\(decouple, deadline=(\\d{4}-\\d{2}-\\d{2})\\)"
+      },
+      "reason": "过渡态必须带到期日，过期即违规"
+    },
+    {
+      "id": "new-file-no-sqlite",
+      "kind": "forbid_pattern",
+      "severity": "error",
+      "params": {
+        "scope": "services/**/*.py",
+        "pattern": "sqlite3\\.connect\\(",
+        "only_new": true
+      },
+      "reason": "新增 service 不得再引入 SQLite；存量由 sqlite_connect_allowlist 只减不增"
+    }
+  ],
+  "exceptions": []
+}
