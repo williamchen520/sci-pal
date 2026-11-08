@@ -8,6 +8,7 @@ One pool per DSN, sized by environment variables:
 
 from __future__ import annotations
 
+import logging
 import os
 import threading
 from typing import Any, Dict, Optional
@@ -102,6 +103,28 @@ def pg_connection(dsn: Optional[str] = None):
         from psycopg.rows import dict_row
 
         return psycopg.connect(dsn, row_factory=dict_row)
+
+
+def main_read_connection():
+    """Read-only main-library connection (P4b1)."""
+    dsn = os.environ.get("SCIPAL_PG_MAIN_READ_DSN", "").strip()
+    if not dsn:
+        logging.getLogger(__name__).warning(
+            "SCIPAL_PG_MAIN_READ_DSN missing; falling back to owner DSN"
+        )
+        return pg_connection()
+    return pg_connection(dsn)
+
+
+def tenant_write_connection():
+    """Tenant-writer connection (P4b1; used only by tenant-aware paths)."""
+    dsn = os.environ.get("SCIPAL_PG_TENANT_WRITE_DSN", "").strip()
+    if not dsn:
+        logging.getLogger(__name__).warning(
+            "SCIPAL_PG_TENANT_WRITE_DSN missing; falling back to owner DSN"
+        )
+        return pg_connection()
+    return pg_connection(dsn)
 
 
 def close_pools() -> None:

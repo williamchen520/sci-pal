@@ -31,10 +31,10 @@ class SummarySearch:
         if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
             "postgres", "postgresql", "pg", "1", "true"
         }:
-            from services.db.pg_pool import pg_connection
+            from services.db.pg_pool import main_read_connection
 
             ts_query = " | ".join(terms)
-            pg = pg_connection()
+            pg = main_read_connection()
             try:
                 rows = pg.execute(
                     "SELECT summary_id, paper_id, section_id, level, title, text, "
