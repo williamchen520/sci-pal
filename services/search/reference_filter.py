@@ -12,15 +12,9 @@ the paper title as their section), so section name alone is unreliable.
 This detector therefore relies primarily on high-precision *content*
 patterns and uses the section name only as a secondary signal.
 
-Audit (read-only, prints what WOULD be excluded):
-  python -m services.search.reference_filter
 """
 import re
-import sqlite3
-from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-DB_PATH = PROJECT_ROOT / "data" / "research.db"
 
 REFERENCE_SECTION_TERMS = (
     "references", "reference", "bibliography", "literature cited",
@@ -84,48 +78,3 @@ def is_reference_entry(text: str, section_l1: str = None,
         return True
 
     return False
-
-
-def _audit():
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute(
-        """SELECT para_id, paper_id, section_level1, section_level2, text
-           FROM paragraphs"""
-    ).fetchall()
-
-    flagged = []
-    section_hits = 0
-    for r in rows:
-        if is_reference_entry(r["text"], r["section_level1"], r["section_level2"]):
-            flagged.append(r)
-            if _section_is_references(r["section_level1"]) or \
-               _section_is_references(r["section_level2"]):
-                section_hits += 1
-
-    print("=" * 64)
-    print("🔎 Reference-entry audit (read-only, nothing changed)")
-    print("=" * 64)
-    print(f"Total paragraphs : {len(rows)}")
-    print(f"Flagged as refs  : {len(flagged)} "
-          f"({100*len(flagged)/max(1,len(rows)):.1f}%)")
-    print(f"  under a References-labelled section: {section_hits}")
-    print(f"  caught by content pattern only     : "
-          f"{len(flagged) - section_hits}")
-    print("\nSample flagged (first 15):")
-    for r in flagged[:15]:
-        preview = _normalize(r["text"])[:95]
-        sec = r["section_level1"] or ""
-        print(f"  • [{sec[:28]:28}] {preview}")
-
-    # Precision check: show short flagged items (most likely false positives)
-    short = [r for r in flagged if len(_normalize(r["text"])) < 60]
-    if short:
-        print(f"\n⚠️  {len(short)} flagged items are <60 chars — eyeball these "
-              f"for false positives:")
-        for r in short[:15]:
-            print(f"  ? {_normalize(r['text'])[:90]}")
-
-
-if __name__ == "__main__":
-    _audit()
