@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import sqlite3
-from pathlib import Path
+from services.db.pg_pool import main_read_connection
 
 
 def normalize_doi(value) -> str:
@@ -14,15 +13,11 @@ def normalize_doi(value) -> str:
     return text.strip().lower()
 
 
-def enrich_references(references: list, db_path: str | Path) -> list:
+def enrich_references(references: list, db_path=None) -> list:
     """Add ``doi_url`` and, when the DOI exists locally, ``paper_id``."""
     if not references:
         return references
-    connection = None
-    try:
-        connection = sqlite3.connect(str(db_path), timeout=5)
-    except sqlite3.Error:
-        connection = None
+    pg = main_read_connection()
     try:
         for reference in references:
             if not isinstance(reference, dict):
@@ -31,17 +26,11 @@ def enrich_references(references: list, db_path: str | Path) -> list:
             if not doi:
                 continue
             reference["doi_url"] = f"https://doi.org/{doi}"
-            if connection is None:
-                continue
-            try:
-                row = connection.execute(
-                    "SELECT paper_id FROM papers WHERE lower(doi) = ? LIMIT 1", (doi,)
-                ).fetchone()
-            except sqlite3.Error:
-                break
+            row = pg.execute(
+                "SELECT paper_id FROM papers WHERE lower(doi) = %s LIMIT 1", (doi,)
+            ).fetchone()
             if row:
-                reference["paper_id"] = row[0]
+                reference["paper_id"] = row["paper_id"]
     finally:
-        if connection is not None:
-            connection.close()
+        pg.close()
     return references
