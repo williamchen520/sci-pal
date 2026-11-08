@@ -284,6 +284,18 @@
         ]
       },
       {
+        "name": "ingest-tracking",
+        "prefix": "/api/ingest-tracking",
+        "routes": [
+          "/api/ingest-tracking/batches",
+          "/api/ingest-tracking/batches/<batch_id>",
+          "/api/ingest-tracking/batches/<batch_id>/items",
+          "/api/ingest-tracking/batches/<batch_id>/finish",
+          "/api/ingest-tracking/papers/<paper_id>",
+          "/api/ingest-tracking/papers/<paper_id>/review"
+        ]
+      },
+      {
         "name": "evidence/qa",
         "prefix": "/api/evidence,/api/qa",
         "routes": [
@@ -1940,6 +1952,54 @@
           "POST"
         ],
         "endpoint": "search.federated_search",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/ingest-tracking/batches",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "ingest_tracking.create_batch",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/ingest-tracking/batches/<batch_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "ingest_tracking.get_batch",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/ingest-tracking/batches/<batch_id>/items",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "ingest_tracking.add_item",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/ingest-tracking/batches/<batch_id>/finish",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "ingest_tracking.finish_batch",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/ingest-tracking/papers/<paper_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "ingest_tracking.get_paper",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/ingest-tracking/papers/<paper_id>/review",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "ingest_tracking.review_paper",
         "status": "implemented"
       },
       {

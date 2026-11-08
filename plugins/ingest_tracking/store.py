@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from services.db.pg_pool import pg_connection
+from services.db.pg_pool import admin_connection
 
 MIGRATION = Path(__file__).resolve().parent / "migrations" / "001_ingest_tracking.sql"
 
@@ -22,7 +22,7 @@ def ensure_schema() -> None:
     if not enabled():
         return
     sql = MIGRATION.read_text(encoding="utf-8")
-    pg = pg_connection()
+    pg = admin_connection()
     try:
         for statement in sql.split(";"):
             if statement.strip():
@@ -33,7 +33,7 @@ def ensure_schema() -> None:
 
 
 def create_batch(batch_id: str, source: str, total: int, meta: dict[str, Any] | None = None) -> None:
-    pg = pg_connection()
+    pg = admin_connection()
     try:
         pg.execute(
             "INSERT INTO ingest_tracking_batches (batch_id,source,total,meta) "
@@ -52,7 +52,7 @@ def add_item(
     quality_status: str,
     flags: list[dict[str, Any]] | None = None,
 ) -> int:
-    pg = pg_connection()
+    pg = admin_connection()
     try:
         row = pg.execute(
             "INSERT INTO ingest_tracking_items "
@@ -80,7 +80,7 @@ def add_finding(
     message: str,
     detail: dict[str, Any] | None = None,
 ) -> None:
-    pg = pg_connection()
+    pg = admin_connection()
     try:
         pg.execute(
             "INSERT INTO ingest_tracking_findings "
@@ -94,7 +94,7 @@ def add_finding(
 
 
 def finish_batch(batch_id: str, summary: dict[str, int]) -> None:
-    pg = pg_connection()
+    pg = admin_connection()
     try:
         pg.execute(
             "UPDATE ingest_tracking_batches SET status='finished', finished_at=now(), "
@@ -115,7 +115,7 @@ def finish_batch(batch_id: str, summary: dict[str, int]) -> None:
 
 
 def get_batch(batch_id: str) -> dict[str, Any] | None:
-    pg = pg_connection()
+    pg = admin_connection()
     try:
         batch = pg.execute(
             "SELECT * FROM ingest_tracking_batches WHERE batch_id=%s", (batch_id,)
@@ -139,7 +139,7 @@ def get_batch(batch_id: str) -> dict[str, Any] | None:
 
 
 def get_paper(paper_id: str) -> dict[str, Any] | None:
-    pg = pg_connection()
+    pg = admin_connection()
     try:
         row = pg.execute(
             "SELECT paper_id, quality_status, quality_flags, quality_checked_at "
@@ -152,7 +152,7 @@ def get_paper(paper_id: str) -> dict[str, Any] | None:
 
 
 def review_paper(paper_id: str, status: str, flags: list[dict[str, Any]] | None = None) -> bool:
-    pg = pg_connection()
+    pg = admin_connection()
     try:
         result = pg.execute(
             "UPDATE papers SET quality_status=%s, quality_flags=%s::jsonb, "
