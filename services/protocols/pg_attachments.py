@@ -8,7 +8,14 @@ import uuid
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from services.db.pg_pool import owner_connection
+from services.db.pg_pool import pg_connection
+from services.db.tenant_pilot import set_search_path
+
+
+def _pg():
+    pg = pg_connection()
+    set_search_path(pg, "protocols")
+    return pg
 from services.protocols.service import _now, _text
 
 MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
@@ -22,7 +29,7 @@ def _storage_root() -> Path:
 def add_attachment(run_id: str, filename: str, content_type: str, data: bytes) -> Dict:
     if len(data) > MAX_ATTACHMENT_BYTES:
         raise ValueError("file too large (max 20 MB)")
-    pg = owner_connection()
+    pg = _pg()
     try:
         exists = pg.execute(
             "SELECT 1 FROM protocol_runs WHERE run_id = %s", (run_id,)
@@ -63,7 +70,7 @@ def add_attachment(run_id: str, filename: str, content_type: str, data: bytes) -
 
 
 def list_attachments(run_id: str) -> List[Dict]:
-    pg = owner_connection()
+    pg = _pg()
     try:
         rows = pg.execute(
             "SELECT * FROM protocol_run_files WHERE run_id = %s ORDER BY uploaded_at",
@@ -75,7 +82,7 @@ def list_attachments(run_id: str) -> List[Dict]:
 
 
 def attachment_path(run_id: str, file_id: str) -> Optional[Path]:
-    pg = owner_connection()
+    pg = _pg()
     try:
         row = pg.execute(
             "SELECT stored_name FROM protocol_run_files WHERE run_id = %s AND file_id = %s",
@@ -91,7 +98,7 @@ def attachment_path(run_id: str, file_id: str) -> Optional[Path]:
 
 def delete_attachment(run_id: str, file_id: str) -> bool:
     path = attachment_path(run_id, file_id)
-    pg = owner_connection()
+    pg = _pg()
     try:
         row = pg.execute(
             "DELETE FROM protocol_run_files WHERE run_id = %s AND file_id = %s RETURNING file_id",
