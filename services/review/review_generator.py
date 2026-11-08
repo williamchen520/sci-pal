@@ -1747,9 +1747,9 @@ class ReviewGenerator:
             return metadata_map
 
         if _pg_metadata_enabled():
-            from services.db.pg_pool import owner_connection
+            from services.db.pg_pool import main_read_connection
 
-            pg = owner_connection()
+            pg = main_read_connection()
             try:
                 rows = pg.execute(
                     "SELECT paper_id, title, authors, journal, year, doi "
@@ -2068,9 +2068,9 @@ def _paper_titles(paper_ids: list[str]) -> dict[str, str]:
     if missing:
         try:
             if _pg_metadata_enabled():
-                from services.db.pg_pool import owner_connection
+                from services.db.pg_pool import main_read_connection
 
-                pg = owner_connection()
+                pg = main_read_connection()
                 try:
                     rows = pg.execute(
                         "SELECT paper_id, title FROM papers WHERE paper_id = ANY(%s)",
@@ -2109,9 +2109,9 @@ def _get_fulltext_doi_map() -> dict[str, str]:
         doi_map: dict[str, str] = {}
         try:
             if _pg_metadata_enabled():
-                from services.db.pg_pool import owner_connection
+                from services.db.pg_pool import main_read_connection
 
-                pg = owner_connection()
+                pg = main_read_connection()
                 try:
                     rows = pg.execute(
                         "SELECT paper_id, doi FROM papers "
