@@ -9,7 +9,6 @@ routes/system.py
 routes/systematic_review.py
 services/claims/service.py
 services/data_sandbox/audit.py
-services/db/etl.py
 services/db/read_router.py
 services/experiments/runs.py
 services/experiments/service.py
