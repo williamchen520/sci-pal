@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from services.db.pg_pool import pg_connection
+from services.db.pg_pool import owner_connection
 
 
 def _now() -> str:
@@ -21,7 +21,7 @@ def create_project(
     owner: str = "default",
 ) -> str:
     project_id = "rev_" + uuid.uuid4().hex[:10]
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         pg.execute(
             "INSERT INTO review_projects (project_id, owner, name, field_text, pico_json, created_at) "
@@ -35,7 +35,7 @@ def create_project(
 
 
 def get_project(project_id: str) -> Optional[Dict]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         row = pg.execute(
             "SELECT project_id, owner, name, field_text, pico_json "
@@ -56,7 +56,7 @@ def get_project(project_id: str) -> Optional[Dict]:
 
 
 def list_projects(owner: str = "default") -> List[Dict]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         rows = pg.execute(
             "SELECT DISTINCT p.project_id, p.name, p.field_text, p.pico_json, p.created_at "
@@ -79,7 +79,7 @@ def list_projects(owner: str = "default") -> List[Dict]:
 
 
 def can_access(project_id: str, user: str) -> bool:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         if pg.execute(
             "SELECT 1 FROM review_projects WHERE project_id = %s AND owner = %s",
@@ -97,7 +97,7 @@ def can_access(project_id: str, user: str) -> bool:
 
 
 def add_member(project_id: str, member: str, role: str = "reviewer") -> None:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         pg.execute(
             "INSERT INTO review_project_members (project_id, member, role, added_at) "
@@ -110,7 +110,7 @@ def add_member(project_id: str, member: str, role: str = "reviewer") -> None:
 
 
 def members(project_id: str) -> List[Dict]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         rows = pg.execute(
             "SELECT member, role FROM review_project_members WHERE project_id = %s ORDER BY member",
@@ -122,7 +122,7 @@ def members(project_id: str) -> List[Dict]:
 
 
 def add_papers(project_id: str, paper_ids: List[str]) -> int:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         for paper_id in paper_ids:
             pg.execute(
@@ -143,7 +143,7 @@ def screen(
     reviewer: str = "",
     stage: str = "title_abstract",
 ) -> None:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         pg.execute(
             "INSERT INTO screening_decisions "
@@ -163,7 +163,7 @@ def adjudicate(
     reason: str = "",
     editor: str = "",
 ) -> None:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         pg.execute(
             "INSERT INTO adjudications "
@@ -177,7 +177,7 @@ def adjudicate(
 
 
 def _latest_adjudications(project_id: str) -> Dict[str, str]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         rows = pg.execute(
             "SELECT paper_id, decision FROM ("
@@ -193,7 +193,7 @@ def _latest_adjudications(project_id: str) -> Dict[str, str]:
 
 
 def prisma(project_id: str) -> Dict[str, int]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         identified = pg.execute(
             "SELECT COUNT(*) AS n FROM review_project_papers WHERE project_id = %s",
@@ -226,7 +226,7 @@ def prisma(project_id: str) -> Dict[str, int]:
 
 
 def conflicts(project_id: str, stage: str = "title_abstract") -> List[Dict]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         rows = pg.execute(
             "SELECT paper_id, reviewer, decision FROM ("
@@ -255,7 +255,7 @@ def conflicts(project_id: str, stage: str = "title_abstract") -> List[Dict]:
 
 
 def log_event(project_id: str, actor: str, action: str, target: str = "", detail: str = "") -> None:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         pg.execute(
             "INSERT INTO review_events (project_id, actor, action, target, detail, created_at) "
@@ -267,7 +267,7 @@ def log_event(project_id: str, actor: str, action: str, target: str = "", detail
         pg.close()
 
 def add_evidence(project_id: str, paper_id: str, row: Dict[str, str]) -> None:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         pg.execute(
             "INSERT INTO evidence_rows "
@@ -286,7 +286,7 @@ def add_evidence(project_id: str, paper_id: str, row: Dict[str, str]) -> None:
 
 
 def list_evidence(project_id: str) -> List[Dict]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         rows = pg.execute(
             "SELECT paper_id, design, sample_size, intervention, comparator, outcomes, effect "
@@ -324,7 +324,7 @@ def evidence_csv(project_id: str) -> str:
 
 
 def project_papers(project_id: str) -> List[Dict]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         rows = pg.execute(
             "SELECT p.paper_id, p.title, p.abstract FROM review_project_papers rp "
@@ -336,7 +336,7 @@ def project_papers(project_id: str) -> List[Dict]:
         pg.close()
 
 def list_events(project_id: str, limit: int = 100) -> List[Dict]:
-    pg = pg_connection()
+    pg = owner_connection()
     try:
         rows = pg.execute(
             "SELECT actor, action, target, detail, created_at FROM review_events "

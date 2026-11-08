@@ -6,7 +6,7 @@ import json
 import uuid
 from typing import Any, Dict, Optional
 
-from services.db.pg_pool import pg_connection
+from services.db.pg_pool import owner_connection
 from services.review.task_manager import (
     PERSISTED_TASK_TYPES,
     _SELECT_COLUMNS,
@@ -25,7 +25,7 @@ class PGTaskManager:
                 params_text = json.dumps(params, ensure_ascii=False)
             except (TypeError, ValueError):
                 params_text = json.dumps(str(params), ensure_ascii=False)
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             pg.execute(
                 "INSERT INTO tasks (task_id, type, status, progress_text, result, error, "
@@ -39,7 +39,7 @@ class PGTaskManager:
         return task_id
 
     def claim_task(self, task_id: str) -> bool:
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             row = pg.execute(
                 "UPDATE tasks SET status='running', started_at=%s, progress_text='初始化中...' "
@@ -52,7 +52,7 @@ class PGTaskManager:
             pg.close()
 
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             row = pg.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM tasks WHERE task_id = %s", (task_id,)
@@ -62,7 +62,7 @@ class PGTaskManager:
             pg.close()
 
     def cancel_task(self, task_id: str) -> bool:
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             row = pg.execute(
                 "UPDATE tasks SET status='cancelled', finished_at=%s "
@@ -76,7 +76,7 @@ class PGTaskManager:
 
     def complete_task(self, task_id: str, result: Any) -> bool:
         payload = None if result is None else json.dumps(result, ensure_ascii=False)
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             row = pg.execute(
                 "UPDATE tasks SET status='completed', result=%s, progress_pct=100, finished_at=%s "
@@ -89,7 +89,7 @@ class PGTaskManager:
             pg.close()
 
     def fail_task(self, task_id: str, error: str) -> bool:
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             row = pg.execute(
                 "UPDATE tasks SET status='failed', error=%s, finished_at=%s "
@@ -102,7 +102,7 @@ class PGTaskManager:
             pg.close()
 
     def is_cancelled(self, task_id: str) -> bool:
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             row = pg.execute(
                 "SELECT status FROM tasks WHERE task_id = %s", (task_id,)
@@ -112,7 +112,7 @@ class PGTaskManager:
             pg.close()
 
     def update_progress(self, task_id: str, progress: str) -> None:
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             pg.execute(
                 "UPDATE tasks SET progress_text=%s WHERE task_id = %s AND status = 'running'",
@@ -124,7 +124,7 @@ class PGTaskManager:
 
     def get_running_task(self) -> Optional[Dict[str, Any]]:
         placeholders = ",".join("%s" for _ in PERSISTED_TASK_TYPES)
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             row = pg.execute(
                 f"SELECT {_SELECT_COLUMNS} FROM tasks "
@@ -140,7 +140,7 @@ class PGTaskManager:
         from datetime import datetime, timedelta
 
         cutoff = (datetime.now() - timedelta(minutes=max_age_minutes)).isoformat(timespec="seconds")
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             rows = pg.execute(
                 "UPDATE tasks SET status='failed', error='stale task recovery', finished_at=%s "
@@ -154,7 +154,7 @@ class PGTaskManager:
 
     def cleanup_old_tasks(self, max_count: int = 100) -> None:
         placeholders = ",".join("%s" for _ in PERSISTED_TASK_TYPES)
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             total = pg.execute(
                 f"SELECT COUNT(*) AS n FROM tasks WHERE type IN ({placeholders})",

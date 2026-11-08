@@ -72,9 +72,9 @@ def flag_paper(
     flags: List[Dict],
 ) -> int:
     if _pg_enabled():
-        from services.db.pg_pool import pg_connection
+        from services.db.pg_pool import owner_connection
 
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             for flag in flags:
                 pg.execute(
@@ -114,9 +114,9 @@ def flags_for_papers(conn: sqlite3.Connection, paper_ids: List[str]) -> Dict[str
     if not paper_ids:
         return {}
     if _pg_enabled():
-        from services.db.pg_pool import pg_connection
+        from services.db.pg_pool import owner_connection
 
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             rows = pg.execute(
                 "SELECT paper_id, flag_type, source, detail FROM paper_flags "

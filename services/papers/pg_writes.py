@@ -33,9 +33,9 @@ def pg_only() -> bool:
 
 
 def _pg_connection():
-    from services.db.pg_pool import pg_connection
+    from services.db.pg_pool import owner_connection
 
-    return pg_connection(os.environ["SCIPAL_PG_DSN"])
+    return owner_connection()
 
 
 def update_workspace(paper_id: str, workspace_id: str, *, db_path: str | Path) -> bool:
