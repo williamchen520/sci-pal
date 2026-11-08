@@ -277,6 +277,7 @@
         "prefix": "/api/search",
         "routes": [
           "/api/search/hybrid",
+          "/api/search/federated",
           "/api/search/online",
           "/api/search/download_online",
           "/api/search/download_status"
@@ -1930,6 +1931,15 @@
           "POST"
         ],
         "endpoint": "search.hybrid_search",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/search/federated",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "endpoint": "search.federated_search",
         "status": "implemented"
       },
       {

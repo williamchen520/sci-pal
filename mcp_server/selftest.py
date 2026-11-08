@@ -64,6 +64,7 @@ SERVERS = [
         "expected": [
             "health",
             "search_hybrid",
+            "search_federated",
             "search_online",
             "get_paper",
             "download_online_papers",
@@ -76,6 +77,7 @@ SERVERS = [
         "calls": {
             "health": {},
             "search_hybrid": {"query": "CRISPR", "top_k": 3},
+            "search_federated": {"query": "cancer", "top_k": 3, "library_scope": "main,bench"},
             # 只取 1 条，减小联网耗时
             "search_online": {"query": "CRISPR", "max_results": 1},
             "get_paper": {"paper_id": MISSING},

@@ -21,6 +21,7 @@ def build_search_blueprint(
     get_task_manager: Callable[[], Any],
     log: Any,
     get_hybrid_retriever: Callable[[], Any] | None = None,
+    get_federated_retriever: Callable[[], Any] | None = None,
     db_path: str | None = None,
 ) -> Blueprint:
     bp = Blueprint("search", __name__, url_prefix="/api")
@@ -66,6 +67,63 @@ def build_search_blueprint(
         except Exception as exc:  # noqa: BLE001
             log.exception("hybrid search failed")
             return jsonify({"error": f"混合搜索失败: {str(exc)}"}), 500
+
+    def _get_federated_retriever():
+        from services.search.federated_retriever import FederatedRetriever
+
+        return FederatedRetriever()
+
+    @bp.route("/search/federated", methods=["GET", "POST"])
+    def federated_search():
+        if request.method == "POST":
+            data = request.get_json(silent=True) or {}
+            query = data.get("q", "").strip()
+            top_k = int(data.get("top_k", 20))
+            per_scope_k = int(data.get("per_scope_k", 20))
+            quota = int(data.get("quota_per_scope", 0))
+            raw_scopes = data.get("library_scope", "main,bench")
+        else:
+            query = request.args.get("q", "").strip()
+            top_k = int(request.args.get("top_k", 20))
+            per_scope_k = int(request.args.get("per_scope_k", 20))
+            quota = int(request.args.get("quota_per_scope", 0))
+            raw_scopes = request.args.get("library_scope", "main,bench")
+
+        if not query:
+            return jsonify({"error": "缺少搜索关键词 q"}), 400
+        scopes = [part.strip().lower() for part in str(raw_scopes).split(",") if part.strip()]
+        allowed_scopes = {"own", "main", "bench"}
+        if not scopes or any(scope not in allowed_scopes for scope in scopes):
+            return jsonify({"error": "library_scope 只支持 own/main/bench"}), 400
+        if top_k < 1 or top_k > 100 or per_scope_k < 1 or per_scope_k > 200:
+            return jsonify({"error": "top_k/per_scope_k 超出范围"}), 400
+        workspace_id = resolve_workspace(db_path=db_path or DATABASE_PATH)
+        if not workspace_id:
+            return jsonify({"error": "workspace access denied"}), 401
+        try:
+            retriever = (
+                get_federated_retriever()
+                if get_federated_retriever is not None
+                else _get_federated_retriever()
+            )
+            rows = retriever.search(
+                query,
+                top_k=top_k,
+                scopes=scopes,
+                per_scope_k=per_scope_k,
+                quota_per_scope=max(0, quota),
+            )
+            return jsonify(
+                {
+                    "query": query,
+                    "library_scope": scopes,
+                    "total": len(rows),
+                    "results": rows,
+                }
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.exception("federated search failed")
+            return jsonify({"error": f"联邦检索失败: {str(exc)}"}), 500
 
     @bp.route("/search/online", methods=["GET", "POST"])
     def online_search():

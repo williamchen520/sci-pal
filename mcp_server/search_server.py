@@ -82,6 +82,36 @@ def search_hybrid(query: str, top_k: int = 10, use_online: bool = False) -> str:
 
 @mcp.tool(
     description=(
+        "Federated search over main + bench libraries "
+        "(POST /api/search/federated). "
+        "library_scope is comma-separated: own,main,bench. "
+        "quota_per_scope reserves one or more hits from each scope so a small "
+        "bench library is not completely buried by main."
+    )
+)
+def search_federated(
+    query: str,
+    top_k: int = 10,
+    library_scope: str = "main,bench",
+    per_scope_k: int = 20,
+    quota_per_scope: int = 1,
+) -> str:
+    """Search multiple libraries and return deduplicated results with provenance."""
+    return _call(
+        "POST",
+        "/api/search/federated",
+        {
+            "q": query,
+            "top_k": top_k,
+            "library_scope": library_scope,
+            "per_scope_k": per_scope_k,
+            "quota_per_scope": quota_per_scope,
+        },
+    )
+
+
+@mcp.tool(
+    description=(
         "仅在线检索 NCBI PubMed/PMC（POST /api/search/online），不搜本地库。"
         "max_results 每个库默认 20（联网较慢，不建议调大）。"
     )
