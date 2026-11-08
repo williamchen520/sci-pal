@@ -53,7 +53,7 @@ class SummaryHit:
 
 class _BasePG:
     def __init__(self, dsn: Optional[str] = None, *, connector=None, ranker: str = "rank_cd"):
-        self.dsn = dsn or os.environ.get("SCIPAL_PG_DSN", "")
+        self.dsn = dsn
         self._connector = connector
         if ranker not in ("rank", "rank_cd"):
             raise ValueError("ranker must be rank or rank_cd")
@@ -62,9 +62,9 @@ class _BasePG:
     def _connection(self):
         if self._connector is not None:
             return self._connector(), False
-        from services.db.pg_pool import main_read_connection
+        from services.db.pg_pool import main_read_connection, pg_connection
 
-        return pg_connection(self.dsn), True
+        return (pg_connection(self.dsn) if self.dsn else main_read_connection()), True
 
     def _lexemes(self, pg, terms: list[str], source: str) -> list[str]:
         """Map query words to PG lexemes and rank them by rarity."""
@@ -325,9 +325,9 @@ class ParadeDBParagraphFTS:
     def _connection(self):
         if self._connector is not None:
             return self._connector(), False
-        from services.db.pg_pool import main_read_connection
+        from services.db.pg_pool import main_read_connection, pg_connection
 
-        return pg_connection(self.dsn), True
+        return (pg_connection(self.dsn) if self.dsn else main_read_connection()), True
 
     @staticmethod
     def _bm25_query(query: str, match: str, term_limit: int) -> str:

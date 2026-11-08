@@ -17,17 +17,15 @@ def vector_literal(values) -> str:
 
 class PGVectorParagraphSearch:
     def __init__(self, dsn: Optional[str] = None, *, connector=None):
-        self.dsn = dsn or os.environ.get("SCIPAL_PG_DSN", "") or os.environ.get(
-            "SCIPAL_PARADEDB_DSN", ""
-        )
+        self.dsn = dsn
         self._connector = connector
 
     def _connection(self):
         if self._connector is not None:
             return self._connector(), False
-        from services.db.pg_pool import main_read_connection
+        from services.db.pg_pool import main_read_connection, pg_connection
 
-        return pg_connection(self.dsn), True
+        return (pg_connection(self.dsn) if self.dsn else main_read_connection()), True
 
     def search(
         self,
