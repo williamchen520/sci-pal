@@ -92,3 +92,12 @@ P3 其余 build_*          归档或重写
 app / watch-cron / health-cron / backup-cron
 均不调用 legacy build 脚本
 ```
+
+## 6. Runtime hard guard
+
+```text
+SCIPAL_SQLITE_RUNTIME=0
+```
+
+`api_server.py` 和 `scripts/run_watch_due.py` 会安装 `sqlite3.connect` 拒绝器。
+legacy 脚本必须在容器外、维护窗口运行，不能依赖运行时 fallback。
