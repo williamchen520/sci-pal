@@ -1,0 +1,19 @@
+name: arch-guard
+
+on:
+  pull_request:
+    paths:
+      - "ARCHITECTURE.json"
+      - "api_server.py"
+      - "routes/**"
+      - "scripts/validate_arch.py"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    # Same self-hosted Windows runner used by the eval workflow.
+    runs-on: [self-hosted, Windows]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate ARCHITECTURE.json against Flask routes
+        run: python scripts/validate_arch.py

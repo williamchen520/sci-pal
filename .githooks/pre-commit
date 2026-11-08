@@ -5,17 +5,37 @@
 # the message file exists). The message-tag enforcement is therefore in
 # .githooks/commit-msg. This hook validates the staged JSON and warns loudly.
 
-staged=$(git diff --cached --name-only --diff-filter=ACMRD -- ARCHITECTURE.json)
-[ -z "$staged" ] && exit 0
+staged_json=$(git diff --cached --name-only --diff-filter=ACMRD -- ARCHITECTURE.json)
+changed=$(git diff --cached --name-only --diff-filter=ACMR -- \
+    ARCHITECTURE.json api_server.py routes scripts/validate_arch.py)
+[ -z "$changed" ] && exit 0
 
-echo "pre-commit: ARCHITECTURE.json is staged." >&2
-echo "pre-commit: commit-msg will require [APPROVED_BY_HUMAN]." >&2
+if [ -n "$staged_json" ]; then
+    echo "pre-commit: ARCHITECTURE.json is staged." >&2
+    echo "pre-commit: commit-msg will require [APPROVED_BY_HUMAN]." >&2
+fi
 
-if command -v python >/dev/null 2>&1; then
+if [ -n "$staged_json" ] && command -v python >/dev/null 2>&1; then
     git show :ARCHITECTURE.json | python -c "import json,sys; json.load(sys.stdin)" || {
         echo "pre-commit: staged ARCHITECTURE.json is not valid JSON; refusing commit." >&2
         exit 1
     }
+fi
+
+# Route/architecture drift guard: if the constitution or any route source is
+# staged, the JSON must still match the Flask app.
+if [ -n "$changed" ]; then
+    echo "pre-commit: route/architecture files staged; running validate_arch.py" >&2
+    if command -v python >/dev/null 2>&1; then
+        python scripts/validate_arch.py || {
+            echo "pre-commit: ARCHITECTURE.json is out of sync with Flask routes." >&2
+            echo "pre-commit: update ARCHITECTURE.json or fix the route mismatch." >&2
+            exit 1
+        }
+    else
+        echo "pre-commit: python not found; cannot validate architecture." >&2
+        exit 1
+    fi
 fi
 
 exit 0

@@ -37,6 +37,10 @@
 - 实现完成、blueprint 注册后，把状态改为 `implemented`，再次运行 `validate_arch.py`。
 - 禁止“野路由”绕过 JSON；禁止用跳过校验的方式合并。
 - 物理拦截：`.githooks/pre-commit` + `.githooks/commit-msg`；后者检查 `[APPROVED_BY_HUMAN]`。
+- 自动同步守卫：
+  - `pre-commit` 检测 `ARCHITECTURE.json`、`api_server.py`、`routes/**` 变更后自动运行 `validate_arch.py`；
+  - `arch-guard` GitHub Actions 在 PR 上再次校验；
+  - PR 模板要求勾选 `validate_arch` 与 `arch-guard`。
 - 详细流程见 [docs/开发流程规范.md](docs/开发流程规范.md)。
 
 ## 规则 0A：架构变更授权审查（强制）

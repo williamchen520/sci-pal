@@ -1,3 +1,5 @@
+> 🗺️ **Architecture and route map:** [docs/架构与路由全景图.md](docs/架构与路由全景图.md) — 26 blueprints / 185 API routes
+
 # SciPal — Retrieval-Augmented Research Workbench
 
 > **Status: active development / PG-only.** No stable release.  
