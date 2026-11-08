@@ -25,6 +25,7 @@ SQLITE_MODULES = [
     "test_reviews_routes",
     "test_systematic_review",
     "test_tasks_routes",
+    "test_federated_retriever",
 ]
 PG_MODULES = [
     "test_pg_pool",
