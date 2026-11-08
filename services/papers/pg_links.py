@@ -6,7 +6,7 @@ import hashlib
 import re
 from typing import Optional
 
-from services.db.pg_pool import owner_connection
+from services.db.pg_pool import ingest_connection
 
 
 def _link_id(prefix: str, *parts: str) -> str:
@@ -22,7 +22,7 @@ def _normalize_title(title: str) -> str:
 
 def build_paper_links_for(paper_id: str) -> int:
     """Upsert citations from one paper into paper_links using PG only."""
-    pg = owner_connection()
+    pg = ingest_connection()
     written = 0
     try:
         rows = pg.execute(
@@ -65,7 +65,7 @@ def build_paper_links_for(paper_id: str) -> int:
 
 def build_sentence_links_for(paper_id: str) -> int:
     """Build figure/table/citation links from PG sentences for one paper."""
-    pg = owner_connection()
+    pg = ingest_connection()
     written = 0
     try:
         sentences = pg.execute(
