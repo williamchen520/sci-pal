@@ -11,6 +11,7 @@
 - [ ] 如修改了 JSON：已获得人类“批准修改”，commit 含 `[APPROVED_BY_HUMAN]`
 - [ ] 新路由使用 `status: "planned"`，并已生成/实现
 - [ ] `python scripts/validate_arch.py` 通过
+- [ ] `arch-guard` CI 通过（或本地 hook 已跑）
 - [ ] 无 JSON 之外的 wild route
 
 ### 0.1) 全自动施工与审批
