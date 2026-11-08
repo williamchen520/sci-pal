@@ -21,7 +21,6 @@ import requests
 
 BASE = "https://www.ebi.ac.uk/europepmc/webservices/rest"
 DEFAULT_XML_DIR = Path(__file__).resolve().parent.parent.parent / "documents_xml"
-DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
 
 
 class EuropePMCClient:
@@ -105,31 +104,6 @@ class EuropePMCClient:
             return None
         return response.text
 
-    def download_and_import(
-        self,
-        pmcid: str,
-        xml_dir: Path | str = DEFAULT_XML_DIR,
-        db_path: Path | str = DEFAULT_DB,
-    ) -> Dict[str, Any]:
-        """Fetch full text, save as documents_xml/<PMCID>.xml, import to DB."""
-        import sqlite3
-
-        from build_db.import_jats import import_file
-
-        xml = self.fetch_fulltext_xml(pmcid)
-        if not xml:
-            return {"pmcid": pmcid, "status": "no_fulltext"}
-        xml_dir = Path(xml_dir)
-        xml_dir.mkdir(parents=True, exist_ok=True)
-        target = xml_dir / f"{pmcid.upper()}.xml"
-        target.write_text(xml, encoding="utf-8")
-        conn = sqlite3.connect(str(db_path))
-        try:
-            stats = import_file(conn, target)
-            conn.commit()
-        finally:
-            conn.close()
-        return {"pmcid": pmcid.upper(), "status": "imported", **stats}
 
 
 if __name__ == "__main__":
