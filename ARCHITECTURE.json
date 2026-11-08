@@ -1,2230 +1,406 @@
 {
-  "schema_version": "2.1",
-  "generated_for": "V33.96",
-  "generated_at": "2026-11-03",
+  "schema_version": "4.0",
+  "generated_for": "SciPal",
+  "generated_at": "2026-11-08",
   "project": {
     "name": "SciPal",
-    "display_name": "SciPal 科研文献 RAG 系统",
-    "version": "V33.96",
-    "status": "work-in-progress",
-    "license": "AGPL-3.0-only",
-    "repository": "https://github.com/williamchen520/sci-pal",
-    "mirror": "https://gitee.com/williamsucas/sci-pal",
-    "default_branch": "dev",
-    "description": "本地化科研文献检索、结构化解析、综述生成与 claim 审讯工作台。"
+    "description": "Local-first retrieval-augmented research workbench for literature search, structured evidence, systematic review and traceable writing.",
+    "status": "active development / PG-only",
+    "version": "dev @ 2026-11-08",
+    "license": "See LICENSE",
+    "repository": "https://github.com/williamchen520/sci-pal"
   },
   "warning": [
-    "本项目目前处于重度开发阶段（Work In Progress），尚未发布任何正式 Release 版本。",
-    "当前主分支代码包含大量未修复的 Bug、不稳定的接口以及未经过全量测试的逻辑。",
-    "绝对禁止将当前代码直接部署于任何生产环境、医疗/科研关键业务或涉及重要数据的场景！",
-    "任何无视本警告、擅自将开发中代码用于实际生产导致的数据丢失、系统崩溃等重大损失，均由使用者自行承担全部法律与经济责任。作者概不负责！"
+    "Active development. No stable release.",
+    "Do not use for clinical or regulated decisions.",
+    "APIs and schemas may change without notice.",
+    "Cold endpoints are smoke-tested, not fully regression-tested."
   ],
   "runtime": {
-    "python": "3.12",
-    "venv_name": "venv_sciPal_py312",
-    "backend": "Flask 3.1.3",
-    "frontend": "原生 HTML/CSS/JS + PDF.js",
+    "language": "Python 3.12",
+    "web_framework": "Flask 3",
     "entrypoint": "api_server.py",
-    "host": "0.0.0.0",
-    "port": 5000,
-    "default_url": "http://127.0.0.1:5000",
-    "database": "PostgreSQL 16 (runtime reads/main writes) + SQLite data/research.db (FTS/legacy mirror)",
-    "vector_store": "ChromaDB data/chroma/"
+    "production_server": "gunicorn, APP_MODE=PROD_MODE",
+    "development_server": "Flask development server, APP_MODE=DEV_MODE",
+    "config": "environment variables; deploy/.env in deployment",
+    "async": "threaded workers plus PostgreSQL task records",
+    "scheduler": "watch-cron container"
   },
   "tech_stack": {
-    "backend": [
-      "Python 3.12",
-      "Flask",
-      "flask-cors",
-      "pydantic 2",
-      "networkx"
-    ],
-    "retrieval": [
-      "ChromaDB",
-      "sentence-transformers",
-      "FTS5/BM25",
-      "RRF",
-      "bge-reranker"
-    ],
-    "pdf": [
-      "PyMuPDF",
-      "Docling",
-      "GROBID",
-      "MinerU"
-    ],
-    "xml": [
-      "PMC/Europe PMC JATS"
-    ],
-    "llm": [
-      "DeepSeek OpenAI-compatible",
-      "Ollama",
-      "DSH"
-    ],
-    "deployment": [
-      "Docker Compose",
-      "Caddy",
-      "watch-cron"
-    ]
+    "primary_store": "PostgreSQL 16",
+    "vector_store": "pgvector 0.8+ with HNSW",
+    "full_text": "PostgreSQL GIN tsvector; optional ParadeDB path",
+    "sqlite": "retired from runtime; research.db archived",
+    "chroma": "retired from runtime; archived",
+    "embeddings": "BAAI/bge-base-en-v1.5",
+    "reranker": "BAAI/bge-reranker-base",
+    "parsing": "PyMuPDF, Docling, GROBID, MinerU, JATS XML",
+    "generation": "OpenAI-compatible cloud API, Ollama local fallback, DSH optional",
+    "frontend": "vanilla HTML/CSS/JS, PDF.js",
+    "deployment": "Docker Compose: app + watch-cron + Caddy + PostgreSQL"
   },
   "models": [
     {
-      "id": "cloud_llm",
-      "name": "deepseek-chat",
-      "provider": "DeepSeek",
-      "role": "QA / review / claim NLI / writing"
-    },
-    {
-      "id": "light_llm",
-      "name": "qwen2.5:3b",
-      "provider": "ollama",
-      "role": "intent / routing / scheduling"
-    },
-    {
-      "id": "heavy_llm",
-      "name": "qwen2.5:7b-instruct-q4_K_M",
-      "provider": "ollama",
-      "role": "offline QA / review fallback"
-    },
-    {
-      "id": "embedding",
       "name": "BAAI/bge-base-en-v1.5",
-      "provider": "sentence-transformers",
-      "role": "paragraph / abstract embeddings"
+      "role": "paragraph/abstract embeddings"
     },
     {
-      "id": "reranker",
       "name": "BAAI/bge-reranker-base",
-      "provider": "sentence-transformers",
       "role": "cross-encoder reranking"
     },
     {
-      "id": "ner",
+      "name": "deepseek-chat",
+      "role": "cloud reasoning / QA / reviews"
+    },
+    {
+      "name": "qwen2.5:3b",
+      "role": "local orchestration and routing"
+    },
+    {
+      "name": "qwen2.5:7b-instruct-q4_K_M",
+      "role": "offline QA/review fallback"
+    },
+    {
       "name": "scispacy en_ner_bionlp13cg_md",
-      "provider": "spacy",
       "role": "biomedical entity recognition"
+    },
+    {
+      "name": "Docling / TableFormer",
+      "role": "layout and table extraction"
+    },
+    {
+      "name": "MinerU 4.x",
+      "role": "scanned and complex-layout fallback"
+    },
+    {
+      "name": "GROBID",
+      "role": "metadata and structured citations"
     }
   ],
   "architecture": {
-    "principles": [
-      "确定性检索优先",
-      "claim 必须绑定精确 quote",
-      "状态变化写入事件表，可审计",
-      "研究裁决由人确认，工程实现可自动化"
+    "principle": [
+      "Deterministic retrieval before generation.",
+      "Every evidence item traces to paper, section, paragraph, sentence, page and bbox.",
+      "Claims must bind to explicit quotes.",
+      "State changes are append-only audit events.",
+      "External capabilities are pluggable and removable; SciPal core stays stable."
     ],
     "layers": [
       {
-        "name": "客户端",
-        "paths": [
-          "frontend/",
-          "mcp_server/"
-        ],
-        "responsibility": "浏览器页面、DSH/MCP 入口"
+        "name": "client",
+        "components": [
+          "browser",
+          "DSH/MCP"
+        ]
       },
       {
-        "name": "HTTP 层",
-        "paths": [
-          "routes/",
-          "api_server.py"
-        ],
-        "responsibility": "26 个蓝图，鉴权、检索、问答、综述、watch、claim、项目/实验"
+        "name": "api",
+        "components": [
+          "Flask blueprints",
+          "session/tenancy",
+          "task API"
+        ]
       },
       {
-        "name": "业务层",
-        "paths": [
-          "services/"
-        ],
-        "responsibility": "检索、QA、review、watch、domain_packs、claims、tenancy、projects、experiments、security"
+        "name": "services",
+        "components": [
+          "search",
+          "evidence",
+          "review",
+          "claims",
+          "watch",
+          "projects",
+          "experiments",
+          "ingest",
+          "guard"
+        ]
       },
       {
-        "name": "解析/入库层",
-        "paths": [
-          "build_db/"
-        ],
-        "responsibility": "PDF/JATS 解析、结构重建、句子/链接、表迁移"
+        "name": "build",
+        "components": [
+          "parsers",
+          "JATS import",
+          "structure rebuild",
+          "embedding backfill"
+        ]
       },
       {
-        "name": "存储层",
-        "paths": [
-          "data/",
-          "documents/",
-          "documents_xml/",
-          "packs/"
-        ],
-        "responsibility": "SQLite、Chroma、PDF/XML、领域包"
+        "name": "storage",
+        "components": [
+          "PostgreSQL + pgvector",
+          "documents filesystem",
+          "archived SQLite/Chroma"
+        ]
       }
     ],
-    "data_model": {
-      "L0_document_tree": [
+    "retrieval_pipeline": [
+      "query normalization + entity extraction",
+      "pgvector paragraph recall",
+      "PostgreSQL FTS/BM25 paragraph recall",
+      "RRF fusion",
+      "cross-encoder rerank",
+      "section/context expansion",
+      "evidence envelope with page/bbox"
+    ],
+    "startup": [
+      "load env",
+      "create Flask app and register 26 blueprints",
+      "skip SQLite migrations when SCIPAL_SQLITE_QUERY_ONLY=1",
+      "warm embedding/reranker models on first use",
+      "serve /api/health"
+    ]
+  },
+  "storage": {
+    "primary": {
+      "engine": "PostgreSQL 16",
+      "database": "scipal_bench",
+      "dsn_env": "SCIPAL_PG_DSN",
+      "approx_size_gb": 5.4,
+      "core_tables": [
         "papers",
         "sections",
         "paragraphs",
         "sentences",
+        "citations",
         "figures",
-        "tables"
-      ],
-      "L1_evidence": [
+        "tables",
         "sentence_links",
         "paper_links",
-        "citations"
-      ],
-      "L2_claim": [
+        "paragraph_embeddings",
+        "summaries",
+        "abstracts",
+        "reviews",
         "claim_cards",
-        "claim_card_evidence",
-        "claim_card_events"
-      ],
-      "L3_watch": [
+        "projects",
+        "experiments",
+        "tasks",
         "watch_profiles",
-        "watch_profile_journals",
-        "watch_runs",
-        "watch_items",
-        "watch_seen"
-      ],
-      "L4_tenancy_projects": [
         "users",
         "workspaces",
-        "memberships",
-        "projects",
-        "experiments",
-        "experiment_runs",
-        "experiment_revisions"
+        "memberships"
       ]
     },
-    "claim_model": {
-      "statuses": [
-        "draft",
-        "interrogating",
-        "supported",
-        "contested",
-        "underdetermined",
-        "accepted",
-        "revised",
-        "rejected"
-      ],
-      "relations": [
-        "supports",
-        "refutes",
-        "mentions",
-        "underdetermines"
-      ],
-      "decisions": [
-        "accept",
-        "revise",
-        "reject",
-        "contest"
-      ],
-      "writing_brief_fields": [
-        "safe_claim",
-        "must_include",
-        "must_not_write",
-        "evidence_ids"
-      ]
+    "vector": {
+      "table": "paragraph_embeddings",
+      "index": "HNSW",
+      "vectors": 320928,
+      "dimensions": 768,
+      "index_size_gb": 1.235,
+      "params": {
+        "m": 16,
+        "ef_construction": 100
+      }
     },
-    "retrieval_flow": [
-      "vector recall (Chroma paragraphs)",
-      "BM25 recall (FTS5)",
-      "RRF fusion + MMR",
-      "cross-encoder rerank",
-      "paragraph -> section / neighbor / sentences",
-      "evidence envelope"
-    ],
-    "claim_flow": [
-      "claim text + qualifiers",
-      "support / oppose / boundary query",
-      "FTS + semantic candidates",
-      "NLI relation classification",
-      "human decision + event",
-      "writing brief"
-    ],
-    "watch_flow": [
-      "profile + journals",
-      "discover / window search",
-      "dedup + score",
-      "select + ingest",
-      "digest + feedback"
-    ],
-    "tenancy": {
-      "roles": [
-        "owner",
-        "pi",
-        "member",
-        "viewer"
-      ],
-      "isolation": [
-        "papers",
-        "notes",
-        "projects",
-        "experiments",
-        "watch profiles"
-      ],
-      "auth_env": "SCIPAL_AUTH_REQUIRED"
+    "files": {
+      "documents": "/app/documents (host F:\\scipal_data\\documents)",
+      "reports": "generated under runtime data directory",
+      "packs": "packs/"
+    },
+    "archived": {
+      "sqlite": "I:\\_archive\\research.db-20261107 (SHA256 verified)",
+      "chroma": "I:\\_archive\\chroma-20261107"
     }
   },
-  "storage": {
-    "relational": {
-      "engine": "SQLite",
-      "path": "data/research.db"
-    },
-    "abstract_db": {
-      "engine": "SQLite",
-      "path": "data/research.db"
-    },
-    "semantic": {
-      "engine": "ChromaDB",
-      "path": "data/chroma/",
-      "join_key": "paper_id"
-    },
-    "documents": [
-      "documents/",
-      "documents_xml/"
-    ],
-    "packs": "packs/"
+  "data_scale": {
+    "papers": 10102,
+    "paragraphs": 331263,
+    "sentences": 1492661,
+    "sections": 124216,
+    "paragraph_embeddings": 320928,
+    "summaries": 69128,
+    "paper_links": 6798
   },
   "frontend_pages": [
     "index.html",
-    "login.html",
+    "papers.html",
+    "search.html",
     "projects.html",
+    "experiments.html",
     "reviews.html",
+    "review_projects.html",
     "watch.html",
     "packs.html",
-    "claims.html",
-    "trace.html",
-    "compare.html",
-    "viewer.html"
+    "claims.html"
   ],
   "api": {
     "blueprints": 26,
-    "route_count": 185,
+    "routes": 186,
+    "get_routes": 109,
     "groups": [
       {
-        "prefix": "/api/auth/*",
-        "purpose": "登录 / 当前用户"
-      },
-      {
-        "prefix": "/api/workspaces/*",
-        "purpose": "工作区"
-      },
-      {
-        "prefix": "/api/retrieve",
-        "purpose": "统一证据检索"
-      },
-      {
-        "prefix": "/api/search/*",
-        "purpose": "本地/在线/混合检索"
-      },
-      {
-        "prefix": "/api/papers/*",
-        "purpose": "论文、解析、PDF、trace"
-      },
-      {
-        "prefix": "/api/qa/*",
-        "purpose": "问答"
-      },
-      {
-        "prefix": "/api/agentic/*",
-        "purpose": "多跳检索"
-      },
-      {
-        "prefix": "/api/review/*",
-        "purpose": "综述大纲/生成"
-      },
-      {
-        "prefix": "/api/reviews/*",
-        "purpose": "综述历史"
-      },
-      {
-        "prefix": "/api/watch/*",
-        "purpose": "文献监控"
-      },
-      {
-        "prefix": "/api/domain-packs/*",
-        "purpose": "领域包"
-      },
-      {
-        "prefix": "/api/claims/*",
-        "purpose": "claim 审讯"
-      },
-      {
-        "prefix": "/api/projects/*",
-        "purpose": "项目"
-      },
-      {
-        "prefix": "/api/experiments/*",
-        "purpose": "实验"
-      },
-      {
-        "prefix": "/api/runs/*",
-        "purpose": "实验 run"
-      },
-      {
-        "prefix": "/api/ingest/*",
-        "purpose": "异步入库"
-      },
-      {
-        "prefix": "/api/tasks/*",
-        "purpose": "任务"
-      },
-      {
-        "prefix": "/api/guard/*",
-        "purpose": "术语校验"
-      },
-      {
-        "prefix": "/api/protocols/*",
-        "purpose": "实验方案"
-      }
-    ],
-    "endpoints": [
-      {
-        "rule": "/",
-        "endpoint": "index",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/<path:path>",
-        "endpoint": "static_files",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/abstracts/<paper_id>",
-        "endpoint": "abstracts.get_abstract",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/abstracts/list",
-        "endpoint": "abstracts.list_abstracts",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/agentic/search",
-        "endpoint": "qa.agentic_search",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/agentic/search_async",
-        "endpoint": "qa.agentic_search_async",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/auth/login",
-        "endpoint": "tenancy.login",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/auth/logout",
-        "endpoint": "tenancy.logout",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/auth/me",
-        "endpoint": "tenancy.me",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/auth/workspace",
-        "endpoint": "tenancy.switch_workspace",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/claims",
-        "endpoint": "claims.listing",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/claims/",
-        "endpoint": "claims.listing",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/claims/<claim_id>",
-        "endpoint": "claims.detail",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/claims/<claim_id>/decision",
-        "endpoint": "claims.decision",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/claims/<claim_id>/events",
-        "endpoint": "claims.events",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/claims/<claim_id>/evidence",
-        "endpoint": "claims.evidence",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/claims/<claim_id>/interrogate",
-        "endpoint": "claims.interrogate",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/claims/<claim_id>/note",
-        "endpoint": "claims.note",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/claims/<claim_id>/search",
-        "endpoint": "claims.search",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/communities",
-        "endpoint": "system.list_communities",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/data/aggregate",
-        "endpoint": "data.aggregate",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/data/artifacts",
-        "endpoint": "data.artifacts",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/data/artifacts/<artifact_id>",
-        "endpoint": "data.artifact",
-        "methods": [
-          "GET",
-          "PUT"
-        ]
-      },
-      {
-        "rule": "/api/data/artifacts/<artifact_id>/validate",
-        "endpoint": "data.validate",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/data/audit",
-        "endpoint": "data.audit_log",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/data/classify",
-        "endpoint": "data.classify",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/data/cloud-gate",
-        "endpoint": "data.cloud_gate",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/data/cloud-send",
-        "endpoint": "data.cloud_send",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/data/profile",
-        "endpoint": "data.profile",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/data/projects",
-        "endpoint": "data.projects",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/data/sample",
-        "endpoint": "data.sample",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/data/session",
-        "endpoint": "data.open_session",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/domain-packs",
-        "endpoint": "domain_packs.packs",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/domain-packs/",
-        "endpoint": "domain_packs.packs",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/domain-packs/<pack_id>",
-        "endpoint": "domain_packs.detail",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/domain-packs/<pack_id>/validate",
-        "endpoint": "domain_packs.validate",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/embed",
-        "endpoint": "ingest.embed",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/evidence/context",
-        "endpoint": "evidence.evidence_context",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/evidence/search",
-        "endpoint": "evidence.evidence_search",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/experiment-access-requests",
-        "endpoint": "experiments.experiment_access_requests",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments",
-        "endpoint": "protocols.recent_runs",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>",
-        "endpoint": "experiments.experiments_detail",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>",
-        "endpoint": "experiments.experiments_update",
-        "methods": [
-          "PUT"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/access-requests",
-        "endpoint": "experiments.experiment_list_access",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/access-requests",
-        "endpoint": "experiments.experiment_request_access",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/access-requests/<request_id>/decide",
-        "endpoint": "experiments.experiment_decide_access",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/audit",
-        "endpoint": "experiments.experiment_audit",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/revisions",
-        "endpoint": "experiments.experiment_revisions",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/runs",
-        "endpoint": "experiment_runs.runs_create",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/runs",
-        "endpoint": "experiment_runs.runs_list",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/sign",
-        "endpoint": "experiments.experiment_sign",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<experiment_id>/signatures",
-        "endpoint": "experiments.experiment_signatures",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<run_id>",
-        "endpoint": "protocols.delete_run",
-        "methods": [
-          "DELETE"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<run_id>",
-        "endpoint": "protocols.update_run",
-        "methods": [
-          "PATCH"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<run_id>/attachments",
-        "endpoint": "protocols.list_attachments",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<run_id>/attachments",
-        "endpoint": "protocols.upload_attachment",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<run_id>/attachments/<file_id>",
-        "endpoint": "protocols.delete_attachment",
-        "methods": [
-          "DELETE"
-        ]
-      },
-      {
-        "rule": "/api/experiments/<run_id>/attachments/<file_id>",
-        "endpoint": "protocols.download_attachment",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/graph/stats",
-        "endpoint": "system.graph_stats",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/guard/check",
-        "endpoint": "guard.check",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/guard/stats",
-        "endpoint": "guard.stats",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/guard/term/<term>",
-        "endpoint": "guard.term",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/health",
-        "endpoint": "core.health",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/ingest",
-        "endpoint": "ingest.start_ingest",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/ingest/<task_id>",
-        "endpoint": "ingest.ingest_status",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/ingest/<task_id>/cancel",
-        "endpoint": "ingest.cancel_ingest",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/notes",
-        "endpoint": "notes.notes_create",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/notes",
-        "endpoint": "notes.notes_list",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/notes/<note_id>",
-        "endpoint": "notes.notes_delete",
-        "methods": [
-          "DELETE"
-        ]
-      },
-      {
-        "rule": "/api/notes/<note_id>",
-        "endpoint": "notes.notes_update",
-        "methods": [
-          "PUT"
-        ]
-      },
-      {
-        "rule": "/api/papers",
-        "endpoint": "papers.list_papers",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>",
-        "endpoint": "papers.paper_detail",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/annotate",
-        "endpoint": "papers_actions.annotate_pdf",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/annotations",
-        "endpoint": "papers_actions.list_pdf_annotations",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/graph",
-        "endpoint": "papers.paper_graph",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/pdf",
-        "endpoint": "papers_actions.serve_pdf",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/supplementary",
-        "endpoint": "papers_actions.list_supplementary_files",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/supplementary",
-        "endpoint": "papers_actions.upload_supplementary_file",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/supplementary/<supp_id>",
-        "endpoint": "papers_actions.delete_supplementary_file",
-        "methods": [
-          "DELETE"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/supplementary/<supp_id>/download",
-        "endpoint": "papers_actions.download_supplementary_file",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/supplementary/link",
-        "endpoint": "papers_actions.link_supplementary_file",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/trace",
-        "endpoint": "papers_actions.sentence_trace",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/<paper_id>/trace.png",
-        "endpoint": "papers_actions.sentence_trace_image",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/import",
-        "endpoint": "papers_actions.import_paper",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/papers/local",
-        "endpoint": "papers_actions.list_local_papers",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/papers/parse",
-        "endpoint": "papers_actions.parse_local_paper",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/papers/parse_async",
-        "endpoint": "papers_actions.parse_local_paper_async",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/projects",
-        "endpoint": "projects.projects_create",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/projects",
-        "endpoint": "projects.projects_list",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/projects/<project_id>",
-        "endpoint": "projects.projects_detail",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/projects/<project_id>",
-        "endpoint": "projects.projects_update",
-        "methods": [
-          "PUT"
-        ]
-      },
-      {
-        "rule": "/api/projects/<project_id>/copy",
-        "endpoint": "projects.projects_copy",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/projects/<project_id>/experiments",
-        "endpoint": "experiments.experiments_create",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/projects/<project_id>/experiments",
-        "endpoint": "experiments.experiments_list",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/projects/<project_id>/members",
-        "endpoint": "projects.projects_add_member",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/protocols",
-        "endpoint": "protocols.list_protocols",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/protocols/<protocol_id>",
-        "endpoint": "protocols.get_protocol",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/protocols/<protocol_id>/export",
-        "endpoint": "protocols.export_protocol",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/protocols/<protocol_id>/runs",
-        "endpoint": "protocols.add_run",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/protocols/<protocol_id>/runs",
-        "endpoint": "protocols.list_runs",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/protocols/import",
-        "endpoint": "protocols.import_protocol",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/qa/ask",
-        "endpoint": "qa.qa_ask",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/qa/ask_async",
-        "endpoint": "qa.qa_ask_async",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/qa/status",
-        "endpoint": "qa.qa_status",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/references",
-        "endpoint": "references.list_references",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/references/import",
-        "endpoint": "references.import_references",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/retrieve",
-        "endpoint": "core.retrieve",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects",
-        "endpoint": "review_projects.projects",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>",
-        "endpoint": "review_projects.project",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/adjudicate",
-        "endpoint": "review_projects.adjudicate",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/brief",
-        "endpoint": "review_projects.review_brief",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/conflicts",
-        "endpoint": "review_projects.screening_conflicts",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/events",
-        "endpoint": "review_projects.review_events",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/evidence",
-        "endpoint": "review_projects.evidence",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/evidence.csv",
-        "endpoint": "review_projects.evidence_csv",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/export.json",
-        "endpoint": "review_projects.export_project",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/from-watch",
-        "endpoint": "review_projects.from_watch",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/import-file",
-        "endpoint": "review_projects.import_file",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/import-records",
-        "endpoint": "review_projects.import_records",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/kappa",
-        "endpoint": "review_projects.screening_kappa",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/members",
-        "endpoint": "review_projects.project_members",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/papers",
-        "endpoint": "review_projects.papers",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/pico",
-        "endpoint": "review_projects.extract_pico",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/prisma",
-        "endpoint": "review_projects.prisma",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/prisma.svg",
-        "endpoint": "review_projects.prisma_diagram",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/report.docx",
-        "endpoint": "review_projects.review_report_docx",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/report.html",
-        "endpoint": "review_projects.review_report",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/report.pdf",
-        "endpoint": "review_projects.review_report_pdf",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/risk-of-bias",
-        "endpoint": "review_projects.rob",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/screen",
-        "endpoint": "review_projects.screen",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/webhooks",
-        "endpoint": "review_projects.webhooks",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/<project_id>/webhooks/<int:webhook_id>",
-        "endpoint": "review_projects.delete_webhook",
-        "methods": [
-          "DELETE"
-        ]
-      },
-      {
-        "rule": "/api/review-projects/import",
-        "endpoint": "review_projects.import_project",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review/<review_id>",
-        "endpoint": "reviews.review_detail",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review/<review_id>/sentence/<sentence_id>",
-        "endpoint": "reviews.review_sentence",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review/assign_papers",
-        "endpoint": "review_actions.assign_papers_to_outline_route",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review/cancel/<task_id>",
-        "endpoint": "reviews.review_cancel",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review/generate",
-        "endpoint": "review_actions.generate_review",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review/generate_async",
-        "endpoint": "review_actions.generate_review_async",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review/llm_status",
-        "endpoint": "reviews.review_llm_status",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review/outline",
-        "endpoint": "review_actions.generate_outline",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review/outline/save",
-        "endpoint": "review_actions.save_outline",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review/outline/saved",
-        "endpoint": "review_actions.list_saved_outlines",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review/outline/saved/<name>",
-        "endpoint": "review_actions.delete_saved_outline",
-        "methods": [
-          "DELETE"
-        ]
-      },
-      {
-        "rule": "/api/review/outline/saved/<name>",
-        "endpoint": "review_actions.load_saved_outline",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review/running_task",
-        "endpoint": "reviews.review_running_task",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/review/search_and_assign",
-        "endpoint": "review_actions.search_and_assign_route",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/review/task/<task_id>",
-        "endpoint": "reviews.review_task",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/reviews",
-        "endpoint": "reviews.list_reviews",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/reviews/<review_id>",
-        "endpoint": "reviews.get_review",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/reviews/<review_id>/to-protocol",
-        "endpoint": "protocols.review_to_protocol",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/runs/<run_id>",
-        "endpoint": "experiment_runs.runs_detail",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/runs/<run_id>",
-        "endpoint": "experiment_runs.runs_update",
-        "methods": [
-          "PUT"
-        ]
-      },
-      {
-        "rule": "/api/runs/<run_id>/comparison",
-        "endpoint": "experiment_runs.runs_comparison",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/search/clear_download_history",
-        "endpoint": "search_downloads.clear_download_history",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/search/download_history",
-        "endpoint": "search.download_history",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/search/download_online",
-        "endpoint": "search_downloads.download_online_papers",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/search/download_queue",
-        "endpoint": "search.download_queue_status",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/search/download_status",
-        "endpoint": "search.download_status",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/search/hybrid",
-        "endpoint": "search.hybrid_search",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/search/online",
-        "endpoint": "search.online_search",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/search/retry_download",
-        "endpoint": "search_downloads.retry_download",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/tasks",
-        "endpoint": "tasks.list_all",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/tasks/<task_id>",
-        "endpoint": "tasks.detail",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/tasks/<task_id>/events",
-        "endpoint": "tasks.events",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/verify",
-        "endpoint": "evidence.verify",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/watch/items/<int:item_id>/feedback",
-        "endpoint": "watch.feedback",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/watch/items/<int:item_id>/read",
-        "endpoint": "watch.read_item",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/watch/profiles",
-        "endpoint": "watch.profiles",
-        "methods": [
-          "GET",
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/watch/profiles/<int:profile_id>",
-        "endpoint": "watch.profile",
-        "methods": [
-          "DELETE",
-          "GET",
-          "PUT"
-        ]
-      },
-      {
-        "rule": "/api/watch/profiles/<int:profile_id>/discover",
-        "endpoint": "watch.discover",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/watch/profiles/<int:profile_id>/journals",
-        "endpoint": "watch.journals",
-        "methods": [
-          "GET",
-          "PUT"
-        ]
-      },
-      {
-        "rule": "/api/watch/profiles/<int:profile_id>/latest",
-        "endpoint": "watch.latest_profile",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/watch/profiles/<int:profile_id>/run",
-        "endpoint": "watch.run",
-        "methods": [
-          "POST"
-        ]
-      },
-      {
-        "rule": "/api/watch/profiles/<int:profile_id>/runs",
-        "endpoint": "watch.runs",
-        "methods": [
-          "GET"
-        ]
-      },
-      {
-        "rule": "/api/watch/runs/<int:run_id>",
-        "endpoint": "watch.run_detail",
-        "methods": [
-          "GET"
+        "name": "core/system",
+        "prefix": "/api",
+        "routes": [
+          "/api/health",
+          "/api/retrieve",
+          "/api/graph/stats",
+          "/api/communities"
         ]
       },
       {
-        "rule": "/api/watch/runs/<int:run_id>/digest.md",
-        "endpoint": "watch.digest",
-        "methods": [
-          "GET"
+        "name": "papers",
+        "prefix": "/api/papers",
+        "routes": [
+          "/api/papers",
+          "/api/papers/<id>",
+          "/api/papers/<id>/graph",
+          "/api/papers/<id>/trace",
+          "/api/papers/<id>/trace.png",
+          "/api/papers/local",
+          "/api/papers/<id>/supplementary"
         ]
       },
       {
-        "rule": "/api/watch/runs/<int:run_id>/latest",
-        "endpoint": "watch.latest",
-        "methods": [
-          "GET"
+        "name": "search",
+        "prefix": "/api/search",
+        "routes": [
+          "/api/search/hybrid",
+          "/api/search/online",
+          "/api/search/download_online",
+          "/api/search/download_status"
         ]
       },
       {
-        "rule": "/api/watch/runs/<int:run_id>/read-all",
-        "endpoint": "watch.read_all",
-        "methods": [
-          "POST"
+        "name": "evidence/qa",
+        "prefix": "/api/evidence,/api/qa",
+        "routes": [
+          "/api/evidence/search",
+          "/api/evidence/context",
+          "/api/qa/ask",
+          "/api/qa/status",
+          "/api/verify"
         ]
       },
       {
-        "rule": "/api/watch/topics",
-        "endpoint": "watch.topics",
-        "methods": [
-          "GET"
+        "name": "review",
+        "prefix": "/api/reviews,/api/review-projects",
+        "routes": [
+          "/api/reviews",
+          "/api/reviews/<id>",
+          "/api/review-projects",
+          "/api/review-projects/<id>/brief",
+          "/api/review-projects/<id>/prisma",
+          "/api/review-projects/<id>/export.json",
+          "/api/review-projects/<id>/report.html"
         ]
       },
       {
-        "rule": "/api/workspaces",
-        "endpoint": "tenancy.create",
-        "methods": [
-          "POST"
+        "name": "projects/experiments",
+        "prefix": "/api/projects,/api/experiments",
+        "routes": [
+          "/api/projects",
+          "/api/projects/<id>",
+          "/api/projects/<id>/experiments",
+          "/api/experiments",
+          "/api/experiments/<id>",
+          "/api/experiments/<id>/runs"
         ]
       },
       {
-        "rule": "/api/workspaces",
-        "endpoint": "tenancy.workspaces",
-        "methods": [
-          "GET"
+        "name": "claims",
+        "prefix": "/api/claims",
+        "routes": [
+          "/api/claims",
+          "/api/claims/<id>",
+          "/api/claims/<id>/events"
         ]
       },
       {
-        "rule": "/api/workspaces/<workspace_id>/members",
-        "endpoint": "tenancy.add",
-        "methods": [
-          "POST"
+        "name": "watch",
+        "prefix": "/api/watch",
+        "routes": [
+          "/api/watch/profiles",
+          "/api/watch/profiles/<id>/latest",
+          "/api/watch/profiles/<id>/runs"
         ]
       },
       {
-        "rule": "/api/workspaces/<workspace_id>/members",
-        "endpoint": "tenancy.members",
-        "methods": [
-          "GET"
+        "name": "tenancy",
+        "prefix": "/api/auth,/api/workspaces",
+        "routes": [
+          "/api/auth/me",
+          "/api/workspaces",
+          "/api/workspaces/<id>/members"
         ]
       },
       {
-        "rule": "/api/workspaces/<workspace_id>/role",
-        "endpoint": "tenancy.role",
-        "methods": [
-          "GET"
+        "name": "tasks/ingest/guard",
+        "prefix": "/api/tasks,/api/ingest,/api/guard",
+        "routes": [
+          "/api/tasks",
+          "/api/ingest/<task_id>",
+          "/api/guard/check",
+          "/api/guard/term/<term>"
         ]
       }
     ]
   },
   "deployment": {
-    "compose_file": "deploy/docker-compose.yml",
-    "services": [
+    "compose": [
       "app",
       "watch-cron",
-      "caddy"
+      "caddy",
+      "postgres"
     ],
-    "caddy_ports": [
-      80,
-      443
+    "volumes": [
+      "data",
+      "documents",
+      "caddy_data"
     ],
-    "data_root": "G:\\sciPal_deploy",
-    "image": "scipal-app:latest (cf81e86c97c3, 2026-11-03)",
-    "models_mount": "/models:ro",
-    "offline_bundle": "deploy/build_offline_bundle.py"
+    "healthcheck": "/api/health",
+    "backup": "PostgreSQL dump plus documents volume",
+    "notes": "research.db and Chroma are not mounted in production"
   },
   "tests": {
-    "framework": "unittest",
-    "count": 800,
-    "duration_seconds": 60,
-    "command": "venv_sciPal_py312\\Scripts\\python.exe -m unittest discover -s tests -p \"test_*.py\"",
-    "coverage": [
-      "检索",
-      "路由",
-      "guard",
-      "JATS 导入",
-      "watch",
-      "domain packs",
-      "claim",
-      "多用户隔离",
-      "项目/实验"
-    ]
+    "unit": "pytest suites under tests/",
+    "smoke": {
+      "A": "31 light GET routes",
+      "B": "14 medium GET routes",
+      "C": "5 heavy GET routes",
+      "status": "50/50 no 5xx at 2026-11-08"
+    },
+    "quality": {
+      "regression_20": "Recall@10 0.675 / nDCG@10 0.461",
+      "scifact_300": "Recall@10 0.8669 / nDCG@10 0.7458"
+    }
   },
   "limitations": [
-    "XML 论文无 bbox；MinerU 兜底路径也无 bbox",
-    "未被正文提及的图表/参考文献没有位置",
-    "Europe PMC 503 时无法继续扩量",
-    "PDF 章节树来自解析推断，XML 才是原生结构",
-    "多用户已实现，但仍是 SQLite 单节点",
-    "Claim 试点仅覆盖 10 个 HCC claim",
-    "writing_brief 仅 1 个 claim 完成",
-    "在线 ingest 仅完成 2 篇；PMC13036683 下载失败",
-    "写作闸门仍为 brief + 人工检查，未自动拒绝违规句",
-    "云端生成会把论文文本发送到外部 provider",
-    "DSH 插件化仍未实现 MCP evidence / validate 工具",
-    "ARCHITECTURE.json 为人工维护的快照，以 docs/架构与路由图.md 为准"
+    "12 title-duplicate groups with different PMCIDs are not merged.",
+    "300-question full-text gold set is deferred.",
+    "GraphRAG / RAPTOR are plugin experiments, not main architecture.",
+    "Client ingest tracking plugin is not wired to real import UI.",
+    "Base image still contains chromadb package although runtime does not use it.",
+    "Some cold POST endpoints are not covered by automated smoke tests."
   ],
   "docs": {
+    "final_report": "docs/PG-only迁移总报告-2026-11-08.md",
     "architecture": "docs/架构与路由图.md",
-    "readme": "README.md",
-    "claim": "docs/claim-pilot-审讯记录-01.md",
-    "claim_online_ingest": "docs/claim-pilot-在线入库-01.md",
-    "domain_pack": "packs/biomed-oncoimmuno/README.md",
-    "tests": "docs/评测说明.md",
-    "module_guide_zh": "docs/开发-模块手册.md",
-    "module_guide_en": "docs/en/Modules-and-Routes.md",
-    "architecture_en": "docs/en/Architecture-and-Routes.md",
-    "deployment_preflight": "docs/部署-2026-11-03-Preflight.md",
-    "audit_id_vector": "docs/审计-ID与向量契约结果.md",
-    "development_flow": "docs/开发流程规范.md"
+    "modules": "docs/开发-模块手册.md",
+    "smoke_plan": "docs/全站端点分层烟测计划.md",
+    "migration_memo": "docs/PG-only架构迁移备忘录.md"
   },
   "collaboration": {
-    "highest_priority_rules": ".dsh_rules",
-    "details": "docs/协作规范.md",
-    "pr_template": ".github/pull_request_template.md",
-    "violation_token": "RULE_VIOLATION"
+    "rule": "one topic per branch/PR; human approval before merge",
+    "branch_flow": "feature branch -> dev -> DSH-dev",
+    "review": "PR body includes scope, changes, metrics, risks",
+    "architecture_change": "requires human 批准修改"
   },
   "quality_guards": {
-    "stop_loss": {
-      "module": "services/quality/stop_loss.py",
-      "test_runner": "scripts/run_tests_guarded.py",
-      "metric_recorder": "scripts/record_eval_metric.py",
-      "state_file": "logs/stop_loss_state.json",
-      "limit": 2,
-      "message": "触发止损规则，停止调参，等待人类介入"
-    }
+    "id_vector_contract": "scripts/audit_id_vector_contract.py",
+    "smoke": "scripts/smoke_http.py, scripts/smoke_group_b.py, scripts/smoke_group_c.py",
+    "dedup": "scripts/soft_dedup_doi.py",
+    "query_only": "SCIPAL_SQLITE_QUERY_ONLY=1",
+    "startup": "fail-closed on missing PG"
   },
   "plugins": {
-    "status": "M0/M1/M2",
-    "paths": {
-      "contracts": "services/plugins/contracts.py",
-      "registry": "services/plugins/registry.py",
-      "runner": "services/plugins/runner.py",
-      "manifests": "plugins/manifests/",
-      "ports": "plugins/ports/",
-      "adapters": "plugins/adapters/",
-      "bench": "eval/plugin_bench.py",
-      "run_log": "logs/plugin_runs.jsonl"
-    },
-    "trust_model": "trusted in-process adapters; subprocess/container isolation later",
-    "smoke_plugin": "echo",
-    "claim_verifier": {
-      "port": "plugins/ports/claim_verifier.json",
-      "adapters": [
-        "claim-verifier-nli",
-        "claim-verifier-rule",
-        "claim-verifier-underdetermines"
-      ],
-      "bench": "eval/claim_verifier_bench.py",
-      "dataset": "eval/plugins/claims_pilot_cases.json",
-      "first_result": {
-        "rule_accuracy": 0.3636,
-        "underdetermines_accuracy": 0.0,
-        "majority_baseline": 0.9091,
-        "note": "pipeline only; dataset imbalanced (10 supports / 1 mentions)"
-      },
-      "balanced_dataset": {
-        "path": "eval/plugins/claims_pilot_balanced_cases.json",
-        "builder": "scripts/build_claim_balanced_cases.py",
-        "cases": 30,
-        "labels": {
-          "supports": 10,
-          "refutes": 10,
-          "underdetermines": 10
-        },
-        "results": {
-          "rule_accuracy": 0.4333,
-          "underdetermines_accuracy": 0.3333,
-          "majority_baseline": 0.3333
-        },
-        "caveat": "refutes are derived_opposite_claim; human review required before publication"
-      }
-    },
-    "retriever": {
-      "port": "plugins/ports/retriever.json",
-      "adapters": [
-        "retriever-bm25",
-        "retriever-dense",
-        "retriever-hybrid",
-        "retriever-hybrid-rerank"
-      ],
-      "bench": "eval/retriever_bench.py",
-      "dataset": "eval/plugins/retriever_queries.json",
-      "cases": 74,
-      "corpus": 100,
-      "results": {
-        "bm25": {
-          "recall@10": 0.9459,
-          "mrr": 0.8149,
-          "ndcg@10": 0.8476
-        },
-        "dense": {
-          "recall@10": 0.9324,
-          "mrr": 0.8829,
-          "ndcg@10": 0.8954
-        },
-        "hybrid": {
-          "recall@10": 0.9459,
-          "mrr": 0.9036,
-          "ndcg@10": 0.9142
-        },
-        "hybrid_rerank": {
-          "recall@10": 0.9865,
-          "mrr": 0.9081,
-          "ndcg@10": 0.928
-        }
-      },
-      "caveat": "74 queries, 20 cross-topic, 48 distractors; not publication-grade",
-      "sources": {
-        "seed_100": 14,
-        "cross_topic": 20,
-        "claim_qualifiers": 20,
-        "paper_title": 20
-      }
-    }
+    "ingest_tracking": "plugins/ingest_tracking (batch/item/finding tables, opt-in)",
+    "ports": "services/plugins + plugins/ manifest/adapter",
+    "graph_rag": "experiment only; not main architecture",
+    "raptor": "summaries table available; retrieval experiment pending"
   },
   "benchmark_db": {
-    "policy": "postgresql-required-for-large-or-concurrent",
-    "default_url": "postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench",
-    "allow_sqlite_env": "SCIPAL_BENCH_ALLOW_SQLITE",
-    "large_threshold": 100,
-    "module": "services/quality/benchmark_db.py",
-    "tests": "tests/test_benchmark_db.py",
-    "postgres_backend": "not-implemented"
-  },
-  "postgres_migration": {
-    "status": "P5-read-canary-pending-merge",
-    "plan": "docs/工作计划-PostgreSQL迁移.md",
-    "baseline": "docs/PostgreSQL迁移-基线.md",
-    "backup_script": "scripts/backup_sqlite.py",
-    "phases": [
-      "P0-backup",
-      "P1-schema-adapter",
-      "P2-readonly-etl",
-      "P3-shadow-read",
-      "P4-dual-write",
-      "P5-cutover",
-      "P6-archive"
-    ],
-    "hard_rule": "original data/research.db is read-only; migrate from snapshot only",
-    "test_count": 699,
-    "p1": {
-      "schema": "build_db/postgres_schema.sql",
-      "generator": "build_db/generate_postgres_schema.py",
-      "adapter": "services/db/adapter.py",
-      "tests": "tests/test_db_adapter.py",
-      "default_backend": "sqlite",
-      "pg_dsn_env": "SCIPAL_PG_DSN",
-      "pool": "deferred-to-P2"
-    },
-    "p2": {
-      "etl": "services/db/etl.py",
-      "cli": "scripts/pg_etl.py",
-      "tests": "tests/test_pg_etl.py",
-      "dry_run_report": "docs/PostgreSQL迁移-ETL-dryrun.json",
-      "checksum_report": "docs/PostgreSQL迁移-ETL-checksum.json",
-      "tables": 60,
-      "total_rows": 2015676,
-      "real_copy_executed": true,
-      "safety": "snapshot-only; live data/research.db rejected",
-      "postgres_rows": 2015676,
-      "count_mismatches": 0,
-      "verify_report": "docs/PostgreSQL迁移-ETL-verify.json",
-      "note": "citations.year uses TEXT; non-year fields diff 0"
-    },
-    "p3": {
-      "shadow_reader": "services/db/shadow_read.py",
-      "cli": "scripts/shadow_read.py",
-      "tests": "tests/test_shadow_read.py",
-      "report": "docs/PostgreSQL迁移-P3-shadow.json",
-      "tables": 8,
-      "table_key_mismatches": 0,
-      "fts_match_jaccard": "0.326-0.828",
-      "fts_note": "SQLite unicode61 no stemming vs PG english stemming; bm25 vs ts_rank_cd",
-      "cutover_ready": false
-    },
-    "fts_alignment": {
-      "script": "scripts/fts_alignment.py",
-      "doc": "docs/PostgreSQL迁移-FTS对齐实验.md",
-      "report": "docs/PostgreSQL迁移-FTS对齐实验.json",
-      "unicode_vs_english": 0.637,
-      "porter_vs_english": 0.989,
-      "recommendation": "rebuild SQLite FTS with porter before cutover",
-      "rebuild_script": "scripts/rebuild_fts_porter.py",
-      "compare_script": "scripts/fts_porter_compare.py",
-      "query_report": "docs/PostgreSQL迁移-FTS-porter-20query.json",
-      "twenty_query_recall": {
-        "sqlite_unicode": 1.0,
-        "sqlite_porter": 0.95,
-        "pg_english": 0.6
-      },
-      "decision": "do not switch FTS; P4 metadata only"
-    },
-    "p4": {
-      "dual_write": "services/db/dual_write.py",
-      "setup": "scripts/setup_dual_write.py",
-      "replay": "scripts/replay_dual_write.py",
-      "tests": "tests/test_dual_write.py",
-      "document": "docs/PostgreSQL迁移-P4-双写.md",
-      "tables": 21,
-      "triggers": 63,
-      "fts_included": false,
-      "backup": "data/backups/research_20261101_012330.db",
-      "outbox_pending": 0,
-      "real_upsert_replay": "1 applied / 0 failed",
-      "24h_lag_observed": false,
-      "healthcheck": "scripts/dual_write_healthcheck.py",
-      "health_report": "docs/PostgreSQL迁移-P4-health.json",
-      "health_status": "ok",
-      "soak": {
-        "script": "scripts/p4_staging_soak.py",
-        "report": "docs/PostgreSQL迁移-P4-soak.json",
-        "cycles": 500,
-        "operations": 2422,
-        "failed": 0,
-        "pending": 0,
-        "mismatches": 0,
-        "status": "ok"
-      }
-    },
-    "p5": {
-      "router": "services/db/read_router.py",
-      "check": "scripts/read_canary_check.py",
-      "tests": "tests/test_read_router.py",
-      "document": "docs/PostgreSQL迁移-P5-读路径Canary.md",
-      "report": "docs/PostgreSQL迁移-P5-canary-check.json",
-      "scope": "GET /api/papers",
-      "canary_env": "SCIPAL_READ_CANARY_PERCENT",
-      "sqlite_count": 3310,
-      "postgres_count": 3310,
-      "same_order": true,
-      "field_diffs": 0,
-      "status": "ok",
-      "fallback": "PG error -> SQLite"
-    }
-  },
-  "modules": [
-    {
-      "id": "core",
-      "name": "Core / System",
-      "route_prefixes": [
-        "/api/health",
-        "/api/retrieve",
-        "/api/graph",
-        "/api/communities"
-      ],
-      "paths": [
-        "routes/core.py",
-        "routes/system.py",
-        "services/retrieval/",
-        "services/graph/"
-      ],
-      "responsibility": "health, retrieval entry, graph and community stats"
-    },
-    {
-      "id": "search",
-      "name": "Search",
-      "route_prefixes": [
-        "/api/search"
-      ],
-      "paths": [
-        "routes/search.py",
-        "routes/search_downloads.py",
-        "services/search/"
-      ],
-      "responsibility": "local/online search, download, dedup, RRF, rerank"
-    },
-    {
-      "id": "papers",
-      "name": "Papers",
-      "route_prefixes": [
-        "/api/papers"
-      ],
-      "paths": [
-        "routes/papers.py",
-        "routes/papers_actions.py",
-        "services/papers/",
-        "build_db/parse_service.py",
-        "build_db/db_writer.py"
-      ],
-      "responsibility": "paper detail, parse, upload, trace, preflight"
-    },
-    {
-      "id": "ingest",
-      "name": "Ingest",
-      "route_prefixes": [
-        "/api/ingest",
-        "/api/embed"
-      ],
-      "paths": [
-        "routes/ingest.py",
-        "services/search/ingest.py",
-        "build_db/import_jats.py"
-      ],
-      "responsibility": "PMC batch download, parse, write, embed"
-    },
-    {
-      "id": "evidence_qa",
-      "name": "Evidence / QA",
-      "route_prefixes": [
-        "/api/evidence",
-        "/api/qa",
-        "/api/agentic",
-        "/api/verify"
-      ],
-      "paths": [
-        "routes/evidence.py",
-        "routes/qa.py",
-        "services/qa/"
-      ],
-      "responsibility": "evidence packs, QA, answer verification"
-    },
-    {
-      "id": "references_abstracts",
-      "name": "References / Abstracts",
-      "route_prefixes": [
-        "/api/references",
-        "/api/abstracts"
-      ],
-      "paths": [
-        "routes/references.py",
-        "routes/abstracts.py"
-      ],
-      "responsibility": "references and abstract DB"
-    },
-    {
-      "id": "watch",
-      "name": "Watch",
-      "route_prefixes": [
-        "/api/watch"
-      ],
-      "paths": [
-        "routes/watch.py",
-        "services/watch/",
-        "scripts/run_watch_due.py"
-      ],
-      "responsibility": "journal monitoring, digests, feedback"
-    },
-    {
-      "id": "claims",
-      "name": "Claims",
-      "route_prefixes": [
-        "/api/claims"
-      ],
-      "paths": [
-        "routes/claims.py",
-        "services/claims/"
-      ],
-      "responsibility": "claim cards, evidence, decisions"
-    },
-    {
-      "id": "reviews",
-      "name": "Reviews",
-      "route_prefixes": [
-        "/api/reviews",
-        "/api/review",
-        "/api/review-projects"
-      ],
-      "paths": [
-        "routes/reviews.py",
-        "routes/review_actions.py",
-        "routes/systematic_review.py",
-        "services/review/"
-      ],
-      "responsibility": "review generation and systematic review projects"
-    },
-    {
-      "id": "projects_experiments",
-      "name": "Projects / Experiments",
-      "route_prefixes": [
-        "/api/projects",
-        "/api/experiments",
-        "/api/runs"
-      ],
-      "paths": [
-        "routes/projects.py",
-        "routes/experiments.py",
-        "routes/runs.py",
-        "services/tenancy/"
-      ],
-      "responsibility": "projects, experiments, runs, signatures"
-    },
-    {
-      "id": "tenancy",
-      "name": "Tenancy",
-      "route_prefixes": [
-        "/api/auth",
-        "/api/workspaces"
-      ],
-      "paths": [
-        "routes/tenancy.py"
-      ],
-      "responsibility": "auth, users, workspaces, isolation"
-    },
-    {
-      "id": "notes",
-      "name": "Notes",
-      "route_prefixes": [
-        "/api/notes"
-      ],
-      "paths": [
-        "routes/notes.py"
-      ],
-      "responsibility": "paper notes"
-    },
-    {
-      "id": "domain_packs",
-      "name": "Domain packs",
-      "route_prefixes": [
-        "/api/domain-packs"
-      ],
-      "paths": [
-        "routes/domain_packs.py",
-        "packs/"
-      ],
-      "responsibility": "declarative domain packs"
-    },
-    {
-      "id": "guard",
-      "name": "Guard",
-      "route_prefixes": [
-        "/api/guard"
-      ],
-      "paths": [
-        "routes/guard.py",
-        "services/guard/"
-      ],
-      "responsibility": "terminology guard"
-    },
-    {
-      "id": "data",
-      "name": "Data",
-      "route_prefixes": [
-        "/api/data"
-      ],
-      "paths": [
-        "routes/data.py",
-        "services/data/"
-      ],
-      "responsibility": "local tabular profile, aggregate, artifacts"
-    },
-    {
-      "id": "tasks",
-      "name": "Tasks",
-      "route_prefixes": [
-        "/api/tasks"
-      ],
-      "paths": [
-        "routes/tasks.py"
-      ],
-      "responsibility": "unified async task status"
-    },
-    {
-      "id": "protocols",
-      "name": "Protocols",
-      "route_prefixes": [
-        "/api/protocols"
-      ],
-      "paths": [
-        "routes/protocols.py"
-      ],
-      "responsibility": "Protocols.io and lab protocols"
-    }
-  ],
-  "data_audit": {
-    "pre_ingest": "services/papers/preflight.py",
-    "post_ingest": "scripts/audit_id_vector_contract.py",
-    "repair_scripts": [
-      "scripts/repair_paragraph_vectors.py",
-      "scripts/backfill_paper_summary_vectors.py",
-      "scripts/backfill_figure_table_vectors.py"
-    ],
-    "env": {
-      "SCIPAL_INGEST_PREFLIGHT": "1"
-    },
-    "checks": [
-      "paper_id",
-      "paragraph/section/figure/table/citation ids",
-      "empty paragraphs",
-      "dangling section parents",
-      "metadata shape"
-    ]
-  },
-  "codegen": {
-    "validator": "scripts/validate_arch.py",
-    "scaffold": "scripts/scaffold_from_arch.py",
-    "node_field": "api.endpoints[].codegen",
-    "planned_status": "planned",
-    "rule": "JSON first; validate before Python; no wild routes"
+    "default": "PostgreSQL",
+    "sqlite": "small single-process checks only with explicit opt-in",
+    "fail_fast": true
   }
 }
