@@ -5,6 +5,14 @@
 # the message file exists). The message-tag enforcement is therefore in
 # .githooks/commit-msg. This hook validates the staged JSON and warns loudly.
 
+sqlite_changed=$(git diff --cached --name-only --diff-filter=ACMR -- services routes api_server.py)
+if [ -n "$sqlite_changed" ] && command -v python >/dev/null 2>&1; then
+    python scripts/audit_sqlite.py || {
+        echo "pre-commit: new sqlite3.connect outside allowlist; refusing commit." >&2
+        exit 1
+    }
+fi
+
 staged_json=$(git diff --cached --name-only --diff-filter=ACMRD -- ARCHITECTURE.json)
 changed=$(git diff --cached --name-only --diff-filter=ACMR -- \
     ARCHITECTURE.json api_server.py routes scripts/validate_arch.py)
