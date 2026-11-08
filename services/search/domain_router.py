@@ -2,49 +2,42 @@
 
 from __future__ import annotations
 
-import sqlite3
-from pathlib import Path
 from typing import Dict, Optional
 
+from services.db.pg_pool import main_read_connection
 from services.search.domain_taxonomy import classify_query
-
-DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
 
 
 class DomainRouter:
-    def __init__(self, db_path: Path | str = DB_PATH):
-        self.db_path = str(db_path)
+    def __init__(self, db_path=None):
+        # Kept for call-site compatibility; the store is PostgreSQL now.
+        self.db_path = db_path
         self._paper_domains: Optional[Dict[str, str]] = None
 
     def _load(self) -> Dict[str, str]:
         if self._paper_domains is not None:
             return self._paper_domains
-        conn = sqlite3.connect(self.db_path)
+        pg = main_read_connection()
         try:
-            self._paper_domains = dict(
-                conn.execute("SELECT paper_id, domain_id FROM paper_domains").fetchall()
-            )
-        except sqlite3.OperationalError:
-            self._paper_domains = {}
+            rows = pg.execute("SELECT paper_id, domain_id FROM paper_domains").fetchall()
+            self._paper_domains = {row["paper_id"]: row["domain_id"] for row in rows}
         finally:
-            conn.close()
+            pg.close()
         return self._paper_domains
 
     def paper_domain(self, paper_id: str) -> str:
         return self._load().get(paper_id or "", "general")
 
     def refusal_threshold(self, domain: str) -> float:
-        conn = sqlite3.connect(self.db_path)
+        pg = main_read_connection()
         try:
-            row = conn.execute(
-                "SELECT refusal_threshold FROM domain_profiles WHERE domain_id = ?",
+            row = pg.execute(
+                "SELECT refusal_threshold FROM domain_profiles WHERE domain_id = %s",
                 (domain,),
             ).fetchone()
-        except sqlite3.OperationalError:
-            row = None
         finally:
-            conn.close()
-        return float(row[0]) if row and row[0] is not None else 0.35
+            pg.close()
+        return float(row["refusal_threshold"]) if row and row["refusal_threshold"] is not None else 0.35
 
     def query_distribution(self, question: str) -> Dict[str, float]:
         return classify_query(question)
