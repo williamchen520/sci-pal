@@ -31,7 +31,6 @@ services/review/review_generator.py
 services/review/review_repository.py
 services/review/task_manager.py
 services/review/title_recall.py
-services/search/abstract_search.py
 services/search/auto_merger.py
 services/search/boilerplate_filter.py
 services/search/context_expander.py
