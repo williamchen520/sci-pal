@@ -8,11 +8,10 @@ patched onto the resulting paper row.
 from __future__ import annotations
 
 import json
-import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List
 
-from services.papers.pg_writes import update_metadata_if_exists
+from services.db.pg_pool import ingest_connection
 from services.search.preprint_sources import (
     download_pdf,
     fetch_biorxiv,
@@ -36,23 +35,16 @@ def _patch_metadata(db_path: Path | str, paper_id: str, meta: Dict[str, Any]) ->
     fields = {k: v for k, v in fields.items() if v}
     if not fields:
         return
-    conn = sqlite3.connect(str(db_path))
+    pg = ingest_connection()
     try:
-        assignments = ", ".join(f"{key} = ?" for key in fields)
-        conn.execute(
-            f"UPDATE papers SET {assignments} WHERE paper_id = ?",
+        assignments = ", ".join(f"{key} = %s" for key in fields)
+        pg.execute(
+            f"UPDATE papers SET {assignments} WHERE paper_id = %s",
             [*fields.values(), paper_id],
         )
-        conn.commit()
-        update_metadata_if_exists(
-            paper_id,
-            journal=None,
-            year=fields.get("year"),
-            doi=fields.get("doi"),
-            db_path=db_path,
-        )
+        pg.commit()
     finally:
-        conn.close()
+        pg.close()
 
 
 def ingest_pdf(
