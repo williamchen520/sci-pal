@@ -17,15 +17,9 @@ because the first paragraph of many papers looks like:
 Dropping the whole paragraph would lose the real body text; line-level
 cleaning keeps only the last line.
 
-Usage (audit, read-only):
-  python -m services.search.boilerplate_filter
 """
 import re
-import sqlite3
-from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-DB_PATH = PROJECT_ROOT / "data" / "research.db"
 
 # Each pattern is matched against a stripped, single line.
 # High precision only — if in doubt, keep the line.
@@ -116,47 +110,3 @@ def clean_boilerplate(text: str) -> str:
     result = "\n".join(kept).strip()
     result = re.sub(r"\n{3,}", "\n\n", result)
     return result
-
-
-def _audit():
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute(
-        "SELECT para_id, paper_id, text FROM paragraphs"
-    ).fetchall()
-
-    changed = 0
-    total_removed_lines = 0
-    samples = []
-
-    for r in rows:
-        original = r["text"] or ""
-        cleaned = clean_boilerplate(original)
-        if cleaned != original:
-            changed += 1
-            removed = max(0, len(original.splitlines()) - len(cleaned.splitlines()))
-            total_removed_lines += removed
-            if len(samples) < 12:
-                # Show the first 3 removed lines for context.
-                removed_lines = [
-                    ln.strip() for ln in original.splitlines()
-                    if is_boilerplate_line(ln)
-                ][:3]
-                samples.append((r["para_id"], removed_lines, len(cleaned)))
-
-    print("=" * 64)
-    print("🧹 Boilerplate line-cleaner audit (read-only)")
-    print("=" * 64)
-    print(f"Total paragraphs     : {len(rows)}")
-    print(f"Paragraphs affected  : {changed} "
-          f"({100*changed/max(1,len(rows)):.1f}%)")
-    print(f"Total lines removed  : {total_removed_lines}")
-    print("\nSample removed lines (first 3 per paragraph):")
-    for pid, lines, remaining in samples:
-        print(f"  • {pid}  (→ {remaining} chars kept)")
-        for ln in lines:
-            print(f"      − {ln[:80]}")
-
-
-if __name__ == "__main__":
-    _audit()
