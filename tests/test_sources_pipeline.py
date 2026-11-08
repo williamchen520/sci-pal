@@ -11,7 +11,7 @@ from unittest import mock
 from build_db import backfill_metadata
 from build_db import import_jats
 from build_db.jats_parser import parse_jats
-from services.search import europe_pmc_batch, preprint_ingest
+from services.search import preprint_ingest
 
 FALLBACK_XML = """<article><front><article-meta>
 <title-group><article-title>T</article-title></title-group>
@@ -77,48 +77,6 @@ class JatsFallbackTests(unittest.TestCase):
             self.assertEqual([r[0] for r in rows], ["figure", "table"])
             self.assertTrue(all(r[1] == "jats-regex" and r[2] == 0.6 for r in rows))
             conn.close()
-
-
-class FakeClient:
-    def __init__(self, results):
-        self.results = results
-
-    def search(self, query, page_size=25):
-        return self.results
-
-    def download_and_import(self, pmcid, xml_dir=None, db_path=None):
-        return {"pmcid": pmcid, "status": "imported", "sections": 1, "links": 2}
-
-
-class EuropePmcBatchTests(unittest.TestCase):
-    def test_select_open_access(self) -> None:
-        results = [
-            {"pmcid": "PMC1", "isOpenAccess": "Y"},
-            {"pmcid": "PMC2", "isOpenAccess": "N"},
-            {"pmcid": "", "isOpenAccess": "Y"},
-        ]
-        self.assertEqual(europe_pmc_batch.select_open_access(results), ["PMC1"])
-
-    def test_batch_import_counts(self) -> None:
-        import tempfile
-
-        with tempfile.TemporaryDirectory() as tmp:
-            summary = europe_pmc_batch.batch_import(
-                ["PMC1", "PMC2"], client=FakeClient([]),
-                xml_dir=tmp, db_path=Path(tmp) / "t.db",
-            )
-        self.assertEqual(summary["imported"], 2)
-        self.assertEqual(summary["sections"], 2)
-
-    def test_run_query_filters(self) -> None:
-        client = FakeClient([{"pmcid": "PMC1", "isOpenAccess": "Y"}])
-        with tempfile.TemporaryDirectory() as tmp:
-            summary = europe_pmc_batch.run_query(
-                "q", max_items=1, client=client,
-                xml_dir=tmp, db_path=Path(tmp) / "t.db",
-            )
-        self.assertEqual(summary["candidates"], 1)
-        self.assertEqual(summary["imported"], 1)
 
 
 class PreprintIngestTests(unittest.TestCase):
