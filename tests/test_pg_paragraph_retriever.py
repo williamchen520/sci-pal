@@ -14,29 +14,21 @@ class FakeFTS:
         ]
 
 
-class FakeReranker:
-    def rerank(self, query, results, top_k=10):
-        return [
-            {**row, "rerank_score": 0.9 if row["para_id"] == "p2" else 0.1}
-            for row in sorted(results, key=lambda r: r["para_id"], reverse=True)[:top_k]
-        ]
-
-
 class PGParagraphRetrieverTests(unittest.TestCase):
-    def test_rerank_maps_to_hybrid_shape(self):
-        retriever = PGParagraphRetriever("postgresql://example", reranker=FakeReranker())
+    def test_maps_fts_hits_to_hybrid_shape(self):
+        retriever = PGParagraphRetriever("postgresql://example")
         retriever.fts = FakeFTS()
         rows = retriever.search("q", top_k=2)
-        self.assertEqual([row["para_id"] for row in rows], ["p2", "p1"])
-        self.assertEqual(rows[0]["section_l1"], "Results")
-        self.assertEqual(rows[0]["score"], 0.9)
+        self.assertEqual([row["para_id"] for row in rows], ["p1", "p2"])
+        self.assertEqual(rows[0]["section_l1"], "Intro")
+        self.assertEqual(rows[0]["score"], 1.0)
 
     def test_empty_candidates_returns_empty(self):
         class Empty:
             def search(self, query, **kwargs):
                 return []
 
-        retriever = PGParagraphRetriever("postgresql://example", reranker=FakeReranker())
+        retriever = PGParagraphRetriever("postgresql://example")
         retriever.fts = Empty()
         self.assertEqual(retriever.search("q"), [])
 
