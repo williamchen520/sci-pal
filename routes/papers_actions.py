@@ -56,6 +56,7 @@ def build_papers_actions_blueprint(
     log: Any,
     lookup: Callable[[str], Any] | None = None,
     paper_store: Any = None,
+    trace_payload: Callable[[str, str], Any] | None = None,
 ) -> Blueprint:
     bp = Blueprint("papers_actions", __name__)
     globals()["db_path_for_lookup"] = lambda: db_path
@@ -656,11 +657,7 @@ def build_papers_actions_blueprint(
             return jsonify({"error": "ç¼ºå°‘ filename"}), 400
 
         # éªŒè¯è®ºæ–‡å­˜åœ¨
-        import sqlite3
-        conn = sqlite3.connect(str(db_path))
-        row = conn.execute("SELECT paper_id FROM papers WHERE paper_id = ?", (paper_id,)).fetchone()
-        conn.close()
-        if not row:
+        if not _paper_exists(paper_id):
             return jsonify({"error": f"Paper {paper_id} not found"}), 404
 
         # éªŒè¯æ–‡ä»¶å­˜åœ¨
@@ -838,78 +835,9 @@ def build_papers_actions_blueprint(
             pg.close()
 
     def _trace_payload(paper_id: str, sentence_id: str):
-        from services.security.signed_url import sign_path
-        if _papers_pg_enabled():
-            return _trace_payload_pg(paper_id, sentence_id)
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        try:
-            row = conn.execute(
-                "SELECT s.sentence_id, s.text, s.page, s.bbox, s.section_id, "
-                "       p.filename, p.title "
-                "FROM sentences s JOIN papers p ON p.paper_id = s.paper_id "
-                "WHERE s.paper_id = ? AND s.sentence_id = ?",
-                (paper_id, sentence_id),
-            ).fetchone()
-            if not row:
-                return None
-            section_path = []
-            current = row["section_id"]
-            seen = set()
-            while current and current not in seen:
-                seen.add(current)
-                section = conn.execute(
-                    "SELECT title, parent_id FROM sections WHERE section_id = ?",
-                    (current,),
-                ).fetchone()
-                if not section:
-                    break
-                section_path.append(section["title"])
-                current = section["parent_id"]
-            section_path.reverse()
-
-            links = []
-            for link in conn.execute(
-                "SELECT target_type, target_id, relation, source, confidence, page, bbox "
-                "FROM sentence_links WHERE sentence_id = ?",
-                (sentence_id,),
-            ):
-                item = dict(link)
-                if item["target_type"] == "citation":
-                    detail = conn.execute(
-                        "SELECT raw_text, doi, title FROM citations WHERE citation_id = ?",
-                        (item["target_id"],),
-                    ).fetchone()
-                elif item["target_type"] == "figure":
-                    detail = conn.execute(
-                        "SELECT fig_number, caption, page, bbox FROM figures WHERE fig_id = ?",
-                        (item["target_id"],),
-                    ).fetchone()
-                else:
-                    detail = conn.execute(
-                        "SELECT table_number, caption FROM tables WHERE table_id = ?",
-                        (item["target_id"],),
-                    ).fetchone()
-                item["detail"] = dict(detail) if detail else {}
-                links.append(item)
-
-            return {
-                "paper_id": paper_id,
-                "title": row["title"],
-                "sentence_id": sentence_id,
-                "sentence": row["text"],
-                "page": row["page"],
-                "bbox": row["bbox"],
-                "section_path": section_path,
-                "links": links,
-                "pdf_url": sign_path(f"/api/papers/{paper_id}/pdf"),
-                "pdf_url_unsigned": f"/api/papers/{paper_id}/pdf",
-                "image_url": (
-                    f"/api/papers/{paper_id}/trace.png?sentence_id={sentence_id}"
-                ),
-            }
-        finally:
-            conn.close()
+        if trace_payload is not None:
+            return trace_payload(paper_id, sentence_id)
+        return _trace_payload_pg(paper_id, sentence_id)
 
     @bp.route("/api/papers/<paper_id>/trace", methods=["GET"])
     def sentence_trace(paper_id):
@@ -952,14 +880,8 @@ def build_papers_actions_blueprint(
             return jsonify({"error": f"渲染失败: {str(exc)[:120]}"}), 500
 
     def conn_filename(db_path, paper_id):
-        conn = sqlite3.connect(str(db_path))
-        try:
-            row = conn.execute(
-                "SELECT filename FROM papers WHERE paper_id = ?", (paper_id,)
-            ).fetchone()
-            return row[0] if row else ""
-        finally:
-            conn.close()
+        row = store.filename(paper_id)
+        return row["filename"] if row and row["filename"] else ""
 
     # ---------------------------------------------------------------------------
     # Frontend

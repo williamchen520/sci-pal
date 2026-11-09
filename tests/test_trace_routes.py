@@ -54,6 +54,21 @@ class TraceRouteTests(unittest.TestCase):
         conn.commit()
         conn.close()
 
+        def fake_trace(paper_id, sentence_id):
+            if sentence_id != "sent1":
+                return None
+            return {
+                "paper_id": paper_id,
+                "title": "T",
+                "sentence_id": sentence_id,
+                "sentence": "See Fig. 1.",
+                "page": 2,
+                "bbox": "10,20,100,40",
+                "section_path": ["Intro"],
+                "links": [{"target_type": "figure", "detail": {"fig_number": "Fig 1"}}],
+                "pdf_url": "/api/papers/p1/pdf",
+            }
+
         app = Flask(__name__)
         app.register_blueprint(
             build_papers_actions_blueprint(
@@ -62,6 +77,7 @@ class TraceRouteTests(unittest.TestCase):
                 get_task_manager=lambda: None,
                 log=app.logger,
                 paper_store=SqlitePaperStore(self.db),
+                trace_payload=fake_trace,
             )
         )
         self.client = app.test_client()
