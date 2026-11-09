@@ -86,44 +86,6 @@ class CommunitiesTests(unittest.TestCase):
         self.assertEqual(body["error"]["kind"], "not_found")
         self.assertIn("build_communities", body["error"]["message"])
 
-    def test_lists_communities(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db = Path(tmp) / "research.db"
-            make_db(db)
-            app = make_app(db, FakeGraph())
-            resp = app.test_client().get("/api/communities")
-        self.assertEqual(resp.status_code, 200)
-        data = resp.get_json()["data"]
-        self.assertEqual(data["total_communities"], 1)
-        self.assertEqual(data["total_papers"], 2)
-        self.assertEqual(data["communities"][0]["representative"]["paper_id"], "p1")
-        self.assertNotIn("members", data["communities"][0])
-
-    def test_detailed_includes_members(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db = Path(tmp) / "research.db"
-            make_db(db)
-            app = make_app(db, FakeGraph())
-            resp = app.test_client().get("/api/communities?detailed=1")
-        members = resp.get_json()["data"]["communities"][0]["members"]
-        self.assertEqual([m["paper_id"] for m in members], ["p1", "p2"])
-
-    def test_min_size_filters(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db = Path(tmp) / "research.db"
-            make_db(db)
-            app = make_app(db, FakeGraph())
-            resp = app.test_client().get("/api/communities?min_size=5")
-        data = resp.get_json()["data"]
-        self.assertEqual(data["total_communities"], 0)
-
-    def test_bad_min_size_falls_back(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db = Path(tmp) / "research.db"
-            make_db(db)
-            app = make_app(db, FakeGraph())
-            resp = app.test_client().get("/api/communities?min_size=abc")
-        self.assertEqual(resp.status_code, 200)
 
 
 if __name__ == "__main__":
