@@ -2,47 +2,25 @@
 
 from __future__ import annotations
 
-import os
-import sqlite3
-from pathlib import Path
 from typing import Dict, List
 
-DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
+from services.db.pg_pool import pg_connection
 
 
-def paragraph_citation(
-    para_id: str, db_path: Path | str = DEFAULT_DB
-) -> Dict[str, object]:
+def paragraph_citation(para_id: str, db_path=None) -> Dict[str, object]:
     if not para_id:
         return {}
-    if os.environ.get("SCIPAL_QA_CITATIONS_BACKEND", "").strip().lower() in {
-        "postgres", "postgresql", "pg", "1", "true"
-    }:
-        from services.db.pg_pool import pg_connection
-
-        pg = pg_connection()
-        try:
-            rows = pg.execute(
-                "SELECT sentence_id FROM sentences WHERE para_id = %s ORDER BY sequence",
-                (para_id,),
-            ).fetchall()
-            return {
-                "paragraph_id": para_id,
-                "sentence_ids": [row["sentence_id"] for row in rows],
-            }
-        finally:
-            pg.close()
-    conn = sqlite3.connect(str(db_path))
+    pg = pg_connection()
     try:
-        rows = conn.execute(
-            "SELECT sentence_id FROM sentences WHERE para_id = ? ORDER BY sequence",
+        rows = pg.execute(
+            "SELECT sentence_id FROM sentences WHERE para_id = %s ORDER BY sequence",
             (para_id,),
         ).fetchall()
     finally:
-        conn.close()
+        pg.close()
     return {
         "paragraph_id": para_id,
-        "sentence_ids": [row[0] for row in rows],
+        "sentence_ids": [row["sentence_id"] for row in rows],
     }
 
 
