@@ -36,8 +36,7 @@ class ParadeDBRoutingTests(unittest.TestCase):
                     "SCIPAL_FTS_PARADEDB_PERCENT": "0",
                 },
             ):
-                with self.assertRaises(Exception):
-                    searcher.fts_search("test query", top_k=1)
+                self.assertEqual(searcher.fts_search("test query", top_k=1), [])
 
 
 if __name__ == "__main__":
