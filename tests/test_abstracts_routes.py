@@ -1,44 +1,80 @@
-"""Abstracts routes (moved out of api_server)."""
+"""Abstracts routes (PostgreSQL mocked)."""
 
 from __future__ import annotations
 
-import sqlite3
-import tempfile
 import unittest
-from pathlib import Path
+from unittest import mock
 
 from flask import Flask
 
 from routes.abstracts import build_abstracts_blueprint
 
 
-def make_app(db_path: Path):
+class Cursor:
+    def __init__(self, row=None, rows=None):
+        self.row = row
+        self.rows = rows or []
+
+    def fetchone(self):
+        return self.row
+
+    def fetchall(self):
+        return self.rows
+
+
+ROWS = [
+    {
+        "pmid": "1",
+        "doi": "10.1/a",
+        "title": "Sepsis review",
+        "abstract": "sepsis abstract",
+        "authors": "A",
+        "journal": "J",
+        "year": 2026,
+        "topic": "sepsis",
+        "source": "abstract",
+    },
+    {
+        "pmid": "2",
+        "doi": "10.1/b",
+        "title": "Liver cancer",
+        "abstract": "liver abstract",
+        "authors": "B",
+        "journal": "J",
+        "year": 2025,
+        "topic": "hcc",
+        "source": "abstract",
+    },
+]
+
+
+class FakePG:
+    def execute(self, sql, params):
+        if "COUNT" in sql:
+            total = 1 if any("sepsis" in str(p) for p in params) else 2
+            return Cursor(row={"total": total})
+        if "FROM abstracts" in sql and "pmid=%s" in sql:
+            pmid = params[0]
+            return Cursor(row=next((row for row in ROWS if row["pmid"] == pmid), None))
+        rows = [row for row in ROWS if any("sepsis" in str(p) for p in params)] if len(params) >= 4 else ROWS
+        return Cursor(rows=rows)
+
+    def close(self):
+        pass
+
+
+def make_app():
     app = Flask(__name__)
-    app.register_blueprint(build_abstracts_blueprint(db_path=db_path))
+    app.register_blueprint(build_abstracts_blueprint())
     return app
 
 
 class AbstractRoutesTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
-        self.addCleanup(self.tmp.cleanup)
-        self.db = Path(self.tmp.name) / "abstracts.db"
-        conn = sqlite3.connect(self.db)
-        conn.execute(
-            "CREATE TABLE papers (pmid TEXT, doi TEXT, title TEXT, abstract TEXT, "
-            "authors TEXT, journal TEXT, year INTEGER, topic TEXT)"
-        )
-        conn.execute(
-            "INSERT INTO papers VALUES ('1', '10.1/a', 'Sepsis review', 'sepsis abstract', "
-            "'A', 'J', 2026, 'sepsis')"
-        )
-        conn.execute(
-            "INSERT INTO papers VALUES ('2', '10.1/b', 'Liver cancer', 'liver abstract', "
-            "'B', 'J', 2025, 'hcc')"
-        )
-        conn.commit()
-        conn.close()
-        self.client = make_app(self.db).test_client()
+        self.patch = mock.patch("routes.abstracts._pg", return_value=FakePG())
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+        self.client = make_app().test_client()
 
     def test_list_returns_papers(self) -> None:
         body = self.client.get("/api/abstracts/list").get_json()
@@ -57,10 +93,6 @@ class AbstractRoutesTests(unittest.TestCase):
 
     def test_missing_abstract_returns_404(self) -> None:
         self.assertEqual(self.client.get("/api/abstracts/999").status_code, 404)
-
-    def test_missing_db_returns_404(self) -> None:
-        client = make_app(Path(self.tmp.name) / "nope.db").test_client()
-        self.assertEqual(client.get("/api/abstracts/list").status_code, 404)
 
 
 if __name__ == "__main__":
