@@ -38,35 +38,13 @@ def _papers_pg_enabled() -> bool:
     }
 
 
-def _find_parsed_paper(filename: str, conn: sqlite3.Connection | None = None):
-    """Return the best paper row for a filename (most paragraphs wins)."""
-    if conn is None and _papers_pg_enabled():
-        from services.db.pg_pool import pg_connection
+def _find_parsed_paper(filename: str, conn=None):
+    override = globals().get("_lookup_override")
+    if override is not None:
+        return override(filename)
+    from services.papers.lookup import find_parsed_paper
 
-        pg = pg_connection()
-        try:
-            row = pg.execute(
-                "SELECT paper_id, filename, title, authors, year, total_paragraphs "
-                "FROM papers WHERE filename = %s "
-                "ORDER BY (total_paragraphs IS NULL) ASC, total_paragraphs DESC LIMIT 1",
-                (filename,),
-            ).fetchone()
-            return dict(row) if row else None
-        finally:
-            pg.close()
-    own_conn = conn is None
-    if conn is None:
-        conn = sqlite3.connect(str(db_path_for_lookup()))  # type: ignore[name-defined]
-        conn.row_factory = sqlite3.Row
-    try:
-        return conn.execute(
-            "SELECT paper_id, filename, title, authors, year, total_paragraphs "
-            f"FROM papers WHERE filename = ? {_PARSED_PAPER_ORDER}",
-            (filename,),
-        ).fetchone()
-    finally:
-        if own_conn:
-            conn.close()
+    return find_parsed_paper(filename)
 
 
 def build_papers_actions_blueprint(
@@ -75,10 +53,12 @@ def build_papers_actions_blueprint(
     project_root: Path,
     get_task_manager: Callable[[], Any],
     log: Any,
+    lookup: Callable[[str], Any] | None = None,
 ) -> Blueprint:
     bp = Blueprint("papers_actions", __name__)
     globals()["db_path_for_lookup"] = lambda: db_path
     globals()["DOCUMENTS_DIR"] = project_root / "documents"
+    globals()["_lookup_override"] = lookup
 
     def _paper_exists(paper_id: str) -> bool:
         if _papers_pg_enabled():

@@ -34,6 +34,20 @@ class FakeTaskManager:
 
 
 def make_app(root: Path, db: Path):
+    def lookup(filename: str):
+        conn = sqlite3.connect(db)
+        conn.row_factory = sqlite3.Row
+        try:
+            row = conn.execute(
+                "SELECT paper_id, filename, title, authors, year, total_paragraphs "
+                "FROM papers WHERE filename = ? "
+                "ORDER BY total_paragraphs DESC LIMIT 1",
+                (filename,),
+            ).fetchone()
+            return dict(row) if row else None
+        finally:
+            conn.close()
+
     app = Flask(__name__)
     app.register_blueprint(
         build_papers_actions_blueprint(
@@ -41,6 +55,7 @@ def make_app(root: Path, db: Path):
             project_root=root,
             get_task_manager=lambda: FakeTaskManager(),
             log=app.logger,
+            lookup=lookup,
         )
     )
     app.register_blueprint(

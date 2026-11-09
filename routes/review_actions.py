@@ -497,32 +497,8 @@ def build_review_actions_blueprint(
 
 
     def _find_parsed_paper(filename: str, conn=None):
-        """按 filename 取「最有效」的一条已解析记录（`sqlite3.Row`）；没有返回 None。
+        from services.papers.lookup import find_parsed_paper
 
-        这是**唯一口径**，三处调用点都走它：
-          · 同步 `POST /api/papers/parse`
-          · 异步 `POST /api/papers/parse_async` 的快路径
-          · `GET /api/papers/local` 的 parsed_map
-
-        Args:
-            filename: `papers.filename`（磁盘上的 PDF 文件名）
-            conn: 可选，复用调用方已打开的连接（`/api/papers/local` 要扫 77 个文件，
-                  避免 77 次开关连接）。为 None 时自己开关。
-        """
-        import sqlite3
-
-        own_conn = conn is None
-        if own_conn:
-            conn = sqlite3.connect(str(db_path), timeout=5)
-            conn.row_factory = sqlite3.Row
-        try:
-            return conn.execute(
-                "SELECT paper_id, filename, title, authors, year, total_paragraphs "
-                f"FROM papers WHERE filename = ? {_PARSED_PAPER_ORDER}",
-                (filename,),
-            ).fetchone()
-        finally:
-            if own_conn:
-                conn.close()
+        return find_parsed_paper(filename)
 
     return bp
