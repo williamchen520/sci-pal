@@ -1,9 +1,7 @@
-"""P5 read-canary router tests."""
+"""P5 read-router tests (PostgreSQL only)."""
 
 from __future__ import annotations
 
-import sqlite3
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -14,7 +12,6 @@ class FakePG:
     def __init__(self, rows=None, error=None):
         self.rows = rows or []
         self.error = error
-        self.closed = False
 
     def execute(self, sql, params=None):
         if self.error:
@@ -25,64 +22,11 @@ class FakePG:
         return self.rows
 
     def close(self):
-        self.closed = True
-
-
-class ReadRouterTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.db = Path(self.tmp.name) / "t.db"
-        conn = sqlite3.connect(self.db)
-        conn.execute(
-            """
-            CREATE TABLE papers (
-              paper_id TEXT PRIMARY KEY, title TEXT, authors TEXT, journal TEXT,
-              year INTEGER, doi TEXT, total_paragraphs INTEGER,
-              total_figures INTEGER, total_tables INTEGER, workspace_id TEXT
-            )
-            """
-        )
-        conn.execute(
-            "INSERT INTO papers VALUES ('p1','SQLite','a','j',2024,'d',1,0,0,'ws')"
-        )
-        conn.commit()
-        conn.close()
-
-    def test_canary_zero_uses_sqlite(self) -> None:
-        router = ReadRouter(self.db, pg_dsn="x", canary_percent=0)
-        result = router.list_papers("ws", canary_key="k")
-        self.assertEqual(result.backend, "sqlite")
-        self.assertEqual(result.rows[0]["title"], "SQLite")
-
-    def test_canary_full_uses_postgres(self) -> None:
-        fake = FakePG([{"paper_id": "p1", "title": "PG"}])
-        router = ReadRouter(
-            self.db, pg_dsn="x", canary_percent=100, connector=lambda: fake
-        )
-        result = router.list_papers("ws", canary_key="k")
-        self.assertEqual(result.backend, "postgres")
-        self.assertEqual(result.rows[0]["title"], "PG")
-
-    def test_pg_error_falls_back(self) -> None:
-        router = ReadRouter(
-            self.db,
-            pg_dsn="x",
-            canary_percent=100,
-            connector=lambda: FakePG(error=RuntimeError("down")),
-        )
-        result = router.list_papers("ws", canary_key="k")
-        self.assertEqual(result.backend, "sqlite")
-        self.assertTrue(result.fallback)
-        self.assertIn("down", result.error)
+        pass
 
 
 class DetailFakePG:
-    def __init__(self):
-        self.calls = 0
-
     def execute(self, sql, params=None):
-        self.calls += 1
         return self
 
     def fetchone(self):
@@ -95,22 +39,38 @@ class DetailFakePG:
         pass
 
 
-class ReadRouterDetailTests(unittest.TestCase):
+class ReadRouterTests(unittest.TestCase):
+    def test_list_uses_postgres(self) -> None:
+        router = ReadRouter(
+            Path("unused.db"),
+            pg_dsn="x",
+            connector=lambda: FakePG([{"paper_id": "p1", "title": "PG"}]),
+        )
+        result = router.list_papers("ws", canary_key="k")
+        self.assertEqual(result.backend, "postgres")
+        self.assertEqual(result.rows[0]["title"], "PG")
+
+    def test_pg_error_is_returned_not_fallback(self) -> None:
+        router = ReadRouter(
+            Path("unused.db"),
+            pg_dsn="x",
+            connector=lambda: FakePG(error=RuntimeError("down")),
+        )
+        result = router.list_papers("ws", canary_key="k")
+        self.assertEqual(result.backend, "postgres")
+        self.assertEqual(result.rows, [])
+        self.assertIn("down", result.error)
+
     def test_detail_uses_postgres(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            db = Path(tmp) / "t.db"
-            conn = sqlite3.connect(db)
-            conn.execute("CREATE TABLE papers (paper_id TEXT PRIMARY KEY, title TEXT)")
-            conn.commit()
-            conn.close()
-            router = ReadRouter(
-                db, pg_dsn="x", canary_percent=100,
-                connector=lambda: DetailFakePG(),
-            )
-            result = router.paper_detail("p1", "ws", canary_key="k")
-            self.assertEqual(result.backend, "postgres")
-            self.assertEqual(result.payload["paper"]["paper_id"], "p1")
-            self.assertEqual(len(result.payload["cites"]), 1)
+        router = ReadRouter(
+            Path("unused.db"),
+            pg_dsn="x",
+            connector=lambda: DetailFakePG(),
+        )
+        result = router.paper_detail("p1", "ws", canary_key="k")
+        self.assertEqual(result.backend, "postgres")
+        self.assertEqual(result.payload["paper"]["paper_id"], "p1")
+        self.assertEqual(len(result.payload["cites"]), 1)
 
 
 if __name__ == "__main__":

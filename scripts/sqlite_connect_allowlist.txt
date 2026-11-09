@@ -1,6 +1,5 @@
 routes/systematic_review.py
 services/data_sandbox/audit.py
-services/db/read_router.py
 services/experiments/runs.py
 services/experiments/service.py
 services/papers/pg_writes.py

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Optional
@@ -61,26 +60,8 @@ class ReadRouter:
         self._connector = connector
 
     def should_use_pg(self, key: str) -> bool:
-        if self.canary_percent <= 0 or not self.pg_dsn:
-            return False
-        if self.canary_percent >= 100:
-            return True
-        digest = hashlib.sha256(f"{self.seed}:{key}".encode("utf-8")).hexdigest()
-        return int(digest[:8], 16) % 100 < self.canary_percent
-
-    def _sqlite_rows(self, workspace_id: str) -> List[dict]:
-        conn = sqlite3.connect(f"file:{self.sqlite_path}?mode=ro", uri=True)
-        conn.row_factory = sqlite3.Row
-        try:
-            rows = conn.execute(
-                f"SELECT {', '.join(PAPER_COLUMNS)} FROM papers "
-                "WHERE workspace_id = ? "
-                "ORDER BY year DESC, title COLLATE BINARY, paper_id",
-                (workspace_id,),
-            ).fetchall()
-            return [dict(row) for row in rows]
-        finally:
-            conn.close()
+        # PostgreSQL is the only backend; kept for call-site compatibility.
+        return True
 
     def _pg_rows(self, workspace_id: str) -> List[dict]:
         if self._connector is not None:
@@ -165,22 +146,13 @@ class ReadRouter:
     def paper_detail(
         self, paper_id: str, workspace_id: str, *, canary_key: str = ""
     ) -> DetailResult:
-        if not self.should_use_pg(canary_key or paper_id):
-            return DetailResult(None, "sqlite")
         try:
             return DetailResult(self._pg_paper_detail(paper_id, workspace_id), "postgres")
         except Exception as exc:  # noqa: BLE001
-            return DetailResult(None, "sqlite", fallback=True, error=str(exc)[:300])
+            return DetailResult(None, "postgres", error=str(exc)[:300])
 
     def list_papers(self, workspace_id: str, *, canary_key: str = "") -> ReadResult:
-        if self.should_use_pg(canary_key or workspace_id):
-            try:
-                return ReadResult(self._pg_rows(workspace_id), "postgres")
-            except Exception as exc:  # noqa: BLE001 - fallback is the safety net
-                return ReadResult(
-                    self._sqlite_rows(workspace_id),
-                    "sqlite",
-                    fallback=True,
-                    error=str(exc)[:300],
-                )
-        return ReadResult(self._sqlite_rows(workspace_id), "sqlite")
+        try:
+            return ReadResult(self._pg_rows(workspace_id), "postgres")
+        except Exception as exc:  # noqa: BLE001
+            return ReadResult([], "postgres", error=str(exc)[:300])
