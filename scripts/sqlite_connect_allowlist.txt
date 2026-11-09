@@ -6,7 +6,6 @@ services/projects/service.py
 services/quality/guard.py
 services/query/search_service.py
 services/review/review_generator.py
-services/review/title_recall.py
 services/search/context_expander.py
 services/search/graph_traverser.py
 services/search/hybrid_retriever.py
