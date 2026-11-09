@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sqlite3
 from pathlib import Path
 
 from config.settings import DATABASE_PATH
@@ -27,23 +26,6 @@ def audit(
     detail: str | None = None,
     db_path: str | Path = DATABASE_PATH,
 ) -> None:
-    import os
+    from services.tenancy import pg_writes
 
-    if os.environ.get("SCIPAL_TENANCY_PG_ONLY", "").strip().lower() in {
-        "1", "true", "yes", "on", "postgres", "postgresql", "pg"
-    }:
-        from services.tenancy import pg_writes
-
-        pg_writes.audit_event(workspace_id, actor_user_id, action, target, detail)
-        return
-    path = Path(db_path)
-    conn = sqlite3.connect(path)
-    try:
-        conn.execute(
-            "INSERT INTO tenancy_audit (workspace_id, actor_user_id, action, target, detail) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (workspace_id, actor_user_id, action, target, detail),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    pg_writes.audit_event(workspace_id, actor_user_id, action, target, detail)
