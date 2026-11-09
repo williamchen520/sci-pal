@@ -11,6 +11,7 @@ from flask import Flask
 
 from routes.notes import build_notes_blueprint
 from services.tenancy import create_user, create_workspace
+from tests import support_sqlite_notes
 
 
 class NotesRouteTests(unittest.TestCase):
@@ -33,7 +34,7 @@ class NotesRouteTests(unittest.TestCase):
         conn.close()
         app = Flask(__name__)
         app.secret_key = "test"
-        app.register_blueprint(build_notes_blueprint(db_path=self.db))
+        app.register_blueprint(build_notes_blueprint(db_path=self.db, service=support_sqlite_notes))
         self.client = app.test_client()
 
     def login(self, user: dict, workspace_id: str) -> None:

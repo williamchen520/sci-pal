@@ -50,6 +50,7 @@ BACKEND_KEYS = [
     "SCIPAL_TASKS_BACKEND",
     "SCIPAL_SYSTEMATIC_BACKEND",
     "SCIPAL_WATCH_PG_STORE",
+    "SCIPAL_NOTES_BACKEND",
 ]
 
 from services.quality.stop_loss import StopLossGuard, StopLossTriggered
