@@ -40,27 +40,14 @@ class PGParagraphRetriever:
             section_level1=section_l1,
             term_limit=int(os.environ.get("SCIPAL_PG_FTS_TERM_LIMIT", "3")),
         )
-        if not candidates:
-            return []
-        reranked = self.reranker.rerank(
-            query,
-            [{"para_id": hit.para_id, "text": hit.text} for hit in candidates],
-            top_k=top_k,
-        )
-        by_id = {hit.para_id: hit for hit in candidates}
-        out = []
-        for row in reranked:
-            hit = by_id.get(row["para_id"])
-            if hit is None:
-                continue
-            out.append(
-                {
-                    "para_id": hit.para_id,
-                    "paper_id": hit.paper_id,
-                    "section_l1": hit.section_level1,
-                    "section_l2": hit.section_level2,
-                    "text": hit.text,
-                    "score": float(row.get("rerank_score", 0.0)),
-                }
-            )
-        return out
+        return [
+            {
+                "para_id": hit.para_id,
+                "paper_id": hit.paper_id,
+                "section_l1": hit.section_level1,
+                "section_l2": hit.section_level2,
+                "text": hit.text,
+                "score": float(hit.rank),
+            }
+            for hit in candidates[: max(1, top_k)]
+        ]
