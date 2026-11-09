@@ -1,6 +1,5 @@
 services/experiments/runs.py
 services/experiments/service.py
-services/papers/pg_writes.py
 services/projects/service.py
 services/search/hybrid_retriever.py
 services/search/hybrid_search.py

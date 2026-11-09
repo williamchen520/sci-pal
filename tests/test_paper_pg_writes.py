@@ -104,7 +104,7 @@ class MetadataPGOnlyTests(unittest.TestCase):
                 "SCIPAL_INGEST_PG_ONLY": "1",
             },
         ):
-            with mock.patch.object(pg_writes, "_pg_connection", return_value=pg):
+            with mock.patch.object(pg_writes, "_ingest_connection", return_value=pg):
                 with mock.patch(
                     "services.papers.pg_writes.sqlite3.connect",
                     side_effect=AssertionError("sqlite should not be touched"),
@@ -123,7 +123,7 @@ class MetadataPGOnlyTests(unittest.TestCase):
                 "SCIPAL_INGEST_PG_ONLY": "1",
             },
         ):
-            with mock.patch.object(pg_writes, "_pg_connection", return_value=pg):
+            with mock.patch.object(pg_writes, "_ingest_connection", return_value=pg):
                 with mock.patch(
                     "services.papers.pg_writes.sqlite3.connect",
                     side_effect=AssertionError("sqlite should not be touched"),
