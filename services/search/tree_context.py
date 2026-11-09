@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import sqlite3
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -36,8 +35,14 @@ def _estimate_tokens(text: str) -> int:
 
 
 class TreeContextBuilder:
-    def __init__(self, db_path: Path | str = DB_PATH):
+    def __init__(self, db_path: Path | str = DB_PATH, conn_factory=None):
         self.db_path = str(db_path)
+        if conn_factory is not None:
+            self.conn_factory = conn_factory
+        else:
+            from services.db.pg_sqlite_compat import PGReadCompat
+
+            self.conn_factory = PGReadCompat
 
     def build(
         self,
@@ -50,8 +55,7 @@ class TreeContextBuilder:
     ) -> List[Dict]:
         if not hits:
             return []
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn = self.conn_factory()
         query_tokens = _tokens(query)
         try:
             sections: Dict[str, Dict] = {}
@@ -191,8 +195,7 @@ class TreeContextBuilder:
         """
         if not hits:
             return []
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn = self.conn_factory()
         query_tokens = _tokens(query)
         contexts: List[Dict] = []
         try:
