@@ -1,7 +1,6 @@
 services/experiments/runs.py
 services/experiments/service.py
 services/papers/pg_writes.py
-services/pdf/annotator.py
 services/projects/service.py
 services/quality/guard.py
 services/query/search_service.py
