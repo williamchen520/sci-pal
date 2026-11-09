@@ -17,7 +17,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping
@@ -520,22 +519,26 @@ def _clean_title(value: Any) -> str:
 def _paper_metadata(
     paper_ids: list[str], context: StageContext
 ) -> dict[str, dict[str, Any]]:
-    db_path = context.services.get("db_path") or _default_db_path()
-    conn = None
+    if not paper_ids:
+        return {}
+    override = context.services.get("paper_metadata")
+    if override is not None:
+        return override
+    from services.db.pg_pool import pg_connection
+
+    pg = None
     try:
-        conn = sqlite3.connect(str(db_path), timeout=5)
-        conn.row_factory = sqlite3.Row
-        placeholders = ",".join("?" for _ in paper_ids)
-        rows = conn.execute(
+        pg = pg_connection()
+        rows = pg.execute(
             "SELECT paper_id, title, authors, journal, year, doi FROM papers "
-            f"WHERE paper_id IN ({placeholders})",
-            paper_ids,
+            "WHERE paper_id = ANY(%s)",
+            (paper_ids,),
         ).fetchall()
-    except sqlite3.Error:
+    except Exception:
         return {}
     finally:
-        if conn is not None:
-            conn.close()
+        if pg is not None:
+            pg.close()
     return {
         row["paper_id"]: {
             "title": _clean_title(row["title"]),

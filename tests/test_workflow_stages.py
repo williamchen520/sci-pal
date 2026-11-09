@@ -705,17 +705,6 @@ class DraftStageTests(unittest.TestCase):
         self.write_evidence(
             [{"evidence_id": "ev1", "paper_id": "p1", "para_id": "a1", "content": "c"}]
         )
-        db = self.dir / "meta.db"
-        conn = sqlite3.connect(db)
-        conn.execute(
-            "CREATE TABLE papers (paper_id TEXT, title TEXT, authors TEXT, journal TEXT, year INTEGER, doi TEXT)"
-        )
-        conn.execute(
-            "INSERT INTO papers VALUES ('p1', 'Real Title', 'A, B', 'Nature', 2024, '10.1/x')"
-        )
-        conn.commit()
-        conn.close()
-
         def writer(plan, evidence, ctx):
             return {
                 "topic": "demo",
@@ -726,7 +715,12 @@ class DraftStageTests(unittest.TestCase):
             }
 
         ctx = context(self.dir, self.spec())
-        ctx.services = {"db_path": db, "review_repository_factory": SqliteReviewRepository}
+        ctx.services = {
+            "paper_metadata": {
+                "p1": {"title": "Real Title", "authors": "A, B", "journal": "Nature", "year": 2024, "doi": "10.1/x"}
+            },
+            "review_repository_factory": SqliteReviewRepository,
+        }
         result = build_draft_stage(writer)(ctx)
         self.assertEqual(result.status, "ok", result.errors)
         review = json.loads((self.dir / "review.json").read_text(encoding="utf-8"))
