@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 import threading
 
 from flask import Blueprint, Response, g, jsonify, request
@@ -22,11 +21,7 @@ from services.review import pico, pg_pdf, pg_report, pg_systematic, systematic
 
 
 def _pg_projects() -> bool:
-    import os
-
-    return os.environ.get("SCIPAL_SYSTEMATIC_BACKEND", "").strip().lower() in {
-        "postgres", "postgresql", "pg", "1", "true"
-    }
+    return True
 
 
 def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
@@ -68,11 +63,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             pass
 
     def _conn():
-        if _pg_projects():
-            return None
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        return conn
+        return None
 
     @bp.route("", methods=["GET", "POST"])
     def projects():
