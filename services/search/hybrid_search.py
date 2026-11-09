@@ -5,8 +5,6 @@ V22.1 - Multi-query expansion + optional HyDE
 V25.19 - Enhanced FTS query + dynamic RRF weights + MMR diversification + diagnostics
 """
 import os
-import sqlite3
-from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Callable
 
 from services.search.reference_filter import is_reference_entry
@@ -17,7 +15,7 @@ from services.search.mmr_diversifier import MMRDiversifier
 from services.search.retrieval_diagnostics import RetrievalDiagnostics
 from services.search.dedup import suppress_near_duplicates, threshold_from_env
 
-from config.paths import CHROMA_PATH, DB_PATH, EMBEDDING_MODEL
+from config.paths import EMBEDDING_MODEL
 RRF_K = 60  # RRF constant
 VECTOR_TOP_K = 20
 FTS_TOP_K = 20
@@ -78,29 +76,6 @@ def chroma_paper_filter(paper_ids) -> Dict[str, List[str]]:
 class HybridSearch:
     def __init__(self, hyde_generate: Optional[Callable[[str], str]] = None,
                  diagnostics: bool = False):
-        backend = os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower()
-        self.conn = None
-        if backend not in {"pgvector", "pg_vec", "postgres"}:
-            self.conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
-            self.conn.row_factory = sqlite3.Row
-        self.client = None
-        self.para_collection = None
-        self.contextual_collection = None
-        self.paper_collection = None
-        self.fig_collection = None
-        self.table_collection = None
-        self.chunk_collection = None
-        if backend not in {"pgvector", "pg_vec", "postgres"}:
-            import chromadb
-
-            self.client = chromadb.PersistentClient(path=str(CHROMA_PATH))
-            collection_name = os.environ.get("SCIPAL_PARAGRAPH_COLLECTION", "paragraphs")
-            self.para_collection = self.client.get_collection(collection_name)
-            self.contextual_collection = self._get_collection("paragraphs_contextual")
-            self.paper_collection = self._get_collection("papers")
-            self.fig_collection = self._get_collection("figures")
-            self.table_collection = self._get_collection("tables")
-            self.chunk_collection = self._get_collection("chunks")  # V24.1
 
         from sentence_transformers import SentenceTransformer
         self.model = SentenceTransformer(EMBEDDING_MODEL)
@@ -122,15 +97,6 @@ class HybridSearch:
         # V25.19: retrieval diagnostics
         self.diagnostics = RetrievalDiagnostics(enabled=diagnostics)
         self._pg_retriever = None
-
-    def _get_collection(self, name):
-        """Get a collection if it exists, else None."""
-        if self.client is None:
-            return None
-        try:
-            return self.client.get_collection(name)
-        except Exception:
-            return None
 
     def _get_filtered_paper_ids(self, filters: Optional[Dict]) -> Optional[List[str]]:
         """
@@ -175,24 +141,6 @@ class HybridSearch:
                 result = [r["paper_id"] for r in rows]
             finally:
                 pg.close()
-        else:
-            clauses = []
-            params = []
-            if year_min is not None:
-                clauses.append("year >= ?")
-                params.append(year_min)
-            if year_max is not None:
-                clauses.append("year <= ?")
-                params.append(year_max)
-            if journal:
-                clauses.append("journal LIKE ?")
-                params.append(f"%{journal}%")
-
-            where = " AND ".join(clauses)
-            rows = self.conn.execute(
-                f"SELECT paper_id FROM papers WHERE {where}", params
-            ).fetchall()
-            result = [r["paper_id"] for r in rows]
         if paper_ids is not None:
             result = [pid for pid in result if pid in set(paper_ids)]
         return result
@@ -267,61 +215,7 @@ class HybridSearch:
             _trace("vector_pg_out", count=len(hits), ids=[hit["para_id"] for hit in hits])
             return hits
 
-        query_emb = self.model.encode([query]).tolist()
-
-        # Build Chroma where clause
-        where = {}
-        if paper_id:
-            where["paper_id"] = paper_id
-        # Paper-level filters (year/journal) → resolve to paper_ids
-        filtered_pids = self._get_filtered_paper_ids(filters)
-        if filtered_pids is not None:
-            if not filtered_pids:
-                return []  # no papers match the filter
-            if "paper_id" in where:
-                # Intersect: keep only paper_id if it's in the filtered set
-                if where["paper_id"] not in filtered_pids:
-                    return []
-            else:
-                where["paper_id"] = chroma_paper_filter(filtered_pids)
-        where = where if where else None
-
-        # Over-fetch so filtering bibliography + section doesn't shrink recall.
-        target_collection = collection or self.para_collection
-        results = target_collection.query(
-            query_embeddings=query_emb,
-            n_results=fetch_k,
-            where=where
-        )
-
-        hits = []
-        for i in range(len(results["ids"][0])):
-            meta = results["metadatas"][0][i]
-            text = results["documents"][0][i]
-            # V24.2: section filter (post-filter since metadata may vary)
-            if section_filter and meta.get("section_l1") != section_filter:
-                continue
-            if EXCLUDE_REFERENCE_ENTRIES and is_reference_entry(
-                text, meta.get("section_l1"), meta.get("section_l2")
-            ):
-                continue
-            if CLEAN_BOILERPLATE:
-                text = clean_boilerplate(text)
-                if not text:
-                    continue
-            hits.append({
-                "para_id": results["ids"][0][i],
-                "paper_id": meta.get("paper_id"),
-                "section_l1": meta.get("section_l1"),
-                "section_l2": meta.get("section_l2"),
-                "text": text,
-                "metadata": meta,
-                "score": 1.0 - results["distances"][0][i],
-            })
-            if len(hits) >= top_k:
-                break
-        _trace("vector_chroma", count=len(hits), ids=[hit["para_id"] for hit in hits])
-        return hits
+        return []
 
     def _paradedb_fts_search(self, query: str, top_k: int, paper_id: str, filters: Optional[Dict]):
         """BM25 candidates from ParadeDB; None means fall back to SQLite."""
@@ -421,135 +315,7 @@ class HybridSearch:
             pg_results = self._pg_fts_search(query, top_k, paper_id, filters)
             if pg_results is not None:
                 return pg_results
-        if self.conn is None:
-            return []
-        if os.environ.get("SCIPAL_FTS_SQLITE_FALLBACK", "1").strip().lower() in {
-            "0", "false", "off", "no"
-        }:
-            return []
-        # V25.19: use enhanced FTS query builder or fall back to simple
-        if ENHANCED_FTS and hasattr(self, "fts_builder"):
-            fts_query = self.fts_builder.build(query)
-            # Log diagnostics
-            if self.diagnostics.enabled:
-                info = self.fts_builder.explain(query)
-                self.diagnostics.log("fts_query", "fts_query", info["fts_query"])
-                self.diagnostics.log("fts_query", "entities", info["entities"])
-                self.diagnostics.log("fts_query", "phrases", info["phrases"])
-        else:
-            import re
-            stop_words = {"how", "does", "do", "is", "are", "the", "a", "an",
-                          "and", "or", "of", "to", "in", "on", "for", "with",
-                          "what", "which", "when", "where", "why", "can", "could",
-                          "we", "you", "it", "this", "that", "these", "those"}
-            raw_terms = re.findall(r'[a-zA-Z0-9]+', query.lower())
-            terms = [t for t in raw_terms if t not in stop_words and len(t) > 1]
-            if not terms:
-                return []
-            fts_query = " OR ".join(terms)
-
-        # V24.2: determine if we need a JOIN with papers for year/journal
-        need_paper_join = bool(filters and (
-            filters.get("year_min") or filters.get("year_max") or
-            filters.get("journal")
-        ))
-        section_filter = (filters or {}).get("section_l1")
-
-        if need_paper_join:
-            sql = """
-                SELECT f.para_id, f.paper_id, f.section_l1, f.section_l2,
-                       f.text, bm25(paragraphs_fts) as score
-                FROM paragraphs_fts f
-                JOIN papers p ON f.paper_id = p.paper_id
-                WHERE paragraphs_fts MATCH ?
-            """
-        else:
-            sql = """
-                SELECT para_id, paper_id, section_l1, section_l2, text,
-                       bm25(paragraphs_fts) as score
-                FROM paragraphs_fts
-                WHERE paragraphs_fts MATCH ?
-            """
-        params = [fts_query]
-
-        if paper_id:
-            sql += " AND paper_id = ?"
-            params.append(paper_id)
-
-        paper_ids = (filters or {}).get("paper_ids")
-        if paper_ids is not None:
-            paper_ids = list(paper_ids)
-            if not paper_ids:
-                return []
-            column = "f.paper_id" if need_paper_join else "paper_id"
-            marks = ",".join("?" * len(paper_ids))
-            sql += f" AND {column} IN ({marks})"
-            params.extend(paper_ids)
-
-        # V24.2: section filter
-        if section_filter:
-            sql += " AND section_l1 = ?"
-            params.append(section_filter)
-
-        # V24.2: year/journal filters (only when JOIN is active)
-        if need_paper_join:
-            if filters.get("year_min") is not None:
-                sql += " AND p.year >= ?"
-                params.append(filters["year_min"])
-            if filters.get("year_max") is not None:
-                sql += " AND p.year <= ?"
-                params.append(filters["year_max"])
-            if filters.get("journal"):
-                sql += " AND lower(p.journal) LIKE lower(?)"
-                params.append(f"%{filters['journal']}%")
-
-        sql += " ORDER BY score LIMIT ?"
-        fetch_k = min(top_k * 3, 200) if EXCLUDE_REFERENCE_ENTRIES else top_k
-        params.append(fetch_k)
-
-        try:
-            rows = self.conn.execute(sql, params).fetchall()
-        except sqlite3.OperationalError:
-            # V25.19: enhanced query may have syntax issues; fall back to simple
-            if ENHANCED_FTS and hasattr(self, "fts_builder"):
-                fts_query = self.fts_builder.build_simple(query)
-                params[0] = fts_query
-                try:
-                    rows = self.conn.execute(sql, params).fetchall()
-                except sqlite3.OperationalError:
-                    return []
-            else:
-                try:
-                    params2 = [terms[0]]
-                    if paper_id:
-                        params2.append(paper_id)
-                    if section_filter:
-                        params2.append(section_filter)
-                    params2.append(fetch_k)
-                    rows = self.conn.execute(sql, params2).fetchall()
-                except sqlite3.OperationalError:
-                    return []
-
-        hits = []
-        for r in rows:
-            if EXCLUDE_REFERENCE_ENTRIES and is_reference_entry(
-                r["text"], r["section_l1"], r["section_l2"]
-            ):
-                continue
-            hit_text = clean_boilerplate(r["text"]) if CLEAN_BOILERPLATE else r["text"]
-            if not hit_text:
-                continue
-            hits.append({
-                "para_id": r["para_id"],
-                "paper_id": r["paper_id"],
-                "section_l1": r["section_l1"],
-                "section_l2": r["section_l2"],
-                "text": hit_text,
-                "score": -r["score"],  # FTS bm25 is negative, negate
-            })
-            if len(hits) >= top_k:
-                break
-        return hits
+        return []
 
     def _compute_dynamic_weights(self, query: str) -> Tuple[float, float]:
         """
@@ -832,52 +598,18 @@ class HybridSearch:
         return result
 
     def _paper_row(self, paper_id: str):
-        if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
-            "postgres", "postgresql", "pg", "1", "true"
-        }:
-            from services.db.pg_pool import pg_connection
+        from services.db.pg_pool import pg_connection
 
-            pg = pg_connection()
-            try:
-                return pg.execute(
-                    "SELECT * FROM papers WHERE paper_id = %s", (paper_id,)
-                ).fetchone()
-            finally:
-                pg.close()
-        if self.conn is None:
-            return None
-        return self.conn.execute(
-            "SELECT * FROM papers WHERE paper_id = ?", (paper_id,)
-        ).fetchone()
+        pg = pg_connection()
+        try:
+            return pg.execute(
+                "SELECT * FROM papers WHERE paper_id = %s", (paper_id,)
+            ).fetchone()
+        finally:
+            pg.close()
 
     def search_papers(self, query: str, top_k: int = 5) -> List[Dict]:
-        """Search across papers by title/abstract."""
-        if self.paper_collection is None:
-            # paragraph-only index (e.g. rebuilt without the side collections):
-            # aggregate paper ids from paragraph hits instead of returning [].
-            return self._papers_from_paragraphs(query, top_k)
-        # Vector search on papers
-        query_emb = self.model.encode([query]).tolist()
-        results = self.paper_collection.query(
-            query_embeddings=query_emb,
-            n_results=top_k
-        )
-
-        hits = []
-        for i in range(len(results["ids"][0])):
-            paper_id = results["ids"][0][i]
-            # Get full paper info
-            paper = self._paper_row(paper_id)
-            if paper:
-                hits.append({
-                    "paper_id": paper_id,
-                    "title": paper["title"],
-                    "authors": paper["authors"],
-                    "journal": paper["journal"],
-                    "year": paper["year"],
-                    "score": 1.0 - results["distances"][0][i],
-                })
-        return hits
+        return self._papers_from_paragraphs(query, top_k)
 
     def _papers_from_paragraphs(self, query: str, top_k: int) -> List[Dict]:
         """Fallback: rank papers by their best paragraph hit."""
@@ -909,111 +641,14 @@ class HybridSearch:
                 )
         return results
 
-    def search_figures(self, query: str, top_k: int = 5,
-                       paper_id: str = None) -> List[Dict]:
-        """Semantic search over figure captions."""
-        if not self.fig_collection:
-            return []
-        query_emb = self.model.encode([query]).tolist()
-        where = {"paper_id": paper_id} if paper_id else None
-        results = self.fig_collection.query(
-            query_embeddings=query_emb,
-            n_results=top_k,
-            where=where
-        )
-        hits = []
-        for i in range(len(results["ids"][0])):
-            meta = results["metadatas"][0][i]
-            hits.append({
-                "fig_id": results["ids"][0][i],
-                "caption": results["documents"][0][i],
-                "paper_id": meta.get("paper_id"),
-                "fig_number": meta.get("fig_number"),
-                "file_path": meta.get("file_path"),
-                "page": meta.get("page"),
-                "score": 1.0 - results["distances"][0][i],
-            })
-        return hits
+    def search_figures(self, query: str, top_k: int = 5, paper_id: str = None) -> List[Dict]:
+        return []
 
-    def search_chunks(self, query: str, top_k: int = 10,
-                      paper_id: str = None) -> List[Dict]:
-        """
-        Semantic search over 800-token chunks (V24.1).
-        Chunks are larger, context-rich units that improve recall for
-        queries needing broader context than a single paragraph.
-        Returns chunk hits with source paragraph IDs for back-reference.
-        """
-        if not self.chunk_collection:
-            return []
-        query_emb = self.model.encode([query]).tolist()
-        where = {"paper_id": paper_id} if paper_id else None
-        results = self.chunk_collection.query(
-            query_embeddings=query_emb,
-            n_results=top_k,
-            where=where
-        )
-        hits = []
-        for i in range(len(results["ids"][0])):
-            meta = results["metadatas"][0][i]
-            chunk_id = results["ids"][0][i]
-            # Look up source paragraph IDs from SQLite
-            para_ids = []
-            if self.conn is None:
-                continue
-            try:
-                row = self.conn.execute(
-                    "SELECT start_para_id, end_para_id FROM chunks WHERE chunk_id = ?",
-                    (chunk_id,)
-                ).fetchone()
-                if row:
-                    # Fetch all paragraphs between start and end sequence
-                    paras = self.conn.execute("""
-                        SELECT para_id FROM paragraphs
-                        WHERE paper_id = ? AND sequence >= ? AND sequence <= ?
-                        ORDER BY sequence
-                    """, (meta.get("paper_id"),
-                          meta.get("start_sequence", 0),
-                          meta.get("end_sequence", 0))).fetchall()
-                    para_ids = [p["para_id"] for p in paras]
-            except Exception:
-                pass
-            hits.append({
-                "chunk_id": chunk_id,
-                "text": results["documents"][0][i],
-                "paper_id": meta.get("paper_id"),
-                "section_l1": meta.get("section_l1"),
-                "section_l2": meta.get("section_l2"),
-                "page": meta.get("page"),
-                "token_count": meta.get("token_count"),
-                "para_ids": para_ids,
-                "score": 1.0 - results["distances"][0][i],
-            })
-        return hits
+    def search_chunks(self, query: str, top_k: int = 10, paper_id: str = None) -> List[Dict]:
+        return []
 
-    def search_tables(self, query: str, top_k: int = 5,
-                      paper_id: str = None) -> List[Dict]:
-        """Semantic search over table captions and content."""
-        if not self.table_collection:
-            return []
-        query_emb = self.model.encode([query]).tolist()
-        where = {"paper_id": paper_id} if paper_id else None
-        results = self.table_collection.query(
-            query_embeddings=query_emb,
-            n_results=top_k,
-            where=where
-        )
-        hits = []
-        for i in range(len(results["ids"][0])):
-            meta = results["metadatas"][0][i]
-            hits.append({
-                "table_id": results["ids"][0][i],
-                "content": results["documents"][0][i],
-                "paper_id": meta.get("paper_id"),
-                "table_number": meta.get("table_number"),
-                "page": meta.get("page"),
-                "score": 1.0 - results["distances"][0][i],
-            })
-        return hits
+    def search_tables(self, query: str, top_k: int = 5, paper_id: str = None) -> List[Dict]:
+        return []
 
 
 if __name__ == "__main__":
