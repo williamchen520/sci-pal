@@ -10,6 +10,12 @@ from pathlib import Path
 from services.search.tree_context import TreeContextBuilder
 
 
+def _conn(db):
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 class TreeContextTests(unittest.TestCase):
     def test_build(self) -> None:
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
@@ -43,7 +49,7 @@ class TreeContextTests(unittest.TestCase):
             conn.commit()
             conn.close()
 
-            contexts = TreeContextBuilder(db).build(
+            contexts = TreeContextBuilder(db, conn_factory=lambda: _conn(db)).build(
                 [{"para_id": "p1", "rerank_score": 0.9}], "response rate", token_budget=200
             )
             self.assertEqual(len(contexts), 1)
@@ -72,7 +78,7 @@ class TreeContextTests(unittest.TestCase):
             conn.execute("INSERT INTO sentences VALUES ('s2','p2','Toxicity was mild.',1,3)")
             conn.commit()
             conn.close()
-            contexts = TreeContextBuilder(db).build_anchor_preserving(
+            contexts = TreeContextBuilder(db, conn_factory=lambda: _conn(db)).build_anchor_preserving(
                 [{"para_id": "p1", "rerank_score": 0.9}], "response", token_budget=200
             )
         self.assertEqual(len(contexts), 1)

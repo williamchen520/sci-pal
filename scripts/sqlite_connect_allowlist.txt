@@ -8,7 +8,6 @@ services/search/ingest.py
 services/search/online_downloader.py
 services/search/retrieval_nodes.py
 services/search/sentence_seeds.py
-services/search/tree_context.py
 services/search/tree_router.py
 services/search/unified_retriever.py
 services/tenancy/service.py
