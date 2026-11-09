@@ -17,7 +17,10 @@ def enrich_references(references: list, db_path=None) -> list:
     """Add ``doi_url`` and, when the DOI exists locally, ``paper_id``."""
     if not references:
         return references
-    pg = main_read_connection()
+    try:
+        pg = main_read_connection()
+    except Exception:
+        pg = None
     try:
         for reference in references:
             if not isinstance(reference, dict):
@@ -26,11 +29,14 @@ def enrich_references(references: list, db_path=None) -> list:
             if not doi:
                 continue
             reference["doi_url"] = f"https://doi.org/{doi}"
+            if pg is None:
+                continue
             row = pg.execute(
                 "SELECT paper_id FROM papers WHERE lower(doi) = %s LIMIT 1", (doi,)
             ).fetchone()
             if row:
                 reference["paper_id"] = row["paper_id"]
     finally:
-        pg.close()
+        if pg is not None:
+            pg.close()
     return references

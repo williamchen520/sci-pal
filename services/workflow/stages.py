@@ -654,6 +654,8 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
     from services.review.review_repository import ReviewRepository
     from services.review.review_store import get_review_store
 
+    repository_factory = context.services.get("review_repository_factory") or ReviewRepository
+
     draft = _rebuild_draft(review, context)
     markdown = str(review.get("markdown") or "") or _render_markdown(draft)
 
@@ -682,7 +684,7 @@ def _default_save_review(review: Mapping[str, Any], context: StageContext) -> di
 
     db_path = context.services.get("db_path") or _default_db_path()
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    ReviewRepository(db_path).save(
+    repository_factory(db_path).save(
         review_id=review_id,
         run_id=context.run_id,
         topic=draft.topic,

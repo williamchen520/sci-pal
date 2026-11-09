@@ -9,13 +9,13 @@ from pathlib import Path
 from flask import Flask
 
 from routes.reviews import build_reviews_blueprint
-from services.review.review_repository import ReviewRepository
+from tests.support_sqlite_review_repository import SqliteReviewRepository
 
 
 def make_app(db_path: Path) -> Flask:
     app = Flask(__name__)
     app.config["PROPAGATE_EXCEPTIONS"] = False
-    app.register_blueprint(build_reviews_blueprint(db_path=db_path, log=app.logger))
+    app.register_blueprint(build_reviews_blueprint(db_path=db_path, log=app.logger, repository_factory=SqliteReviewRepository))
     return app
 
 
@@ -24,7 +24,7 @@ class ReviewRoutesTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.db = Path(self.tmp.name) / "research.db"
-        self.repo = ReviewRepository(self.db)
+        self.repo = SqliteReviewRepository(self.db)
 
     def test_empty_list(self) -> None:
         resp = make_app(self.db).test_client().get("/api/reviews")
