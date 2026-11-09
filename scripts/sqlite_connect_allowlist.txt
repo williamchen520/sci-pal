@@ -21,7 +21,6 @@ services/qa/citations.py
 services/quality/guard.py
 services/query/search_service.py
 services/references/library.py
-services/review/notifications.py
 services/review/outline_generator.py
 services/review/review_generator.py
 services/review/review_repository.py
