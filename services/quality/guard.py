@@ -10,8 +10,6 @@ Three sources, deliberately:
 from __future__ import annotations
 
 import re
-import sqlite3
-import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable
@@ -88,46 +86,35 @@ class GuardReport:
 
 
 class FtsLanding:
-    """Cached ``paragraphs_fts`` membership check (the corpus body source).
-
-    Flask serves requests from a thread pool, so the sqlite connection is kept
-    in a ``threading.local`` — a single cached connection raises
-    "SQLite objects created in a thread can only be used in that same thread".
-    """
+    """Cached corpus membership check against PostgreSQL paragraphs."""
 
     def __init__(self, db_path: str | Path | None = None) -> None:
         self.db_path = Path(db_path) if db_path else DEFAULT_DB
         self._cache: dict[str, bool] = {}
-        self._local = threading.local()
 
     def __call__(self, term: str) -> bool:
         key = normalize_surface(term)
         if key in self._cache:
             return self._cache[key]
-        hit = False
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
         try:
-            conn = getattr(self._local, "conn", None)
-            if conn is None:
-                conn = sqlite3.connect(str(self.db_path), timeout=5, check_same_thread=False)
-                self._local.conn = conn
-            query = '"' + term.replace('"', '""') + '"'
-            hit = (
-                conn.execute(
-                    "SELECT 1 FROM paragraphs_fts WHERE paragraphs_fts MATCH ? LIMIT 1",
-                    (query,),
-                ).fetchone()
-                is not None
-            )
-        except sqlite3.OperationalError:
+            row = pg.execute(
+                "SELECT 1 FROM paragraphs WHERE search_vector "
+                "@@ plainto_tsquery('english', %s) LIMIT 1",
+                (term,),
+            ).fetchone()
+            hit = row is not None
+        except Exception:
             hit = False
+        finally:
+            pg.close()
         self._cache[key] = hit
         return hit
 
     def close(self) -> None:
-        conn = getattr(self._local, "conn", None)
-        if conn is not None:
-            conn.close()
-            self._local.conn = None
+        return None
 
 
 class VocabularyGuard:

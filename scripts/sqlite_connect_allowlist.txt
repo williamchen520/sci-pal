@@ -2,7 +2,6 @@ services/experiments/runs.py
 services/experiments/service.py
 services/papers/pg_writes.py
 services/projects/service.py
-services/quality/guard.py
 services/query/search_service.py
 services/search/context_expander.py
 services/search/graph_traverser.py
