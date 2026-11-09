@@ -1,40 +1,36 @@
-"""Sentence seed search tests."""
+"""Sentence seed search tests (PostgreSQL mocked)."""
 
 from __future__ import annotations
 
-import sqlite3
-import tempfile
 import unittest
-from pathlib import Path
+from unittest import mock
 
 from services.search.sentence_seeds import SentenceSeedSearch
 
 
+class Cursor:
+    def fetchall(self):
+        return [{"para_id": "p1", "rank": 0.5}, {"para_id": "p1", "rank": 0.7}]
+
+
+class FakePG:
+    def execute(self, sql, params=None):
+        return Cursor()
+
+    def close(self):
+        pass
+
+
 class SentenceSeedTests(unittest.TestCase):
     def test_search(self) -> None:
-        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
-            db = Path(tmp) / "t.db"
-            conn = sqlite3.connect(db)
-            conn.executescript(
-                """
-                CREATE TABLE sentences (sentence_id TEXT, para_id TEXT, text TEXT);
-                CREATE VIRTUAL TABLE sentences_fts USING fts5(
-                    sentence_id, paper_id, section_id, text
-                );
-                """
-            )
-            conn.execute("INSERT INTO sentences VALUES ('s1','p1','response rate was 42%')")
-            conn.execute("INSERT INTO sentences VALUES ('s2','p2','toxicity was mild')")
-            conn.execute("INSERT INTO sentences_fts VALUES ('s1','paper','sec','response rate was 42%')")
-            conn.execute("INSERT INTO sentences_fts VALUES ('s2','paper','sec','toxicity was mild')")
-            conn.commit()
-            conn.close()
-            results = SentenceSeedSearch(db).search("response rate", top_k=10)
+        with mock.patch("services.db.pg_pool.pg_connection", return_value=FakePG()):
+            results = SentenceSeedSearch().search("response rate", top_k=10)
         self.assertEqual(results[0]["para_id"], "p1")
         self.assertEqual(results[0]["rank"], 1)
 
     def test_empty(self) -> None:
-        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
-            db = Path(tmp) / "t.db"
-            sqlite3.connect(db).close()
-            self.assertEqual(SentenceSeedSearch(db).search("the and"), [])
+        self.assertEqual(SentenceSeedSearch().search("the and"), [])
+
+
+if __name__ == "__main__":
+    unittest.main()

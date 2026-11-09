@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import sqlite3
 from pathlib import Path
 from typing import Dict, List
 
@@ -27,31 +26,28 @@ class SentenceSeedSearch:
         ][:10]
         if not terms:
             return []
-        match = " OR ".join(f'"{term}"' for term in terms)
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        ts_query = " | ".join(terms)
+        from services.db.pg_pool import pg_connection
+
+        pg = pg_connection()
         try:
-            rows = conn.execute(
-                "SELECT s.para_id, bm25(sentences_fts) AS rank "
-                "FROM sentences_fts f "
-                "JOIN sentences s ON s.sentence_id = f.sentence_id "
-                "WHERE sentences_fts MATCH ? "
-                "ORDER BY rank LIMIT ?",
-                (match, top_k * 5),
+            rows = pg.execute(
+                "SELECT para_id, MAX(ts_rank(search_vector, to_tsquery('english', %s))) AS rank "
+                "FROM sentences WHERE search_vector @@ to_tsquery('english', %s) "
+                "GROUP BY para_id ORDER BY rank DESC LIMIT %s",
+                (ts_query, ts_query, top_k * 5),
             ).fetchall()
-        except sqlite3.OperationalError:
-            return []
         finally:
-            conn.close()
+            pg.close()
         best = {}
         for row in rows:
             para_id = row["para_id"]
             if not para_id:
                 continue
             rank = float(row["rank"] or 0.0)
-            if para_id not in best or rank < best[para_id]:
+            if para_id not in best or rank > best[para_id]:
                 best[para_id] = rank
-        ordered = sorted(best.items(), key=lambda item: item[1])[:top_k]
+        ordered = sorted(best.items(), key=lambda item: -item[1])[:top_k]
         return [
             {
                 "para_id": para_id,
