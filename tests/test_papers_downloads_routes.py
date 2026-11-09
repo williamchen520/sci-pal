@@ -10,6 +10,7 @@ from pathlib import Path
 from flask import Flask
 
 from routes.papers_actions import build_papers_actions_blueprint
+from tests.support_sqlite_paper_store import SqlitePaperStore
 from routes.search_downloads import build_search_downloads_blueprint
 
 
@@ -56,6 +57,7 @@ def make_app(root: Path, db: Path):
             get_task_manager=lambda: FakeTaskManager(),
             log=app.logger,
             lookup=lookup,
+            paper_store=SqlitePaperStore(db),
         )
     )
     app.register_blueprint(

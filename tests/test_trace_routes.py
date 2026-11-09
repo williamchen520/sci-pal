@@ -10,6 +10,7 @@ from pathlib import Path
 from flask import Flask
 
 from routes.papers_actions import build_papers_actions_blueprint
+from tests.support_sqlite_paper_store import SqlitePaperStore
 
 
 class TraceRouteTests(unittest.TestCase):
@@ -60,6 +61,7 @@ class TraceRouteTests(unittest.TestCase):
                 project_root=root,
                 get_task_manager=lambda: None,
                 log=app.logger,
+                paper_store=SqlitePaperStore(self.db),
             )
         )
         self.client = app.test_client()
