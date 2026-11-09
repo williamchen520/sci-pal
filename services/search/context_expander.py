@@ -16,7 +16,6 @@ show "Chapter 3 › 3.2 Efficacy" instead of a bare paragraph.
 """
 import os
 import re
-import sqlite3
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -34,16 +33,14 @@ _TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fff]")
 
 
 class ContextExpander:
-    def __init__(self, db_path: Path = DB_PATH):
-        if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
-            "postgres", "postgresql", "pg", "1", "true"
-        }:
+    def __init__(self, db_path: Path = DB_PATH, conn=None):
+        # conn is for tests; production uses the PG compatibility reader.
+        if conn is not None:
+            self.conn = conn
+        else:
             from services.db.pg_sqlite_compat import PGReadCompat
 
             self.conn = PGReadCompat()
-        else:
-            self.conn = sqlite3.connect(str(db_path), check_same_thread=False)
-            self.conn.row_factory = sqlite3.Row
 
     @staticmethod
     def _row_dict(r) -> Dict:
