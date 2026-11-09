@@ -1,4 +1,3 @@
-routes/papers_actions.py
 routes/system.py
 routes/systematic_review.py
 services/data_sandbox/audit.py
