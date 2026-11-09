@@ -17,7 +17,6 @@ V1.1 - 增加 Protocols.io 实验方法搜索源
 Protocols.io 实验方法作为独立结果返回（跟论文是不同类型内容，不混合去重）。
 """
 
-import sqlite3
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Tuple
 
@@ -117,12 +116,15 @@ class HybridRetriever:
         self._local_paper_meta = {}
 
         try:
-            conn = sqlite3.connect(DB_PATH)
-            conn.row_factory = sqlite3.Row
-            rows = conn.execute(
-                "SELECT paper_id, title, authors, journal, year, doi FROM papers"
-            ).fetchall()
-            conn.close()
+            from services.db.pg_pool import pg_connection
+
+            pg = pg_connection()
+            try:
+                rows = pg.execute(
+                    "SELECT paper_id, title, authors, journal, year, doi FROM papers"
+                ).fetchall()
+            finally:
+                pg.close()
 
             for row in rows:
                 paper_id = row["paper_id"]
