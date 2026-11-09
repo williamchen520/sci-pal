@@ -1,52 +1,11 @@
-"""Metadata-only audit log for the data sandbox (no raw values)."""
+"""Metadata-only audit log for the data sandbox (no raw values, PostgreSQL only)."""
 
 from __future__ import annotations
 
 import hashlib
-import os
-import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
-
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS data_audit (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    owner TEXT,
-    project_id TEXT,
-    action TEXT,
-    artifact_id TEXT,
-    kind TEXT,
-    provider TEXT,
-    bytes INTEGER,
-    sha256 TEXT,
-    detail TEXT,
-    created_at TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_data_audit_project
-    ON data_audit(owner, project_id, id);
-"""
-
-
-def _pg_backend() -> bool:
-    return os.environ.get("SCIPAL_AUDIT_BACKEND", "").strip().lower() in {
-        "postgres", "postgresql", "pg", "1", "true"
-    }
-
-
-def _db_path() -> Path:
-    return Path(os.environ.get("SCIPAL_AUDIT_DB", str(DEFAULT_DB)))
-
-
-def _connect() -> sqlite3.Connection:
-    path = _db_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(path))
-    conn.execute("PRAGMA busy_timeout=30000")
-    conn.executescript(SCHEMA)
-    return conn
 
 
 def file_digest(path: Path) -> str:
@@ -67,86 +26,44 @@ def log_event(
     detail: str = "",
 ) -> None:
     """Append one metadata event; never store file contents."""
+    from services.db.pg_pool import pg_connection
+
     size = path.stat().st_size if path and path.exists() else 0
     digest = file_digest(path) if path and path.exists() else ""
-    if _pg_backend():
-        from services.db.pg_pool import pg_connection
-
-        pg = pg_connection()
-        try:
-            pg.execute(
-                "INSERT INTO data_audit "
-                "(owner, project_id, action, artifact_id, kind, provider, bytes, sha256, detail, created_at) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (
-                    owner, project_id, action, artifact_id, kind, provider,
-                    size, digest, detail[:500], datetime.now(timezone.utc).isoformat(),
-                ),
-            )
-            pg.commit()
-        finally:
-            pg.close()
-        return
-    conn = _connect()
+    pg = pg_connection()
     try:
-        conn.execute(
+        pg.execute(
             "INSERT INTO data_audit "
             "(owner, project_id, action, artifact_id, kind, provider, bytes, sha256, detail, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (
-                owner,
-                project_id,
-                action,
-                artifact_id,
-                kind,
-                provider,
-                size,
-                digest,
-                detail[:500],
-                datetime.now(timezone.utc).isoformat(),
+                owner, project_id, action, artifact_id, kind, provider,
+                size, digest, detail[:500], datetime.now(timezone.utc).isoformat(),
             ),
         )
-        conn.commit()
+        pg.commit()
     finally:
-        conn.close()
+        pg.close()
 
 
 def list_events(
     owner: str, project_id: Optional[str] = None, limit: int = 100
 ) -> List[Dict[str, Any]]:
-    if _pg_backend():
-        from services.db.pg_pool import pg_connection
+    from services.db.pg_pool import pg_connection
 
-        pg = pg_connection()
-        try:
-            if project_id:
-                rows = pg.execute(
-                    "SELECT * FROM data_audit WHERE owner = %s AND project_id = %s "
-                    "ORDER BY id DESC LIMIT %s",
-                    (owner, project_id, limit),
-                ).fetchall()
-            else:
-                rows = pg.execute(
-                    "SELECT * FROM data_audit WHERE owner = %s ORDER BY id DESC LIMIT %s",
-                    (owner, limit),
-                ).fetchall()
-            return [dict(row) for row in rows]
-        finally:
-            pg.close()
-    conn = _connect()
-    conn.row_factory = sqlite3.Row
+    pg = pg_connection()
     try:
         if project_id:
-            rows = conn.execute(
-                "SELECT * FROM data_audit WHERE owner = ? AND project_id = ? "
-                "ORDER BY id DESC LIMIT ?",
+            rows = pg.execute(
+                "SELECT * FROM data_audit WHERE owner = %s AND project_id = %s "
+                "ORDER BY id DESC LIMIT %s",
                 (owner, project_id, limit),
-            )
+            ).fetchall()
         else:
-            rows = conn.execute(
-                "SELECT * FROM data_audit WHERE owner = ? ORDER BY id DESC LIMIT ?",
+            rows = pg.execute(
+                "SELECT * FROM data_audit WHERE owner = %s ORDER BY id DESC LIMIT %s",
                 (owner, limit),
-            )
+            ).fetchall()
         return [dict(row) for row in rows]
     finally:
-        conn.close()
+        pg.close()

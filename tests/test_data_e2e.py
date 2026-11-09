@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import os
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from services.data_sandbox import audit, store
@@ -30,6 +32,29 @@ class DataE2ETests(unittest.TestCase):
         from services.data_sandbox import policy
 
         self.frame = policy.load_table(self.csv)
+        self.audit_events = []
+
+        def _log(**kwargs):
+            path = kwargs.get("path")
+            kwargs["id"] = len(self.audit_events) + 1
+            kwargs["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest() if path and path.exists() else ""
+            kwargs["bytes"] = path.stat().st_size if path and path.exists() else 0
+            self.audit_events.append(kwargs)
+
+        def _list(owner, project_id=None, limit=100):
+            rows = [
+                event for event in self.audit_events
+                if event.get("owner") == owner
+                and (project_id is None or event.get("project_id") == project_id)
+            ]
+            return list(reversed(rows))[:limit]
+
+        self.log_patch = mock.patch("services.data_sandbox.audit.log_event", side_effect=_log)
+        self.list_patch = mock.patch("services.data_sandbox.audit.list_events", side_effect=_list)
+        self.log_patch.start()
+        self.list_patch.start()
+        self.addCleanup(self.log_patch.stop)
+        self.addCleanup(self.list_patch.stop)
 
     def test_full_flow_and_audit(self) -> None:
         store.create_project("alice", "e2e", str(self.csv), self.frame)
