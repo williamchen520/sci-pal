@@ -19,7 +19,6 @@ services/projects/service.py
 services/protocols/service.py
 services/quality/guard.py
 services/query/search_service.py
-services/references/library.py
 services/review/outline_generator.py
 services/review/review_generator.py
 services/review/title_recall.py
