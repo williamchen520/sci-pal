@@ -20,5 +20,4 @@ services/search/tree_context.py
 services/search/tree_router.py
 services/search/unified_retriever.py
 services/tenancy/service.py
-services/unified_task_manager.py
 services/workflow/stages.py
