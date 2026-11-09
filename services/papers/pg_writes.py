@@ -60,18 +60,6 @@ def update_workspace(paper_id: str, workspace_id: str, *, db_path: str | Path) -
         LOGGER.error("PG paper workspace update failed; refusing SQLite fallback: %s", exc)
         raise PaperWriteError("paper write backend unavailable") from exc
 
-    if pg_only():
-        return True
-
-    conn = sqlite3.connect(str(db_path), timeout=30)
-    try:
-        conn.execute(
-            "UPDATE papers SET workspace_id = ? WHERE paper_id = ?",
-            (workspace_id, paper_id),
-        )
-        conn.commit()
-    finally:
-        conn.close()
     return True
 
 
@@ -102,18 +90,6 @@ def update_metadata_if_exists(
     except Exception as exc:  # noqa: BLE001
         LOGGER.warning("PG metadata sync skipped for %s: %s", paper_id, exc)
         return False
-    if pg_only():
-        return True
-
-    conn = sqlite3.connect(str(db_path), timeout=30)
-    try:
-        conn.execute(
-            "UPDATE papers SET journal = ?, year = ?, doi = ? WHERE paper_id = ?",
-            (journal or "", year, doi or "", paper_id),
-        )
-        conn.commit()
-    finally:
-        conn.close()
     return True
 
 
