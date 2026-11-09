@@ -5,7 +5,6 @@ services/pdf/annotator.py
 services/projects/service.py
 services/quality/guard.py
 services/query/search_service.py
-services/review/outline_generator.py
 services/review/review_generator.py
 services/review/title_recall.py
 services/search/context_expander.py
