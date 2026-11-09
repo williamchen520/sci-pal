@@ -16,7 +16,7 @@ from services.references.interchange import (
     to_endnote_xml,
     to_ris,
 )
-from services.references.library import ReferenceLibrary
+from tests.support_sqlite_reference_library import SqliteReferenceLibrary as ReferenceLibrary
 
 SAMPLE = {
     "title": "TLR4 signaling in sepsis",

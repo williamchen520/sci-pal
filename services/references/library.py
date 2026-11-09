@@ -1,14 +1,9 @@
-"""Durable reference library (imported from RIS / EndNote XML)."""
+"""Durable reference library (PostgreSQL only)."""
 
 from __future__ import annotations
 
 import hashlib
-import json
-import sqlite3
-from contextlib import contextmanager
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any, Iterable
 
 from services.db.pg_pool import pg_connection
 from services.db.tenant_pilot import set_search_path
@@ -20,42 +15,13 @@ def _pg():
     return pg
 
 
-SCHEMA = (
-    """
-    CREATE TABLE IF NOT EXISTS reference_library (
-        reference_id TEXT PRIMARY KEY,
-        doi          TEXT,
-        title        TEXT,
-        authors      TEXT,
-        journal      TEXT,
-        year         TEXT,
-        abstract     TEXT,
-        source       TEXT,
-        created_at   TEXT NOT NULL
-    )
-    """,
-    "CREATE UNIQUE INDEX IF NOT EXISTS idx_reference_library_doi "
-    "ON reference_library (doi) WHERE doi IS NOT NULL AND doi != ''",
-)
-
-
 class ReferenceLibrary:
-    def __init__(self, db_path: str | Path) -> None:
-        self.db_path = Path(db_path)
-
-    def _pg_backend(self) -> bool:
-        import os
-
-        return os.environ.get("SCIPAL_REFERENCE_LIBRARY_BACKEND", "").strip().lower() in {
-            "postgres", "postgresql", "pg", "1", "true"
-        }
+    def __init__(self, db_path=None) -> None:
+        # db_path is kept for call-site compatibility; storage is PostgreSQL.
+        self.db_path = db_path
 
     def ensure_schema(self) -> None:
-        if self._pg_backend():
-            return
-        with self._session() as conn:
-            for statement in SCHEMA:
-                conn.execute(statement)
+        return None
 
     def import_references(
         self,
@@ -63,43 +29,9 @@ class ReferenceLibrary:
         *,
         source: str = "ris",
     ) -> dict[str, int]:
-        self.ensure_schema()
         added = skipped = 0
-        if self._pg_backend():
-            
-
-            pg = _pg()
-            try:
-                for reference in references:
-                    doi = _clean(getattr(reference, "doi", "") or _dict(reference).get("doi"))
-                    title = _clean(getattr(reference, "title", "") or _dict(reference).get("title"))
-                    if not doi and not title:
-                        skipped += 1
-                        continue
-                    key = doi.lower() if doi else f"title:{title.lower()}|{_year(reference)}"
-                    reference_id = "ref_" + hashlib.sha1(key.encode("utf-8")).hexdigest()[:12]
-                    row = pg.execute(
-                        "INSERT INTO reference_library "
-                        "(reference_id, doi, title, authors, journal, year, abstract, source, created_at) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING "
-                        "RETURNING reference_id",
-                        (
-                            reference_id, doi, title, _authors(reference),
-                            _clean(getattr(reference, "journal", "") or _dict(reference).get("journal")),
-                            _year(reference),
-                            _clean(getattr(reference, "abstract", "") or _dict(reference).get("abstract")),
-                            source, _now(),
-                        ),
-                    ).fetchone()
-                    if row:
-                        added += 1
-                    else:
-                        skipped += 1
-                pg.commit()
-            finally:
-                pg.close()
-            return {"added": added, "skipped": skipped}
-        with self._session() as conn:
+        pg = _pg()
+        try:
             for reference in references:
                 doi = _clean(getattr(reference, "doi", "") or _dict(reference).get("doi"))
                 title = _clean(getattr(reference, "title", "") or _dict(reference).get("title"))
@@ -108,77 +40,45 @@ class ReferenceLibrary:
                     continue
                 key = doi.lower() if doi else f"title:{title.lower()}|{_year(reference)}"
                 reference_id = "ref_" + hashlib.sha1(key.encode("utf-8")).hexdigest()[:12]
-                try:
-                    conn.execute(
-                        """
-                        INSERT INTO reference_library
-                        (reference_id, doi, title, authors, journal, year, abstract, source, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        (
-                            reference_id,
-                            doi,
-                            title,
-                            _authors(reference),
-                            _clean(getattr(reference, "journal", "") or _dict(reference).get("journal")),
-                            _year(reference),
-                            _clean(getattr(reference, "abstract", "") or _dict(reference).get("abstract")),
-                            source,
-                            _now(),
-                        ),
-                    )
+                row = pg.execute(
+                    "INSERT INTO reference_library "
+                    "(reference_id, doi, title, authors, journal, year, abstract, source, created_at) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING "
+                    "RETURNING reference_id",
+                    (
+                        reference_id, doi, title, _authors(reference),
+                        _clean(getattr(reference, "journal", "") or _dict(reference).get("journal")),
+                        _year(reference),
+                        _clean(getattr(reference, "abstract", "") or _dict(reference).get("abstract")),
+                        source, _now(),
+                    ),
+                ).fetchone()
+                if row:
                     added += 1
-                except sqlite3.IntegrityError:
+                else:
                     skipped += 1
+            pg.commit()
+        finally:
+            pg.close()
         return {"added": added, "skipped": skipped}
 
     def list(self, limit: int = 50) -> list[dict[str, Any]]:
-        self.ensure_schema()
-        if self._pg_backend():
-            
-
-            pg = _pg()
-            try:
-                rows = pg.execute(
-                    "SELECT * FROM reference_library ORDER BY created_at DESC LIMIT %s",
-                    (max(1, limit),),
-                ).fetchall()
-                return [dict(row) for row in rows]
-            finally:
-                pg.close()
-        with self._session() as conn:
-            rows = conn.execute(
-                "SELECT * FROM reference_library ORDER BY created_at DESC LIMIT ?",
+        pg = _pg()
+        try:
+            rows = pg.execute(
+                "SELECT * FROM reference_library ORDER BY created_at DESC LIMIT %s",
                 (max(1, limit),),
             ).fetchall()
-        return [dict(row) for row in rows]
+            return [dict(row) for row in rows]
+        finally:
+            pg.close()
 
     def count(self) -> int:
-        self.ensure_schema()
-        if self._pg_backend():
-            
-
-            pg = _pg()
-            try:
-                return int(pg.execute("SELECT COUNT(*) AS n FROM reference_library").fetchone()["n"])
-            finally:
-                pg.close()
-        with self._session() as conn:
-            return int(conn.execute("SELECT COUNT(*) FROM reference_library").fetchone()[0])
-
-    def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self.db_path), timeout=10)
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    @contextmanager
-    def _session(self) -> Iterator[sqlite3.Connection]:
-        conn = self._connect()
+        pg = _pg()
         try:
-            yield conn
-            conn.commit()
+            return int(pg.execute("SELECT COUNT(*) AS n FROM reference_library").fetchone()["n"])
         finally:
-            conn.close()
+            pg.close()
 
 
 def _dict(value: Any) -> dict:
