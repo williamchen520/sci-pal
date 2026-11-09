@@ -15,7 +15,6 @@ V25.2 - 综述大纲生成器（OutlineGenerator）。
 from __future__ import annotations
 
 import json
-import sqlite3
 from pathlib import Path
 from typing import Optional
 
@@ -612,46 +611,10 @@ class OutlineGenerator:
     # ──────────────────────────────────────────
 
     def _load_communities(self, evidence_cards: list[EvidenceCard]) -> dict[str, list[str]]:
-        """
-        从 SQLite 的 paper_communities + community_members 表读取文献聚类信息。
-        返回 {community_id: [paper_id, ...]}，只包含证据卡片中涉及的论文。
-        """
-        if not self.db_path or not Path(self.db_path).exists():
-            return {}
+        """Communities were never migrated to PostgreSQL; keep the outline flat."""
+        return {}
 
-        try:
-            paper_ids = {c.paper_id for c in evidence_cards}
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
 
-            # 查询涉及论文的社区归属
-            placeholders = ",".join("?" * len(paper_ids))
-            cursor.execute(
-                f"""
-                SELECT cm.community_id, cm.paper_id, pc.label
-                FROM community_members cm
-                LEFT JOIN paper_communities pc ON cm.community_id = pc.community_id
-                WHERE cm.paper_id IN ({placeholders})
-                """,
-                list(paper_ids),
-            )
-
-            communities: dict[str, list[str]] = {}
-            for community_id, paper_id, label in cursor.fetchall():
-                cid = f"{community_id}({label})" if label else str(community_id)
-                communities.setdefault(cid, []).append(paper_id)
-
-            conn.close()
-            return communities
-
-        except Exception:
-            return {}
-
-    # ──────────────────────────────────────────
-    # V25.8: 从用户自定义 JSON 构建大纲
-    # ──────────────────────────────────────────
-
-    @staticmethod
     def from_custom_json(topic: str, custom_data: dict, evidence_cards: Optional[list[EvidenceCard]] = None) -> ReviewOutline:
         """
         从用户传入的自定义 JSON 构建 ReviewOutline（V25.8: 段落级自定义大纲）。
