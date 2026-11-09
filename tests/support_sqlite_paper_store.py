@@ -30,6 +30,33 @@ class SqlitePaperStore:
         finally:
             conn.close()
 
+    def assign_workspace(self, paper_id: str, workspace_id: str) -> None:
+        conn = sqlite3.connect(str(self.db_path))
+        try:
+            try:
+                conn.execute(
+                    "UPDATE papers SET workspace_id = ? WHERE paper_id = ?",
+                    (workspace_id, paper_id),
+                )
+                conn.commit()
+            except sqlite3.OperationalError:
+                pass
+        finally:
+            conn.close()
+
+    def supplementary_counts(self) -> dict:
+        conn = sqlite3.connect(str(self.db_path))
+        try:
+            try:
+                rows = conn.execute(
+                    "SELECT paper_id, COUNT(*) AS cnt FROM supplementary_files GROUP BY paper_id"
+                ).fetchall()
+                return {row[0]: row[1] for row in rows}
+            except sqlite3.OperationalError:
+                return {}
+        finally:
+            conn.close()
+
     def in_workspace(self, paper_id: str, workspace_id: str) -> bool:
         conn = sqlite3.connect(str(self.db_path))
         try:
