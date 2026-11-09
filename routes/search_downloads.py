@@ -6,7 +6,6 @@ import json
 import os
 import re
 import shutil
-import sqlite3
 import threading
 import time
 import uuid
@@ -20,21 +19,10 @@ _PARSED_PAPER_ORDER = (
 )
 
 
-def _find_parsed_paper(filename: str, conn: sqlite3.Connection | None = None):
-    """Return the best paper row for a filename (most paragraphs wins)."""
-    own_conn = conn is None
-    if conn is None:
-        conn = sqlite3.connect(str(db_path_for_lookup()))  # type: ignore[name-defined]
-        conn.row_factory = sqlite3.Row
-    try:
-        return conn.execute(
-            "SELECT paper_id, filename, title, authors, year, total_paragraphs "
-            f"FROM papers WHERE filename = ? {_PARSED_PAPER_ORDER}",
-            (filename,),
-        ).fetchone()
-    finally:
-        if own_conn:
-            conn.close()
+def _find_parsed_paper(filename: str, conn=None):
+    from services.papers.lookup import find_parsed_paper
+
+    return find_parsed_paper(filename)
 
 
 def build_search_downloads_blueprint(
