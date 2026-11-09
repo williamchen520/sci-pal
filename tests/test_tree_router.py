@@ -10,6 +10,12 @@ from pathlib import Path
 from services.search.tree_router import TreeRouter
 
 
+def _conn(db):
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 class TreeRouterTests(unittest.TestCase):
     def test_beam_expands_relevant_child(self) -> None:
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
@@ -35,7 +41,7 @@ class TreeRouterTests(unittest.TestCase):
                     {"section_id": "c2", "distance": 0.8},
                 ]
 
-            results = TreeRouter(db, summary_search=fake_summary).search(
+            results = TreeRouter(db, summary_search=fake_summary, conn_factory=lambda: _conn(db)).search(
                 "response rate", ["paper"], beam=2, depth=2
             )
         ids = {item["section_id"] for item in results}

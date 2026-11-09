@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sqlite3
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional
 
@@ -16,9 +15,16 @@ class TreeRouter:
         self,
         db_path: Path | str = DB_PATH,
         summary_search: Optional[Callable[..., List[Dict]]] = None,
+        conn_factory=None,
     ):
         self.db_path = str(db_path)
         self.summary_search = summary_search
+        if conn_factory is not None:
+            self.conn_factory = conn_factory
+        else:
+            from services.db.pg_sqlite_compat import PGReadCompat
+
+            self.conn_factory = PGReadCompat
 
     def _summary_scores(self, query: str, paper_id: str) -> Dict[str, float]:
         if self.summary_search is None:
@@ -45,8 +51,7 @@ class TreeRouter:
         paper_ids = list(dict.fromkeys(pid for pid in paper_ids if pid))
         if not paper_ids:
             return []
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn = self.conn_factory()
         intent = query_intent(query)
         paragraph_scores = paragraph_scores or {}
         max_para = max(paragraph_scores.values(), default=1.0) or 1.0
