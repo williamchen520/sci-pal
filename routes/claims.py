@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, request
 
 import os
 
-from services.claims import service
+from services.claims import service as default_service
 
 
 def _pg_read() -> bool:
@@ -15,8 +15,9 @@ def _pg_read() -> bool:
     }
 
 
-def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=None) -> Blueprint:
+def build_claims_blueprint(*, db_path, log=None, get_llm=None, get_retriever=None, service=None) -> Blueprint:
     bp = Blueprint("claims", __name__, url_prefix="/api/claims")
+    service = service or default_service
     service.ensure_schema(db_path)
 
     @bp.get("")
