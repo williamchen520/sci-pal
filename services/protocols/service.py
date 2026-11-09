@@ -7,6 +7,8 @@ field names have drifted across versions, so each field has fallbacks.
 
 from __future__ import annotations
 
+from services.protocols.render import render_protocol_markdown
+
 import json
 import sqlite3
 from contextlib import contextmanager
@@ -424,51 +426,10 @@ class ProtocolService:
         return cursor.rowcount > 0
 
     def export_markdown(self, protocol_id: str) -> str | None:
-        """Render one protocol (steps + runs) as a Markdown lab sheet."""
         record = self.get(protocol_id)
         if record is None:
             return None
-        lines = [f"# {record.get('title') or protocol_id}", ""]
-        meta = []
-        if record.get("doi"):
-            meta.append(f"DOI: {record['doi']}")
-        if record.get("version"):
-            meta.append(f"版本: {record['version']}")
-        if record.get("license"):
-            meta.append(f"许可: {record['license']}")
-        if record.get("url"):
-            meta.append(f"来源: {record['url']}")
-        if meta:
-            lines.extend([" · ".join(meta), ""])
-        lines.extend(["## 步骤", ""])
-        steps = record.get("steps") or []
-        if not steps:
-            lines.extend(["（该协议没有解析出步骤）", ""])
-        for step in steps:
-            lines.append(f"### {step['ordinal']}. {step.get('title') or '(未命名步骤)'}")
-            if step.get("duration"):
-                lines.append(f"- 时长：{step['duration']}")
-            if step.get("reagents"):
-                lines.append(f"- 试剂：{'、'.join(step['reagents'])}")
-            if step.get("instructions"):
-                lines.extend(["", step["instructions"]])
-            lines.append("")
-        runs = self.list_runs(protocol_id, limit=200)
-        lines.extend(["## 实验记录", ""])
-        if not runs:
-            lines.append("（还没有实验记录）")
-        else:
-            lines.append("| 日期 | 标题 | 操作人 | 状态 | 步骤进度 | 结果 |")
-            lines.append("|---|---|---|---|---|---|")
-            for run in runs:
-                done = len(run.get("done_steps") or [])
-                lines.append(
-                    f"| {run.get('run_date') or ''} | {run.get('title') or ''} | "
-                    f"{run.get('operator') or ''} | {run.get('status') or ''} | "
-                    f"{done}/{len(steps)} | {(run.get('result') or '').replace('|', '/')} |"
-                )
-        lines.append("")
-        return "\n".join(lines)
+        return render_protocol_markdown(record, self.list_runs(protocol_id, limit=200), protocol_id)
 
     # ---------------------------------------------------------- attachments
     MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
