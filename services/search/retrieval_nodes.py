@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sqlite3
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -37,17 +36,17 @@ class RetrievalNode:
 def paragraph_nodes(db_path: Path | str, section_ids: List[str], limit: int = 300) -> List[RetrievalNode]:
     if not section_ids:
         return []
-    marks = ",".join("?" * len(section_ids))
-    conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row
+    from services.db.pg_pool import pg_connection
+
+    pg = pg_connection()
     try:
-        rows = conn.execute(
-            f"SELECT para_id, paper_id, section_id, text, section_level1, section_level2 "
-            f"FROM paragraphs WHERE section_id IN ({marks}) LIMIT ?",
-            (*section_ids, limit),
+        rows = pg.execute(
+            "SELECT para_id, paper_id, section_id, text, section_level1, section_level2 "
+            "FROM paragraphs WHERE section_id = ANY(%s) LIMIT %s",
+            (list(section_ids), limit),
         ).fetchall()
     finally:
-        conn.close()
+        pg.close()
     return [
         RetrievalNode(
             node_id=row["para_id"],
