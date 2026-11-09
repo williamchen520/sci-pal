@@ -20,11 +20,41 @@ from services.workflow.stages import (
     sanitize_references,
 )
 from services.workflow.types import StageContext
+from tests.support_sqlite_review_repository import SqliteReviewRepository
+
+
+_MODULE_PATCH = None
+
+
+def setUpModule() -> None:
+    global _MODULE_PATCH
+    from unittest.mock import patch
+
+    from tests.support_sqlite_review_repository import SqliteReviewRepository
+
+    _MODULE_PATCH = patch(
+        "services.review.review_repository.ReviewRepository",
+        SqliteReviewRepository,
+    )
+    _MODULE_PATCH.start()
+
+
+def tearDownModule() -> None:
+    if _MODULE_PATCH is not None:
+        _MODULE_PATCH.stop()
 
 
 def context(run_dir: Path, spec: WorkflowSpec, run_id: str = "r1") -> StageContext:
+    from tests.support_sqlite_review_repository import SqliteReviewRepository
+
     run_dir.mkdir(parents=True, exist_ok=True)
-    return StageContext(run_id=run_id, run_dir=run_dir, spec=spec, services={}, logger=None)
+    return StageContext(
+        run_id=run_id,
+        run_dir=run_dir,
+        spec=spec,
+        services={"review_repository_factory": SqliteReviewRepository},
+        logger=None,
+    )
 
 
 class PlanStageTests(unittest.TestCase):
@@ -65,9 +95,19 @@ class PlanStageTests(unittest.TestCase):
 
 class StoreStageTests(unittest.TestCase):
     def setUp(self) -> None:
+        from unittest.mock import patch
+
+        from tests.support_sqlite_review_repository import SqliteReviewRepository
+
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.dir = Path(self.tmp.name)
+        patcher = patch(
+            "services.review.review_repository.ReviewRepository",
+            SqliteReviewRepository,
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_missing_review_fails(self) -> None:
         spec = WorkflowSpec(topic="demo", stages=("plan", "store", "export"))
@@ -79,7 +119,7 @@ class StoreStageTests(unittest.TestCase):
         spec = WorkflowSpec(topic="demo", stages=("plan", "store", "export"))
         (self.dir / "review.json").write_text('{"topic": "demo", "sections": []}', encoding="utf-8")
         ctx = context(self.dir, spec)
-        ctx.services = {"db_path": self.dir / "reviews.db"}
+        ctx.services = {"db_path": self.dir / "reviews.db", "review_repository_factory": SqliteReviewRepository}
         result = build_store_stage()(ctx)
         self.assertEqual(result.status, "ok")
         record = json.loads((self.dir / "store.json").read_text(encoding="utf-8"))
@@ -116,7 +156,7 @@ class StoreStageTests(unittest.TestCase):
             encoding="utf-8",
         )
         ctx = context(self.dir, spec)
-        ctx.services = {"db_path": self.dir / "reviews.db"}
+        ctx.services = {"db_path": self.dir / "reviews.db", "review_repository_factory": SqliteReviewRepository}
         with patch("services.review.review_store.get_review_store", return_value=FakeStore()):
             result = build_store_stage()(ctx)
 
@@ -126,7 +166,7 @@ class StoreStageTests(unittest.TestCase):
         self.assertEqual(len(captured["draft"].sentences), 1)
         self.assertEqual(len(captured["cards"]), 1)
 
-        from services.review.review_repository import ReviewRepository
+        from tests.support_sqlite_review_repository import SqliteReviewRepository as ReviewRepository
 
         record = ReviewRepository(self.dir / "reviews.db").get("rev_fake")
         self.assertIsNotNone(record)
@@ -157,7 +197,7 @@ class StoreStageTests(unittest.TestCase):
             encoding="utf-8",
         )
         ctx = context(self.dir, spec)
-        ctx.services = {"db_path": self.dir / "reviews.db"}
+        ctx.services = {"db_path": self.dir / "reviews.db", "review_repository_factory": SqliteReviewRepository}
         with patch("services.review.review_store.get_review_store", return_value=FakeStore()):
             result = build_store_stage()(ctx)
 
@@ -189,7 +229,7 @@ class StoreStageTests(unittest.TestCase):
             encoding="utf-8",
         )
         ctx = context(self.dir, spec)
-        ctx.services = {"db_path": self.dir / "reviews.db"}
+        ctx.services = {"db_path": self.dir / "reviews.db", "review_repository_factory": SqliteReviewRepository}
         with patch("services.review.review_store.get_review_store", return_value=FakeStore()):
             result = build_store_stage()(ctx)
 
@@ -686,7 +726,7 @@ class DraftStageTests(unittest.TestCase):
             }
 
         ctx = context(self.dir, self.spec())
-        ctx.services = {"db_path": db}
+        ctx.services = {"db_path": db, "review_repository_factory": SqliteReviewRepository}
         result = build_draft_stage(writer)(ctx)
         self.assertEqual(result.status, "ok", result.errors)
         review = json.loads((self.dir / "review.json").read_text(encoding="utf-8"))

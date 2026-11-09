@@ -1,51 +1,14 @@
-"""Persistent storage for generated reviews.
-
-``ReviewStore`` is an in-process, TTL-limited cache used by the web API for
-citation tracing. This repository is the durable half: a ``reviews`` table in
-``research.db`` that survives process exit, so reviews produced by the CLI (or
-by an external client) remain readable.
-
-Schema is created lazily (``CREATE TABLE IF NOT EXISTS``) so existing databases
-gain the table on first use without a migration step.
-"""
-
 from __future__ import annotations
 
 import json
-import sqlite3
-from contextlib import contextmanager
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Iterator, Mapping
-
-SCHEMA = (
-    """
-    CREATE TABLE IF NOT EXISTS reviews (
-        review_id       TEXT PRIMARY KEY,
-        run_id          TEXT,
-        topic           TEXT NOT NULL,
-        markdown        TEXT NOT NULL,
-        stats_json      TEXT,
-        references_json TEXT,
-        warnings_json   TEXT,
-        guard_json      TEXT,
-        created_at      TEXT NOT NULL
-    )
-    """,
-    "CREATE INDEX IF NOT EXISTS idx_reviews_created_at ON reviews (created_at DESC)",
-)
-
+from typing import Any, Mapping
 
 class ReviewRepository:
-    def __init__(self, db_path: str | Path) -> None:
-        self.db_path = Path(db_path)
+    """PostgreSQL-only durable review repository."""
 
-    def _pg_backend(self) -> bool:
-        import os
-
-        return os.environ.get("SCIPAL_REVIEWS_BACKEND", "").strip().lower() in {
-            "postgres", "postgresql", "pg", "1", "true"
-        }
+    def __init__(self, db_path=None) -> None:
+        # db_path is kept for call-site compatibility; storage is PostgreSQL.
+        self.db_path = db_path
 
     def _pg(self):
         from services.db.pg_pool import pg_connection
@@ -56,15 +19,7 @@ class ReviewRepository:
         return pg
 
     def ensure_schema(self) -> None:
-        if self._pg_backend():
-            return
-        with self._session() as conn:
-            for statement in SCHEMA:
-                conn.execute(statement)
-            try:
-                conn.execute("ALTER TABLE reviews ADD COLUMN guard_json TEXT")
-            except sqlite3.OperationalError:
-                pass
+        return None
 
     def save(
         self,
@@ -79,110 +34,53 @@ class ReviewRepository:
         guard: Mapping[str, Any] | None = None,
         created_at: str | None = None,
     ) -> str:
-        self.ensure_schema()
-        if self._pg_backend():
-            from services.db.pg_pool import pg_connection
-
-            pg = self._pg()
-            try:
-                pg.execute(
-                    "INSERT INTO reviews "
-                    "(review_id, run_id, topic, markdown, stats_json, references_json, "
-                    "warnings_json, guard_json, created_at) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
-                    "ON CONFLICT (review_id) DO UPDATE SET run_id=EXCLUDED.run_id, "
-                    "topic=EXCLUDED.topic, markdown=EXCLUDED.markdown, "
-                    "stats_json=EXCLUDED.stats_json, references_json=EXCLUDED.references_json, "
-                    "warnings_json=EXCLUDED.warnings_json, guard_json=EXCLUDED.guard_json, "
-                    "created_at=EXCLUDED.created_at",
-                    (
-                        review_id, run_id, topic, markdown, _dump(stats or {}),
-                        _dump(references or []), _dump(warnings or []),
-                        _dump(guard) if guard is not None else None,
-                        created_at or _now(),
-                    ),
-                )
-                pg.commit()
-            finally:
-                pg.close()
-            return review_id
-        with self._session() as conn:
-            conn.execute(
-                """
-                INSERT OR REPLACE INTO reviews
-                    (review_id, run_id, topic, markdown, stats_json,
-                     references_json, warnings_json, guard_json, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
+        pg = self._pg()
+        try:
+            pg.execute(
+                "INSERT INTO reviews "
+                "(review_id, run_id, topic, markdown, stats_json, references_json, "
+                "warnings_json, guard_json, created_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                "ON CONFLICT (review_id) DO UPDATE SET run_id=EXCLUDED.run_id, "
+                "topic=EXCLUDED.topic, markdown=EXCLUDED.markdown, "
+                "stats_json=EXCLUDED.stats_json, references_json=EXCLUDED.references_json, "
+                "warnings_json=EXCLUDED.warnings_json, guard_json=EXCLUDED.guard_json, "
+                "created_at=EXCLUDED.created_at",
                 (
-                    review_id,
-                    run_id,
-                    topic,
-                    markdown,
-                    _dump(stats or {}),
-                    _dump(references or []),
-                    _dump(warnings or []),
+                    review_id, run_id, topic, markdown, _dump(stats or {}),
+                    _dump(references or []), _dump(warnings or []),
                     _dump(guard) if guard is not None else None,
                     created_at or _now(),
                 ),
             )
+            pg.commit()
+        finally:
+            pg.close()
         return review_id
 
     def get(self, review_id: str) -> dict[str, Any] | None:
-        self.ensure_schema()
-        if self._pg_backend():
-            from services.db.pg_pool import pg_connection
-
-            pg = self._pg()
-            try:
-                row = pg.execute(
-                    "SELECT * FROM reviews WHERE review_id = %s", (review_id,)
-                ).fetchone()
-                return _row_to_dict(row) if row else None
-            finally:
-                pg.close()
-        with self._session() as conn:
-            row = conn.execute(
-                "SELECT * FROM reviews WHERE review_id = ?", (review_id,)
+        pg = self._pg()
+        try:
+            row = pg.execute(
+                "SELECT * FROM reviews WHERE review_id = %s", (review_id,)
             ).fetchone()
-        return _row_to_dict(row) if row else None
+            return _row_to_dict(row) if row else None
+        finally:
+            pg.close()
 
     def list(self, limit: int = 20) -> list[dict[str, Any]]:
-        self.ensure_schema()
-        if self._pg_backend():
-            from services.db.pg_pool import pg_connection
-
-            pg = self._pg()
-            try:
-                rows = pg.execute(
-                    "SELECT * FROM reviews ORDER BY created_at DESC LIMIT %s",
-                    (max(1, limit),),
-                ).fetchall()
-                return [_row_to_dict(row) for row in rows]
-            finally:
-                pg.close()
-        with self._session() as conn:
-            rows = conn.execute(
-                "SELECT * FROM reviews ORDER BY created_at DESC LIMIT ?", (max(1, limit),)
-            ).fetchall()
-        return [_row_to_dict(row) for row in rows]
-
-    def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self.db_path), timeout=5)
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    @contextmanager
-    def _session(self) -> Iterator[sqlite3.Connection]:
-        conn = self._connect()
+        pg = self._pg()
         try:
-            yield conn
-            conn.commit()
+            rows = pg.execute(
+                "SELECT * FROM reviews ORDER BY created_at DESC LIMIT %s",
+                (max(1, limit),),
+            ).fetchall()
+            return [_row_to_dict(row) for row in rows]
         finally:
-            conn.close()
+            pg.close()
 
 
-def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+def _row_to_dict(row) -> dict[str, Any]:
     return {
         "review_id": row["review_id"],
         "run_id": row["run_id"],

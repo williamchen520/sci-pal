@@ -26,6 +26,7 @@ def build_reviews_blueprint(
     get_task_manager: Any = None,
     get_review_store: Any = None,
     get_llm_client: Any = None,
+    repository_factory: Any = ReviewRepository,
 ) -> Blueprint:
     bp = Blueprint("reviews", __name__, url_prefix="/api")
 
@@ -33,7 +34,7 @@ def build_reviews_blueprint(
     def list_reviews():
         limit = _int_arg("limit", 20, minimum=1, maximum=100)
         try:
-            records = ReviewRepository(db_path).list(limit=limit)
+            records = repository_factory(db_path).list(limit=limit)
         except Exception:
             log.exception("list_reviews failed")
             error = InternalError("Failed to list reviews")
@@ -48,7 +49,7 @@ def build_reviews_blueprint(
     @bp.get("/reviews/<review_id>")
     def get_review(review_id: str):
         try:
-            record = ReviewRepository(db_path).get(review_id)
+            record = repository_factory(db_path).get(review_id)
         except Exception:
             log.exception("get_review failed")
             error = InternalError("Failed to load review")

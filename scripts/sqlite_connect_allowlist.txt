@@ -22,7 +22,6 @@ services/query/search_service.py
 services/references/library.py
 services/review/outline_generator.py
 services/review/review_generator.py
-services/review/review_repository.py
 services/review/title_recall.py
 services/search/context_expander.py
 services/search/graph_traverser.py

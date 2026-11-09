@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from services.review.review_repository import ReviewRepository
+from tests.support_sqlite_review_repository import SqliteReviewRepository as ReviewRepository
 
 
 class ReviewRepositoryTests(unittest.TestCase):
