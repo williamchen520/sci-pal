@@ -1,6 +1,8 @@
 # App layer on top of the pinned runtime base.
 FROM scipal-base:py312
 
+# COPY merges into the base image; clean /app so deleted files do not linger.
+RUN rm -rf /app && mkdir -p /app
 WORKDIR /app
 
 COPY . .
