@@ -17,6 +17,7 @@ from flask import Blueprint, Response, jsonify, request, send_from_directory
 
 from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 from services.papers.pg_writes import enabled as paper_pg_enabled, update_workspace as pg_update_workspace
+from services.papers.paper_store import PaperStore
 
 from build_db.parse_service import (
     PARSE_MAX_CONCURRENT,
@@ -54,50 +55,19 @@ def build_papers_actions_blueprint(
     get_task_manager: Callable[[], Any],
     log: Any,
     lookup: Callable[[str], Any] | None = None,
+    paper_store: Any = None,
 ) -> Blueprint:
     bp = Blueprint("papers_actions", __name__)
     globals()["db_path_for_lookup"] = lambda: db_path
     globals()["DOCUMENTS_DIR"] = project_root / "documents"
     globals()["_lookup_override"] = lookup
+    store = paper_store or PaperStore(db_path)
 
     def _paper_exists(paper_id: str) -> bool:
-        if _papers_pg_enabled():
-            from services.db.pg_pool import pg_connection
-
-            pg = pg_connection()
-            try:
-                return bool(pg.execute(
-                    "SELECT 1 FROM papers WHERE paper_id = %s", (paper_id,)
-                ).fetchone())
-            finally:
-                pg.close()
-        conn = sqlite3.connect(str(db_path))
-        try:
-            return bool(conn.execute(
-                "SELECT 1 FROM papers WHERE paper_id = ?", (paper_id,)
-            ).fetchone())
-        finally:
-            conn.close()
+        return bool(store.exists(paper_id))
 
     def _paper_filename(paper_id: str):
-        if _papers_pg_enabled():
-            from services.db.pg_pool import pg_connection
-
-            pg = pg_connection()
-            try:
-                return pg.execute(
-                    "SELECT filename FROM papers WHERE paper_id = %s", (paper_id,)
-                ).fetchone()
-            finally:
-                pg.close()
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        try:
-            return conn.execute(
-                "SELECT filename FROM papers WHERE paper_id = ?", (paper_id,)
-            ).fetchone()
-        finally:
-            conn.close()
+        return store.filename(paper_id)
 
     @bp.before_request
     def scope_paper_routes():
@@ -107,30 +77,10 @@ def build_papers_actions_blueprint(
         workspace_id = resolve_workspace(db_path=db_path)
         if not workspace_id:
             return jsonify({"error": "workspace access denied"}), 401
-        if _papers_pg_enabled():
-            from services.db.pg_pool import pg_connection
-
-            pg = pg_connection()
-            try:
-                row = pg.execute(
-                    "SELECT 1 FROM papers WHERE paper_id = %s AND workspace_id = %s",
-                    (paper_id, workspace_id),
-                ).fetchone()
-            finally:
-                pg.close()
-        else:
-            conn = sqlite3.connect(str(db_path))
-            try:
-                ensure_workspace_scoping(conn)
-                row = conn.execute(
-                    "SELECT 1 FROM papers WHERE paper_id = ? AND workspace_id = ?",
-                    (paper_id, workspace_id),
-                ).fetchone()
-            finally:
-                conn.close()
-        if not row:
+        if not store.in_workspace(paper_id, workspace_id):
             return jsonify({"error": "Paper not found"}), 404
         return None
+
 
     def assign_paper_workspace(paper_id: str, workspace_id: str | None = None) -> None:
         workspace_id = workspace_id or resolve_workspace(db_path=db_path)
