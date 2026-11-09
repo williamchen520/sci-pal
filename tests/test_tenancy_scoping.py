@@ -5,6 +5,7 @@ from __future__ import annotations
 import sqlite3
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from flask import Flask
@@ -24,20 +25,22 @@ class FakeTasks:
         return "t1"
 
 
-class ScopingTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
-        self.addCleanup(self.tmp.cleanup)
-        self.db = Path(self.tmp.name) / "scoping.db"
-        conn = sqlite3.connect(self.db)
-        conn.execute("CREATE TABLE papers (paper_id TEXT PRIMARY KEY, workspace_id TEXT)")
-        conn.execute("INSERT INTO papers VALUES ('p_a', 'ws_a')")
-        conn.execute("INSERT INTO papers VALUES ('p_b', 'ws_b')")
-        conn.commit()
-        conn.close()
+class _ScopingPG:
+    def execute(self, sql, params=None):
+        self.params = params
+        return self
 
+    def fetchall(self):
+        return [{"paper_id": "p_a"}] if self.params[0] == "ws_a" else [{"paper_id": "p_b"}]
+
+    def close(self):
+        pass
+
+
+class ScopingTests(unittest.TestCase):
     def test_allowed_ids(self) -> None:
-        self.assertEqual(allowed_paper_ids("ws_a", db_path=self.db), {"p_a"})
+        with mock.patch("services.db.pg_pool.main_read_connection", return_value=_ScopingPG()):
+            self.assertEqual(allowed_paper_ids("ws_a", db_path=Path("unused.db")), {"p_a"})
         self.assertEqual(filter_retrieval_result(
             {
                 "paragraphs": [
@@ -76,6 +79,19 @@ class QAScopingRouteTests(unittest.TestCase):
         conn.execute("INSERT INTO papers VALUES ('p_b', ?)", (other_ws,))
         conn.commit()
         conn.close()
+        def allowed(workspace_id, **kwargs):
+            conn = sqlite3.connect(self.db)
+            try:
+                return {row[0] for row in conn.execute(
+                    "SELECT paper_id FROM papers WHERE workspace_id = ?", (workspace_id,)
+                )}
+            finally:
+                conn.close()
+
+        self.allowed_patch = mock.patch("routes.qa.allowed_paper_ids", side_effect=allowed)
+        self.allowed_patch.start()
+        self.addCleanup(self.allowed_patch.stop)
+
         app = Flask(__name__)
         app.secret_key = "test"
         app.register_blueprint(
