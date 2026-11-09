@@ -1,4 +1,3 @@
-routes/papers.py
 routes/papers_actions.py
 routes/review_actions.py
 routes/search_downloads.py
