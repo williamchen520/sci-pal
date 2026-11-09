@@ -17,7 +17,6 @@ services/papers/pg_writes.py
 services/pdf/annotator.py
 services/projects/service.py
 services/protocols/service.py
-services/qa/citations.py
 services/quality/guard.py
 services/query/search_service.py
 services/references/library.py
