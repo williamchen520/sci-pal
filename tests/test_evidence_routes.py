@@ -51,12 +51,25 @@ class EvidenceRouteTests(unittest.TestCase):
         conn.commit()
         conn.close()
 
+        def sentence_lookup(paper_id: str, sentence_id: str):
+            conn = sqlite3.connect(self.db)
+            conn.row_factory = sqlite3.Row
+            try:
+                return conn.execute(
+                    "SELECT sentence_id, para_id, paper_id, text, page, bbox, section_id "
+                    "FROM sentences WHERE paper_id = ? AND sentence_id = ?",
+                    (paper_id, sentence_id),
+                ).fetchone()
+            finally:
+                conn.close()
+
         app = Flask(__name__)
         app.register_blueprint(
             build_evidence_blueprint(
                 db_path=self.db,
                 get_retriever=lambda: None,
                 log=app.logger,
+                sentence_lookup=sentence_lookup,
             )
         )
         self.client = app.test_client()

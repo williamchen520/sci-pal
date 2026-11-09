@@ -7,7 +7,6 @@ and its answer must pass a deterministic verifier before it becomes formal.
 
 from __future__ import annotations
 
-import sqlite3
 from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request
@@ -21,21 +20,25 @@ def build_evidence_blueprint(
     db_path,
     get_retriever: Callable[[], Any],
     log: Any,
+    sentence_lookup: Callable[[str, str], Any] | None = None,
 ) -> Blueprint:
     bp = Blueprint("evidence", __name__, url_prefix="/api")
     expander = ContextExpander(db_path)
 
     def _sentence(paper_id: str, sentence_id: str):
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
+        if sentence_lookup is not None:
+            return sentence_lookup(paper_id, sentence_id)
+        from services.db.pg_pool import main_read_connection
+
+        pg = main_read_connection()
         try:
-            return conn.execute(
+            return pg.execute(
                 "SELECT sentence_id, para_id, paper_id, text, page, bbox, section_id "
-                "FROM sentences WHERE paper_id = ? AND sentence_id = ?",
+                "FROM sentences WHERE paper_id = %s AND sentence_id = %s",
                 (paper_id, sentence_id),
             ).fetchone()
         finally:
-            conn.close()
+            pg.close()
 
     @bp.route("/evidence/search", methods=["GET", "POST"])
     def evidence_search():
