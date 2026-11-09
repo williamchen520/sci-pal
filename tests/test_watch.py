@@ -9,11 +9,12 @@ os.environ.setdefault("SCIPAL_WATCH_ALLOW_SQLITE_REPO", "1")
 import sqlite3
 import tempfile
 import unittest
+from unittest import mock
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from build_db.watch_schema import migrate
-from services.watch import repo
+from tests import support_sqlite_watch_repo as repo
 from services.watch.runner import run_profile
 
 
@@ -31,6 +32,9 @@ def _candidate(index: int, journal: str = "J1") -> dict:
 
 class WatchRunnerTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.store_patch = mock.patch("services.watch.runner._store", return_value=repo)
+        self.store_patch.start()
+        self.addCleanup(self.store_patch.stop)
         self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.tmp.cleanup)
         self.db = Path(self.tmp.name) / "t.db"

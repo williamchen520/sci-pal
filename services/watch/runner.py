@@ -23,7 +23,7 @@ def _pg_mode() -> bool:
 
 
 def _store():
-    return pg_store if _pg_mode() else repo
+    return pg_store
 
 
 def _tokens(text: str) -> List[str]:
@@ -261,8 +261,9 @@ def run_profile(
     candidate_fn=None,
     fulltext_fn=None,
     oa_pdf_fn=None,
+    store=None,
 ) -> Dict[str, Any]:
-    store = _store()
+    store = store or _store()
     conn = store.connect(db_path)
     profile = store.get_profile(conn, profile_id)
     if not profile:

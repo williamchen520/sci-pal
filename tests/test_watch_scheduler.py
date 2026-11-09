@@ -13,7 +13,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from build_db.watch_schema import migrate
-from services.watch import repo, scheduler
+from tests import support_sqlite_watch_repo as repo
+from services.watch import scheduler
 
 
 class WatchSchedulerTests(unittest.TestCase):
@@ -74,7 +75,12 @@ class WatchSchedulerTests(unittest.TestCase):
                 raise RuntimeError("boom")
             return {"run_id": 1}
 
-        results = scheduler.run_due(self.db, run_profile=fake_run)
+        conn = repo.connect(self.db)
+        try:
+            profiles = scheduler.due_profiles(conn)
+        finally:
+            conn.close()
+        results = scheduler.run_due(self.db, run_profile=fake_run, profiles=profiles)
         self.assertEqual(calls, [self.due, self.future])
         self.assertFalse(results[0]["ok"])
         self.assertIn("boom", results[0]["error"])
