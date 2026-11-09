@@ -29,6 +29,29 @@ class PaperStore:
         finally:
             pg.close()
 
+    def assign_workspace(self, paper_id: str, workspace_id: str) -> None:
+        pg = pg_connection()
+        try:
+            pg.execute(
+                "UPDATE papers SET workspace_id = %s WHERE paper_id = %s",
+                (workspace_id, paper_id),
+            )
+            pg.commit()
+        finally:
+            pg.close()
+
+    def supplementary_counts(self) -> dict:
+        pg = pg_connection()
+        try:
+            rows = pg.execute(
+                "SELECT paper_id, COUNT(*) AS cnt FROM supplementary_files GROUP BY paper_id"
+            ).fetchall()
+            return {row["paper_id"]: row["cnt"] for row in rows}
+        except Exception:
+            return {}
+        finally:
+            pg.close()
+
     def in_workspace(self, paper_id: str, workspace_id: str) -> bool:
         pg = pg_connection()
         try:

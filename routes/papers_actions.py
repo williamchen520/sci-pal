@@ -84,47 +84,11 @@ def build_papers_actions_blueprint(
 
     def assign_paper_workspace(paper_id: str, workspace_id: str | None = None) -> None:
         workspace_id = workspace_id or resolve_workspace(db_path=db_path)
-        if not workspace_id:
-            return
-        if paper_pg_enabled():
-            pg_update_workspace(paper_id, workspace_id, db_path=db_path)
-            return
-        conn = sqlite3.connect(str(db_path))
-        try:
-            ensure_workspace_scoping(conn)
-            conn.execute(
-                "UPDATE papers SET workspace_id = ? WHERE paper_id = ?",
-                (workspace_id, paper_id),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        if workspace_id:
+            store.assign_workspace(paper_id, workspace_id)
 
     def _supplementary_counts() -> dict:
-        counts = {}
-        if _papers_pg_enabled():
-            from services.db.pg_pool import pg_connection
-
-            pg = pg_connection()
-            try:
-                rows = pg.execute(
-                    "SELECT paper_id, COUNT(*) AS cnt FROM supplementary_files GROUP BY paper_id"
-                ).fetchall()
-            except Exception:
-                rows = []
-            finally:
-                pg.close()
-            return {row["paper_id"]: row["cnt"] for row in rows}
-        conn = sqlite3.connect(str(db_path))
-        try:
-            rows = conn.execute(
-                "SELECT paper_id, COUNT(*) as cnt FROM supplementary_files GROUP BY paper_id"
-            ).fetchall()
-            return {row[0]: row[1] for row in rows}
-        except Exception:
-            return counts
-        finally:
-            conn.close()
+        return store.supplementary_counts()
 
     @bp.route("/api/papers/local", methods=["GET"])
     def list_local_papers():
@@ -132,10 +96,6 @@ def build_papers_actions_blueprint(
         if not DOCUMENTS_DIR.exists():
             return jsonify({"papers": [], "error": "documents directory not found"}), 200
 
-        conn = None
-        if not _papers_pg_enabled():
-            conn = sqlite3.connect(str(db_path))
-            conn.row_factory = sqlite3.Row
         try:
             supp_counts = _supplementary_counts()
             result = []
@@ -144,7 +104,7 @@ def build_papers_actions_blueprint(
                     continue
                 filename = entry.name
                 stat = entry.stat()
-                info = _find_parsed_paper(filename, conn=conn) if conn is not None else _find_parsed_paper(filename)
+                info = _find_parsed_paper(filename)
                 result.append({
                     "filename": filename,
                     "file_size": stat.st_size,
@@ -159,8 +119,7 @@ def build_papers_actions_blueprint(
                     "supp_count": supp_counts.get(info["paper_id"], 0) if info else 0,
                 })
         finally:
-            if conn is not None:
-                conn.close()
+            pass
 
         result.sort(key=lambda x: (not x["parsed"], x["filename"].lower()))
         return jsonify({
