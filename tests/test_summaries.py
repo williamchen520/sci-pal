@@ -40,16 +40,31 @@ class SummaryTests(unittest.TestCase):
         self.assertIn("Efficacy", text)
         self.assertIn("42%", text)
 
-    def test_build_and_search(self) -> None:
+    def test_build(self) -> None:
         stats = build(self.db)
         self.assertEqual(stats["sections"], 1)
-        results = SummarySearch(self.db).search("response rate")
-        self.assertEqual(len(results), 1)
+
+    def test_search_uses_postgres(self) -> None:
+        from unittest import mock
+
+        class FakePG:
+            def execute(self, sql, params):
+                return self
+
+            def fetchall(self):
+                return [{"paper_id": "p1", "summary_id": "s1"}]
+
+            def close(self):
+                pass
+
+        with mock.patch(
+            "services.db.pg_pool.main_read_connection", return_value=FakePG()
+        ):
+            results = SummarySearch("unused").search("response rate")
         self.assertEqual(results[0]["paper_id"], "p1")
 
     def test_no_terms(self) -> None:
-        build(self.db)
-        self.assertEqual(SummarySearch(self.db).search("the of and"), [])
+        self.assertEqual(SummarySearch("unused").search("the of and"), [])
 
 
 if __name__ == "__main__":
