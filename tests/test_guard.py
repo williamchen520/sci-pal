@@ -200,25 +200,26 @@ class MeshLexiconTests(unittest.TestCase):
         self.assertEqual(statuses.get("Lipitor"), "known_curated")
 
 
-class FtsLandingThreadTests(unittest.TestCase):
-    def test_connection_works_across_threads(self) -> None:
+class FtsLandingTests(unittest.TestCase):
+    def test_uses_postgres(self) -> None:
+        from unittest import mock
         from services.quality.guard import FtsLanding
 
-        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
-            db = Path(tmp) / "fts.db"
-            conn = sqlite3.connect(db)
-            conn.execute("CREATE VIRTUAL TABLE paragraphs_fts USING fts5(text)")
-            conn.execute("INSERT INTO paragraphs_fts(text) VALUES ('TLR4 signaling in sepsis')")
-            conn.commit()
-            conn.close()
+        class Cursor:
+            def fetchone(self):
+                return (1,)
 
-            landing = FtsLanding(db)
-            result = []
-            worker = threading.Thread(target=lambda: result.append(landing("sepsis")))
-            worker.start()
-            worker.join()
-            self.assertEqual(result, [True])
-            self.assertTrue(landing("TLR4"))
+        class FakePG:
+            def execute(self, sql, params=None):
+                return Cursor()
+
+            def close(self):
+                pass
+
+        landing = FtsLanding()
+        with mock.patch("services.db.pg_pool.pg_connection", return_value=FakePG()):
+            self.assertTrue(landing("sepsis"))
+            self.assertTrue(landing("sepsis"))
 
 
 if __name__ == "__main__":
