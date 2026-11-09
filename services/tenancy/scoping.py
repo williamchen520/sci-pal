@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sqlite3
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -14,29 +13,16 @@ def allowed_paper_ids(
     *,
     db_path: str | Path = DATABASE_PATH,
 ) -> set[str]:
-    path = Path(db_path)
-    if not path.exists():
-        return set()
-    conn = sqlite3.connect(path)
+    from services.db.pg_pool import main_read_connection
+
+    pg = main_read_connection()
     try:
-        tables = {
-            row[0]
-            for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
-        }
-        if "papers" not in tables:
-            return set()
-        columns = {row[1] for row in conn.execute("PRAGMA table_info(papers)")}
-        if "workspace_id" not in columns:
-            conn.execute("ALTER TABLE papers ADD COLUMN workspace_id TEXT DEFAULT 'ws_default'")
-            conn.commit()
-        return {
-            row[0]
-            for row in conn.execute(
-                "SELECT paper_id FROM papers WHERE workspace_id = ?", (workspace_id,)
-            )
-        }
+        rows = pg.execute(
+            "SELECT paper_id FROM papers WHERE workspace_id = %s", (workspace_id,)
+        ).fetchall()
+        return {row["paper_id"] for row in rows}
     finally:
-        conn.close()
+        pg.close()
 
 
 def item_paper_id(item: Any) -> str | None:
