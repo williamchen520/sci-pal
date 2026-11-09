@@ -11,7 +11,7 @@ from flask import Flask
 
 from build_db.claim_pilot_schema import migrate
 from routes.claims import build_claims_blueprint
-from services.claims import service
+from tests import support_sqlite_claims as service
 
 
 class ClaimPilotTests(unittest.TestCase):
@@ -52,7 +52,7 @@ class ClaimPilotTests(unittest.TestCase):
         )
         conn.close()
         app = Flask(__name__)
-        app.register_blueprint(build_claims_blueprint(db_path=self.db))
+        app.register_blueprint(build_claims_blueprint(db_path=self.db, service=service))
         self.client = app.test_client()
 
     def test_add_evidence_and_decision(self) -> None:
