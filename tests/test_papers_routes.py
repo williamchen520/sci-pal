@@ -9,6 +9,8 @@ from pathlib import Path
 
 from flask import Flask
 
+from types import SimpleNamespace
+
 from routes.papers import build_papers_blueprint
 
 
@@ -32,11 +34,41 @@ class FakeGraph:
         return list(self._traversed)
 
 
+class FakeRouter:
+    ROWS = [
+        {"paper_id": "p1", "title": "Title One", "year": 2020},
+        {"paper_id": "p2", "title": "Title Two", "year": 2021},
+    ]
+
+    def list_papers(self, workspace_id, *, canary_key=""):
+        return SimpleNamespace(rows=self.ROWS, backend="postgres", error=None)
+
+    def paper_detail(self, paper_id, workspace_id, *, canary_key=""):
+        if paper_id != "p1":
+            return SimpleNamespace(payload=None, backend="postgres", error=None)
+        return SimpleNamespace(
+            payload={
+                "paper": {"paper_id": "p1", "title": "Title One"},
+                "cites": [{"paper_id": "p2"}],
+                "cited_by": [],
+                "similar": [],
+            },
+            backend="postgres",
+            error=None,
+        )
+
+
 def make_app(db_path: Path, graph) -> Flask:
     app = Flask(__name__)
     app.config["PROPAGATE_EXCEPTIONS"] = False
     app.register_blueprint(
-        build_papers_blueprint(db_path=db_path, get_graph=lambda: graph, log=app.logger)
+        build_papers_blueprint(
+            db_path=db_path,
+            get_graph=lambda: graph,
+            log=app.logger,
+            router_factory=lambda *a, **k: FakeRouter(),
+            detail_router_factory=lambda *a, **k: FakeRouter(),
+        )
     )
     return app
 

@@ -10,7 +10,6 @@ from __future__ import annotations
 import hashlib
 import os
 import secrets
-import sqlite3
 from pathlib import Path
 from typing import Any, Callable
 
@@ -18,7 +17,7 @@ from flask import Blueprint, jsonify, request
 
 from services.db.fallback_stats import record as record_fallback
 from services.db.read_router import ReadRouter
-from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
+from services.tenancy.web import resolve_workspace
 
 
 def build_papers_blueprint(
@@ -26,6 +25,8 @@ def build_papers_blueprint(
     db_path: Path,
     get_graph: Callable[[], Any],
     log: Any,
+    router_factory: Callable[..., Any] = ReadRouter,
+    detail_router_factory: Callable[..., Any] = ReadRouter,
 ) -> Blueprint:
     bp = Blueprint("papers", __name__, url_prefix="/api")
 
@@ -37,12 +38,12 @@ def build_papers_blueprint(
             if warning:
                 warning(message)
 
-    router = ReadRouter(
+    router = router_factory(
         db_path,
         pg_dsn=os.environ.get("SCIPAL_PG_DSN", ""),
         canary_percent=int(os.environ.get("SCIPAL_READ_CANARY_PERCENT", "0") or 0),
     )
-    detail_router = ReadRouter(
+    detail_router = detail_router_factory(
         db_path,
         pg_dsn=os.environ.get("SCIPAL_PG_DSN", ""),
         canary_percent=int(os.environ.get("SCIPAL_READ_DETAIL_PERCENT", "0") or 0),
@@ -58,32 +59,12 @@ def build_papers_blueprint(
             or request.args.get("canary_key")
             or secrets.token_hex(8)
         )
-        if router.should_use_pg(canary_key):
-            result = router.list_papers(workspace_id, canary_key=canary_key)
-            if result.backend == "postgres":
-                response = jsonify(
-                    {"count": len(result.rows), "papers": result.rows}
-                )
-                response.headers["X-SciPal-Read-Backend"] = "postgres"
-                return response
-            record_fallback("papers_list")
-            _log(f"read canary fell back to SQLite: {result.error}")
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        try:
-            ensure_workspace_scoping(conn)
-            rows = conn.execute(
-                """
-                SELECT paper_id, title, authors, journal, year, doi,
-                       total_paragraphs, total_figures, total_tables, workspace_id
-                FROM papers WHERE workspace_id = ? ORDER BY year DESC, title
-                """,
-                (workspace_id,),
-            ).fetchall()
-        finally:
-            conn.close()
-        response = jsonify({"count": len(rows), "papers": [dict(row) for row in rows]})
-        response.headers["X-SciPal-Read-Backend"] = "sqlite"
+        result = router.list_papers(workspace_id, canary_key=canary_key)
+        if result.backend != "postgres" or result.error:
+            _log(f"papers list PG read failed: {result.error}")
+            return jsonify({"error": "paper read backend unavailable"}), 503
+        response = jsonify({"count": len(result.rows), "papers": result.rows})
+        response.headers["X-SciPal-Read-Backend"] = "postgres"
         return response
 
     @bp.get("/papers/<paper_id>")
@@ -96,73 +77,14 @@ def build_papers_blueprint(
             or request.args.get("canary_key")
             or secrets.token_hex(8)
         )
-        if detail_router.should_use_pg(canary_key):
-            result = detail_router.paper_detail(
-                paper_id, workspace_id, canary_key=canary_key
-            )
-            if result.backend == "postgres" and result.payload:
-                response = jsonify(result.payload)
-                response.headers["X-SciPal-Read-Backend"] = "postgres"
-                return response
-            if result.error:
-                record_fallback("papers_detail")
-                _log(f"paper detail canary fell back to SQLite: {result.error}")
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        try:
-            ensure_workspace_scoping(conn)
-            paper = conn.execute(
-                "SELECT * FROM papers WHERE paper_id = ? AND workspace_id = ?",
-                (paper_id, workspace_id),
-            ).fetchone()
-            if not paper:
-                return jsonify({"error": "Paper not found"}), 404
-
-            cites = conn.execute(
-                """
-                SELECT p.paper_id, p.title, p.year, c.confidence
-                FROM cross_paper_index c
-                JOIN papers p ON p.paper_id = c.target_paper_id
-                WHERE c.source_paper_id = ? AND c.relation = 'cites'
-                  AND p.workspace_id = ?
-                ORDER BY c.confidence DESC
-                """,
-                (paper_id, workspace_id),
-            ).fetchall()
-            cited_by = conn.execute(
-                """
-                SELECT p.paper_id, p.title, p.year, c.confidence
-                FROM cross_paper_index c
-                JOIN papers p ON p.paper_id = c.source_paper_id
-                WHERE c.target_paper_id = ? AND c.relation = 'cites'
-                  AND p.workspace_id = ?
-                ORDER BY c.confidence DESC
-                """,
-                (paper_id, workspace_id),
-            ).fetchall()
-            similar = conn.execute(
-                """
-                SELECT p.paper_id, p.title, p.year, c.confidence
-                FROM cross_paper_index c
-                JOIN papers p ON p.paper_id = c.target_paper_id
-                WHERE c.source_paper_id = ? AND c.relation = 'similar'
-                  AND p.workspace_id = ?
-                ORDER BY c.confidence DESC LIMIT 10
-                """,
-                (paper_id, workspace_id),
-            ).fetchall()
-        finally:
-            conn.close()
-
-        response = jsonify(
-            {
-                "paper": dict(paper),
-                "cites": [dict(row) for row in cites],
-                "cited_by": [dict(row) for row in cited_by],
-                "similar": [dict(row) for row in similar],
-            }
-        )
-        response.headers["X-SciPal-Read-Backend"] = "sqlite"
+        result = detail_router.paper_detail(paper_id, workspace_id, canary_key=canary_key)
+        if result.backend != "postgres" or result.error:
+            _log(f"paper detail PG read failed: {result.error}")
+            return jsonify({"error": "paper read backend unavailable"}), 503
+        if not result.payload:
+            return jsonify({"error": "Paper not found"}), 404
+        response = jsonify(result.payload)
+        response.headers["X-SciPal-Read-Backend"] = "postgres"
         return response
 
     @bp.get("/papers/<paper_id>/graph")
