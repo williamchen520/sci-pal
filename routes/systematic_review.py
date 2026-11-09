@@ -355,7 +355,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             run_id = int(data.get("run_id") or 0)
             if not run_id:
                 return jsonify({"error": "run_id required"}), 400
-            added = systematic.add_from_watch(conn, project_id, run_id)
+            added = pg_systematic.add_from_watch(project_id, run_id)
             _audit(conn, project_id, "watch_imported", str(run_id), str(added))
             return jsonify({"added": added})
         finally:
@@ -569,11 +569,11 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def import_records(project_id: str):
         conn = _conn()
         try:
-            if not systematic.can_access(conn, project_id, _owner()):
+            if not pg_systematic.can_access(project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             data = request.get_json(silent=True) or {}
             records = data.get("records") or []
-            result = systematic.import_records(conn, project_id, records)
+            result = pg_systematic.import_records(project_id, records)
             _audit(
                 conn,
                 project_id,
@@ -590,7 +590,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
     def import_file(project_id: str):
         conn = _conn()
         try:
-            if not systematic.can_access(conn, project_id, _owner()):
+            if not pg_systematic.can_access(project_id, _owner()):
                 return jsonify({"error": "project not found"}), 404
             upload = request.files.get("file")
             if not upload:
@@ -602,7 +602,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             records = importers.parse_file(upload.filename or "", text)
             if not records:
                 return jsonify({"error": "no records parsed (.bib/.csv)"}), 400
-            result = systematic.import_records(conn, project_id, records)
+            result = pg_systematic.import_records(project_id, records)
             result["parsed"] = len(records)
             _audit(
                 conn,
