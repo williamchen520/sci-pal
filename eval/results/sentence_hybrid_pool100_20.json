@@ -1,0 +1,516 @@
+{
+  "summary": {
+    "n": 20,
+    "legacy_recall": 0.0,
+    "new_recall": 0.65,
+    "legacy_sec_avg": 0.0,
+    "new_rerank_sec_avg": 13.0
+  },
+  "rows": [
+    {
+      "id": "q001",
+      "question": "What is ICI rechallenge in hepatocellular carcinoma?",
+      "legacy_sec": 0.0,
+      "new_sec": 15.22,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_001"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707946_2d3bcc67_0067_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_008",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0059_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0037_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0014_sent_001"
+      ]
+    },
+    {
+      "id": "q002",
+      "question": "How many main ICI rechallenge strategies are described for HCC, and what are they based on?",
+      "legacy_sec": 0.0,
+      "new_sec": 12.6,
+      "legacy_hit": false,
+      "new_hit": false,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_004"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707946_2d3bcc67_0059_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0014_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0030_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0030_sent_002",
+        "para_paper_PMC12707946_2d3bcc67_0016_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0016_sent_009",
+        "para_paper_PMC12707946_2d3bcc67_0067_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_005",
+        "para_paper_PMC12707946_2d3bcc67_0015_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_003"
+      ]
+    },
+    {
+      "id": "q003",
+      "question": "Which rechallenge regimens achieved relatively better outcomes among the four strategies?",
+      "legacy_sec": 0.0,
+      "new_sec": 12.34,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0035_sent_001"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707946_2d3bcc67_0035_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0035_sent_003",
+        "paper_PMC13627273_09aa9e42_xml_para_00070_sent_004",
+        "paper_PMC13628067_7e2e3d38_xml_para_00001_sent_001",
+        "paper_PMC13625931_70a7768d_xml_para_00330_sent_003",
+        "paper_PMC6179115_para_00281_sent_002",
+        "paper_PMC13614934_99230ccd_xml_para_00084_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0035_sent_002",
+        "paper_PMC13311204_para_00034_sent_001",
+        "paper_PMC6179115_para_00281_sent_001"
+      ]
+    },
+    {
+      "id": "q004",
+      "question": "What ORR was reported for ICI rechallenge compared with initial ICI therapy in the cited study?",
+      "legacy_sec": 0.0,
+      "new_sec": 11.8,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_002"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_002",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_004",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_004",
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0064_sent_001"
+      ]
+    },
+    {
+      "id": "q005",
+      "question": "Why is patient selection important for ICI rechallenge in HCC?",
+      "legacy_sec": 0.0,
+      "new_sec": 11.77,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_001"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0067_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0058_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_007",
+        "para_paper_PMC12707946_2d3bcc67_0015_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_005",
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_002",
+        "para_paper_PMC12707946_2d3bcc67_0037_sent_008",
+        "para_paper_PMC12707946_2d3bcc67_0014_sent_001"
+      ]
+    },
+    {
+      "id": "q006",
+      "question": "What is the role of liquid biopsy with circulating tumor DNA in advanced HCC?",
+      "legacy_sec": 0.0,
+      "new_sec": 16.13,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707966_ae9a35bd_0006_sent_003"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707966_ae9a35bd_0013_sent_001",
+        "paper_PMC13655921_f697a5bb_xml_para_00017_sent_001",
+        "paper_PMC13683985_1af5b8e5_xml_para_00001_sent_002",
+        "para_paper_PMC12707966_ae9a35bd_0006_sent_003",
+        "para_paper_PMC12707966_ae9a35bd_0013_sent_002",
+        "paper_PMC13621659_cdba246e_xml_para_00002_sent_001",
+        "paper_PMC13683985_1af5b8e5_xml_para_00001_sent_003",
+        "para_paper_PMC12707966_ae9a35bd_0086_sent_002",
+        "paper_PMC13621659_cdba246e_xml_para_00002_sent_003",
+        "para_paper_PMC12707966_ae9a35bd_0006_sent_001"
+      ]
+    },
+    {
+      "id": "q007",
+      "question": "What limits precision medicine in HCC according to the ctDNA paper?",
+      "legacy_sec": 0.0,
+      "new_sec": 15.18,
+      "legacy_hit": false,
+      "new_hit": false,
+      "candidate_hit": false,
+      "expected": [
+        "para_paper_PMC12707966_ae9a35bd_0006_sent_002"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707966_ae9a35bd_0063_sent_001",
+        "para_paper_PMC12707966_ae9a35bd_0063_sent_012",
+        "para_paper_PMC12707966_ae9a35bd_0064_sent_001",
+        "para_paper_PMC12707966_ae9a35bd_0022_sent_001",
+        "para_paper_PMC12707966_ae9a35bd_0063_sent_005",
+        "paper_PMC13655921_f697a5bb_xml_para_00020_sent_001",
+        "para_paper_PMC12707966_ae9a35bd_0063_sent_003",
+        "paper_PMC13655921_f697a5bb_xml_para_00053_sent_001",
+        "paper_PMC13655921_f697a5bb_xml_para_00053_sent_003",
+        "para_paper_PMC12707966_ae9a35bd_0064_sent_003"
+      ]
+    },
+    {
+      "id": "q008",
+      "question": "What cargo do extracellular vesicles carry and why is it important in breast cancer?",
+      "legacy_sec": 0.0,
+      "new_sec": 16.45,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC13612676_5962339f_0003_sent_002"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC13612676_5962339f_0003_sent_002",
+        "para_paper_PMC13612676_5962339f_0165_sent_005",
+        "para_paper_PMC13612676_5962339f_0131_sent_004",
+        "para_paper_PMC13612676_5962339f_0193_sent_007",
+        "para_paper_PMC13612676_5962339f_0104_sent_007",
+        "para_paper_PMC13612676_5962339f_0003_sent_001",
+        "para_paper_PMC13612676_5962339f_0003_sent_008",
+        "para_paper_PMC13612676_5962339f_0003_sent_003",
+        "para_paper_PMC13612676_5962339f_0193_sent_008",
+        "para_paper_PMC13612676_5962339f_0003_sent_005"
+      ]
+    },
+    {
+      "id": "q009",
+      "question": "What are the main global challenges in colorectal cancer burden despite screening?",
+      "legacy_sec": 0.0,
+      "new_sec": 14.5,
+      "legacy_hit": false,
+      "new_hit": false,
+      "candidate_hit": false,
+      "expected": [
+        "paper_PMC13631563_4e18eb11_xml_para_00001_sent_002"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "paper_PMC13630772_2fd56d48_xml_para_00000_sent_001",
+        "paper_PMC13719324_para_00000_sent_001",
+        "paper_PMC13630772_2fd56d48_xml_para_00000_sent_004",
+        "paper_PMC13630772_2fd56d48_xml_para_00000_sent_003",
+        "paper_PMC13631563_4e18eb11_xml_para_00006_sent_001",
+        "paper_PMC13630772_2fd56d48_xml_para_00000_sent_002",
+        "paper_PMC13619374_f2bc11ba_xml_para_00000_sent_001",
+        "paper_PMC13581885_b45229cd_xml_para_00000_sent_001",
+        "paper_PMC13619374_f2bc11ba_xml_para_00000_sent_003",
+        "paper_PMC13657844_para_00000_sent_001"
+      ]
+    },
+    {
+      "id": "q010",
+      "question": "What is the central paradox of immune checkpoint blockade described in the ICI position article?",
+      "legacy_sec": 0.0,
+      "new_sec": 12.57,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "paper_PMC13625931_70a7768d_xml_para_00002_sent_002"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "paper_PMC13625931_70a7768d_xml_para_00002_sent_002",
+        "paper_PMC13615423_f9cdbe83_xml_para_00047_sent_001",
+        "paper_PMC13629053_0f3caa4c_xml_para_00000_sent_002",
+        "paper_PMC13678295_0d970e81_xml_para_00027_sent_001",
+        "paper_PMC13625931_70a7768d_xml_para_00002_sent_001",
+        "paper_PMC13601972_9ebce884_xml_para_00073_sent_002",
+        "paper_PMC13625931_70a7768d_xml_para_00002_sent_004",
+        "paper_PMC13678295_0d970e81_xml_para_00027_sent_003",
+        "paper_PMC13601972_9ebce884_xml_para_00073_sent_003",
+        "paper_PMC13678295_0d970e81_xml_para_00027_sent_002"
+      ]
+    },
+    {
+      "id": "q011",
+      "question": "Compare the evidence for ICI rechallenge efficacy with the evidence for its safety in HCC.",
+      "legacy_sec": 0.0,
+      "new_sec": 12.6,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0035_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0058_sent_001"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707946_2d3bcc67_0014_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0058_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0015_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0067_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0016_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_005",
+        "para_paper_PMC12707946_2d3bcc67_0063_sent_002",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_003"
+      ]
+    },
+    {
+      "id": "q012",
+      "question": "Do all HCC patients benefit from ICI rechallenge? What limits the conclusion?",
+      "legacy_sec": 0.0,
+      "new_sec": 12.56,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0058_sent_001"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707946_2d3bcc67_0067_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0058_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0061_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_005",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0037_sent_007",
+        "para_paper_PMC12707946_2d3bcc67_0014_sent_001"
+      ]
+    },
+    {
+      "id": "q013",
+      "question": "Why does an initial response to ICI not guarantee continued benefit in HCC?",
+      "legacy_sec": 0.0,
+      "new_sec": 10.97,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_001"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC12707946_2d3bcc67_0018_sent_011",
+        "para_paper_PMC12707946_2d3bcc67_0067_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0040_sent_009",
+        "para_paper_PMC12707946_2d3bcc67_0018_sent_010",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_005",
+        "para_paper_PMC12707946_2d3bcc67_0040_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_003"
+      ]
+    },
+    {
+      "id": "q014",
+      "question": "Why is EV heterogeneity a barrier to clinical translation in breast cancer?",
+      "legacy_sec": 0.0,
+      "new_sec": 11.03,
+      "legacy_hit": false,
+      "new_hit": false,
+      "candidate_hit": true,
+      "expected": [
+        "para_paper_PMC13612676_5962339f_0003_sent_005"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "para_paper_PMC13612676_5962339f_0066_sent_002",
+        "paper_PMC13613017_98f5f2e4_xml_para_00061_sent_002",
+        "paper_PMC13613017_98f5f2e4_xml_para_00086_sent_002",
+        "paper_PMC13607229_3a1e296e_xml_para_00052_sent_001",
+        "para_paper_PMC13612676_5962339f_0066_sent_001",
+        "paper_PMC13607229_3a1e296e_xml_para_00052_sent_002",
+        "paper_PMC13613017_98f5f2e4_xml_para_00086_sent_003",
+        "paper_PMC13613017_98f5f2e4_xml_para_00092_sent_001",
+        "paper_PMC13607229_3a1e296e_xml_para_00052_sent_003",
+        "para_paper_PMC13612676_5962339f_0070_sent_003"
+      ]
+    },
+    {
+      "id": "q015",
+      "question": "How did screening change colorectal cancer incidence and what remains unresolved?",
+      "legacy_sec": 0.0,
+      "new_sec": 13.32,
+      "legacy_hit": false,
+      "new_hit": false,
+      "candidate_hit": false,
+      "expected": [
+        "paper_PMC13631563_4e18eb11_xml_para_00001_sent_002",
+        "paper_PMC13631563_4e18eb11_xml_para_00001_sent_003"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "paper_PMC13631563_4e18eb11_xml_para_00015_sent_001",
+        "paper_PMC13631563_4e18eb11_xml_para_00132_sent_002",
+        "paper_PMC13657844_para_00000_sent_001",
+        "paper_PMC13631563_4e18eb11_xml_para_00157_sent_004",
+        "paper_PMC13631563_4e18eb11_xml_para_00139_sent_004",
+        "paper_PMC13631563_4e18eb11_xml_para_00015_sent_003",
+        "paper_PMC13631563_4e18eb11_xml_para_00138_sent_001",
+        "paper_PMC13657844_para_00000_sent_003",
+        "paper_PMC13631563_4e18eb11_xml_para_00139_sent_003",
+        "paper_PMC13631563_4e18eb11_xml_para_00157_sent_001"
+      ]
+    },
+    {
+      "id": "q016",
+      "question": "What is the difference between the traditional adenoma-carcinoma model and contemporary CRC research?",
+      "legacy_sec": 0.0,
+      "new_sec": 12.24,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "paper_PMC13631563_4e18eb11_xml_para_00000_sent_002",
+        "paper_PMC13631563_4e18eb11_xml_para_00000_sent_003"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "paper_PMC13631563_4e18eb11_xml_para_00000_sent_003",
+        "paper_PMC13631563_4e18eb11_xml_para_00000_sent_001",
+        "paper_PMC13631563_4e18eb11_xml_para_00163_sent_001",
+        "paper_PMC13533940_1a4dcab0_xml_para_00004_sent_001",
+        "paper_PMC13631563_4e18eb11_xml_para_00193_sent_001",
+        "paper_PMC13533940_1a4dcab0_xml_para_00004_sent_003",
+        "paper_PMC13631563_4e18eb11_xml_para_00000_sent_002",
+        "paper_PMC13630989_19b600ba_xml_para_00017_sent_005",
+        "paper_PMC13630989_19b600ba_xml_para_00017_sent_003",
+        "paper_PMC13631563_4e18eb11_xml_para_00003_sent_002"
+      ]
+    },
+    {
+      "id": "q017",
+      "question": "Why is reproducibility a central challenge in AI biomarker discovery?",
+      "legacy_sec": 0.0,
+      "new_sec": 11.35,
+      "legacy_hit": false,
+      "new_hit": false,
+      "candidate_hit": true,
+      "expected": [
+        "paper_PMC13612816_4ecbe955_xml_para_00000_sent_002",
+        "paper_PMC13612816_4ecbe955_xml_para_00000_sent_004"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "paper_PMC13612816_4ecbe955_xml_para_00239_sent_003",
+        "paper_PMC13612816_4ecbe955_xml_para_00237_sent_002",
+        "paper_PMC13612816_4ecbe955_xml_para_00239_sent_001",
+        "paper_PMC13612816_4ecbe955_xml_para_00224_sent_003",
+        "paper_PMC13612816_4ecbe955_xml_para_00002_sent_008",
+        "paper_PMC13612816_4ecbe955_xml_para_00224_sent_001",
+        "paper_PMC13612816_4ecbe955_xml_para_00237_sent_001",
+        "paper_PMC13612816_4ecbe955_xml_para_00223_sent_001",
+        "paper_PMC13612816_4ecbe955_xml_para_00002_sent_003",
+        "paper_PMC13612816_4ecbe955_xml_para_00121_sent_002"
+      ]
+    },
+    {
+      "id": "q018",
+      "question": "What does the AI biomarker paper identify as the main implementation gap?",
+      "legacy_sec": 0.0,
+      "new_sec": 12.63,
+      "legacy_hit": false,
+      "new_hit": false,
+      "candidate_hit": true,
+      "expected": [
+        "paper_PMC13612816_4ecbe955_xml_para_00000_sent_003"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "paper_PMC13612816_4ecbe955_xml_para_00233_sent_002",
+        "paper_PMC13612816_4ecbe955_xml_para_00124_sent_006",
+        "paper_PMC13612816_4ecbe955_xml_para_00000_sent_007",
+        "paper_PMC13612816_4ecbe955_xml_para_00000_sent_002",
+        "paper_PMC13612816_4ecbe955_xml_para_00135_sent_002",
+        "paper_PMC13612816_4ecbe955_xml_para_00213_sent_001",
+        "paper_PMC13612816_4ecbe955_xml_para_00132_sent_002",
+        "paper_PMC13612816_4ecbe955_xml_para_00124_sent_005",
+        "paper_PMC13612816_4ecbe955_xml_para_00237_sent_002",
+        "paper_PMC13612816_4ecbe955_xml_para_00132_sent_001"
+      ]
+    },
+    {
+      "id": "q019",
+      "question": "How is nitric oxide synthesized by NOS enzymes?",
+      "legacy_sec": 0.0,
+      "new_sec": 12.47,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_001"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_002",
+        "paper_PMC13607564_531e0063_xml_para_00236_sent_003",
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_001",
+        "paper_PMC13607564_531e0063_xml_para_00237_sent_001",
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_006",
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_003",
+        "paper_PMC11201058_para_00030_sent_003",
+        "paper_PMC11201058_para_00030_sent_002",
+        "paper_PMC13607564_531e0063_xml_para_00236_sent_002",
+        "paper_PMC11201058_para_00030_sent_004"
+      ]
+    },
+    {
+      "id": "q020",
+      "question": "What structural form is required for active NOS function?",
+      "legacy_sec": 0.0,
+      "new_sec": 12.31,
+      "legacy_hit": false,
+      "new_hit": true,
+      "candidate_hit": true,
+      "expected": [
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_003"
+      ],
+      "legacy_top10": [],
+      "new_top10": [
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_005",
+        "paper_PMC11201058_para_00022_sent_007",
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_001",
+        "paper_PMC11201058_para_00034_sent_002",
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_004",
+        "paper_PMC11201058_para_00030_sent_002",
+        "paper_PMC11201058_para_00030_sent_004",
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_002",
+        "paper_PMC13607564_531e0063_xml_para_00001_sent_003",
+        "paper_PMC11201058_para_00022_sent_008"
+      ]
+    }
+  ]
+}
