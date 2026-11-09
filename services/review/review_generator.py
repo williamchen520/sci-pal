@@ -20,7 +20,6 @@ V25.0 范围：
 
 from __future__ import annotations
 
-import sqlite3
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional
@@ -1727,66 +1726,29 @@ class ReviewGenerator:
         return "\n".join(lines)
 
     def _fetch_paper_metadata(self, evidence_cards: list[EvidenceCard]) -> dict[str, PaperMetadata]:
-        """
-        从数据库查询论文元数据，用于 GB/T 7714 参考文献格式化（V25.7）。
-
-        返回：{paper_id: PaperMetadata} 字典
-        """
+        """从 PostgreSQL 查询论文元数据，用于 GB/T 7714 参考文献格式化。"""
         metadata_map = {}
-        if not self.db_path or not Path(self.db_path).exists():
-            return metadata_map
-
-        # 收集所有需要查询的 paper_id
         paper_ids = set()
         for card in evidence_cards:
             pid = (card.paper_id or "").strip()
             if pid:
                 paper_ids.add(pid)
-
         if not paper_ids:
             return metadata_map
+        from services.db.pg_pool import main_read_connection
 
-        if _pg_metadata_enabled():
-            from services.db.pg_pool import main_read_connection
-
-            pg = main_read_connection()
-            try:
-                rows = pg.execute(
-                    "SELECT paper_id, title, authors, journal, year, doi "
-                    "FROM papers WHERE paper_id = ANY(%s)",
-                    (list(paper_ids),),
-                ).fetchall()
-            finally:
-                pg.close()
-            for row in rows:
-                metadata = build_metadata_from_db_row(dict(row))
-                metadata_map[metadata.paper_id] = metadata
-            return metadata_map
-
+        pg = main_read_connection()
         try:
-            conn = sqlite3.connect(self.db_path)
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
-
-            # 批量查询（SQLite 对 IN 子句的参数数量有限制，这里分批处理）
-            pid_list = list(paper_ids)
-            batch_size = 500
-            for i in range(0, len(pid_list), batch_size):
-                batch = pid_list[i:i + batch_size]
-                placeholders = ",".join("?" * len(batch))
-                cursor.execute(
-                    f"SELECT paper_id, title, authors, journal, year, doi FROM papers WHERE paper_id IN ({placeholders})",
-                    batch
-                )
-                for row in cursor.fetchall():
-                    metadata = build_metadata_from_db_row(dict(row))
-                    metadata_map[metadata.paper_id] = metadata
-
-            conn.close()
-        except Exception as e:
-            # 数据库查询失败时静默降级，不影响主流程
-            print(f"⚠️  查询论文元数据失败（将使用简单格式）: {e}")
-
+            rows = pg.execute(
+                "SELECT paper_id, title, authors, journal, year, doi "
+                "FROM papers WHERE paper_id = ANY(%s)",
+                (list(paper_ids),),
+            ).fetchall()
+        finally:
+            pg.close()
+        for row in rows:
+            metadata = build_metadata_from_db_row(dict(row))
+            metadata_map[metadata.paper_id] = metadata
         return metadata_map
 
     def _build_references(self, evidence_cards: list[EvidenceCard], paper_metadata_map: Optional[dict[str, PaperMetadata]] = None, citation_style: str = "apa") -> list[dict]:
@@ -2041,16 +2003,8 @@ _PAPER_TITLE_CACHE: dict[str, str] = {}
 
 
 def _research_db_path() -> Optional[Path]:
-    path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
-    return path if path.exists() else None
-
-
-def _pg_metadata_enabled() -> bool:
-    import os
-
-    return os.environ.get("SCIPAL_REVIEWS_BACKEND", "").strip().lower() in {
-        "postgres", "postgresql", "pg", "1", "true"
-    }
+    # Kept for call-site compatibility; title recall now uses PostgreSQL.
+    return Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
 
 
 def _title_recall_limits() -> tuple[int, int]:
@@ -2063,79 +2017,49 @@ def _title_recall_limits() -> tuple[int, int]:
 
 
 def _paper_titles(paper_ids: list[str]) -> dict[str, str]:
-    """Titles for the candidate papers (module-level cache, DB-backed)."""
+    """Titles for the candidate papers (module-level cache, PG-backed)."""
     missing = [pid for pid in paper_ids if pid not in _PAPER_TITLE_CACHE]
     if missing:
         try:
-            if _pg_metadata_enabled():
-                from services.db.pg_pool import main_read_connection
+            from services.db.pg_pool import main_read_connection
 
-                pg = main_read_connection()
-                try:
-                    rows = pg.execute(
-                        "SELECT paper_id, title FROM papers WHERE paper_id = ANY(%s)",
-                        (missing,),
-                    ).fetchall()
-                finally:
-                    pg.close()
-                for row in rows:
-                    _PAPER_TITLE_CACHE[row["paper_id"]] = row["title"] or ""
-            else:
-                db_path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
-                if db_path.exists():
-                    conn = sqlite3.connect(str(db_path))
-                    placeholders = ",".join("?" for _ in missing)
-                    rows = conn.execute(
-                        f"SELECT paper_id, title FROM papers WHERE paper_id IN ({placeholders})",
-                        missing,
-                    ).fetchall()
-                    conn.close()
-                    for paper_id, title in rows:
-                        _PAPER_TITLE_CACHE[paper_id] = title or ""
+            pg = main_read_connection()
+            try:
+                rows = pg.execute(
+                    "SELECT paper_id, title FROM papers WHERE paper_id = ANY(%s)",
+                    (missing,),
+                ).fetchall()
+            finally:
+                pg.close()
+            for row in rows:
+                _PAPER_TITLE_CACHE[row["paper_id"]] = row["title"] or ""
         except Exception:
             pass
     return {pid: _PAPER_TITLE_CACHE.get(pid, "") for pid in paper_ids}
 
 
 def _get_fulltext_doi_map() -> dict[str, str]:
-    """V33.17: 从 research.db 加载 DOI → paper_id 映射（模块级缓存）。
-
-    用于摘要回退去重：摘要库命中时，如果该 DOI 在全文库有 PDF/XML 全文，
-    则把摘要证据归到全文 paper_id 名下（同一篇论文只有一个身份），
-    避免同一篇论文以 pmid 和 paper_id 两个身份重复出现。
-    """
+    """DOI -> paper_id mapping from PostgreSQL (module-level cache)."""
     global _FULLTEXT_DOI_MAP
     if _FULLTEXT_DOI_MAP is None:
         doi_map: dict[str, str] = {}
         try:
-            if _pg_metadata_enabled():
-                from services.db.pg_pool import main_read_connection
+            from services.db.pg_pool import main_read_connection
 
-                pg = main_read_connection()
-                try:
-                    rows = pg.execute(
-                        "SELECT paper_id, doi FROM papers "
-                        "WHERE doi IS NOT NULL AND btrim(doi) <> ''"
-                    ).fetchall()
-                finally:
-                    pg.close()
-                for row in rows:
-                    doi_map[row["doi"].strip().lower()] = row["paper_id"]
-            else:
-                db_path = Path(__file__).resolve().parent.parent.parent / "data" / "research.db"
-                if db_path.exists():
-                    conn = sqlite3.connect(str(db_path))
-                    rows = conn.execute(
-                        "SELECT paper_id, doi FROM papers "
-                        "WHERE doi IS NOT NULL AND TRIM(doi) != ''"
-                    ).fetchall()
-                    conn.close()
-                    for paper_id, doi in rows:
-                        doi_map[doi.strip().lower()] = paper_id
+            pg = main_read_connection()
+            try:
+                rows = pg.execute(
+                    "SELECT paper_id, doi FROM papers "
+                    "WHERE doi IS NOT NULL AND btrim(doi) <> ''"
+                ).fetchall()
+            finally:
+                pg.close()
+            for row in rows:
+                doi_map[row["doi"].strip().lower()] = row["paper_id"]
         except Exception as e:
-            print(f"⚠️  V33.17: 加载全文 DOI 映射失败: {e}")
+            print(f"加载全文 DOI 映射失败: {e}")
         _FULLTEXT_DOI_MAP = doi_map
-        print(f"✅ V33.17: 全文库 DOI 映射已加载（{len(doi_map)} 篇）")
+        print(f"全文库 DOI 映射已加载（{len(doi_map)} 篇）")
     return _FULLTEXT_DOI_MAP
 
 
