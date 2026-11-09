@@ -24,5 +24,4 @@ services/search/unified_retriever.py
 services/tenancy/service.py
 services/unified_task_manager.py
 services/watch/pg_writes.py
-services/watch/repo.py
 services/workflow/stages.py

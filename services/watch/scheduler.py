@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from services.watch import pg_store, repo, runner
+from services.watch import pg_store, runner
 
 
 def due_profiles(
@@ -44,16 +44,11 @@ def run_due(
     now: Optional[datetime] = None,
     limit: int = 20,
     run_profile=None,
+    profiles=None,
 ) -> List[Dict[str, Any]]:
     """Run every due profile once; failures do not stop the batch."""
-    if pg_store.enabled():
+    if profiles is None:
         profiles = due_profiles(None, now=now, limit=limit)
-    else:
-        conn = repo.connect(db_path)
-        try:
-            profiles = due_profiles(conn, now=now, limit=limit)
-        finally:
-            conn.close()
     runner_fn = run_profile or runner.run_profile
     results: List[Dict[str, Any]] = []
     for profile in profiles:

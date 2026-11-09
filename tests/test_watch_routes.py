@@ -15,7 +15,7 @@ from flask import Flask
 
 from build_db.watch_schema import migrate
 from routes.watch import build_watch_blueprint
-from services.watch import repo
+from tests import support_sqlite_watch_repo as repo
 
 
 class WatchRouteTests(unittest.TestCase):
@@ -34,7 +34,7 @@ class WatchRouteTests(unittest.TestCase):
         conn.close()
         migrate(self.db)
         app = Flask(__name__)
-        app.register_blueprint(build_watch_blueprint(db_path=self.db, log=app.logger))
+        app.register_blueprint(build_watch_blueprint(db_path=self.db, log=app.logger, store=repo))
         self.client = app.test_client()
 
     def test_profile_crud_and_journals(self) -> None:

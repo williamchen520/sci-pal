@@ -7,7 +7,7 @@ from flask import Blueprint, Response, g, jsonify, request, session
 from services.watch import discovery, pg_read, pg_store, repo, runner
 
 
-def build_watch_blueprint(*, db_path, log) -> Blueprint:
+def build_watch_blueprint(*, db_path, log, store=None, run_profile=None) -> Blueprint:
     bp = Blueprint("watch", __name__, url_prefix="/api/watch")
 
     @bp.before_request
@@ -18,7 +18,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
         return getattr(g, "owner", "default")
 
     def _store():
-        return pg_store if pg_store.enabled() else repo
+        return store or pg_store
 
     def _owned_run(conn, run_id: int):
         row = _store().get_run(conn, run_id)
@@ -116,7 +116,7 @@ def build_watch_blueprint(*, db_path, log) -> Blueprint:
             if conn is not None:
                 conn.close()
         try:
-            result = runner.run_profile(db_path, profile_id)
+            result = (run_profile or runner.run_profile)(db_path, profile_id)
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 404
         except Exception as exc:  # noqa: BLE001
