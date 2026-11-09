@@ -11,7 +11,6 @@ graph edges to find related papers vector search might miss.
 """
 from typing import Dict, List, Optional
 import os
-import sqlite3
 import time
 from services.search.hybrid_search import HybridSearch
 from services.search.shared import get_shared_hybrid
@@ -27,7 +26,6 @@ from services.search.auto_merger import AutoMerger
 from services.search.domain_router import DomainRouter
 from services.search.context_expander import (
     ContextExpander,
-    DB_PATH as STRUCT_DB,
     HIT_START,
     HIT_END,
 )
@@ -238,15 +236,15 @@ class UnifiedRetriever:
                         if seed["para_id"] and seed["para_id"] not in existing_ids
                     ][:max_add]
                     if missing:
-                        seed_conn = sqlite3.connect(str(STRUCT_DB))
-                        seed_conn.row_factory = sqlite3.Row
+                        from services.db.pg_pool import pg_connection
+
+                        seed_conn = pg_connection()
                         try:
-                            marks = ",".join("?" * len(missing))
                             rows = seed_conn.execute(
                                 "SELECT para_id, paper_id, section_id, text, "
                                 "section_level1, section_level2 FROM paragraphs "
-                                f"WHERE para_id IN ({marks})",
-                                missing,
+                                "WHERE para_id = ANY(%s)",
+                                (missing,),
                             ).fetchall()
                             scores = {seed["para_id"]: seed["score"] for seed in seeds}
                             for row in rows:
@@ -332,14 +330,15 @@ class UnifiedRetriever:
                         }
                         para_ids = [p.get("para_id") for p in paragraphs if p.get("para_id")]
                         if para_ids and section_prior:
-                            marks = ",".join("?" * len(para_ids))
-                            map_conn = sqlite3.connect(str(STRUCT_DB))
+                            from services.db.pg_pool import pg_connection
+
+                            map_conn = pg_connection()
                             try:
                                 section_map = dict(
                                     map_conn.execute(
-                                        f"SELECT para_id, section_id FROM paragraphs "
-                                        f"WHERE para_id IN ({marks})",
-                                        para_ids,
+                                        "SELECT para_id, section_id FROM paragraphs "
+                                        "WHERE para_id = ANY(%s)",
+                                        (para_ids,),
                                     ).fetchall()
                                 )
                             finally:
@@ -714,8 +713,9 @@ class UnifiedRetriever:
 
             conn = PGReadCompat()
         else:
-            conn = sqlite3.connect(str(STRUCT_DB))
-            conn.row_factory = sqlite3.Row
+            from services.db.pg_sqlite_compat import PGReadCompat
+
+            conn = PGReadCompat()
         meta_cache: Dict[str, Dict] = {}
         try:
             def paper_meta(pid: str) -> Dict:

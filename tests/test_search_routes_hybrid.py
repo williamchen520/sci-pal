@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest import mock
 from unittest.mock import patch
 
 from flask import Flask
@@ -45,6 +46,11 @@ def make_app(retriever=None, fail: bool = False):
 
 
 class HybridRouteTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.scope_patch = mock.patch("routes.search.allowed_paper_ids", return_value=set())
+        self.scope_patch.start()
+        self.addCleanup(self.scope_patch.stop)
+
     def test_post_returns_retriever_result(self) -> None:
         client = make_app().test_client()
         response = client.post("/api/search/hybrid", json={"q": "sepsis", "use_online": False})

@@ -4,5 +4,4 @@ services/projects/service.py
 services/search/hybrid_search.py
 services/search/ingest.py
 services/search/online_downloader.py
-services/search/unified_retriever.py
 services/tenancy/service.py
