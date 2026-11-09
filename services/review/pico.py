@@ -71,3 +71,37 @@ def auto_pico(conn: sqlite3.Connection, project_id: str) -> Dict[str, str]:
     )
     conn.commit()
     return existing
+
+
+def auto_pico_pg(project_id: str) -> Dict[str, str]:
+    from services.db.pg_pool import pg_connection
+
+    pg = pg_connection()
+    try:
+        row = pg.execute(
+            "SELECT field_text, pico_json FROM review_projects WHERE project_id = %s",
+            (project_id,),
+        ).fetchone()
+        if not row:
+            raise KeyError("project not found")
+        text_parts: List[str] = [row["field_text"] or ""]
+        for paper in pg.execute(
+            "SELECT p.title, p.abstract FROM review_project_papers rp "
+            "JOIN papers p ON p.paper_id = rp.paper_id WHERE rp.project_id = %s",
+            (project_id,),
+        ).fetchall():
+            text_parts.append(paper["title"] or "")
+            text_parts.append(paper["abstract"] or "")
+        extracted = extract("\n".join(text_parts))
+        existing = json.loads(row["pico_json"] or "{}")
+        for key, value in extracted.items():
+            if value and not existing.get(key):
+                existing[key] = value
+        pg.execute(
+            "UPDATE review_projects SET pico_json = %s WHERE project_id = %s",
+            (json.dumps(existing, ensure_ascii=False), project_id),
+        )
+        pg.commit()
+        return existing
+    finally:
+        pg.close()

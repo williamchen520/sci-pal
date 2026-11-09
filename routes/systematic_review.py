@@ -265,7 +265,7 @@ def build_systematic_review_blueprint(*, db_path, log) -> Blueprint:
             )
             if not row or not allowed:
                 return jsonify({"error": "project not found"}), 404
-            result = pico.auto_pico(conn, project_id)
+            result = pico.auto_pico_pg(project_id)
             _audit(conn, project_id, "pico_extracted")
             return jsonify(result)
         finally:
