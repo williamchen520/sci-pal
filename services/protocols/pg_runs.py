@@ -14,7 +14,7 @@ def _pg():
     pg = pg_connection()
     set_search_path(pg, "protocols")
     return pg
-from services.protocols.service import _done_steps, _now, _run_row, _run_status, _text
+from services.protocols.helpers import _done_steps, _now, _run_row, _run_status, _text
 
 
 def add_run(

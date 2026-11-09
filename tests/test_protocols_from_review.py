@@ -10,7 +10,7 @@ from flask import Flask
 
 from routes.protocols import build_protocols_blueprint
 from services.protocols.from_review import build_protocol_payload
-from services.protocols.service import ProtocolService
+from tests.support_sqlite_protocol_service import ProtocolService
 
 REVIEW = {
     "review_id": "rev_demo",

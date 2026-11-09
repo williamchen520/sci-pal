@@ -16,7 +16,7 @@ def _pg():
     pg = pg_connection()
     set_search_path(pg, "protocols")
     return pg
-from services.protocols.service import _now, _text
+from services.protocols.helpers import _now, _text
 
 MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
 MAX_RUN_ATTACHMENT_BYTES = 100 * 1024 * 1024
