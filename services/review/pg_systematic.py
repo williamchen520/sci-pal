@@ -355,3 +355,54 @@ def list_events(project_id: str, limit: int = 100) -> List[Dict]:
         return [dict(row) for row in rows]
     finally:
         pg.close()
+
+
+def add_from_watch(project_id: str, run_id: int) -> int:
+    pg = _pg()
+    try:
+        rows = pg.execute(
+            "SELECT paper_id FROM watch_items WHERE run_id = %s AND paper_id IS NOT NULL",
+            (run_id,),
+        ).fetchall()
+        paper_ids = [row["paper_id"] for row in rows]
+        if paper_ids:
+            add_papers(project_id, paper_ids)
+        return len(paper_ids)
+    finally:
+        pg.close()
+
+
+def import_records(project_id: str, records: List[Dict]) -> Dict:
+    pg = _pg()
+    try:
+        matched: List[Dict] = []
+        unmatched: List[Dict] = []
+        paper_ids = set()
+        for record in records or []:
+            doi = (record.get("doi") or "").strip().lower()
+            title = (record.get("title") or "").strip()
+            row = None
+            if doi:
+                row = pg.execute(
+                    "SELECT paper_id FROM papers WHERE lower(doi) = %s LIMIT 1", (doi,)
+                ).fetchone()
+            if not row and title:
+                row = pg.execute(
+                    "SELECT paper_id FROM papers WHERE lower(title) = %s LIMIT 1",
+                    (title.lower(),),
+                ).fetchone()
+            if row:
+                paper_ids.add(row["paper_id"])
+                matched.append({"paper_id": row["paper_id"], "title": title, "doi": doi})
+            else:
+                unmatched.append(record)
+        if paper_ids:
+            add_papers(project_id, sorted(paper_ids))
+        return {
+            "matched": len(matched),
+            "unmatched": len(unmatched),
+            "paper_ids": sorted(paper_ids),
+            "unmatched_records": unmatched,
+        }
+    finally:
+        pg.close()
