@@ -450,9 +450,9 @@ _protocol_service = None
 def get_protocol_service():
     global _protocol_service
     if _protocol_service is None:
-        from services.protocols.service import ProtocolService
+        from services.protocols.pg_service import PGProtocolService
 
-        service = ProtocolService(DB_PATH)
+        service = PGProtocolService(DB_PATH)
         try:
             from services.search.protocols_io_client import ProtocolsIOClient
 

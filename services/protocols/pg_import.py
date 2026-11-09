@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Mapping
 
 from services.db.pg_pool import pg_connection
-from services.protocols.service import (
+from services.protocols.helpers import (
     _duration,
     _first,
     _html_text,

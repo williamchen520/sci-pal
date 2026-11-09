@@ -9,7 +9,7 @@ from pathlib import Path
 from flask import Flask
 
 from routes.protocols import build_protocols_blueprint
-from services.protocols.service import ProtocolService
+from tests.support_sqlite_protocol_service import ProtocolService
 
 FIXTURE = {
     "status_code": 0,
@@ -137,7 +137,7 @@ class ProtocolServiceTests(unittest.TestCase):
         self.assertEqual(captured["id"], "325000")
 
     def test_view_url_with_digits_in_slug(self) -> None:
-        from services.protocols.service import _normalize_protocol_id
+        from tests.support_sqlite_protocol_service import _normalize_protocol_id
 
         cases = {
             "325000": "325000",
