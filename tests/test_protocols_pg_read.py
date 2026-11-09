@@ -23,12 +23,12 @@ class _FakePG:
 
 class ProtocolsPGReadTests(unittest.TestCase):
     def test_list(self):
-        with mock.patch.object(pg_read, "pg_connection", return_value=_FakePG()):
+        with mock.patch.object(pg_read, "main_read_connection", return_value=_FakePG()):
             rows = pg_read.list_protocols(5)
         self.assertEqual(rows[0]["protocol_id"], "p1")
 
     def test_count(self):
-        with mock.patch.object(pg_read, "pg_connection", return_value=_FakePG()):
+        with mock.patch.object(pg_read, "main_read_connection", return_value=_FakePG()):
             self.assertEqual(pg_read.count_protocols(), 1)
 
 
