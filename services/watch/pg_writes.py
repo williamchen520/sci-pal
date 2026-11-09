@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 import os
-import sqlite3
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
@@ -52,11 +51,7 @@ def _ensure_id_sequence(pg, table: str) -> None:
 
 
 def delete_paper_best_effort(paper_id: str, *, db_path: str | Path) -> bool:
-    """Delete a watch placeholder in PG, then SQLite; return False if disabled.
-
-    The SQLite delete still runs when PG is unavailable so the existing outbox
-    can carry the delete later.
-    """
+    """Delete a watch placeholder in PostgreSQL; return False if disabled."""
     if not enabled():
         return False
     try:
@@ -69,12 +64,6 @@ def delete_paper_best_effort(paper_id: str, *, db_path: str | Path) -> bool:
         LOGGER.error("PG watch paper delete failed; refusing SQLite fallback: %s", exc)
         raise WatchWriteError("watch write backend unavailable") from exc
 
-    conn = sqlite3.connect(str(db_path), timeout=30)
-    try:
-        conn.execute("DELETE FROM papers WHERE paper_id = ?", (paper_id,))
-        conn.commit()
-    finally:
-        conn.close()
     return pg_deleted
 
 
