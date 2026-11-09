@@ -1,4 +1,3 @@
-routes/system.py
 routes/systematic_review.py
 services/data_sandbox/audit.py
 services/db/read_router.py
