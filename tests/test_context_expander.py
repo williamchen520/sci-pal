@@ -39,11 +39,13 @@ class ContextExpanderTests(unittest.TestCase):
         conn.execute(
             "INSERT INTO sentences VALUES ('sent2','para1','p1','Second sentence about response.',2,3,'5,6,7,8','s2',16,47)"
         )
+        conn.row_factory = sqlite3.Row
         conn.commit()
-        conn.close()
+        self.conn = conn
+        self.addCleanup(conn.close)
 
     def test_section_path_and_highlight(self) -> None:
-        expander = ContextExpander(self.db)
+        expander = ContextExpander(self.db, conn=self.conn)
         units = expander.expand(
             [{"para_id": "para1", "score": 1.0}],
             query="response",
@@ -55,7 +57,7 @@ class ContextExpanderTests(unittest.TestCase):
         self.assertIn("►Second sentence about response.◄", units[0]["text"])
 
     def test_window_mode(self) -> None:
-        expander = ContextExpander(self.db)
+        expander = ContextExpander(self.db, conn=self.conn)
         units = expander.expand(
             [{"para_id": "para1", "score": 1.0}], mode="window", max_parents=1
         )
