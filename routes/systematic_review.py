@@ -17,7 +17,7 @@ from services.review import pdf_report
 from services.review import prisma_svg
 from services.review import report as report_mod
 from services.review import risk_of_bias
-from services.review import pico, pg_pdf, pg_report, pg_systematic, systematic
+from services.review import pico, pg_pdf, pg_report, pg_systematic
 
 
 def _pg_projects() -> bool:

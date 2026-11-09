@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from build_db.review_schema import migrate
-from services.review import systematic
+from tests import support_sqlite_systematic as systematic
 
 
 class SystematicReviewTests(unittest.TestCase):
