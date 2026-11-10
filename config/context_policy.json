@@ -1,0 +1,22 @@
+{
+  "max_chars": 1200,
+  "max_scan": 6,
+  "relevance_threshold": 0.2,
+  "logic_terms": {
+    "en": [
+      "however", "therefore", "but", "although", "in contrast",
+      "compared to", "nevertheless", "whereas", "consequently",
+      "in addition", "moreover", "yet", "still", "despite",
+      "on the other hand", "as a result", "because", "thus"
+    ],
+    "zh": [
+      "然而", "但是", "因此", "所以", "尽管", "虽然", "相反",
+      "相比", "此外", "而且", "不过", "由于", "因而", "从而"
+    ]
+  },
+  "heading_terms": [
+    "abstract", "introduction", "background", "methods", "materials and methods",
+    "results", "discussion", "conclusion", "conclusions", "references",
+    "limitations", "supplementary"
+  ]
+}
