@@ -7,6 +7,7 @@ rules: route ownership, deadline TODOs, and new SQLite connections.
 from __future__ import annotations
 
 import argparse
+import ast
 import datetime as dt
 import json
 import re
@@ -128,10 +129,49 @@ def check_forbid_pattern(rule: dict, args) -> list[dict]:
     return violations
 
 
+
+
+def check_forbid_import(rule: dict, args) -> list[dict]:
+    params = rule.get("params") or {}
+    modules = tuple(params.get("modules") or ())
+    names = set(params.get("names") or ())
+    only_new = bool(params.get("only_new"))
+    if only_new:
+        files = [ROOT / name for name in git_new_files(args.staged, args.base_ref)]
+    else:
+        files = list(iter_files(params.get("scope", "**/*.py")))
+    violations = []
+    for path in files:
+        if not path.is_file():
+            continue
+        rel = path.relative_to(ROOT).as_posix()
+        if not in_scope(path, params.get("scope", "**/*.py")):
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if any(alias.name == module or alias.name.startswith(module + ".") for module in modules):
+                        violations.append({"target": f"{rel}:{node.lineno}", "detail": f"forbidden import: {alias.name}"})
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                matched = any(module == forbidden or module.startswith(forbidden + ".") for forbidden in modules)
+                if matched:
+                    violations.append({"target": f"{rel}:{node.lineno}", "detail": f"forbidden import: {module}"})
+                else:
+                    for alias in node.names:
+                        if alias.name in names:
+                            violations.append({"target": f"{rel}:{node.lineno}", "detail": f"forbidden symbol: {alias.name}"})
+    return violations
+
 CHECKS = {
     "route_unique_blueprint": check_route_unique,
     "deadline_scan": check_deadline,
     "forbid_pattern": check_forbid_pattern,
+    "forbid_import": check_forbid_import,
 }
 
 
@@ -141,6 +181,7 @@ def main() -> int:
     parser.add_argument("--staged", action="store_true")
     parser.add_argument("--base-ref", default="")
     parser.add_argument("--rule", default="", help="run a single rule id")
+    parser.add_argument("--skip-rule", action="append", default=[], help="skip a rule id")
     args = parser.parse_args()
 
     contract = load_contract()
@@ -148,6 +189,8 @@ def main() -> int:
     violations = []
     for rule in contract.get("rules", []):
         if args.rule and rule["id"] != args.rule:
+            continue
+        if rule["id"] in args.skip_rule:
             continue
         check = CHECKS.get(rule["kind"])
         if check is None:

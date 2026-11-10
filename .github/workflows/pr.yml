@@ -14,6 +14,8 @@ jobs:
           fetch-depth: 0
       - name: SQL guard
         run: python scripts/sql_guard.py --changed --forbid-schema public --allow-destructive
+      - name: Architecture coupling guard
+        run: python scripts/guard.py --base-ref origin/${{ github.base_ref }}
       - name: Unit tests
         run: python -m unittest discover -s tests -p "test_*.py"
 
