@@ -13,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 
 class PGParagraphRetriever:
     def __init__(self, dsn: Optional[str] = None, *, reranker=None):
-        self.dsn = dsn or os.environ.get("SCIPAL_PG_DSN", "")
+        self.dsn = dsn or os.environ.get("SCIPAL_PG_CORPUS_DSN") or os.environ.get("SCIPAL_PG_DSN", "")
         self.fts = PGParagraphFTS(self.dsn, ranker="rank")
         self._reranker = reranker
 

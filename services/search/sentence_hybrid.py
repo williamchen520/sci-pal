@@ -52,9 +52,9 @@ class SentenceHybridRetriever:
         self.context_policy = context_policy or WindowPolicy.from_config()
 
     def _pg(self):
-        from services.db.pg_pool import pg_connection
+        from services.db.pg_pool import corpus_connection
 
-        return pg_connection()
+        return corpus_connection()
 
     @staticmethod
     def _lexical_rows(pg, query: str, limit: int) -> List[Dict[str, Any]]:

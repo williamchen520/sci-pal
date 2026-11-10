@@ -17,7 +17,7 @@ from services.search.context_expander import ContextExpander
 
 def _fts_bundle(query: str, top_k: int) -> dict:
     """Last-resort evidence bundle: PostgreSQL sentence FTS only."""
-    from services.db.pg_pool import main_read_connection
+    from services.db.pg_pool import corpus_connection
 
     pg = main_read_connection()
     try:
@@ -90,7 +90,7 @@ def build_evidence_blueprint(
     def _sentence(paper_id: str, sentence_id: str):
         if sentence_lookup is not None:
             return sentence_lookup(paper_id, sentence_id)
-        from services.db.pg_pool import main_read_connection
+        from services.db.pg_pool import corpus_connection
 
         pg = main_read_connection()
         try:

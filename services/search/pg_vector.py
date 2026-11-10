@@ -23,9 +23,9 @@ class PGVectorParagraphSearch:
     def _connection(self):
         if self._connector is not None:
             return self._connector(), False
-        from services.db.pg_pool import main_read_connection, pg_connection
+        from services.db.pg_pool import corpus_connection, pg_connection
 
-        return (pg_connection(self.dsn) if self.dsn else main_read_connection()), True
+        return (pg_connection(self.dsn) if self.dsn else corpus_connection()), True
 
     def search(
         self,
