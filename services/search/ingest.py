@@ -29,6 +29,7 @@ from services.papers import pg_writes as paper_pg_writes
 from services.papers import preflight
 from services.papers.pg_writes import update_metadata_if_exists
 from services.search.ingest_tasks import task_store_for
+from services.search.ingest_writer import writer_for
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 DEFAULT_BATCH_SIZE = 5
@@ -60,6 +61,7 @@ class IngestService:
     ) -> None:
         self.db_path = Path(db_path)
         self.tasks = task_store_for(self.db_path)
+        self.writer = writer_for(self.db_path)
         self.xml_dir = Path(xml_dir)
         self.chroma_path = Path(chroma_path) if chroma_path else None
         self.queue_dir = Path(queue_dir) if queue_dir else None
@@ -132,7 +134,7 @@ class IngestService:
 
     # ------------------------------------------------------------------ work
     def _run(self, task_id: str, pmc_ids: list[str], batch_size: int) -> None:
-        conn = self._connect()
+        conn = self.writer.connect() if self.writer is not None else None
         try:
             with RUN_LOCK:
                 self.tasks.set(task_id, status="running")
@@ -147,7 +149,8 @@ class IngestService:
                     try:
                         written = self._write_batch(conn, parsed)
                     except Exception as exc:  # noqa: BLE001 - roll back this batch only
-                        conn.rollback()
+                        if conn is not None:
+                            conn.rollback()
                         for item in parsed:
                             failures.append({"pmc_id": item["pmc_id"], "error": f"db: {exc}"})
                         written = 0
@@ -201,7 +204,8 @@ class IngestService:
                 pass
             self.log(f"{task_id} failed: {exc}")
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     def _download_batch(
         self, batch: Sequence[str], failures: list[dict[str, str]]
@@ -241,7 +245,9 @@ class IngestService:
                 time.sleep(self.download_retry_delay * attempt)
         return None
 
-    def _write_batch(self, conn: sqlite3.Connection, parsed: Sequence[Mapping[str, Any]]) -> int:
+    def _write_batch(self, conn, parsed: Sequence[Mapping[str, Any]]) -> int:
+        if self.writer is not None:
+            return self.writer.write(conn, parsed, self)
         written = 0
         metadata_updates: list[tuple[str, object, object, object]] = []
         children: list[tuple[str, list[dict], list[dict]]] = []
@@ -298,6 +304,12 @@ class IngestService:
             paper_pg_writes.write_papers_batch(paper_rows, children)
             return written
 
+
+    def _write_batch_sqlite(self, conn, parsed: Sequence[Mapping[str, Any]]) -> int:
+        written = 0
+        metadata_updates: list[tuple[str, object, object, object]] = []
+        children: list[tuple[str, list[dict], list[dict]]] = []
+        paper_rows: list[dict] = []
         # `paragraphs_ad` deletes from FTS5 with `WHERE para_id = ?`, which is a
         # full scan per deleted row (para_id is UNINDEXED). Dropping it for the
         # batch and deleting by a single set-based join keeps re-ingest fast.
@@ -571,13 +583,10 @@ class IngestService:
         return self.tasks.cancel(task_id)
 
     # --------------------------------------------------------------- helpers
-    def _connect(self) -> sqlite3.Connection:
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        conn = sqlite3.connect(str(self.db_path), timeout=30)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA synchronous=NORMAL")
-        return conn
+    def _connect(self):
+        if self.writer is None:
+            raise RuntimeError("sqlite ingest writer is not configured")
+        return self.writer.connect()
 
 def _paper_id(pmc_id: str) -> str:
     import hashlib

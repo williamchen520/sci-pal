@@ -47,3 +47,8 @@ import services.search.ingest_tasks as _ingest_tasks
 import tests.support.ingest_tasks_sqlite as _ingest_tasks_sqlite
 
 _ingest_tasks.configure(lambda db_path: _ingest_tasks_sqlite.SqliteTaskStore(db_path))
+
+import services.search.ingest_writer as _ingest_writer
+import tests.support.ingest_sqlite_writer as _ingest_writer_sqlite
+
+_ingest_writer.configure(lambda db_path: _ingest_writer_sqlite.SqliteIngestWriter(db_path))
