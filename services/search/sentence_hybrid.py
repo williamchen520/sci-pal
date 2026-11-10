@@ -30,11 +30,12 @@ class SentenceHybridRetriever:
         model=None,
         vector: Optional[PGVectorParagraphSearch] = None,
         reranker=None,
-        paragraph_top_k: int = 30,
+        paragraph_top_k: int = 50,
         sentence_top_k: int = 200,
-        rerank_pool: int = 100,
+        rerank_pool: int = 50,
         lexical_weight: float = 0.7,
         paragraph_weight: float = 0.3,
+        max_full_chars: int = 600,
     ) -> None:
         from sentence_transformers import SentenceTransformer
 
@@ -48,6 +49,7 @@ class SentenceHybridRetriever:
         self.rerank_pool = rerank_pool
         self.lexical_weight = lexical_weight
         self.paragraph_weight = paragraph_weight
+        self.max_full_chars = max_full_chars
 
     def _pg(self):
         from services.db.pg_pool import pg_connection
@@ -63,7 +65,7 @@ class SentenceHybridRetriever:
             "SELECT sentence_id, para_id, paper_id, text, sequence, "
             "ts_rank(search_vector, to_tsquery('english', %s)) AS rank "
             "FROM sentences WHERE search_vector @@ to_tsquery('english', %s) "
-            "ORDER BY rank DESC LIMIT %s",
+            "ORDER BY rank DESC, sentence_id LIMIT %s",
             (ts_query, ts_query, limit),
         ).fetchall()
         return [dict(row) for row in rows]
@@ -118,9 +120,36 @@ class SentenceHybridRetriever:
             prior_rank = paragraph_rank.get(row["para_id"])
             prior = self.paragraph_weight / (60 + prior_rank) if prior_rank is not None else 0.0
             scored.append((lex + prior, row, lex, prior, prior_rank))
-        scored.sort(key=lambda item: -item[0])
+        scored.sort(key=lambda item: (-item[0], item[1]["sentence_id"]))
 
-        pool = scored[: self.rerank_pool]
+        # Keep a few sentences from each top paragraph in the rerank pool.
+        # Without this, a paragraph whose sentences do not match lexically is
+        # represented only by its prior and is cut before the cross-encoder.
+        meta_by_id = {row["sentence_id"]: (score, row, lex, prior, prior_rank) for score, row, lex, prior, prior_rank in scored}
+        pool = []
+        chosen = set()
+        for hit in paragraph_hits[:15]:
+            rows = sorted(by_paragraph.get(hit.para_id, []), key=lambda row: row.get("sequence") or 0)
+            if not rows:
+                continue
+            picks = rows[:3]
+            lexical_rows = [row for row in rows if row["sentence_id"] in lexical_rank]
+            if lexical_rows:
+                best = min(lexical_rows, key=lambda row: lexical_rank[row["sentence_id"]])
+                if best not in picks:
+                    picks[-1] = best
+            for row in picks:
+                if row["sentence_id"] not in chosen:
+                    pool.append(meta_by_id[row["sentence_id"]])
+                    chosen.add(row["sentence_id"])
+        for item in scored:
+            if len(pool) >= self.rerank_pool:
+                break
+            row = item[1]
+            if row["sentence_id"] not in chosen:
+                pool.append(item)
+                chosen.add(row["sentence_id"])
+        pool = pool[: self.rerank_pool]
         reranked = self.reranker.rerank(
             query,
             [
@@ -165,6 +194,7 @@ class SentenceHybridRetriever:
             unit = build_context(
                 anchor,
                 context_rows.get(anchor["para_id"], []),
+                max_full_chars=self.max_full_chars,
             )
             units.append(unit.as_dict())
         return units

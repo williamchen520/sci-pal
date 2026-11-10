@@ -50,7 +50,7 @@ class PGVectorParagraphSearch:
             JOIN paragraphs p ON p.para_id = e.para_id
             JOIN papers pp ON pp.paper_id = e.paper_id AND pp.duplicate_of IS NULL
             WHERE {where}
-            ORDER BY e.embedding <=> %s::vector
+            ORDER BY e.embedding <=> %s::vector, e.para_id
             LIMIT %s
         """
         pg, close = self._connection()

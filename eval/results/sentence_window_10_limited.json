@@ -1,0 +1,350 @@
+{
+  "summary": {
+    "n": 10,
+    "recall@10": 0.9,
+    "sec_avg": 18.28,
+    "context_chars_avg": 7655.9
+  },
+  "rows": [
+    {
+      "id": "q001",
+      "question": "What is ICI rechallenge in hepatocellular carcinoma?",
+      "sec": 31.07,
+      "hit": true,
+      "top10": [
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0022_sent_010",
+        "para_paper_PMC12707946_2d3bcc67_0059_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0037_sent_006",
+        "paper_PMC13615818_420937c7_xml_para_00051_sent_001",
+        "paper_PMC13615818_420937c7_xml_para_00052_sent_017",
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_007",
+        "para_paper_PMC12707946_2d3bcc67_0036_sent_002",
+        "paper_PMC13620340_2161e89f_xml_para_00001_sent_002"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 7716,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_001"
+      ]
+    },
+    {
+      "id": "q002",
+      "question": "How many main ICI rechallenge strategies are described for HCC, and what are they based on?",
+      "sec": 15.53,
+      "hit": true,
+      "top10": [
+        "para_paper_PMC12707946_2d3bcc67_0059_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_004",
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0030_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0030_sent_002",
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_008",
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_007",
+        "para_paper_PMC12707946_2d3bcc67_0067_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0018_sent_012",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_003"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 7955,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_004"
+      ]
+    },
+    {
+      "id": "q003",
+      "question": "Which rechallenge regimens achieved relatively better outcomes among the four strategies?",
+      "sec": 17.67,
+      "hit": true,
+      "top10": [
+        "para_paper_PMC12707946_2d3bcc67_0035_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0035_sent_003",
+        "paper_PMC12266006_para_00005_sent_009",
+        "paper_PMC13616637_ab84d6de_xml_para_00026_sent_010",
+        "paper_PMC13652618_para_00079_sent_001",
+        "paper_PMC13197381_e524a2d4_xml_para_00028_sent_005",
+        "paper_PMC13676356_para_00032_sent_007",
+        "paper_PMC13615750_b68708fb_xml_para_00066_sent_007",
+        "paper_PMC13613317_00c6512e_mineru_para_00076_sent_008",
+        "paper_PMC13672841_para_00012_sent_002"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 11111,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0035_sent_001"
+      ]
+    },
+    {
+      "id": "q004",
+      "question": "What ORR was reported for ICI rechallenge compared with initial ICI therapy in the cited study?",
+      "sec": 17.33,
+      "hit": true,
+      "top10": [
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_002",
+        "para_paper_PMC12707946_2d3bcc67_0037_sent_004",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_004",
+        "para_paper_PMC12707946_2d3bcc67_0037_sent_006",
+        "para_paper_PMC12707946_2d3bcc67_0019_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0029_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0037_sent_001",
+        "paper_PMC13625931_70a7768d_xml_para_00157_sent_002",
+        "para_paper_PMC12707946_2d3bcc67_0008_sent_004"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 7436,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0020_sent_002"
+      ]
+    },
+    {
+      "id": "q005",
+      "question": "Why is patient selection important for ICI rechallenge in HCC?",
+      "sec": 17.7,
+      "hit": true,
+      "top10": [
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0067_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0058_sent_001",
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_007",
+        "para_paper_PMC12707946_2d3bcc67_0062_sent_007",
+        "para_paper_PMC12707946_2d3bcc67_0061_sent_003",
+        "para_paper_PMC12707946_2d3bcc67_0013_sent_005",
+        "para_paper_PMC12707946_2d3bcc67_0037_sent_008",
+        "para_paper_PMC12707946_2d3bcc67_0014_sent_001",
+        "paper_PMC13625931_70a7768d_xml_para_00327_sent_001"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 6906,
+      "expected": [
+        "para_paper_PMC12707946_2d3bcc67_0039_sent_001"
+      ]
+    },
+    {
+      "id": "q006",
+      "question": "What is the role of liquid biopsy with circulating tumor DNA in advanced HCC?",
+      "sec": 16.01,
+      "hit": true,
+      "top10": [
+        "para_paper_PMC12707966_ae9a35bd_0013_sent_001",
+        "paper_PMC13655921_f697a5bb_xml_para_00017_sent_001",
+        "paper_PMC13683985_1af5b8e5_xml_para_00001_sent_002",
+        "paper_PMC13635559_para_00002_sent_001",
+        "para_paper_PMC12707966_ae9a35bd_0006_sent_003",
+        "paper_PMC13601432_fca91059_xml_para_00013_sent_001",
+        "paper_PMC13627780_d839a9c1_xml_para_00034_sent_005",
+        "paper_PMC13672841_para_00030_sent_001",
+        "paper_PMC12286613_para_00017_sent_002",
+        "paper_PMC13621873_801b0f7d_xml_para_00083_sent_001"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 6549,
+      "expected": [
+        "para_paper_PMC12707966_ae9a35bd_0006_sent_003"
+      ]
+    },
+    {
+      "id": "q007",
+      "question": "What limits precision medicine in HCC according to the ctDNA paper?",
+      "sec": 15.02,
+      "hit": true,
+      "top10": [
+        "para_paper_PMC12707966_ae9a35bd_0006_sent_002",
+        "paper_PMC13297017_para_00000_sent_001",
+        "paper_PMC13627226_1ed61ecd_xml_para_00064_sent_003",
+        "paper_PMC13615807_b533cd8b_xml_para_00062_sent_001",
+        "para_paper_PMC12707966_ae9a35bd_0063_sent_012",
+        "paper_PMC13655921_f697a5bb_xml_para_00017_sent_004",
+        "para_paper_PMC12707966_ae9a35bd_0012_sent_003",
+        "paper_PMC13626776_e01c77f9_xml_para_00033_sent_002",
+        "paper_PMC13626775_a6c7c1aa_xml_para_00044_sent_009",
+        "paper_PMC13615298_e08c4e33_xml_para_00057_sent_001"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 9495,
+      "expected": [
+        "para_paper_PMC12707966_ae9a35bd_0006_sent_002"
+      ]
+    },
+    {
+      "id": "q008",
+      "question": "What cargo do extracellular vesicles carry and why is it important in breast cancer?",
+      "sec": 16.26,
+      "hit": true,
+      "top10": [
+        "paper_PMC13630567_bf978b32_xml_para_00001_sent_002",
+        "para_paper_PMC13612676_5962339f_0003_sent_002",
+        "paper_PMC13599371_c03778d5_mineru_para_00087_sent_002",
+        "para_paper_PMC13612676_5962339f_0165_sent_005",
+        "para_paper_PMC13612676_5962339f_0181_sent_010",
+        "para_paper_PMC13612676_5962339f_0131_sent_004",
+        "paper_PMC13599371_c03778d5_mineru_para_00113_sent_002",
+        "para_paper_PMC13612676_5962339f_0147_sent_004",
+        "para_paper_PMC13612676_5962339f_0193_sent_007",
+        "para_paper_PMC13612676_5962339f_0104_sent_007"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 3181,
+      "expected": [
+        "para_paper_PMC13612676_5962339f_0003_sent_002"
+      ]
+    },
+    {
+      "id": "q009",
+      "question": "What are the main global challenges in colorectal cancer burden despite screening?",
+      "sec": 15.96,
+      "hit": false,
+      "top10": [
+        "paper_PMC13297017_para_00000_sent_001",
+        "paper_PMC13654138_para_00000_sent_001",
+        "paper_PMC13632337_58742dd8_xml_para_00000_sent_001",
+        "paper_PMC13511682_323f2073_xml_para_00000_sent_001",
+        "paper_PMC13619544_a6e3b44f_xml_para_00002_sent_009",
+        "paper_PMC13501572_de0d4870_xml_para_00000_sent_002",
+        "paper_PMC13630036_f13548e3_xml_para_00000_sent_001",
+        "paper_PMC13630772_2fd56d48_xml_para_00000_sent_001",
+        "paper_PMC13719324_para_00000_sent_001",
+        "paper_PMC13678479_72d29957_xml_para_00000_sent_004"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 7214,
+      "expected": [
+        "paper_PMC13631563_4e18eb11_xml_para_00001_sent_002"
+      ]
+    },
+    {
+      "id": "q010",
+      "question": "What is the central paradox of immune checkpoint blockade described in the ICI position article?",
+      "sec": 20.24,
+      "hit": true,
+      "top10": [
+        "paper_PMC13625931_70a7768d_xml_para_00002_sent_002",
+        "paper_PMC13650307_para_00000_sent_001",
+        "paper_PMC13678295_0d970e81_xml_para_00000_sent_001",
+        "paper_PMC13614377_1c3c202d_xml_para_00000_sent_001",
+        "paper_PMC13617522_4da532d5_xml_para_00054_sent_001",
+        "paper_PMC13408408_8927b463_xml_para_00007_sent_001",
+        "paper_PMC13602120_4cdcad34_xml_para_00060_sent_007",
+        "paper_PMC13601904_9362ff81_xml_para_00021_sent_001",
+        "paper_PMC13632146_582c335c_xml_para_00027_sent_002",
+        "paper_PMC13613722_dffed48e_mineru_para_00080_sent_004"
+      ],
+      "context_modes": [
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window",
+        "sentence_window"
+      ],
+      "context_chars": 8996,
+      "expected": [
+        "paper_PMC13625931_70a7768d_xml_para_00002_sent_002"
+      ]
+    }
+  ]
+}
