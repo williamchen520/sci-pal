@@ -42,3 +42,8 @@ import tests.support.experiments_runs_sqlite as _exp_runs_sqlite
 _exp_sqlite.ProtocolNotFound = _exp_service.ProtocolNotFound
 _exp_service.configure(_exp_sqlite)
 _exp_runs.configure(_exp_runs_sqlite)
+
+import services.search.ingest_tasks as _ingest_tasks
+import tests.support.ingest_tasks_sqlite as _ingest_tasks_sqlite
+
+_ingest_tasks.configure(lambda db_path: _ingest_tasks_sqlite.SqliteTaskStore(db_path))
