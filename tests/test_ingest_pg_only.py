@@ -24,6 +24,7 @@ class IngestPGBatchTests(unittest.TestCase):
                 },
             }
         ]
+        service.writer = None
         with mock.patch("services.papers.pg_writes.pg_only", return_value=True):
             with mock.patch("services.papers.pg_writes.enabled", return_value=True):
                 with mock.patch(
