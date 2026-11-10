@@ -286,7 +286,10 @@ app.register_blueprint(
 )
 app.register_blueprint(
     build_evidence_blueprint(
-        db_path=DB_PATH, get_retriever=lambda: get_evidence_retriever(), log=app.logger
+        db_path=DB_PATH,
+        get_retriever=lambda: get_evidence_retriever(),
+        get_fallback_retriever=lambda: get_retriever(),
+        log=app.logger,
     )
 )
 app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))

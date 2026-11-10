@@ -21,6 +21,7 @@ def build_evidence_blueprint(
     get_retriever: Callable[[], Any],
     log: Any,
     sentence_lookup: Callable[[str, str], Any] | None = None,
+    get_fallback_retriever: Callable[[], Any] | None = None,
 ) -> Blueprint:
     bp = Blueprint("evidence", __name__, url_prefix="/api")
     expander = ContextExpander(db_path)
@@ -58,8 +59,18 @@ def build_evidence_blueprint(
                 query, paper_id=paper_id, top_paragraphs=top_k
             )
         except Exception as exc:  # noqa: BLE001
-            log.exception("evidence search failed")
-            return jsonify({"error": str(exc)[:300]}), 500
+            fallback = get_fallback_retriever() if get_fallback_retriever else None
+            if fallback is None:
+                log.exception("evidence search failed")
+                return jsonify({"error": str(exc)[:300]}), 500
+            log.warning("evidence backend failed; falling back to unified: %s", exc)
+            try:
+                bundle = fallback.to_evidence_json(
+                    query, paper_id=paper_id, top_paragraphs=top_k
+                )
+            except Exception as fallback_exc:  # noqa: BLE001
+                log.exception("evidence fallback failed")
+                return jsonify({"error": str(fallback_exc)[:300]}), 500
         return jsonify(bundle)
 
     @bp.route("/evidence/context", methods=["GET"])
