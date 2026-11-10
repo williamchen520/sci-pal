@@ -11,6 +11,7 @@ from flask import Flask
 
 from routes.experiments import build_experiments_blueprint
 from routes.projects import build_projects_blueprint
+from tests.support.projects_sqlite import SqliteProjects
 from routes.runs import build_runs_blueprint
 from services.tenancy import add_member, create_user, create_workspace
 
@@ -33,7 +34,7 @@ class RunRouteTests(unittest.TestCase):
         add_member(self.ws, self.bob["user_id"], "member", db_path=self.db)
         app = Flask(__name__)
         app.secret_key = "test"
-        app.register_blueprint(build_projects_blueprint(db_path=self.db))
+        app.register_blueprint(build_projects_blueprint(db_path=self.db, backend=SqliteProjects(self.db)))
         app.register_blueprint(build_experiments_blueprint(db_path=self.db))
         app.register_blueprint(build_runs_blueprint(db_path=self.db))
         self.client = app.test_client()

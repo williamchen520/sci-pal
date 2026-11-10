@@ -13,6 +13,7 @@ from routes.experiments import build_experiments_blueprint
 from routes.notes import build_notes_blueprint
 from routes.papers import build_papers_blueprint
 from routes.projects import build_projects_blueprint
+from tests.support.projects_sqlite import SqliteProjects
 from routes.runs import build_runs_blueprint
 from routes.tenancy import build_tenancy_blueprint
 from services.tenancy import add_member, create_user, create_workspace
@@ -38,7 +39,7 @@ class MultiUserEndToEndTests(unittest.TestCase):
         app.register_blueprint(build_tenancy_blueprint(db_path=self.db))
         app.register_blueprint(build_papers_blueprint(db_path=self.db, get_graph=lambda: None, log=app.logger))
         app.register_blueprint(build_notes_blueprint(db_path=self.db))
-        app.register_blueprint(build_projects_blueprint(db_path=self.db))
+        app.register_blueprint(build_projects_blueprint(db_path=self.db, backend=SqliteProjects(self.db)))
         app.register_blueprint(build_experiments_blueprint(db_path=self.db))
         app.register_blueprint(build_runs_blueprint(db_path=self.db))
         self.client = app.test_client()

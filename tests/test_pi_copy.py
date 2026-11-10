@@ -10,6 +10,7 @@ from pathlib import Path
 from flask import Flask
 
 from routes.projects import build_projects_blueprint
+from tests.support.projects_sqlite import SqliteProjects
 from services.tenancy import add_member, create_user, create_workspace
 
 
@@ -26,7 +27,7 @@ class PICopyTests(unittest.TestCase):
         add_member(self.ws, self.member["user_id"], "member", db_path=self.db)
         app = Flask(__name__)
         app.secret_key = "test"
-        app.register_blueprint(build_projects_blueprint(db_path=self.db))
+        app.register_blueprint(build_projects_blueprint(db_path=self.db, backend=SqliteProjects(self.db)))
         self.client = app.test_client()
 
     def login(self, user: dict) -> None:
