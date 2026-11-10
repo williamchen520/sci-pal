@@ -190,6 +190,22 @@ def get_retriever():
     return _retriever
 
 
+_evidence_retriever = None
+
+
+def get_evidence_retriever():
+    """Evidence endpoint backend: sentence-anchored by default, unified fallback."""
+    global _evidence_retriever
+    backend = os.environ.get("SCIPAL_EVIDENCE_BACKEND", "sentence").strip().lower()
+    if backend in {"unified", "legacy", "old"}:
+        return get_retriever()
+    if _evidence_retriever is None:
+        from services.search.sentence_hybrid import SentenceHybridRetriever
+
+        _evidence_retriever = SentenceHybridRetriever()
+    return _evidence_retriever
+
+
 def get_hybrid_retriever():
     """V33.1: Lazy-load 混合检索器（本地+在线NCBI/PMC）。"""
     global _hybrid_retriever
@@ -270,7 +286,7 @@ app.register_blueprint(
 )
 app.register_blueprint(
     build_evidence_blueprint(
-        db_path=DB_PATH, get_retriever=lambda: get_retriever(), log=app.logger
+        db_path=DB_PATH, get_retriever=lambda: get_evidence_retriever(), log=app.logger
     )
 )
 app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
