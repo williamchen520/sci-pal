@@ -13,6 +13,7 @@ from flask import Flask
 from routes.data import build_data_blueprint
 
 
+@unittest.skipUnless(os.environ.get("SCIPAL_PG_DSN"), "data routes require PostgreSQL sandbox")
 class DataRouteTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)

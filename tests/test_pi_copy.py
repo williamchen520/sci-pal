@@ -10,6 +10,7 @@ from pathlib import Path
 from flask import Flask
 
 from routes.projects import build_projects_blueprint
+from routes import projects as projects_module
 from tests.support.projects_sqlite import SqliteProjects
 from services.tenancy import add_member, create_user, create_workspace
 
@@ -25,6 +26,22 @@ class PICopyTests(unittest.TestCase):
         self.ws = create_workspace("Lab", self.owner["user_id"], db_path=self.db)["workspace_id"]
         add_member(self.ws, self.pi["user_id"], "pi", db_path=self.db)
         add_member(self.ws, self.member["user_id"], "member", db_path=self.db)
+        original_audit = projects_module.audit
+
+        def audit(workspace_id, actor_user_id, action, *, target=None, detail=None, db_path=None):
+            conn = sqlite3.connect(self.db)
+            try:
+                conn.execute(
+                    "INSERT INTO tenancy_audit (workspace_id, actor_user_id, action, target, detail) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (workspace_id, actor_user_id, action, target, detail),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+        projects_module.audit = audit
+        self.addCleanup(setattr, projects_module, "audit", original_audit)
         app = Flask(__name__)
         app.secret_key = "test"
         app.register_blueprint(build_projects_blueprint(db_path=self.db, backend=SqliteProjects(self.db)))
