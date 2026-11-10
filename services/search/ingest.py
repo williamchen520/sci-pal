@@ -28,6 +28,7 @@ from config.paths import EMBEDDING_MODEL
 from services.papers import pg_writes as paper_pg_writes
 from services.papers import preflight
 from services.papers.pg_writes import update_metadata_if_exists
+from services.search.ingest_tasks import task_store_for
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 DEFAULT_BATCH_SIZE = 5
@@ -58,6 +59,7 @@ class IngestService:
         log: Callable[[str], None] = print,
     ) -> None:
         self.db_path = Path(db_path)
+        self.tasks = task_store_for(self.db_path)
         self.xml_dir = Path(xml_dir)
         self.chroma_path = Path(chroma_path) if chroma_path else None
         self.queue_dir = Path(queue_dir) if queue_dir else None
@@ -88,20 +90,7 @@ class IngestService:
 
         task_id = f"ing_{uuid.uuid4().hex[:12]}"
         size = _clamp_batch(batch_size or self.default_batch_size)
-        conn = self._connect()
-        try:
-            _ensure_schema(conn)
-            conn.execute(
-                """
-                INSERT INTO ingest_tasks
-                (task_id, status, total, batch_size, pmc_ids, created_at, updated_at)
-                VALUES (?, 'queued', ?, ?, ?, ?, ?)
-                """,
-                (task_id, len(ids), size, json.dumps(ids), _now(), _now()),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        self.tasks.create(task_id, total=len(ids), batch_size=size, pmc_ids=json.dumps(ids))
 
         self.log(f"ingest queued: {task_id} ({len(ids)} papers, batch={size})")
         if self.queue_dir is not None:
@@ -132,19 +121,11 @@ class IngestService:
 
     def execute(self, task_id: str) -> dict[str, Any] | None:
         """Run an already-created task (called by the worker)."""
-        conn = self._connect()
-        try:
-            _ensure_schema(conn)
-            row = conn.execute(
-                "SELECT status, pmc_ids, batch_size FROM ingest_tasks WHERE task_id = ?",
-                (task_id,),
-            ).fetchone()
-            if row is None:
-                raise ValueError(f"unknown ingest task: {task_id}")
-            ids = json.loads(row["pmc_ids"] or "[]")
-            size = int(row["batch_size"] or self.default_batch_size)
-        finally:
-            conn.close()
+        row = self.tasks.get(task_id)
+        if row is None:
+            raise ValueError(f"unknown ingest task: {task_id}")
+        ids = json.loads(row["pmc_ids"] or "[]")
+        size = int(row["batch_size"] or self.default_batch_size)
 
         self._run(task_id, ids, size)
         return self.status(task_id)
@@ -153,14 +134,13 @@ class IngestService:
     def _run(self, task_id: str, pmc_ids: list[str], batch_size: int) -> None:
         conn = self._connect()
         try:
-            _ensure_schema(conn)
             with RUN_LOCK:
-                self._set(conn, task_id, status="running")
+                self.tasks.set(task_id, status="running")
                 failures: list[dict[str, str]] = []
                 processed = imported = 0
                 for start in range(0, len(pmc_ids), batch_size):
-                    if self._cancelled(conn, task_id):
-                        self._set(conn, task_id, status="cancelled")
+                    if self.tasks.cancelled(task_id):
+                        self.tasks.set(task_id, status="cancelled")
                         return
                     batch = pmc_ids[start:start + batch_size]
                     parsed = self._download_batch(batch, failures)
@@ -191,8 +171,7 @@ class IngestService:
                         f"{task_id}: batch {start // batch_size + 1} "
                         f"written={written} embedded={embedded}"
                     )
-                    self._set(
-                        conn,
+                    self.tasks.set(
                         task_id,
                         processed=processed,
                         imported=imported,
@@ -206,8 +185,7 @@ class IngestService:
                     status = "completed"
                 else:
                     status = "failed"
-                self._set(
-                    conn,
+                self.tasks.set(
                     task_id,
                     status=status,
                     processed=processed,
@@ -218,7 +196,7 @@ class IngestService:
                 )
         except Exception as exc:  # noqa: BLE001 - worker thread must always end in a known state
             try:
-                self._set(conn, task_id, status="failed", error=str(exc))
+                self.tasks.set(task_id, status="failed", error=str(exc))
             except Exception:
                 pass
             self.log(f"{task_id} failed: {exc}")
@@ -587,26 +565,10 @@ class IngestService:
 
     # ---------------------------------------------------------------- status
     def status(self, task_id: str) -> dict[str, Any] | None:
-        conn = self._connect()
-        try:
-            _ensure_schema(conn)
-            row = conn.execute("SELECT * FROM ingest_tasks WHERE task_id = ?", (task_id,)).fetchone()
-            return dict(row) if row else None
-        finally:
-            conn.close()
+        return self.tasks.get(task_id)
 
     def cancel(self, task_id: str) -> bool:
-        conn = self._connect()
-        try:
-            _ensure_schema(conn)
-            cur = conn.execute(
-                "UPDATE ingest_tasks SET cancel_requested = 1, updated_at = ? WHERE task_id = ?",
-                (_now(), task_id),
-            )
-            conn.commit()
-            return cur.rowcount > 0
-        finally:
-            conn.close()
+        return self.tasks.cancel(task_id)
 
     # --------------------------------------------------------------- helpers
     def _connect(self) -> sqlite3.Connection:
@@ -616,44 +578,6 @@ class IngestService:
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA synchronous=NORMAL")
         return conn
-
-    def _cancelled(self, conn: sqlite3.Connection, task_id: str) -> bool:
-        row = conn.execute(
-            "SELECT cancel_requested FROM ingest_tasks WHERE task_id = ?", (task_id,)
-        ).fetchone()
-        return bool(row and row["cancel_requested"])
-
-    def _set(self, conn: sqlite3.Connection, task_id: str, **fields: Any) -> None:
-        fields["updated_at"] = _now()
-        assignments = ", ".join(f"{key} = ?" for key in fields)
-        conn.execute(
-            f"UPDATE ingest_tasks SET {assignments} WHERE task_id = ?",
-            (*fields.values(), task_id),
-        )
-        conn.commit()
-
-
-def _ensure_schema(conn: sqlite3.Connection) -> None:
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS ingest_tasks (
-            task_id TEXT PRIMARY KEY,
-            status TEXT NOT NULL,
-            total INTEGER NOT NULL DEFAULT 0,
-            processed INTEGER NOT NULL DEFAULT 0,
-            imported INTEGER NOT NULL DEFAULT 0,
-            failed INTEGER NOT NULL DEFAULT 0,
-            batch_size INTEGER NOT NULL DEFAULT 5,
-            current TEXT,
-            error TEXT,
-            pmc_ids TEXT,
-            cancel_requested INTEGER NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-        """
-    )
-
 
 def _paper_id(pmc_id: str) -> str:
     import hashlib
