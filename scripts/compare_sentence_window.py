@@ -24,7 +24,7 @@ def main() -> None:
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--rerank-pool", type=int, default=100)
     parser.add_argument("--sent-k", type=int, default=200)
-    parser.add_argument("--max-full-chars", type=int, default=600)
+
     parser.add_argument("--output", default=str(ROOT / "eval" / "results" / "sentence_window_20.json"))
     args = parser.parse_args()
     seed_everything(42)
@@ -35,7 +35,7 @@ def main() -> None:
         if line.strip()
     ][: args.limit]
 
-    retriever = SentenceHybridRetriever(rerank_pool=args.rerank_pool, sentence_top_k=args.sent_k, max_full_chars=args.max_full_chars)
+    retriever = SentenceHybridRetriever(rerank_pool=args.rerank_pool, sentence_top_k=args.sent_k)
     rows = []
     for item in gold:
         expected = set(item.get("evidence") or [])

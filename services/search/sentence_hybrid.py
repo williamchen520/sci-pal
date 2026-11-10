@@ -13,7 +13,7 @@ from typing import Any, Dict, Iterable, List, Optional
 from config.paths import EMBEDDING_MODEL
 from services.search.pg_vector import PGVectorParagraphSearch
 from services.search.reranker import Reranker
-from services.search.sentence_window import build_context
+from services.search.sentence_window import WindowPolicy, build_context
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9]+")
 
@@ -35,7 +35,7 @@ class SentenceHybridRetriever:
         rerank_pool: int = 50,
         lexical_weight: float = 0.7,
         paragraph_weight: float = 0.3,
-        max_full_chars: int = 600,
+        context_policy: Optional[WindowPolicy] = None,
     ) -> None:
         from sentence_transformers import SentenceTransformer
 
@@ -49,7 +49,7 @@ class SentenceHybridRetriever:
         self.rerank_pool = rerank_pool
         self.lexical_weight = lexical_weight
         self.paragraph_weight = paragraph_weight
-        self.max_full_chars = max_full_chars
+        self.context_policy = context_policy or WindowPolicy.from_config()
 
     def _pg(self):
         from services.db.pg_pool import pg_connection
@@ -78,7 +78,7 @@ class SentenceHybridRetriever:
         if not ids:
             return {}
         rows = pg.execute(
-            "SELECT sentence_id, para_id, paper_id, text, sequence "
+            "SELECT sentence_id, para_id, paper_id, section_id, text, sequence "
             "FROM sentences WHERE para_id = ANY(%s) ORDER BY para_id, sequence",
             (ids,),
         ).fetchall()
@@ -194,7 +194,8 @@ class SentenceHybridRetriever:
             unit = build_context(
                 anchor,
                 context_rows.get(anchor["para_id"], []),
-                max_full_chars=self.max_full_chars,
+                query=query,
+                policy=self.context_policy,
             )
             units.append(unit.as_dict())
         return units
