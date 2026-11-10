@@ -32,12 +32,19 @@ class _Cursor:
 
 class PGReadCompat:
     def __init__(self):
-        from services.db.pg_pool import main_read_connection
+        self._pg = None
 
-        self._pg = main_read_connection()
+    def _connection(self):
+        if self._pg is None:
+            from services.db.pg_pool import main_read_connection
+
+            self._pg = main_read_connection()
+        return self._pg
 
     def execute(self, sql: str, params: Iterable[Any] = ()):
-        return _Cursor(self._pg.execute(sql.replace("?", "%s"), tuple(params)).fetchall())
+        return _Cursor(self._connection().execute(sql.replace("?", "%s"), tuple(params)).fetchall())
 
     def close(self) -> None:
-        self._pg.close()
+        if self._pg is not None:
+            self._pg.close()
+            self._pg = None
