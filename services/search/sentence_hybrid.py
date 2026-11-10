@@ -199,3 +199,55 @@ class SentenceHybridRetriever:
             )
             units.append(unit.as_dict())
         return units
+
+
+    def to_evidence_json(self, query: str, paper_id: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Return the same bundle shape as UnifiedRetriever.to_evidence_json.
+
+        The anchor sentence is the ranked unit; the logical window is attached
+        as context and is never scored.
+        """
+        top_k = int(kwargs.get("top_paragraphs") or kwargs.get("top_k") or 10)
+        units = self.search(query, top_k=top_k)
+        if paper_id:
+            units = [unit for unit in units if unit.get("paper_id") == paper_id]
+        evidence = []
+        for unit in units:
+            sentence_id = unit.get("sentence_id")
+            anchor_text = unit.get("anchor_text") or ""
+            evidence.append(
+                {
+                    "paper_id": unit.get("paper_id"),
+                    "para_id": unit.get("para_id"),
+                    "section_path": [],
+                    "text": unit.get("text") or anchor_text,
+                    "highlight": [
+                        {
+                            "sentence_id": sentence_id,
+                            "text": anchor_text,
+                            "score": unit.get("anchor_score"),
+                        }
+                    ],
+                    "matched_sentences": [
+                        {"sentence_id": sentence_id, "text": anchor_text}
+                    ],
+                    "paragraph_details": [
+                        {
+                            "para_id": unit.get("para_id"),
+                            "sentence_ids": [
+                                row.get("sentence_id")
+                                for row in unit.get("window_sentences") or []
+                                if row.get("sentence_id")
+                            ],
+                            "text": unit.get("paragraph_text") or "",
+                        }
+                    ],
+                }
+            )
+        return {
+            "query": query,
+            "evidence": evidence,
+            "sufficient": bool(evidence),
+            "sufficiency": {"sufficient": bool(evidence), "reason": "sentence_backend"},
+            "summaries": [],
+        }
