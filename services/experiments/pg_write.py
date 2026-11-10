@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 from services.db.pg_pool import pg_connection
 from services.experiments import pg_read, pg_writes
-from services.experiments.service import (
+from services.experiments.model import (
     STATUSES,
     ProtocolNotFound,
     _revision_hash,

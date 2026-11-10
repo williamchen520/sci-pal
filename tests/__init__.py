@@ -33,3 +33,12 @@ def _test_audit(workspace_id, actor_user_id, action, *, target=None, detail=None
 
 
 _tenancy_permissions.audit = _test_audit
+
+import services.experiments.service as _exp_service
+import services.experiments.runs as _exp_runs
+import tests.support.experiments_sqlite as _exp_sqlite
+import tests.support.experiments_runs_sqlite as _exp_runs_sqlite
+
+_exp_sqlite.ProtocolNotFound = _exp_service.ProtocolNotFound
+_exp_service.configure(_exp_sqlite)
+_exp_runs.configure(_exp_runs_sqlite)
