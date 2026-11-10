@@ -21,6 +21,21 @@ if [ -n "$sqlite_changed" ] && command -v python >/dev/null 2>&1; then
     }
 fi
 
+sql_changed=$(git diff --cached --name-only --diff-filter=ACMR -- '*.py' '*.sql')
+if [ -n "$sql_changed" ] && command -v python >/dev/null 2>&1; then
+    if [ "${SCIPAL_ALLOW_DESTRUCTIVE:-0}" = "1" ]; then
+        python scripts/sql_guard.py --staged --forbid-schema public --allow-destructive || {
+            echo "pre-commit: unsafe destructive SQL; refusing commit." >&2
+            exit 1
+        }
+    else
+        python scripts/sql_guard.py --staged --forbid-schema public || {
+            echo "pre-commit: unsafe destructive SQL; refusing commit." >&2
+            exit 1
+        }
+    fi
+fi
+
 staged_json=$(git diff --cached --name-only --diff-filter=ACMRD -- ARCHITECTURE.json)
 changed=$(git diff --cached --name-only --diff-filter=ACMR -- \
     ARCHITECTURE.json api_server.py routes scripts/validate_arch.py)
@@ -55,3 +70,5 @@ if [ -n "$changed" ]; then
 fi
 
 exit 0
+
+
