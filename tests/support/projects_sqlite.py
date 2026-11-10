@@ -1,3 +1,4 @@
+# sql_guard: allow-file
 """Projects scoped to a workspace."""
 
 from __future__ import annotations
@@ -358,3 +359,35 @@ def copy_project(
         return get_project(new_id, workspace_id, actor_user_id, db_path=db_path)
     finally:
         conn.close()
+
+
+class SqliteProjects:
+    """Test adapter exposing the same methods as pg_service."""
+
+    def __init__(self, db_path):
+        self.db_path = db_path
+
+    def list_projects(self, workspace_id, user_id):
+        return list_projects(workspace_id, user_id, db_path=self.db_path)
+
+    def get_project(self, project_id, workspace_id, user_id):
+        return get_project(project_id, workspace_id, user_id, db_path=self.db_path)
+
+    def create_project(self, workspace_id, user_id, name, description, *, status="active"):
+        return create_project(
+            workspace_id, user_id, name, description, status=status, db_path=self.db_path
+        )
+
+    def update_project(self, project_id, workspace_id, user_id, *, name=None, description=None, status=None):
+        return update_project(
+            project_id, workspace_id, user_id, name=name, description=description,
+            status=status, db_path=self.db_path,
+        )
+
+    def add_member(self, project_id, workspace_id, user_id, target_user_id, role):
+        return add_member(
+            project_id, workspace_id, user_id, target_user_id, role, db_path=self.db_path
+        )
+
+    def copy_project(self, project_id, workspace_id, user_id):
+        return copy_project(project_id, workspace_id, user_id, db_path=self.db_path)
