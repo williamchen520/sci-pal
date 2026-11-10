@@ -17,7 +17,6 @@ V1.0 - 混合检索系统 P1 模块
 """
 
 import hashlib
-import sqlite3
 import threading
 import time
 import uuid
@@ -37,17 +36,8 @@ if sys.platform == "win32":
 
 
 # 路径配置（跟项目保持一致）
-from config.paths import (
-    CHROMA_PATH as _CHROMA_PATH,
-    DB_PATH as _DB_PATH,
-    EMBEDDING_MODEL,
-    MODELS_DIR,
-    XML_DIR,
-)
-DB_PATH = str(_DB_PATH)
-CHROMA_PATH = str(_CHROMA_PATH)
+from config.paths import EMBEDDING_MODEL, MODELS_DIR, XML_DIR
 XML_OUTPUT_DIR = str(XML_DIR)
-COLLECTION_NAME = "sci_pal_paragraphs"
 
 # Embedding 模型（跟主程序一致：bge-base-en-v1.5）
 # 本地模型路径（如果有的话优先用本地）
@@ -537,38 +527,23 @@ class OnlineDownloader:
                 print(f"❌ 下载任务失败: {e}")
 
     def _import_new_papers(self, task: DownloadTask):
-        """
-        增量导入新下载的论文到数据库（只导入新的，不清空旧数据）。
-        """
+        """Import newly downloaded XML directly into PostgreSQL."""
         from import_xml_v2 import parse_jats_xml
 
-        pg_only = paper_pg_writes.pg_only() and paper_pg_writes.enabled()
-        conn = None if pg_only else sqlite3.connect(DB_PATH)
-        c = conn.cursor() if conn is not None else None
+        if not paper_pg_writes.enabled():
+            raise RuntimeError("paper write backend unavailable")
+
         children: list[tuple[str, list[dict], list[dict]]] = []
         paper_rows: list[dict] = []
-
         for i, pmc_id in enumerate(task.new_paper_ids, 1):
             xml_file = Path(XML_OUTPUT_DIR) / f"{pmc_id}.xml"
-
             if not xml_file.exists():
-                if self.verbose:
-                    print(f"  ⚠️  {pmc_id}: 文件不存在，跳过")
                 continue
-
             try:
                 data = parse_jats_xml(xml_file)
-
                 if data is None or not data["title"]:
-                    if self.verbose:
-                        print(f"  ⚠️  {pmc_id}: 无标题，跳过")
                     continue
-
-                # 生成 paper_id（跟 import_xml_v2.py 一致）
-                paper_hash = hashlib.md5(pmc_id.encode()).hexdigest()[:8]
-                paper_id = f"paper_{pmc_id}_{paper_hash}_xml"
-
-                # INSERT OR REPLACE：如果已存在就更新，不存在就插入
+                paper_id = f"paper_{pmc_id}_{hashlib.md5(pmc_id.encode()).hexdigest()[:8]}_xml"
                 paper_rows.append(
                     {
                         "paper_id": paper_id,
@@ -581,181 +556,70 @@ class OnlineDownloader:
                         "doi": data.get("doi") or "",
                     }
                 )
-                if not pg_only:
-                    c.execute("""
-                        INSERT OR REPLACE INTO papers
-                        (paper_id, filename, title, abstract, authors, parse_engine)
-                        VALUES (?, ?, ?, ?, ?, 'xml')
-                    """, (paper_id, f"{pmc_id}.xml", data["title"], data["abstract"], data["authors"]))
-
-                # 先删除这篇论文旧的段落（如果有），再插入新的
-                if not pg_only:
-                    c.execute("DELETE FROM paragraphs WHERE paper_id = ?", (paper_id,))
-
-                # 插入段落
-                paper_paragraphs: list[dict] = []
-                for j, para in enumerate(data["paragraphs"]):
-                    para_id = f"{paper_id}_para_{j:05d}"
-                    paper_paragraphs.append(
-                        {
-                            "para_id": para_id,
-                            "section_level1": para["section"],
-                            "text": para["text"],
-                            "sequence": para["sequence"],
-                        }
-                    )
-                    if not pg_only:
-                        c.execute("""
-                            INSERT OR REPLACE INTO paragraphs
-                            (para_id, paper_id, section_level1, text, sequence, parse_engine)
-                            VALUES (?, ?, ?, ?, ?, 'xml')
-                        """, (para_id, paper_id, para["section"], para["text"], para["sequence"]))
-
+                paper_paragraphs = [
+                    {
+                        "para_id": f"{paper_id}_para_{j:05d}",
+                        "section_level1": para["section"],
+                        "text": para["text"],
+                        "sequence": para["sequence"],
+                    }
+                    for j, para in enumerate(data["paragraphs"])
+                ]
                 children.append((paper_id, paper_paragraphs, []))
                 task.imported += 1
-
+            except Exception as bex:  # noqa: BLE001
                 if self.verbose:
-                    print(f"  ✅ [{i}/{len(task.new_paper_ids)}] {pmc_id}: {len(data['paragraphs'])} 段落")
-
-            except Exception as e:
-                if self.verbose:
-                    print(f"  ❌ [{i}/{len(task.new_paper_ids)}] {pmc_id}: {str(e)[:100]}")
-
-        try:
-            if paper_pg_writes.enabled():
-                paper_pg_writes.write_papers_batch(paper_rows, children)
-            if conn is not None:
-                conn.commit()
-        finally:
-            if conn is not None:
-                conn.close()
-
-        if self.verbose:
-            print(f"  ✅ 增量导入完成: {task.imported} 篇")
+                    print(f"  FAIL {pmc_id}: {str(bex)[:100]}")
+        paper_pg_writes.write_papers_batch(paper_rows, children)
 
     def _incremental_index(self, task: DownloadTask):
-        """
-        增量建向量索引（只对新论文的段落做 embedding，追加到 chroma，不重建整个库）。
-        """
+        """Embed only newly downloaded papers into pgvector."""
         if not task.new_paper_ids:
-            if self.verbose:
-                print("  ℹ️  无新论文，跳过索引")
             return
+        if os.environ.get("SCIPAL_VECTOR_BACKEND", "").strip().lower() not in {
+            "pgvector", "pg_vec", "postgres"
+        }:
+            raise RuntimeError("pgvector backend is required for incremental indexing")
 
-        try:
-            import chromadb
-            from sentence_transformers import SentenceTransformer
-        except ImportError as e:
-            if self.verbose:
-                print(f"  ⚠️  缺少依赖: {e}，跳过索引")
-            return
+        from sentence_transformers import SentenceTransformer
+        from services.db.pg_pool import ingest_connection
 
-        # 1. 加载 embedding 模型（优先本地路径）
         model_path = LOCAL_EMBEDDING_PATH if Path(LOCAL_EMBEDDING_PATH).exists() else EMBEDDING_MODEL
-        if self.verbose:
-            print(f"  📥 加载 embedding 模型: {model_path}")
-
+        model = getattr(self, "_model", None)
+        if model is None:
+            model = SentenceTransformer(str(model_path), device=os.environ.get("SCIPAL_INGEST_DEVICE", "cpu"))
+            self._model = model
+        paper_ids = [
+            f"paper_{pmc_id}_{hashlib.md5(pmc_id.encode()).hexdigest()[:8]}_xml"
+            for pmc_id in task.new_paper_ids
+        ]
+        pg = ingest_connection()
         try:
-            model = SentenceTransformer(model_path)
-        except Exception as e:
-            if self.verbose:
-                print(f"  ⚠️  本地模型加载失败，尝试在线加载: {e}")
-            model = SentenceTransformer(EMBEDDING_MODEL)
-
-        # 2. 连接 ChromaDB（获取现有 collection，不删除！）
-        if self.verbose:
-            print(f"  📥 连接 ChromaDB: {CHROMA_PATH}")
-        client = chromadb.PersistentClient(path=CHROMA_PATH)
-
-        # 获取或创建 collection（不删除旧的！）
-        try:
-            collection = client.get_collection(name=COLLECTION_NAME)
-            if self.verbose:
-                print(f"  ✅ 现有 collection 已加载（增量追加模式）")
-        except Exception:
-            collection = client.create_collection(
-                name=COLLECTION_NAME,
-                metadata={"hnsw:space": "cosine"},
-            )
-            if self.verbose:
-                print(f"  ✅ 新 collection 已创建")
-
-        # 3. 查询新论文的段落
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-
-        # 构造 paper_id 列表（跟导入时的格式一致）
-        paper_ids = []
-        for pmc_id in task.new_paper_ids:
-            paper_hash = hashlib.md5(pmc_id.encode()).hexdigest()[:8]
-            paper_ids.append(f"paper_{pmc_id}_{paper_hash}_xml")
-
-        if not paper_ids:
-            conn.close()
-            return
-
-        # 查询这些论文的所有段落
-        placeholders = ",".join("?" * len(paper_ids))
-        cursor = conn.execute(f"""
-            SELECT para_id, paper_id, section_level1, text
-            FROM paragraphs
-            WHERE paper_id IN ({placeholders})
-        """, paper_ids)
-        rows = cursor.fetchall()
-        conn.close()
-
-        if self.verbose:
-            print(f"  📊 新论文段落数: {len(rows)}")
-
-        if not rows:
-            if self.verbose:
-                print("  ℹ️  无段落，跳过索引")
-            return
-
-        # 4. 批量 embedding + 增量追加到 chroma
-        batch_size = 256  # 小批量，避免内存溢出
-        total_indexed_paras = 0
-
-        for i in range(0, len(rows), batch_size):
-            batch = rows[i:i + batch_size]
-
-            ids = [row["para_id"] for row in batch]
-            documents = [row["text"] for row in batch]
-            metadatas = [
-                {
-                    "paper_id": row["paper_id"] or "",
-                    "section_l1": row["section_level1"] or "",
-                }
-                for row in batch
-            ]
-
-            # 做 embedding
-            embeddings = model.encode(documents).tolist()
-
-            # 增量追加到 chroma（collection.add 会自动去重，相同 ID 会更新）
-            collection.add(
-                ids=ids,
-                documents=documents,
-                metadatas=metadatas,
-                embeddings=embeddings,
-            )
-
-            total_indexed_paras += len(batch)
-            if self.verbose:
-                print(f"  🔢 已索引 {total_indexed_paras}/{len(rows)} 段落")
-
-        # 统计索引了多少篇论文
-        indexed_paper_ids = set(row["paper_id"] for row in rows)
-        task.indexed = len(indexed_paper_ids)
-
-        if self.verbose:
-            print(f"  ✅ 增量索引完成: {task.indexed} 篇论文，{total_indexed_paras} 段落")
-            print(f"  ✅ 向量库已自动更新，检索层无需改动，新论文立即可搜！")
-
-
-# ============================================================
-# 单例
-# ============================================================
+            rows = pg.execute(
+                "SELECT para_id,paper_id,section_level1,text FROM paragraphs "
+                "WHERE paper_id = ANY(%s) AND length(btrim(text)) >= 10",
+                (paper_ids,),
+            ).fetchall()
+            for start in range(0, len(rows), 256):
+                batch = rows[start:start + 256]
+                vectors = model.encode(
+                    [row["text"] for row in batch],
+                    normalize_embeddings=True,
+                    show_progress_bar=False,
+                )
+                with pg.cursor() as cur:
+                    cur.executemany(
+                        "INSERT INTO paragraph_embeddings (para_id,paper_id,embedding) "
+                        "VALUES (%s,%s,%s::vector) ON CONFLICT (para_id) DO NOTHING",
+                        [
+                            (row["para_id"], row["paper_id"], "[" + ",".join(f"{float(v):.6f}" for v in vec) + "]")
+                            for row, vec in zip(batch, vectors)
+                        ],
+                    )
+                pg.commit()
+        finally:
+            pg.close()
+        task.indexed = len({row["paper_id"] for row in rows})
 
 _online_downloader: Optional[OnlineDownloader] = None
 
