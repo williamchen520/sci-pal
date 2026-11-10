@@ -13,6 +13,13 @@ if [ -n "$new_services" ] && command -v python >/dev/null 2>&1; then
     }
 fi
 
+if command -v python >/dev/null 2>&1; then
+    python scripts/guard.py --staged --skip-rule route-unique-owner || {
+        echo "pre-commit: architecture coupling rule violated; refusing commit." >&2
+        exit 1
+    }
+fi
+
 sqlite_changed=$(git diff --cached --name-only --diff-filter=ACMR -- services routes api_server.py)
 if [ -n "$sqlite_changed" ] && command -v python >/dev/null 2>&1; then
     python scripts/audit_sqlite.py || {

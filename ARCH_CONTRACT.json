@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-09",
+  "updated": "2026-11-10",
   "rules": [
     {
       "id": "route-unique-owner",
@@ -28,6 +28,80 @@
         "only_new": true
       },
       "reason": "新增 service 不得再引入 SQLite；存量由 sqlite_connect_allowlist 只减不增"
+    },
+    {
+      "id": "review-no-storage",
+      "kind": "forbid_import",
+      "severity": "error",
+      "params": {
+        "scope": "services/review/**/*.py",
+        "modules": [
+          "sqlite3",
+          "chromadb"
+        ],
+        "only_new": true
+      },
+      "reason": "综述层必须通过检索/DAO，不得直接依赖 SQLite/Chroma"
+    },
+    {
+      "id": "qa-no-evidence-extractor",
+      "kind": "forbid_import",
+      "severity": "error",
+      "params": {
+        "scope": "services/qa/**/*.py",
+        "modules": [
+          "services.review.evidence_extractor"
+        ],
+        "names": [
+          "EvidenceExtractor"
+        ],
+        "only_new": false
+      },
+      "reason": "问答层使用自己的证据链，不混用综述的证据抽取"
+    },
+    {
+      "id": "downloader-no-llm",
+      "kind": "forbid_import",
+      "severity": "error",
+      "params": {
+        "scope": "services/search/online_downloader.py",
+        "modules": [
+          "services.llm_client",
+          "services.llm"
+        ],
+        "names": [
+          "LLMClient"
+        ],
+        "only_new": false
+      },
+      "reason": "下载层只负责取数，不做 AI 推理"
+    },
+    {
+      "id": "search-no-review-generator",
+      "kind": "forbid_import",
+      "severity": "error",
+      "params": {
+        "scope": "services/search/**/*.py",
+        "modules": [
+          "services.review.review_generator"
+        ],
+        "names": [
+          "ReviewGenerator"
+        ],
+        "only_new": false
+      },
+      "reason": "检索层不能反向依赖综述业务层"
+    },
+    {
+      "id": "no-direct-data-db",
+      "kind": "forbid_pattern",
+      "severity": "error",
+      "params": {
+        "scope": "services/**/*.py",
+        "pattern": "[\"']data/[^\"']+\\.db[\"']",
+        "only_new": true
+      },
+      "reason": "任何模块不得直接读写 data/*.db，必须走 DAO/配置"
     }
   ],
   "exceptions": []
