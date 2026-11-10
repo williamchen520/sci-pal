@@ -10,6 +10,7 @@ from flask import Flask
 
 from routes.projects import build_projects_blueprint
 from services.tenancy import add_member, create_user, create_workspace
+from tests.support.projects_sqlite import SqliteProjects
 
 
 class ProjectRouteTests(unittest.TestCase):
@@ -23,7 +24,7 @@ class ProjectRouteTests(unittest.TestCase):
         self.ws_b = create_workspace("B", self.bob["user_id"], db_path=self.db)["workspace_id"]
         app = Flask(__name__)
         app.secret_key = "test"
-        app.register_blueprint(build_projects_blueprint(db_path=self.db))
+        app.register_blueprint(build_projects_blueprint(db_path=self.db, backend=SqliteProjects(self.db)))
         self.client = app.test_client()
 
     def login(self, user: dict, workspace_id: str) -> None:
