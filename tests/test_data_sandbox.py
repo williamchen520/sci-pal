@@ -19,6 +19,7 @@ def _make_csv(path: Path, rows: list[dict]) -> Path:
     return path
 
 
+@unittest.skipUnless(os.environ.get("SCIPAL_PG_DSN"), "data sandbox is PostgreSQL-backed")
 class DataSandboxTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)

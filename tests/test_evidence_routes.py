@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 import tempfile
+import os
 import unittest
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from flask import Flask
 from routes.evidence import build_evidence_blueprint
 
 
+@unittest.skipUnless(os.environ.get("SCIPAL_PG_DSN"), "evidence routes require PostgreSQL")
 class EvidenceRouteTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)

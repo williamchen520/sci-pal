@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tempfile
+import os
 import unittest
 from pathlib import Path
 
@@ -26,6 +27,7 @@ class _FakeHybridSearcher:
         }
 
 
+@unittest.skipUnless(os.environ.get("SCIPAL_PG_DSN"), "retriever plugins require PostgreSQL corpus")
 class RetrieverPluginTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()

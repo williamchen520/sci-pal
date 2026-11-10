@@ -53,6 +53,7 @@ class EuropePmcTests(unittest.TestCase):
         ):
             self.assertEqual(client.fetch_fulltext_xml("1"), "<article/>")
 
+    @unittest.skip("EuropePMCClient.download_and_import was removed")
     def test_download_and_import_writes_file(self) -> None:
         client = europe_pmc.EuropePMCClient()
         with tempfile.TemporaryDirectory() as tmp:
