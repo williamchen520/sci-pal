@@ -16,56 +16,62 @@ from services.search.context_expander import ContextExpander
 
 
 def _fts_bundle(query: str, top_k: int) -> dict:
-    """Last-resort evidence bundle using FTS paragraphs, no vector table."""
-    from services.search.hybrid_search import get_shared_hybrid
+    """Last-resort evidence bundle: PostgreSQL sentence FTS only."""
     from services.db.pg_pool import main_read_connection
 
-    hits = get_shared_hybrid().fts_search(query, top_k=top_k)
-    if not hits:
-        raise RuntimeError("no FTS evidence")
-    evidence = []
     pg = main_read_connection()
     try:
-        for hit in hits:
-            para_id = hit.get("para_id")
-            paper_id = hit.get("paper_id")
-            if not para_id or not paper_id:
+        rows = pg.execute(
+            "SELECT sentence_id, paper_id, para_id, text, "
+            "ts_rank(search_vector, plainto_tsquery('english', %s)) AS rank "
+            "FROM sentences "
+            "WHERE search_vector @@ plainto_tsquery('english', %s) "
+            "ORDER BY rank DESC, sentence_id LIMIT %s",
+            (query, query, max(top_k * 3, top_k)),
+        ).fetchall()
+        if not rows:
+            raise RuntimeError("no FTS evidence")
+        seen = set()
+        evidence = []
+        for row in rows:
+            para_id = row["para_id"]
+            if not para_id or para_id in seen:
                 continue
-            rows = pg.execute(
+            seen.add(para_id)
+            siblings = pg.execute(
                 "SELECT sentence_id, text FROM sentences "
-                "WHERE para_id = %s ORDER BY sequence LIMIT 3",
+                "WHERE para_id = %s ORDER BY seq LIMIT 3",
                 (para_id,),
             ).fetchall()
-            if not rows:
-                continue
             evidence.append(
                 {
-                    "paper_id": paper_id,
+                    "paper_id": row["paper_id"],
                     "para_id": para_id,
                     "section_path": [],
-                    "text": hit.get("text") or "",
-                    "highlight": [{"sentence_id": rows[0]["sentence_id"], "text": rows[0]["text"]}],
+                    "text": row["text"] or "",
+                    "highlight": [{"sentence_id": row["sentence_id"], "text": row["text"]}],
                     "matched_sentences": [
-                        {"sentence_id": row["sentence_id"], "text": row["text"]} for row in rows
+                        {"sentence_id": item["sentence_id"], "text": item["text"]}
+                        for item in siblings
                     ],
                     "paragraph_details": [
                         {
                             "para_id": para_id,
-                            "sentence_ids": [row["sentence_id"] for row in rows],
-                            "text": hit.get("text") or "",
+                            "sentence_ids": [item["sentence_id"] for item in siblings],
+                            "text": " ".join((item["text"] or "") for item in siblings),
                         }
                     ],
                 }
             )
+            if len(evidence) >= top_k:
+                break
     finally:
         pg.close()
-    if not evidence:
-        raise RuntimeError("no sentence evidence")
     return {
         "query": query,
         "evidence": evidence,
-        "sufficient": True,
-        "sufficiency": {"sufficient": True, "reason": "fts_fallback"},
+        "sufficient": bool(evidence),
+        "sufficiency": {"sufficient": bool(evidence), "reason": "fts_fallback"},
         "summaries": [],
     }
 
