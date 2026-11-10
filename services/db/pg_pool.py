@@ -116,6 +116,14 @@ def main_read_connection():
     return pg_connection(dsn)
 
 
+def corpus_connection():
+    """Read-only corpus connection (P4b: rebuild corpus, not app state)."""
+    dsn = os.environ.get("SCIPAL_PG_CORPUS_DSN", "").strip()
+    if not dsn:
+        return main_read_connection()
+    return pg_connection(dsn)
+
+
 def ingest_connection():
     """Ingest connection: main-library content writes, no tenant writes."""
     dsn = os.environ.get("SCIPAL_PG_INGEST_DSN", "").strip()
