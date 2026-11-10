@@ -15,6 +15,61 @@ from services.qa.verify import verify_answer
 from services.search.context_expander import ContextExpander
 
 
+def _fts_bundle(query: str, top_k: int) -> dict:
+    """Last-resort evidence bundle using FTS paragraphs, no vector table."""
+    from services.search.hybrid_search import get_shared_hybrid
+    from services.db.pg_pool import main_read_connection
+
+    hits = get_shared_hybrid().fts_search(query, top_k=top_k)
+    if not hits:
+        raise RuntimeError("no FTS evidence")
+    evidence = []
+    pg = main_read_connection()
+    try:
+        for hit in hits:
+            para_id = hit.get("para_id")
+            paper_id = hit.get("paper_id")
+            if not para_id or not paper_id:
+                continue
+            rows = pg.execute(
+                "SELECT sentence_id, text FROM sentences "
+                "WHERE para_id = %s ORDER BY sequence LIMIT 3",
+                (para_id,),
+            ).fetchall()
+            if not rows:
+                continue
+            evidence.append(
+                {
+                    "paper_id": paper_id,
+                    "para_id": para_id,
+                    "section_path": [],
+                    "text": hit.get("text") or "",
+                    "highlight": [{"sentence_id": rows[0]["sentence_id"], "text": rows[0]["text"]}],
+                    "matched_sentences": [
+                        {"sentence_id": row["sentence_id"], "text": row["text"]} for row in rows
+                    ],
+                    "paragraph_details": [
+                        {
+                            "para_id": para_id,
+                            "sentence_ids": [row["sentence_id"] for row in rows],
+                            "text": hit.get("text") or "",
+                        }
+                    ],
+                }
+            )
+    finally:
+        pg.close()
+    if not evidence:
+        raise RuntimeError("no sentence evidence")
+    return {
+        "query": query,
+        "evidence": evidence,
+        "sufficient": True,
+        "sufficiency": {"sufficient": True, "reason": "fts_fallback"},
+        "summaries": [],
+    }
+
+
 def build_evidence_blueprint(
     *,
     db_path,
@@ -69,8 +124,12 @@ def build_evidence_blueprint(
                     query, paper_id=paper_id, top_paragraphs=top_k
                 )
             except Exception as fallback_exc:  # noqa: BLE001
-                log.exception("evidence fallback failed")
-                return jsonify({"error": str(fallback_exc)[:300]}), 500
+                log.warning("unified fallback failed; trying FTS: %s", fallback_exc)
+                try:
+                    bundle = _fts_bundle(query, top_k)
+                except Exception as fts_exc:  # noqa: BLE001
+                    log.exception("evidence FTS fallback failed")
+                    return jsonify({"error": str(fts_exc)[:300]}), 503
         return jsonify(bundle)
 
     @bp.route("/evidence/context", methods=["GET"])
