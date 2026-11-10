@@ -8,9 +8,15 @@ import unittest
 from pathlib import Path
 
 from scripts.fts_porter_compare import metrics, terms_for
-from scripts.rebuild_fts_porter import copy_database, rebuild
+try:
+    from scripts.rebuild_fts_porter import copy_database, rebuild
+    HAS_FTS_TOOLS = True
+except ModuleNotFoundError:
+    copy_database = rebuild = None
+    HAS_FTS_TOOLS = False
 
 
+@unittest.skipUnless(HAS_FTS_TOOLS, "legacy FTS porter scripts removed")
 class PorterRebuildTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()

@@ -20,7 +20,6 @@ from services.experiments.model import (
 
 
 def _pg():
-    from services.db.pg_pool import pg_connection
     from services.db.tenant_pilot import set_search_path
 
     pg = pg_connection()
