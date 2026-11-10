@@ -29,7 +29,7 @@ def main() -> None:
     conn = psycopg.connect(args.dsn, autocommit=True)
     conn.execute(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA}")
     conn.execute(f"SET search_path TO {SCHEMA}, public")
-    conn.execute("DROP TABLE IF EXISTS paragraph_embeddings, sentences, paragraphs, papers CASCADE")
+    conn.execute("DROP TABLE IF EXISTS scifact_eval.paragraph_embeddings, scifact_eval.sentences, scifact_eval.paragraphs, scifact_eval.papers CASCADE")
     conn.execute(
         """
         CREATE TABLE papers (
