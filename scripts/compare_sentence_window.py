@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 import sys
 import time
 from pathlib import Path
@@ -11,25 +13,29 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from services.search.determinism import seed_everything
 from services.search.sentence_hybrid import SentenceHybridRetriever  # noqa: E402
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--gold", default=str(ROOT / "eval" / "gold" / "seed_100.jsonl"))
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--rerank-pool", type=int, default=100)
     parser.add_argument("--sent-k", type=int, default=200)
+    parser.add_argument("--max-full-chars", type=int, default=600)
     parser.add_argument("--output", default=str(ROOT / "eval" / "results" / "sentence_window_20.json"))
     args = parser.parse_args()
+    seed_everything(42)
 
     gold = [
         json.loads(line)
-        for line in (ROOT / "eval" / "gold" / "seed_100.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in Path(args.gold).read_text(encoding="utf-8").splitlines()
         if line.strip()
     ][: args.limit]
 
-    retriever = SentenceHybridRetriever(rerank_pool=args.rerank_pool, sentence_top_k=args.sent_k)
+    retriever = SentenceHybridRetriever(rerank_pool=args.rerank_pool, sentence_top_k=args.sent_k, max_full_chars=args.max_full_chars)
     rows = []
     for item in gold:
         expected = set(item.get("evidence") or [])
