@@ -85,3 +85,37 @@ sentence hybrid + rerank
 3. 逻辑词开/关对照
 4. 指标看 anchor recall + context 覆盖率，不看窗口排序
 ```
+
+
+## 6. 生产部署发现
+
+部署 #631 后 `/api/evidence/search` 返回 500：
+
+```text
+psycopg.errors.UndefinedTable:
+relation "paragraph_embeddings" does not exist
+```
+
+原因：
+
+```text
+生产 public 仍是恢复后的 3,301 篇快照
+该快照没有 paragraph_embeddings
+sentence backend 依赖它
+```
+
+处理：
+
+```text
+evidence_search 增加 sentence -> unified 自动回退
+```
+
+边界：
+
+```text
+sentence 路径仍默认
+embeddings 恢复后自动生效
+当前生产实际走 unified fallback
+```
+
+这说明 P3 不能只看重建库指标；生产 corpus 的向量表必须先补齐。
