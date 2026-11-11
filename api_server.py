@@ -98,6 +98,9 @@ def _require_api_token():
     expected_internal = os.environ.get("SCIPAL_INTERNAL_TOKEN", "").strip()
     if expected_internal and internal == expected_internal:
         g.owner = "internal"
+        if not session.get("user_id"):
+            session["user_id"] = os.environ.get("SCIPAL_INTERNAL_USER_ID", "")
+            session["workspace_id"] = os.environ.get("SCIPAL_INTERNAL_WORKSPACE_ID", "ws_default")
         return None
     if _TOKENS:
         owner = _TOKENS.get(token)
