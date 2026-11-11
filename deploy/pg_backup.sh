@@ -16,7 +16,7 @@ log() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*"; }
 
 last_age() {
   local name="$1" latest
-  latest=$(find "$OUT" -maxdepth 1 -name "${name}-*.dump" -printf '%T@\n' 2>/dev/null | sort -n | tail -1)
+  latest=$(find "$OUT" -maxdepth 1 -name "${name}-*.dump*" -printf '%T@\n' 2>/dev/null | sort -n | tail -1)
   if [ -z "$latest" ]; then echo 999999999; return; fi
   echo $(( $(date +%s) - ${latest%.*} ))
 }
@@ -24,11 +24,25 @@ last_age() {
 dump() {
   local name="$1" dsn="$2"
   if [ -z "$dsn" ]; then log "skip $name: DSN missing"; return 1; fi
+  if [ -z "${SCIPAL_BACKUP_PASSPHRASE:-}" ]; then
+    log "FAILED $name: SCIPAL_BACKUP_PASSPHRASE missing; refusing plaintext"
+    return 1
+  fi
   local target="$OUT/${name}-$(date -u +%Y%m%d-%H%M%S).dump"
   log "start $name -> $target"
   if pg_dump "$dsn" --format=custom --no-owner --no-acl --file "$target" \
      && pg_restore --list "$target" >/dev/null 2>&1; then
-    log "ok $name $(du -h "$target" | cut -f1)"
+    local encrypted="${target}.enc"
+    if openssl enc -aes-256-cbc -pbkdf2 -salt -in "$target" -out "$encrypted" \
+       -pass env:SCIPAL_BACKUP_PASSPHRASE; then
+      rm -f "$target"
+      chmod 600 "$encrypted"
+      log "ok $name $(du -h "$encrypted" | cut -f1) encrypted"
+    else
+      log "FAILED $name: encryption failed; removing plaintext"
+      rm -f "$target" "$encrypted"
+      return 1
+    fi
   else
     log "FAILED $name; removing partial"
     rm -f "$target"
@@ -38,7 +52,7 @@ dump() {
 
 prune() {
   local name="$1" retention="$2"
-  find "$OUT" -maxdepth 1 -name "${name}-*.dump" -mtime +$(( retention / 86400 )) -print -delete 2>/dev/null
+  find "$OUT" -maxdepth 1 -name "${name}-*.dump*" -mtime +$(( retention / 86400 )) -print -delete 2>/dev/null
 }
 
 trap 'log "stopping"; exit 0' TERM INT
