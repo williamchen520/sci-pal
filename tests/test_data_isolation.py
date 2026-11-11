@@ -34,6 +34,20 @@ class ConnectionSplitTests(unittest.TestCase):
                 self.assertEqual(pg_pool.admin_connection(), "postgresql://core")
                 self.assertEqual(pg_pool.tenant_write_connection(), "postgresql://core")
 
+    def test_auth_uses_auth_or_core_dsn(self) -> None:
+        env = {
+            "SCIPAL_AUTH_DSN": "postgresql://auth",
+            "SCIPAL_CORE_DSN": "postgresql://core",
+            "SCIPAL_PG_CORPUS_DSN": "postgresql://corpus",
+        }
+        with mock.patch.dict(os.environ, env, clear=False):
+            with mock.patch.object(pg_pool, "pg_connection", side_effect=lambda dsn: dsn):
+                self.assertEqual(pg_pool.auth_connection(), "postgresql://auth")
+        env.pop("SCIPAL_AUTH_DSN")
+        with mock.patch.dict(os.environ, env, clear=False):
+            with mock.patch.object(pg_pool, "pg_connection", side_effect=lambda dsn: dsn):
+                self.assertEqual(pg_pool.auth_connection(), "postgresql://core")
+
     def test_corpus_writes_never_use_core_dsn(self) -> None:
         env = {
             "SCIPAL_CORE_DSN": "postgresql://core",
