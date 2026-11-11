@@ -15,7 +15,7 @@ import sys
 import threading
 from pathlib import Path
 from typing import Optional, Dict
-from flask import Flask, g, jsonify, request, send_from_directory, Response
+from flask import Flask, g, jsonify, request, send_from_directory, Response, session
 
 # Ensure project root is on sys.path for services.* imports
 PROJECT_ROOT = Path(__file__).parent
@@ -86,22 +86,27 @@ def _require_api_token():
     path = request.path
     if not path.startswith("/api/"):
         return None
-    if path in ("/api/health",):
+    if path in ("/api/health", "/api/auth/login"):
         return None
     if path.endswith("/pdf") and request.args.get("token"):
         return None
+    if session.get("user_id"):
+        return None
     auth = request.headers.get("Authorization", "")
     token = auth[7:] if auth.startswith("Bearer ") else ""
+    internal = request.headers.get("X-SCIPAL-Internal-Token", "")
+    expected_internal = os.environ.get("SCIPAL_INTERNAL_TOKEN", "").strip()
+    if expected_internal and internal == expected_internal:
+        g.owner = "internal"
+        return None
     if _TOKENS:
         owner = _TOKENS.get(token)
-        if not owner:
-            return jsonify({"error": "unauthorized"}), 401
-        g.owner = owner
+        if owner:
+            g.owner = owner
+            return None
+    elif _API_TOKEN and token == _API_TOKEN:
         return None
-    if _API_TOKEN:
-        if token != _API_TOKEN:
-            return jsonify({"error": "unauthorized"}), 401
-    return None
+    return jsonify({"error": "unauthorized"}), 401
 
 # Lazy-loaded retrieval components (loaded on first request to keep startup fast)
 _retriever = None
