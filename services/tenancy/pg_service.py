@@ -49,9 +49,9 @@ class Membership:
 
 
 def _admin():
-    from services.db.pg_pool import admin_connection
+    from services.db.pg_pool import auth_connection
 
-    return admin_connection()
+    return auth_connection()
 
 
 def _require():
@@ -153,7 +153,7 @@ def bootstrap_default_workspace(*, db_path=DATABASE_PATH):
         for item in pg.execute("SELECT user_id FROM users").fetchall():
             role = "owner" if item["user_id"] == owner else "member"
             pg.execute(
-                "INSERT INTO memberships (workspace_id,user_id,role) VALUES (%s,%s,%s) "
+                "INSERT INTO memberships (workspace_id,user_id,role_id) VALUES (%s,%s,%s) "
                 "ON CONFLICT (workspace_id,user_id) DO UPDATE SET role=EXCLUDED.role",
                 (DEFAULT_WORKSPACE_ID, item["user_id"], role),
             )
@@ -196,7 +196,7 @@ def add_member(workspace_id: str, user_id: str, role: str, *, actor_user_id=None
 def get_membership(workspace_id: str, user_id: str, *, db_path=DATABASE_PATH):
     with _admin() as pg:
         row = pg.execute(
-            "SELECT workspace_id,user_id,role,status FROM memberships "
+            "SELECT workspace_id,user_id,role_id AS role,status FROM memberships "
             "WHERE workspace_id=%s AND user_id=%s AND status='active'",
             (workspace_id, user_id),
         ).fetchone()
@@ -210,7 +210,7 @@ def list_members(workspace_id: str, *, db_path=DATABASE_PATH):
 def list_workspaces(user_id: str, *, db_path=DATABASE_PATH):
     with _admin() as pg:
         rows = pg.execute(
-            "SELECT w.workspace_id,w.name,w.owner_user_id,m.role FROM workspaces w "
+            "SELECT w.workspace_id,w.name,w.owner_user_id,m.role_id AS role FROM workspaces w "
             "JOIN memberships m ON m.workspace_id=w.workspace_id "
             "WHERE m.user_id=%s AND m.status='active' ORDER BY w.created_at,w.name",
             (user_id,),

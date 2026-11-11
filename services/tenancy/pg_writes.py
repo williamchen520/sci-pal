@@ -17,14 +17,16 @@ class PGWriteError(RuntimeError):
 def enabled() -> bool:
     backend = os.environ.get("SCIPAL_TENANCY_WRITE_BACKEND", "").strip().lower()
     return backend in {"postgres", "postgresql", "pg", "1", "true"} and bool(
-        os.environ.get("SCIPAL_PG_DSN", "").strip()
+        os.environ.get("SCIPAL_AUTH_DSN", "").strip()
+        or os.environ.get("SCIPAL_CORE_DSN", "").strip()
+        or os.environ.get("SCIPAL_PG_DSN", "").strip()
     )
 
 
 def _connect():
-    from services.db.pg_pool import pg_connection
+    from services.db.pg_pool import auth_connection
 
-    return pg_connection(os.environ["SCIPAL_PG_DSN"])
+    return auth_connection()
 
 
 def _ensure_audit_sequence(pg) -> None:
@@ -86,7 +88,7 @@ def create_workspace(*, name: str, owner_user_id: str, workspace_id: str) -> dic
             (workspace_id, name, owner_user_id),
         )
         pg.execute(
-            "INSERT INTO memberships (workspace_id, user_id, role) VALUES (%s, %s, 'owner')",
+            "INSERT INTO memberships (workspace_id, user_id, role_id) VALUES (%s, %s, 'owner')",
             (workspace_id, owner_user_id),
         )
         _audit(pg, workspace_id, owner_user_id, "workspace.create", workspace_id)
@@ -108,8 +110,8 @@ def add_member(
         if not pg.execute("SELECT 1 FROM users WHERE user_id = %s", (user_id,)).fetchone():
             raise PGWriteError("user does not exist")
         pg.execute(
-            "INSERT INTO memberships (workspace_id, user_id, role) VALUES (%s, %s, %s) "
-            "ON CONFLICT (workspace_id, user_id) DO UPDATE SET role = EXCLUDED.role",
+            "INSERT INTO memberships (workspace_id, user_id, role_id) VALUES (%s, %s, %s) "
+            "ON CONFLICT (workspace_id, user_id) DO UPDATE SET role_id = EXCLUDED.role_id",
             (workspace_id, user_id, role),
         )
         _audit(pg, workspace_id, actor_user_id, "membership.upsert", f"{workspace_id}/{user_id}", role)
@@ -124,7 +126,7 @@ def add_member(
 def list_members(workspace_id: str) -> list[dict[str, Any]]:
     with _connect() as pg:
         rows = pg.execute(
-            "SELECT m.user_id, u.username, u.display_name, m.role, m.status "
+            "SELECT m.user_id, u.username, u.display_name, m.role_id AS role, m.status "
             "FROM memberships m JOIN users u ON u.user_id = m.user_id "
             "WHERE m.workspace_id = %s ORDER BY m.created_at, u.username",
             (workspace_id,),
