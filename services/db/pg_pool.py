@@ -32,6 +32,16 @@ def _dsn(dsn: Optional[str] = None) -> str:
     return value
 
 
+def _configure(conn) -> None:
+    """Bound every pooled session so a slow query cannot pin the pool."""
+    statement_ms = max(1000, int(os.environ.get("SCIPAL_PG_STATEMENT_TIMEOUT_MS", "300000")))
+    idle_ms = max(1000, int(os.environ.get("SCIPAL_PG_IDLE_TX_TIMEOUT_MS", "60000")))
+    with conn.cursor() as cur:
+        cur.execute(f"SET statement_timeout = {statement_ms}")
+        cur.execute(f"SET idle_in_transaction_session_timeout = {idle_ms}")
+    conn.commit()
+
+
 def _get_pool(dsn: str):
     """Lazy-import psycopg_pool so non-PG installs still import this module."""
     with _LOCK:
@@ -47,6 +57,7 @@ def _get_pool(dsn: str):
             max_size=cfg["max_size"],
             timeout=cfg["timeout"],
             kwargs={"row_factory": dict_row},
+            configure=_configure,
             name="scipal-pg",
             open=True,
         )
