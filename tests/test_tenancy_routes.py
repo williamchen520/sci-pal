@@ -8,12 +8,13 @@ from pathlib import Path
 
 from flask import Flask
 
-from routes.tenancy import build_tenancy_blueprint
+from routes.tenancy import _LOGIN_FAILURES, build_tenancy_blueprint
 from services.tenancy import create_user
 
 
 class TenancyRouteTests(unittest.TestCase):
     def setUp(self) -> None:
+        _LOGIN_FAILURES.clear()
         self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.tmp.cleanup)
         self.db = Path(self.tmp.name) / "research.db"
@@ -30,6 +31,12 @@ class TenancyRouteTests(unittest.TestCase):
     def test_login_rejects_bad_password(self) -> None:
         response = self.login(password="wrong-password")
         self.assertEqual(response.status_code, 401)
+
+    def test_login_rate_limited_after_five_failures(self) -> None:
+        for _ in range(5):
+            self.assertEqual(self.login(password="wrong-password").status_code, 401)
+        self.assertEqual(self.login(password="wrong-password").status_code, 429)
+        self.assertEqual(self.login().status_code, 429)
 
     def test_login_and_me(self) -> None:
         response = self.login()
