@@ -92,3 +92,67 @@ P4b 只切检索读
 旧语料不再被检索使用
 不是旧业务库被删除
 ```
+
+
+---
+
+## 6. 切换结果（2026-11-11）
+
+生产 `.env` 增加：
+
+```text
+SCIPAL_PG_CORPUS_DSN=.../scipal_rebuild
+```
+
+部署后：
+
+```text
+POST /api/evidence/search -> 200
+evidence=5
+sufficiency.reason=sentence_backend
+sentence_id=paper_PMC13625931_para_00052_sent_003
+```
+
+业务 smoke：
+
+```text
+A 31/31 200
+B 14/14 200
+```
+
+说明：
+
+```text
+检索读重建库
+登录/项目/实验仍读旧库
+```
+
+## 7. 还没有解决
+
+```text
+/api/papers 列表仍来自旧 3,301 篇
+/api/papers/<new_id> 对重建库新论文会 404
+写入/ingest 仍写旧库
+```
+
+这是 split-brain：
+
+```text
+搜索结果 = 13,201 篇语料
+业务元数据/写入 = 3,301 篇旧库
+```
+
+回滚：
+
+```text
+删除 SCIPAL_PG_CORPUS_DSN
+重启 app
+```
+
+P4c 必须做：
+
+```text
+业务表与语料合并到同一个库
+或 papers/abstracts 读路径切到 corpus
+写入路径切到新库
+```
