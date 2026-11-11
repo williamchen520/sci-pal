@@ -13,9 +13,9 @@ def allowed_paper_ids(
     *,
     db_path: str | Path = DATABASE_PATH,
 ) -> set[str]:
-    from services.db.pg_pool import core_connection
+    from services.db.pg_pool import corpus_connection
 
-    pg = core_connection()
+    pg = corpus_connection()
     try:
         rows = pg.execute(
             "SELECT paper_id FROM papers WHERE workspace_id = %s", (workspace_id,)
