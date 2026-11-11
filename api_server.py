@@ -654,6 +654,11 @@ if __name__ == "__main__":
     try:
         retriever = get_retriever()
         print("  ✅ 检索模型已加载")
+        try:
+            get_evidence_retriever()
+            print("  ✅ Evidence sentence backend 已预热")
+        except Exception as exc:  # noqa: BLE001
+            print(f"  ⚠️ Evidence 预热失败: {exc}")
         if os.environ.get("SCIPAL_WARMUP", "").strip().lower() in {"1", "true", "yes", "on"}:
             print("  🔥 预热向量索引...")
             warm_collection = None
