@@ -9,15 +9,15 @@ from typing import Dict, List, Optional, Set, Tuple
 
 class PGGraphTraverser:
     def __init__(self, dsn: Optional[str] = None, *, connector=None):
-        self.dsn = dsn or os.environ.get("SCIPAL_PG_DSN", "")
+        self.dsn = dsn or os.environ.get("SCIPAL_PG_CORPUS_DSN") or os.environ.get("SCIPAL_PG_DSN", "")
         self._connector = connector
 
     def _connection(self):
         if self._connector is not None:
             return self._connector(), False
-        from services.db.pg_pool import pg_connection
+        from services.db.pg_pool import corpus_connection, pg_connection
 
-        return pg_connection(self.dsn), True
+        return (pg_connection(self.dsn) if self.dsn else corpus_connection()), True
 
     def get_neighbors(
         self, paper_ids: List[str], relation: str = "all", direction: str = "both"

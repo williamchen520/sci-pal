@@ -36,9 +36,9 @@ class RetrievalNode:
 def paragraph_nodes(db_path: Path | str, section_ids: List[str], limit: int = 300) -> List[RetrievalNode]:
     if not section_ids:
         return []
-    from services.db.pg_pool import pg_connection
+    from services.db.pg_pool import corpus_connection
 
-    pg = pg_connection()
+    pg = corpus_connection()
     try:
         rows = pg.execute(
             "SELECT para_id, paper_id, section_id, text, section_level1, section_level2 "

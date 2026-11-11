@@ -116,9 +116,9 @@ class HybridRetriever:
         self._local_paper_meta = {}
 
         try:
-            from services.db.pg_pool import pg_connection
+            from services.db.pg_pool import corpus_connection
 
-            pg = pg_connection()
+            pg = corpus_connection()
             try:
                 rows = pg.execute(
                     "SELECT paper_id, title, authors, journal, year, doi FROM papers"

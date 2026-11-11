@@ -15,7 +15,7 @@ def allowed_paper_ids(
 ) -> set[str]:
     from services.db.pg_pool import core_connection
 
-    pg = main_read_connection()
+    pg = core_connection()
     try:
         rows = pg.execute(
             "SELECT paper_id FROM papers WHERE workspace_id = %s", (workspace_id,)
