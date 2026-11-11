@@ -90,7 +90,7 @@ def verify_password(password: str, encoded: str | None) -> bool:
         return False
 
 
-def authenticate(username: str, password: str):
+def authenticate(username: str, password: str, *, db_path=DATABASE_PATH):
     with _admin() as pg:
         row = pg.execute(
             "SELECT user_id, username, email, display_name, password_hash, status, is_admin "
