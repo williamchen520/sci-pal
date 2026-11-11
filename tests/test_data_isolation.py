@@ -70,3 +70,57 @@ class ConnectionSplitTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FakeConn:
+    def __init__(self, dbname: str) -> None:
+        self.dbname = dbname
+
+    def execute(self, *args, **kwargs):
+        return self
+
+    def fetchone(self):
+        return {"ok": 1}
+
+    def fetchall(self):
+        return [{"paper_id": "p1", "cnt": 1}]
+
+    def commit(self):
+        return None
+
+    def close(self):
+        return None
+
+
+class PaperStoreOwnershipTests(unittest.TestCase):
+    def test_paper_reads_use_corpus(self) -> None:
+        from services.papers import paper_store
+
+        calls = []
+
+        def read():
+            calls.append("corpus")
+            return FakeConn("scipal_rebuild")
+
+        with mock.patch.object(paper_store, "main_read_connection", side_effect=read):
+            store = paper_store.PaperStore()
+            self.assertTrue(store.exists("p1"))
+            self.assertTrue(store.filename("p1"))
+            self.assertTrue(store.in_workspace("p1", "ws_default"))
+            self.assertEqual(store.supplementary_counts(), {"p1": 1})
+
+        self.assertEqual(calls, ["corpus", "corpus", "corpus", "corpus"])
+
+    def test_workspace_write_uses_corpus_owner(self) -> None:
+        from services.papers import paper_store
+
+        seen = []
+
+        def owner():
+            seen.append("owner")
+            return FakeConn("scipal_rebuild")
+
+        with mock.patch.object(paper_store, "owner_connection", side_effect=owner):
+            paper_store.PaperStore().assign_workspace("p1", "ws_default")
+
+        self.assertEqual(seen, ["owner"])
