@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,37 @@ from services.tenancy import (
 )
 from services.tenancy.web import resolve_workspace
 
+_LOGIN_LOCK = threading.Lock()
+_LOGIN_FAILURES: dict[str, tuple[int, float]] = {}
+_LOGIN_WINDOW = 300.0
+_LOGIN_MAX = 5
+
+
+def _login_blocked(username: str) -> bool:
+    key = (username or "").strip().lower()
+    now = time.time()
+    with _LOGIN_LOCK:
+        count, reset = _LOGIN_FAILURES.get(key, (0, 0.0))
+        if now >= reset:
+            _LOGIN_FAILURES.pop(key, None)
+            return False
+        return count >= _LOGIN_MAX
+
+
+def _login_failed(username: str) -> None:
+    key = (username or "").strip().lower()
+    now = time.time()
+    with _LOGIN_LOCK:
+        count, reset = _LOGIN_FAILURES.get(key, (0, 0.0))
+        if now >= reset:
+            count, reset = 0, now + _LOGIN_WINDOW
+        _LOGIN_FAILURES[key] = (count + 1, reset)
+
+
+def _login_succeeded(username: str) -> None:
+    with _LOGIN_LOCK:
+        _LOGIN_FAILURES.pop((username or "").strip().lower(), None)
+
 
 def build_tenancy_blueprint(*, db_path: str | Path, log: Any = None) -> Blueprint:
     bp = Blueprint("tenancy", __name__)
@@ -37,9 +70,14 @@ def build_tenancy_blueprint(*, db_path: str | Path, log: Any = None) -> Blueprin
     @bp.post("/api/auth/login")
     def login():
         body = request.get_json(silent=True) or {}
-        user = authenticate(str(body.get("username") or ""), str(body.get("password") or ""), db_path=db)
+        username = str(body.get("username") or "")
+        if _login_blocked(username):
+            return error("too many login attempts; retry later", 429)
+        user = authenticate(username, str(body.get("password") or ""), db_path=db)
         if not user:
+            _login_failed(username)
             return error("invalid username or password", 401)
+        _login_succeeded(username)
         session.clear()
         session["user_id"] = user["user_id"]
         session.permanent = False
