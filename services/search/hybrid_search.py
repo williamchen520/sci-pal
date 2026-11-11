@@ -900,18 +900,19 @@ class HybridSearch:
                 best[paper_id] = score
         results = []
         for paper_id, score in sorted(best.items(), key=lambda item: item[1], reverse=True)[:top_k]:
-            paper = self._paper_row(paper_id)
-            if paper:
-                results.append(
-                    {
-                        "paper_id": paper_id,
-                        "title": paper["title"],
-                        "authors": paper["authors"],
-                        "journal": paper["journal"],
-                        "year": paper["year"],
-                        "score": score,
-                    }
-                )
+            paper = self._paper_row(paper_id) or {}
+            # A paragraph hit with missing paper metadata is still a valid local
+            # hit; do not drop it or the hybrid endpoint silently returns [].
+            results.append(
+                {
+                    "paper_id": paper_id,
+                    "title": paper.get("title") or "",
+                    "authors": paper.get("authors") or "",
+                    "journal": paper.get("journal") or "",
+                    "year": paper.get("year"),
+                    "score": score,
+                }
+            )
         return results
 
     def search_figures(self, query: str, top_k: int = 5,
