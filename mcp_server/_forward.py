@@ -28,7 +28,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 DEFAULT_BASE_URL = "http://127.0.0.1:5000"
 
 # 单次 HTTP 读超时。MCP 侧 toolCallTimeoutMs 上限 60 秒，此处留 15 秒余量。
-HTTP_TIMEOUT_SECONDS = 45.0
+HTTP_TIMEOUT_SECONDS = 55.0
 
 
 def base_url() -> str:
