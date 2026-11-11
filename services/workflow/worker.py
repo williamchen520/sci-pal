@@ -120,10 +120,14 @@ class HttpEmbedder:
                 for row in rows
             ]
         }
+        headers = {"Content-Type": "application/json"}
+        internal_token = os.environ.get("SCIPAL_INTERNAL_TOKEN", "").strip()
+        if internal_token:
+            headers["X-SCIPAL-Internal-Token"] = internal_token
         request = urllib.request.Request(
             self.base_url + "/api/embed",
             data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             method="POST",
         )
         with urllib.request.urlopen(request, timeout=300) as response:

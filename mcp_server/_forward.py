@@ -66,6 +66,9 @@ def _http_raw(method: str, path: str, payload: dict[str, Any] | None = None) -> 
     token = os.environ.get("SCIPAL_API_TOKEN")
     if token:
         headers["Authorization"] = f"Bearer {token}"
+    internal_token = os.environ.get("SCIPAL_INTERNAL_TOKEN", "").strip()
+    if internal_token:
+        headers["X-SCIPAL-Internal-Token"] = internal_token
     data: bytes | None = None
     if payload is not None:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")

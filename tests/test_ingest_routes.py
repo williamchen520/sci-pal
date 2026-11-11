@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import unittest
 
 from flask import Flask
@@ -48,7 +49,9 @@ def make_app(service, embed_rows=None):
 class IngestRoutesTests(unittest.TestCase):
     def setUp(self) -> None:
         self.service = FakeService()
+        os.environ.setdefault("SCIPAL_INTERNAL_TOKEN", "test-token")
         self.client = make_app(self.service).test_client()
+        self.client.environ_base["HTTP_X_SCIPAL_INTERNAL_TOKEN"] = "test-token"
 
     def test_submit_returns_202_and_task_id(self) -> None:
         resp = self.client.post("/api/ingest", json={"pmc_ids": ["PMC1", "PMC2"], "batch_size": 5})
@@ -80,6 +83,7 @@ class IngestRoutesTests(unittest.TestCase):
             return len(rows)
 
         client = make_app(self.service, embed_rows=embed_rows).test_client()
+        client.environ_base["HTTP_X_SCIPAL_INTERNAL_TOKEN"] = "test-token"
         resp = client.post("/api/embed", json={"rows": [{"para_id": "p1", "text": "x"}]})
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get_json()["count"], 1)
