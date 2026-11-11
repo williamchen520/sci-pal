@@ -28,7 +28,7 @@ def pool_settings() -> dict:
 def _dsn(dsn: Optional[str] = None) -> str:
     value = (dsn or os.environ.get("SCIPAL_PG_DSN", "")).strip()
     if not value:
-        raise RuntimeError("SCIPAL_PG_DSN is not configured")
+        raise RuntimeError("SCIPAL_PG_DSN or SCIPAL_CORE_DSN is not configured")
     return value
 
 
@@ -105,66 +105,79 @@ def pg_connection(dsn: Optional[str] = None):
         return psycopg.connect(dsn, row_factory=dict_row)
 
 
+def core_connection():
+    """Business-core connection: users, projects, experiments, notes, tasks."""
+    dsn = os.environ.get("SCIPAL_CORE_DSN", "").strip()
+    if not dsn:
+        dsn = os.environ.get("SCIPAL_PG_DSN", "").strip()
+    if not dsn:
+        raise RuntimeError("SCIPAL_CORE_DSN is not configured")
+    return pg_connection(dsn)
+
+
 def main_read_connection():
-    """Read-only main-library connection (P4b1)."""
-    dsn = os.environ.get("SCIPAL_PG_MAIN_READ_DSN", "").strip()
+    """Read-only corpus connection for bibliographic reads."""
+    dsn = (
+        os.environ.get("SCIPAL_PG_MAIN_READ_DSN", "").strip()
+        or os.environ.get("SCIPAL_PG_CORPUS_DSN", "").strip()
+    )
     if not dsn:
         logging.getLogger(__name__).warning(
-            "SCIPAL_PG_MAIN_READ_DSN missing; falling back to owner DSN"
+            "SCIPAL_PG_MAIN_READ_DSN/SCIPAL_PG_CORPUS_DSN missing; falling back to core"
         )
-        return pg_connection()
+        return core_connection()
     return pg_connection(dsn)
 
 
 def corpus_connection():
-    """Read-only corpus connection (P4b: rebuild corpus, not app state)."""
+    """Read-only corpus connection (papers/paragraphs/sentences/embeddings)."""
     dsn = os.environ.get("SCIPAL_PG_CORPUS_DSN", "").strip()
     if not dsn:
-        return main_read_connection()
+        dsn = os.environ.get("SCIPAL_PG_MAIN_READ_DSN", "").strip()
+    if not dsn:
+        raise RuntimeError("SCIPAL_PG_CORPUS_DSN is not configured")
     return pg_connection(dsn)
 
 
 def ingest_connection():
-    """Ingest connection: main-library content writes, no tenant writes."""
+    """Ingest connection: corpus writes, never business-core writes."""
     dsn = os.environ.get("SCIPAL_PG_INGEST_DSN", "").strip()
     if not dsn:
-        logging.getLogger(__name__).warning(
-            "SCIPAL_PG_INGEST_DSN missing; falling back to owner DSN"
-        )
-        return pg_connection()
+        dsn = os.environ.get("SCIPAL_PG_CORPUS_DSN", "").strip()
+    if not dsn:
+        raise RuntimeError("SCIPAL_PG_INGEST_DSN/SCIPAL_PG_CORPUS_DSN is not configured")
     return pg_connection(dsn)
 
 
 def admin_connection():
-    """Admin connection for identity/migration writes."""
+    """Admin connection for identity/migration writes in scipal_core."""
     dsn = os.environ.get("SCIPAL_PG_ADMIN_DSN", "").strip()
     if not dsn:
-        logging.getLogger(__name__).warning(
-            "SCIPAL_PG_ADMIN_DSN missing; falling back to owner DSN"
-        )
-        return pg_connection()
+        dsn = os.environ.get("SCIPAL_CORE_DSN", "").strip()
+    if not dsn:
+        raise RuntimeError("SCIPAL_PG_ADMIN_DSN/SCIPAL_CORE_DSN is not configured")
     return pg_connection(dsn)
 
 
 def owner_connection():
-    """Owner connection for papers/ingest/admin writes."""
-    dsn = os.environ.get("SCIPAL_PG_OWNER_DSN", "").strip()
+    """Owner connection for corpus writes (papers/ingest)."""
+    dsn = (
+        os.environ.get("SCIPAL_PG_OWNER_DSN", "").strip()
+        or os.environ.get("SCIPAL_PG_INGEST_DSN", "").strip()
+        or os.environ.get("SCIPAL_PG_CORPUS_DSN", "").strip()
+    )
     if not dsn:
-        logging.getLogger(__name__).warning(
-            "SCIPAL_PG_OWNER_DSN missing; falling back to default DSN"
-        )
-        return pg_connection()
+        raise RuntimeError("SCIPAL_PG_OWNER_DSN/SCIPAL_PG_CORPUS_DSN is not configured")
     return pg_connection(dsn)
 
 
 def tenant_write_connection():
-    """Tenant-writer connection (P4b1; used only by tenant-aware paths)."""
+    """Tenant-writer connection: business-core only."""
     dsn = os.environ.get("SCIPAL_PG_TENANT_WRITE_DSN", "").strip()
     if not dsn:
-        logging.getLogger(__name__).warning(
-            "SCIPAL_PG_TENANT_WRITE_DSN missing; falling back to owner DSN"
-        )
-        return pg_connection()
+        dsn = os.environ.get("SCIPAL_CORE_DSN", "").strip()
+    if not dsn:
+        raise RuntimeError("SCIPAL_PG_TENANT_WRITE_DSN/SCIPAL_CORE_DSN is not configured")
     return pg_connection(dsn)
 
 
