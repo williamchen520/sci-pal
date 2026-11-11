@@ -40,12 +40,12 @@ def build_papers_blueprint(
 
     router = router_factory(
         db_path,
-        pg_dsn=os.environ.get("SCIPAL_PG_DSN", ""),
+        pg_dsn=os.environ.get("SCIPAL_PG_CORPUS_DSN") or os.environ.get("SCIPAL_PG_DSN", ""),
         canary_percent=int(os.environ.get("SCIPAL_READ_CANARY_PERCENT", "0") or 0),
     )
     detail_router = detail_router_factory(
         db_path,
-        pg_dsn=os.environ.get("SCIPAL_PG_DSN", ""),
+        pg_dsn=os.environ.get("SCIPAL_PG_CORPUS_DSN") or os.environ.get("SCIPAL_PG_DSN", ""),
         canary_percent=int(os.environ.get("SCIPAL_READ_DETAIL_PERCENT", "0") or 0),
     )
 

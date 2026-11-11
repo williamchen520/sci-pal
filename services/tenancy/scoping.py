@@ -13,7 +13,7 @@ def allowed_paper_ids(
     *,
     db_path: str | Path = DATABASE_PATH,
 ) -> set[str]:
-    from services.db.pg_pool import main_read_connection
+    from services.db.pg_pool import core_connection
 
     pg = main_read_connection()
     try:

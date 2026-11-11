@@ -8,9 +8,11 @@ from flask import Blueprint, jsonify, request
 
 
 def _pg():
+    import os
     from services.db.pg_pool import pg_connection
 
-    return pg_connection()
+    dsn = os.environ.get("SCIPAL_LEGACY_DSN", "").strip()
+    return pg_connection(dsn) if dsn else pg_connection()
 
 
 def build_abstracts_blueprint(*, db_path: Path | None = None) -> Blueprint:

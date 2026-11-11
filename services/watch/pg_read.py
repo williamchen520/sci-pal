@@ -5,10 +5,10 @@ from __future__ import annotations
 import os
 from typing import Any, Dict, List, Optional
 
-from services.db.pg_pool import main_read_connection
+from services.db.pg_pool import core_connection
 
 # Backward-compatible alias used by tests and older callers.
-pg_connection = main_read_connection
+pg_connection = core_connection
 from services.db.tenant_pilot import set_search_path
 
 
