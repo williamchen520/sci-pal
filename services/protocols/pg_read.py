@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional
 
-from services.db.pg_pool import main_read_connection
+from services.db.pg_pool import core_connection
 
 
 def list_protocols(limit: int = 50, offset: int = 0, query: str = "") -> List[Dict[str, Any]]:
