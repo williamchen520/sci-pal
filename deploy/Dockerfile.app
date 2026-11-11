@@ -6,9 +6,6 @@ RUN rm -rf /app && mkdir -p /app
 WORKDIR /app
 
 COPY . .
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir "psycopg-pool>=3.2" "gunicorn>=22.0"
 RUN mkdir -p data documents documents_xml logs
 COPY deploy/entrypoint.sh /usr/local/bin/scipal-entrypoint.sh
