@@ -6,7 +6,7 @@ touches papers/paragraphs/sentences/paragraph_embeddings.
 
 Usage:
     SCIPAL_CORE_DSN=postgresql://.../scipal_core \
-    SCIPAL_PG_ADMIN_DSN=postgresql://.../scipal_bench \
+    SCIPAL_PG_ADMIN_DSN=postgresql://.../postgres \
     python scripts/init_core_db.py
 """
 from __future__ import annotations

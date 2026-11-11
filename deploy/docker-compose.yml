@@ -51,36 +51,6 @@ services:
       disable: true
     restart: unless-stopped
 
-  backup-cron:
-    image: scipal-app:latest
-    entrypoint: []
-    command:
-      - python
-      - scripts/run_backup_loop.py
-      - --data
-      - /app/data
-      - --out
-      - /app/backups
-      - --interval-hours
-      - "${SCIPAL_BACKUP_INTERVAL_HOURS:-24}"
-      - --db-retention-days
-      - "${SCIPAL_BACKUP_DB_RETENTION_DAYS:-30}"
-      - --full-retention-days
-      - "${SCIPAL_BACKUP_FULL_RETENTION_DAYS:-28}"
-      - --full-interval-days
-      - "${SCIPAL_BACKUP_FULL_INTERVAL_DAYS:-7}"
-    env_file:
-      - .env
-    environment:
-      SCIPAL_AUTH_REQUIRED: "1"
-    volumes:
-      - ../data:/app/data
-      - ../backups:/app/backups
-      - ../logs:/app/logs
-    healthcheck:
-      disable: true
-    restart: unless-stopped
-
   pg-backup:
     image: postgres:16
     entrypoint: ["/bin/bash", "/pg_backup.sh"]
