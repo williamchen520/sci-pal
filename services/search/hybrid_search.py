@@ -899,10 +899,12 @@ class HybridSearch:
             if paper_id and score > best.get(paper_id, 0.0):
                 best[paper_id] = score
         results = []
-        for paper_id, score in sorted(best.items(), key=lambda item: item[1], reverse=True)[:top_k]:
-            paper = self._paper_row(paper_id) or {}
-            # A paragraph hit with missing paper metadata is still a valid local
-            # hit; do not drop it or the hybrid endpoint silently returns [].
+        for paper_id, score in sorted(best.items(), key=lambda item: item[1], reverse=True):
+            paper = self._paper_row(paper_id)
+            # FTS can still surface legacy ids (e.g. the old 3,301 corpus).
+            # Only ids present in the active corpus are valid local papers.
+            if not paper:
+                continue
             results.append(
                 {
                     "paper_id": paper_id,
@@ -913,6 +915,8 @@ class HybridSearch:
                     "score": score,
                 }
             )
+            if len(results) >= top_k:
+                break
         return results
 
     def search_figures(self, query: str, top_k: int = 5,
