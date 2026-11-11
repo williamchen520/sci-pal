@@ -82,19 +82,13 @@ services:
     restart: unless-stopped
 
   pg-backup:
-    image: scipal-app:latest
-    entrypoint: []
-    command:
-      - python
-      - scripts/backup_pg.py
-      - --out
-      - /app/backups/pg
-      - --interval-minutes
-      - "${SCIPAL_PG_BACKUP_INTERVAL_MINUTES:-60}"
+    image: postgres:16
+    entrypoint: ["/bin/bash", "/pg_backup.sh"]
     env_file:
       - .env
     volumes:
       - ../backups:/app/backups
+      - ./pg_backup.sh:/pg_backup.sh:ro
     healthcheck:
       disable: true
     restart: unless-stopped
