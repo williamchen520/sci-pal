@@ -236,9 +236,9 @@ class UnifiedRetriever:
                         if seed["para_id"] and seed["para_id"] not in existing_ids
                     ][:max_add]
                     if missing:
-                        from services.db.pg_pool import pg_connection
+                        from services.db.pg_pool import corpus_connection
 
-                        seed_conn = pg_connection()
+                        seed_conn = corpus_connection()
                         try:
                             rows = seed_conn.execute(
                                 "SELECT para_id, paper_id, section_id, text, "
@@ -330,9 +330,9 @@ class UnifiedRetriever:
                         }
                         para_ids = [p.get("para_id") for p in paragraphs if p.get("para_id")]
                         if para_ids and section_prior:
-                            from services.db.pg_pool import pg_connection
+                            from services.db.pg_pool import corpus_connection
 
-                            map_conn = pg_connection()
+                            map_conn = corpus_connection()
                             try:
                                 section_map = dict(
                                     map_conn.execute(
@@ -690,9 +690,9 @@ class UnifiedRetriever:
         }:
             pids = [p.get("paper_id") for p in env.get("parent_contexts") or [] if p.get("paper_id")]
             if pids:
-                from services.db.pg_pool import pg_connection
+                from services.db.pg_pool import corpus_connection
 
-                pg = pg_connection()
+                pg = corpus_connection()
                 try:
                     dup = {
                         row["paper_id"]

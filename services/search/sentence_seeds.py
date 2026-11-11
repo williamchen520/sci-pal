@@ -27,9 +27,9 @@ class SentenceSeedSearch:
         if not terms:
             return []
         ts_query = " | ".join(terms)
-        from services.db.pg_pool import pg_connection
+        from services.db.pg_pool import corpus_connection
 
-        pg = pg_connection()
+        pg = corpus_connection()
         try:
             rows = pg.execute(
                 "SELECT para_id, MAX(ts_rank(search_vector, to_tsquery('english', %s))) AS rank "

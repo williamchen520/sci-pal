@@ -19,7 +19,7 @@ def _fts_bundle(query: str, top_k: int) -> dict:
     """Last-resort evidence bundle: PostgreSQL sentence FTS only."""
     from services.db.pg_pool import corpus_connection
 
-    pg = main_read_connection()
+    pg = corpus_connection()
     try:
         rows = pg.execute(
             "SELECT sentence_id, paper_id, para_id, text, "
@@ -92,7 +92,7 @@ def build_evidence_blueprint(
             return sentence_lookup(paper_id, sentence_id)
         from services.db.pg_pool import corpus_connection
 
-        pg = main_read_connection()
+        pg = corpus_connection()
         try:
             return pg.execute(
                 "SELECT sentence_id, para_id, paper_id, text, page, bbox, section_id "

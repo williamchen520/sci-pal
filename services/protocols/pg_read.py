@@ -16,7 +16,7 @@ def list_protocols(limit: int = 50, offset: int = 0, query: str = "") -> List[Di
         where = "WHERE p.title ILIKE %s OR p.doi ILIKE %s"
         params.extend([f"%{text}%", f"%{text}%"])
     params.extend([max(1, limit), max(0, offset)])
-    pg = main_read_connection()
+    pg = core_connection()
     try:
         rows = pg.execute(
             f"""
@@ -34,7 +34,7 @@ def list_protocols(limit: int = 50, offset: int = 0, query: str = "") -> List[Di
 
 def count_protocols(query: str = "") -> int:
     text = str(query or "").strip()
-    pg = main_read_connection()
+    pg = core_connection()
     try:
         if text:
             row = pg.execute(
@@ -49,7 +49,7 @@ def count_protocols(query: str = "") -> int:
 
 
 def get_protocol(protocol_id: str) -> Optional[Dict[str, Any]]:
-    pg = main_read_connection()
+    pg = core_connection()
     try:
         row = pg.execute(
             "SELECT * FROM protocol_imports WHERE protocol_id = %s", (protocol_id,)

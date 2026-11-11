@@ -153,9 +153,9 @@ class HybridSearch:
         if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
             "postgres", "postgresql", "pg", "1", "true"
         }:
-            from services.db.pg_pool import pg_connection
+            from services.db.pg_pool import corpus_connection
 
-            pg = pg_connection()
+            pg = corpus_connection()
             try:
                 clauses = ["duplicate_of IS NULL"]
                 params = []
@@ -835,9 +835,9 @@ class HybridSearch:
         if os.environ.get("SCIPAL_SEARCH_META_BACKEND", "").strip().lower() in {
             "postgres", "postgresql", "pg", "1", "true"
         }:
-            from services.db.pg_pool import pg_connection
+            from services.db.pg_pool import corpus_connection
 
-            pg = pg_connection()
+            pg = corpus_connection()
             try:
                 return pg.execute(
                     "SELECT * FROM papers WHERE paper_id = %s", (paper_id,)
