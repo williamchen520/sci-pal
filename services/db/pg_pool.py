@@ -119,7 +119,9 @@ def auth_connection():
     )
     if not dsn:
         raise RuntimeError("SCIPAL_AUTH_DSN/SCIPAL_CORE_DSN is not configured")
-    return pg_connection(dsn)
+    conn = pg_connection(dsn)
+    conn.execute("SET search_path TO auth, public")
+    return conn
 
 
 def core_connection():

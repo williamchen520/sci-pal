@@ -40,13 +40,20 @@ class ConnectionSplitTests(unittest.TestCase):
             "SCIPAL_CORE_DSN": "postgresql://core",
             "SCIPAL_PG_CORPUS_DSN": "postgresql://corpus",
         }
+        class FakeConn:
+            def __init__(self, dsn):
+                self.dsn = dsn
+
+            def execute(self, *args, **kwargs):
+                return self
+
         with mock.patch.dict(os.environ, env, clear=False):
-            with mock.patch.object(pg_pool, "pg_connection", side_effect=lambda dsn: dsn):
-                self.assertEqual(pg_pool.auth_connection(), "postgresql://auth")
+            with mock.patch.object(pg_pool, "pg_connection", side_effect=lambda dsn: FakeConn(dsn)):
+                self.assertEqual(pg_pool.auth_connection().dsn, "postgresql://auth")
         env.pop("SCIPAL_AUTH_DSN")
         with mock.patch.dict(os.environ, env, clear=False):
-            with mock.patch.object(pg_pool, "pg_connection", side_effect=lambda dsn: dsn):
-                self.assertEqual(pg_pool.auth_connection(), "postgresql://core")
+            with mock.patch.object(pg_pool, "pg_connection", side_effect=lambda dsn: FakeConn(dsn)):
+                self.assertEqual(pg_pool.auth_connection().dsn, "postgresql://core")
 
     def test_corpus_writes_never_use_core_dsn(self) -> None:
         env = {
