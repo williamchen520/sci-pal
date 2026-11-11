@@ -883,11 +883,16 @@ class HybridSearch:
         """Fallback: rank papers by their best paragraph hit."""
         best: dict[str, float] = {}
         hits = []
+        # Vector and FTS have independent failure domains. A missing ParadeDB
+        # index must not discard valid pgvector candidates.
         try:
             hits.extend(self.vector_search(query, top_k=max(top_k * 4, 20)))
+        except Exception:  # noqa: BLE001 - vector failure is isolated
+            pass
+        try:
             hits.extend(self.fts_search(query, top_k=max(top_k * 4, 20)))
-        except Exception:  # noqa: BLE001 - fallback must not raise
-            return []
+        except Exception:  # noqa: BLE001 - FTS failure is isolated
+            pass
         for hit in hits:
             paper_id = hit.get("paper_id")
             score = float(hit.get("score") or 0.0)
