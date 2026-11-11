@@ -81,6 +81,24 @@ services:
       disable: true
     restart: unless-stopped
 
+  pg-backup:
+    image: scipal-app:latest
+    entrypoint: []
+    command:
+      - python
+      - scripts/backup_pg.py
+      - --out
+      - /app/backups/pg
+      - --interval-minutes
+      - "${SCIPAL_PG_BACKUP_INTERVAL_MINUTES:-60}"
+    env_file:
+      - .env
+    volumes:
+      - ../backups:/app/backups
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
   paradedb:
     image: paradedb/paradedb:latest
     environment:
