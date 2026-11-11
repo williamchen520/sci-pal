@@ -765,9 +765,9 @@ def build_papers_actions_blueprint(
 
     def _trace_payload_pg(paper_id: str, sentence_id: str):
         from services.security.signed_url import sign_path
-        from services.db.pg_pool import pg_connection
+        from services.db.pg_pool import main_read_connection
 
-        pg = pg_connection()
+        pg = main_read_connection()
         try:
             row = pg.execute(
                 "SELECT s.sentence_id, s.text, s.page, s.bbox, s.section_id, "

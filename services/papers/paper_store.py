@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from services.db.pg_pool import pg_connection
+from services.db.pg_pool import main_read_connection, owner_connection
 
 
 class PaperStore:
@@ -10,7 +10,7 @@ class PaperStore:
         self.db_path = db_path
 
     def exists(self, paper_id: str) -> bool:
-        pg = pg_connection()
+        pg = main_read_connection()
         try:
             return bool(
                 pg.execute(
@@ -21,7 +21,7 @@ class PaperStore:
             pg.close()
 
     def filename(self, paper_id: str):
-        pg = pg_connection()
+        pg = main_read_connection()
         try:
             return pg.execute(
                 "SELECT filename FROM papers WHERE paper_id = %s", (paper_id,)
@@ -30,7 +30,7 @@ class PaperStore:
             pg.close()
 
     def assign_workspace(self, paper_id: str, workspace_id: str) -> None:
-        pg = pg_connection()
+        pg = owner_connection()
         try:
             pg.execute(
                 "UPDATE papers SET workspace_id = %s WHERE paper_id = %s",
@@ -41,7 +41,7 @@ class PaperStore:
             pg.close()
 
     def supplementary_counts(self) -> dict:
-        pg = pg_connection()
+        pg = main_read_connection()
         try:
             rows = pg.execute(
                 "SELECT paper_id, COUNT(*) AS cnt FROM supplementary_files GROUP BY paper_id"
@@ -53,7 +53,7 @@ class PaperStore:
             pg.close()
 
     def in_workspace(self, paper_id: str, workspace_id: str) -> bool:
-        pg = pg_connection()
+        pg = main_read_connection()
         try:
             return bool(
                 pg.execute(
