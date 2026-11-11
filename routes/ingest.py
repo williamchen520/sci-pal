@@ -5,6 +5,7 @@ Kept separate from ``api_server`` so the service can be injected in tests.
 
 from __future__ import annotations
 
+import os
 from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request
@@ -18,8 +19,20 @@ def build_ingest_blueprint(
 ) -> Blueprint:
     bp = Blueprint("ingest", __name__, url_prefix="/api")
 
+    def internal_denied():
+        expected = os.environ.get("SCIPAL_INTERNAL_TOKEN", "").strip()
+        if not expected:
+            return jsonify({"ok": False, "error": "internal endpoint disabled"}), 503
+        supplied = request.headers.get("X-SCIPAL-Internal-Token", "").strip()
+        if not supplied or supplied != expected:
+            return jsonify({"ok": False, "error": "unauthorized"}), 401
+        return None
+
     @bp.post("/embed")
     def embed():
+        denied = internal_denied()
+        if denied:
+            return denied
         """Single-writer bridge: the worker posts paragraphs, Flask owns Chroma."""
         if embed_rows is None:
             return jsonify({"ok": False, "error": "embedding disabled"}), 503
@@ -38,6 +51,9 @@ def build_ingest_blueprint(
 
     @bp.post("/ingest")
     def start_ingest():
+        denied = internal_denied()
+        if denied:
+            return denied
         body = request.get_json(silent=True) or {}
         pmc_ids = body.get("pmc_ids") or []
         if not isinstance(pmc_ids, list) or not pmc_ids:
@@ -50,6 +66,9 @@ def build_ingest_blueprint(
 
     @bp.get("/ingest/<task_id>")
     def ingest_status(task_id: str):
+        denied = internal_denied()
+        if denied:
+            return denied
         task = get_service().status(task_id)
         if task is None:
             return jsonify({"ok": False, "error": "task not found"}), 404
@@ -57,6 +76,9 @@ def build_ingest_blueprint(
 
     @bp.post("/ingest/<task_id>/cancel")
     def cancel_ingest(task_id: str):
+        denied = internal_denied()
+        if denied:
+            return denied
         if not get_service().cancel(task_id):
             return jsonify({"ok": False, "error": "task not found"}), 404
         return jsonify({"ok": True, "task_id": task_id})
