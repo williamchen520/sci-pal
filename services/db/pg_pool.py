@@ -105,6 +105,23 @@ def pg_connection(dsn: Optional[str] = None):
         return psycopg.connect(dsn, row_factory=dict_row)
 
 
+def auth_connection():
+    """Authentication/identity connection.
+
+    Defaults to SCIPAL_AUTH_DSN; otherwise the auth schema lives in
+    scipal_core. Set the DSN option search_path=auth,public when auth is a
+    schema in the core DB.
+    """
+    dsn = (
+        os.environ.get("SCIPAL_AUTH_DSN", "").strip()
+        or os.environ.get("SCIPAL_CORE_DSN", "").strip()
+        or os.environ.get("SCIPAL_PG_DSN", "").strip()
+    )
+    if not dsn:
+        raise RuntimeError("SCIPAL_AUTH_DSN/SCIPAL_CORE_DSN is not configured")
+    return pg_connection(dsn)
+
+
 def core_connection():
     """Business-core connection: users, projects, experiments, notes, tasks."""
     dsn = os.environ.get("SCIPAL_CORE_DSN", "").strip()
