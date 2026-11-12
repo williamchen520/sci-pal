@@ -91,6 +91,16 @@ DOCS_RAG_INGEST_OK docs=438 chunks=5885 dim=512
 
 ```bash
 python -m docs_rag.search "core 和 rebuild 为什么要物理隔离" --top-k 8
+python -m docs_rag.search "治理门禁" --mode vector
+python -m docs_rag.search "治理门禁" --mode lexical
+```
+
+模式：
+
+```text
+hybrid   默认，RRF 融合
+vector   仅 pgvector HNSW
+lexical  仅 pg_trgm similarity + word_similarity
 ```
 
 融合：
@@ -118,29 +128,36 @@ path / title / category / score
 docs_rag/eval_queries.json
 ```
 
-12 条人工问题，按“正确文档出现在前 k 个 chunk”计：
+30 条人工问题，按“正确文档出现在前 k 个 chunk”计：
 
-| 指标 | 值 |
-|---|---:|
-| Hit@1 | 0.583 |
-| Hit@5 | 0.917 |
-| Hit@10 | 1.000 |
-| MRR@10 | 0.713 |
+| 模式 | Hit@1 | Hit@5 | Hit@10 | MRR@10 |
+|---|---:|---:|---:|---:|
+| vector-only | 0.467 | 0.667 | 0.733 | 0.564 |
+| lexical-only | 0.233 | 0.600 | 0.733 | 0.378 |
+| **hybrid** | **0.667** | **0.900** | **1.000** | **0.765** |
+
+结论：
+
+```text
+hybrid 明显优于单路
+lexical 的 Hit@1 最弱，但能补 exact-term 长尾
+vector 语义召回更稳，仍会漏表格/短查询
+```
 
 注意：
 
 ```text
-这是内部小查询集，不是 SciFact/QASPER 公开 benchmark
+这是内部 30 条问题，不是 SciFact/QASPER 公开 benchmark
 只评检索，不评答案生成
 ```
 
-失败样例：
+典型失败样例：
 
 ```text
-"内部 ingest 和 embed 端点需要什么 token"
-  正确文档 P6-红队审计 排第 1（已修正 gold）
 "当前总共有多少 route 和 method"
-  架构与路由全景图 排第 2
+  架构与路由全景图 在 vector-only 下偏低
+"SQLite research.db 什么时候退役"
+  需要 Changelog 的时间轴语义
 ```
 
 ---
@@ -160,8 +177,8 @@ pg_trgm 对中文短语是字符级近似，不是分词
 ## 8. 下一步
 
 ```text
-1. 用 30–50 条真实问题替换 12 条小集
-2. 比较 vector-only / lexical-only / hybrid
-3. 评估 chunk 大小 800 / 1200 / 1600
+1. 把 30 条扩到 50 条，加入真实用户问题
+2. 评估 chunk 大小 800 / 1200 / 1600
+3. 对 hybrid 做 rerank，不动独立库边界
 4. 需要答案时再接 LLM，但仍只读 scipal_docs
 ```
