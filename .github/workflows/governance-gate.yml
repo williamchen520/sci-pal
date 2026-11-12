@@ -1,0 +1,31 @@
+name: governance-gate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+
+      - name: Fetch PR head
+        run: git fetch --no-tags origin ${{ github.event.pull_request.head.sha }}
+
+      - name: Run governance gate
+        if: hashFiles('scripts/governance_ci.py') != ''
+        env:
+          GOVERNANCE_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          python3 scripts/governance_ci.py \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --plan "PR #${{ github.event.pull_request.number }}" \
+            --risk "see PR body"

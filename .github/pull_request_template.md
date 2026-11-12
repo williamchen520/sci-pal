@@ -22,6 +22,12 @@
 - [ ] 净变更行数：____（>300 行必须在标题加 `[LARGE]`）
 - [ ] 风险：外部 API / 写库 / 权限变化已列出
 
+### 0.2) 治理门禁
+
+- [ ] 已运行 `python scripts/governance_gate.py --paths <changed> --ops <ops>`
+- [ ] 若命中，已获人类“批准执行”，并给 PR 加 `governance-approved` 标签
+- [ ] CI `governance-gate` 通过，或已按标签批准
+
 ### 1) 这个 PR 解决了什么单一主题？（对应规则 1）
 
 <!-- 一句话说明。若包含多个主题，拆成多个 PR。 -->
