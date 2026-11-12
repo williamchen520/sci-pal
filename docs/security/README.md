@@ -1,6 +1,6 @@
 # 安全复盘
 
-> 共 32 篇 · 分类索引，文件原路径不变
+> 共 33 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -13,6 +13,7 @@
 | PostgreSQL SQL 提取与方言解析 | --- | [PostgreSQL方言审计-SQL提取.md](../PostgreSQL方言审计-SQL提取.md) |
 | PostgreSQL 方言审计清单 | --- | [PostgreSQL方言审计-清单.md](../PostgreSQL方言审计-清单.md) |
 | 双库备份策略 | --- | [备份策略-双库.md](../备份策略-双库.md) |
+| 实验系统层可行性审计：PaperQA2 / GraphRAG | --- | [实验-系统层可行性审计.md](../实验-系统层可行性审计.md) |
 | ID / 向量契约审计结果（2026-11-03） | vectorresolutionrate = 0.9328 | [审计-ID与向量契约结果.md](../审计-ID与向量契约结果.md) |
 | ID / 向量契约审计设计 | --- | [审计-ID与向量契约设计.md](../审计-ID与向量契约设计.md) |
 | OpenAlex 100-Paper Human Validation Kit | sample rows 100 | [审计-OpenAlex-100篇人工校验.md](../审计-OpenAlex-100篇人工校验.md) |

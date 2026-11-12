@@ -140,6 +140,7 @@ def main() -> None:
 - [补充-生信代码RAG-DSH原生检索](补充-生信代码RAG-DSH原生检索.md)
 - [实验-PhaseC-SciFact-300](实验-PhaseC-SciFact-300.md)
 - [报告-PhaseC-SciFact](报告-PhaseC-SciFact.md)
+- [实验-系统层可行性审计](实验-系统层可行性审计.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
