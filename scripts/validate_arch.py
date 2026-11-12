@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import inspect
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -51,6 +52,20 @@ def _accepts(func: Any, name: str) -> bool:
     return any(p.kind is inspect.Parameter.VAR_KEYWORD for p in signature.parameters.values())
 
 
+def _feature_enabled(flag: str) -> bool:
+    return os.environ.get(flag, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _optional_disabled(endpoint: dict[str, Any]) -> bool:
+    flag = endpoint.get("feature_flag")
+    optional = endpoint.get("optional")
+    if not flag and isinstance(optional, str):
+        flag = optional
+    if endpoint.get("optional") is True and not flag:
+        return True
+    return bool(flag) and not _feature_enabled(flag)
+
+
 def load_architecture(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
     endpoints = data.get("api", {}).get("endpoints")
@@ -64,12 +79,17 @@ def validate(arch: dict[str, Any], app: Any) -> dict[str, Any]:
     warnings: list[str] = []
 
     json_keys: dict[tuple[str, str], dict[str, Any]] = {}
+    disabled_keys: set[tuple[str, str]] = set()
     for endpoint in arch.get("api", {}).get("endpoints", []):
         rule = endpoint.get("rule")
         if not rule:
             errors.append("endpoint without rule")
             continue
         if endpoint.get("status") == "planned":
+            continue
+        if _optional_disabled(endpoint):
+            for method in methods_of(endpoint):
+                disabled_keys.add(route_key(rule, method))
             continue
         for method in methods_of(endpoint):
             key = route_key(rule, method)
@@ -84,7 +104,7 @@ def validate(arch: dict[str, Any], app: Any) -> dict[str, Any]:
         for method in rule.methods - IGNORED_METHODS:
             app_keys[route_key(rule.rule, method)] = rule
 
-    for key in sorted(app_keys.keys() - json_keys.keys()):
+    for key in sorted(app_keys.keys() - json_keys.keys() - disabled_keys):
         errors.append(f"wild route not in ARCHITECTURE.json: {key[1]} {key[0]}")
     for key in sorted(json_keys.keys() - app_keys.keys()):
         errors.append(f"documented route missing from Flask: {key[1]} {key[0]}")
