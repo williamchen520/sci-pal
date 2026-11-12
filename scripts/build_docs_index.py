@@ -143,6 +143,7 @@ def main() -> None:
 - [实验-PhaseC-收口](实验-PhaseC-收口.md)
 - [实验-系统层可行性审计](实验-系统层可行性审计.md)
 - [实验-PaperQA2-适配烟测](实验-PaperQA2-适配烟测.md)
+- [报告-PaperQA2-适配烟测](报告-PaperQA2-适配烟测.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
