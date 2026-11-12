@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 142 篇 · 分类索引，文件原路径不变
+> 共 143 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -66,6 +66,7 @@
 | 工作计划：项目跟踪与实验记录（ELN） | 明确： | [工作计划-项目跟踪与实验记录.md](../工作计划-项目跟踪与实验记录.md) |
 | 开发主线计划表 | 先完成计划表 | [开发-主线计划.md](../开发-主线计划.md) |
 | 执行顺序：修复、架构、功能 | --- | [执行顺序-修复-架构-功能.md](../执行顺序-修复-架构-功能.md) |
+| 实验报告：Phase C — SciFact 句级检索与 chunk 策略 | --- | [报告-PhaseC-SciFact.md](../报告-PhaseC-SciFact.md) |
 | P2 XML 重建 | --- | [数据重建-P2-XML重建.md](../数据重建-P2-XML重建.md) |
 | Two-Stage Sentence Recall + Cross-Encoder | The GIN index is present and used: | [数据重建-P4-两阶段召回.md](../数据重建-P4-两阶段召回.md) |
 | PostgreSQL 纯净化路线图与 Schema 差异 | 生产 SQLite： | [架构-PG纯净化路线.md](../架构-PG纯净化路线.md) |

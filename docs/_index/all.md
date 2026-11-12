@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 441 篇 · 2026-11-12
+> 共 442 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -268,6 +268,7 @@
 | 架构规范 | 完整 evidence 请求耗时 Profile | 完整请求不是 PG FTS 慢 | [性能-profile-evidence.md](../性能-profile-evidence.md) |
 | 安全复盘 | corpus 加密备份恢复演练记录 | --- | [恢复演练-20261112.md](../恢复演练-20261112.md) |
 | 阶段计划 | 执行顺序：修复、架构、功能 | --- | [执行顺序-修复-架构-功能.md](../执行顺序-修复-架构-功能.md) |
+| 阶段计划 | 实验报告：Phase C — SciFact 句级检索与 chunk 策略 | --- | [报告-PhaseC-SciFact.md](../报告-PhaseC-SciFact.md) |
 | 架构规范 | 接口文档 | --- | [接口明细.md](../接口明细.md) |
 | 架构规范 | 摘要层（RAPTOR 精简版） | summaries( | [摘要层-RAPTOR精简版.md](../摘要层-RAPTOR精简版.md) |
 | 架构规范 | Data Issue: Sentence IDs Differ Between SQLite and PostgreSQL | gold sentence total 65 | [数据-句子ID不一致.md](../数据-句子ID不一致.md) |
