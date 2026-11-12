@@ -1,6 +1,6 @@
 # SciPal 文档索引
 
-> 更新：2026-11-12 · 共 438 篇 Markdown  
+> 更新：2026-11-12 · 共 439 篇 Markdown  
 > 分类是索引视图，不移动原文件；原路径与既有链接保持不变。
 
 ## 五大分类
@@ -8,7 +8,7 @@
 | 分类 | 数量 | 索引 |
 |---|---:|---|
 | 架构规范 | 132 | [architecture/README.md](architecture/README.md) |
-| 阶段计划 | 140 | [plans/README.md](plans/README.md) |
+| 阶段计划 | 141 | [plans/README.md](plans/README.md) |
 | 安全复盘 | 32 | [security/README.md](security/README.md) |
 | 测试报告 | 52 | [testing/README.md](testing/README.md) |
 | 废弃历史 | 82 | [legacy/README.md](legacy/README.md) |
@@ -25,6 +25,7 @@
 - [代码审查-20261112](代码审查-20261112.md)
 - [工程治理门禁规范](工程治理门禁规范.md)
 - [公共测试集选型](公共测试集选型.md)
+- [计划-生信代码RAG](计划-生信代码RAG.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
