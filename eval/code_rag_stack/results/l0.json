@@ -1,0 +1,23 @@
+{
+  "stats": {
+    "total": 2578,
+    "parse_ok": 2578,
+    "span_exact": 2578,
+    "delimiter_balance": 2578,
+    "parent_ok": 2578
+  },
+  "rates": {
+    "parse_ok": 1.0,
+    "span_exact": 1.0,
+    "delimiter_balance": 1.0,
+    "parent_ok": 1.0
+  },
+  "by_type": {
+    "file": 462,
+    "class": 84,
+    "function": 1527,
+    "process": 476,
+    "workflow": 29
+  },
+  "failures": []
+}
