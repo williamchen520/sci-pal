@@ -1,0 +1,110 @@
+{
+  "experiment": "Phase C — SciFact sentence retrieval / chunk strategies",
+  "date": "2026-11-12",
+  "commit": "22155b534826d8f30186e9fa1dfe93993c95279e",
+  "python": "3.12.10",
+  "models": [
+    {
+      "name": "BAAI/bge-base-en-v1.5",
+      "path": "G:/models/bge-base-en-v1.5",
+      "dim": 768
+    },
+    {
+      "name": "BAAI/bge-reranker-base",
+      "path": "G:/models/bge-reranker-base"
+    },
+    {
+      "name": "BAAI/bge-small-en-v1.5",
+      "path": "G:/models/bge-small-en-v1.5",
+      "dim": 384
+    }
+  ],
+  "data": [
+    {
+      "path": "data/benchmark_scifact.db",
+      "bytes": 48320512,
+      "sha256": "ace1afead4e0d4f26c3c6ac9699f1709de00cf7878a1e10111665ccfd613f9e4"
+    },
+    {
+      "path": "eval/gold/scifact_300.jsonl",
+      "bytes": 90649,
+      "sha256": "efe689041fb01fbac58134c7409d63440ed9820facdacb460c78687f4daa73ce"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_20.json",
+      "bytes": 24198,
+      "sha256": "b759ae4f4a9824dbff578c01bef8003a2a3a4f2db20a27344c98b9506dba77bc"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_20_120.json",
+      "bytes": 24208,
+      "sha256": "c6fb5084c5a11bd52f3f425e445caa6a2444657ee34252f0659909288d4efcbe"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_20_120_C2.json",
+      "bytes": 36491,
+      "sha256": "05d8021a74d1f98364c5505511ba63a285e1a3469f8fcdbfe06121bb65a936ef"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_20_C3.json",
+      "bytes": 45802,
+      "sha256": "9b2ddc3ffcaf3cb03347e13f3ce4edb50ef46156b95f9a1f1e992cf933008aa1"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_20_rerank.json",
+      "bytes": 24313,
+      "sha256": "6a16a6b53de3a61de5b96dab50e493a914218e3126b00429fe36e625d57e7203"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_300_120.json",
+      "bytes": 338717,
+      "sha256": "a6de33f1dc90923025d100b761cb713fa16cf272c685c566df59a2db63f7a6af"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_300_120_rerank.json",
+      "bytes": 338837,
+      "sha256": "cb4327d551b294b1c53e3b790c9197052a87b3b6762f66538e171b5b50b953e0"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_300_120_S.json",
+      "bytes": 445491,
+      "sha256": "935ca537fb59111054cd818256178299557904a6f067976a151302b742b81565"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_300_200.json",
+      "bytes": 338668,
+      "sha256": "728d4adbe09cd8c8dec3c29c57a6ecc166bd6da52eaf7cbfa19e60f31b57f9be"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_300_500.json",
+      "bytes": 338807,
+      "sha256": "78a9a1076e55699b433408d81d24599ce9eb80256dee226696d5290f3cce9778"
+    },
+    {
+      "path": "eval/results/scifact_phase_c_501_120_strict.json",
+      "bytes": 843280,
+      "sha256": "140f722f50c4db9485e989e83eaad62d6d903eacd62fb25d0597556b39f9e5ad"
+    },
+    {
+      "path": "eval/results/scifact_systems_300.json",
+      "bytes": 73848,
+      "sha256": "e783d3cf378926f2c8c0c9cc1b34a507e8c22cbbf59dbc0611e9b8a4221de4f1"
+    },
+    {
+      "path": "eval/results/scifact_systems_501.json",
+      "bytes": 122272,
+      "sha256": "7cd44edff0bbc86f25fb141eee6e9cc3f106c0f84b77bbf9e3530a2270d79da4"
+    }
+  ],
+  "commands": [
+    "python -m eval.scifact_phase_c --limit 300 --chunk-words 120 --include-sentence --output eval/results/scifact_phase_c_300_120_S.json",
+    "python -m eval.scifact_phase_c --limit 0 --chunk-words 120 --include-sentence --output eval/results/scifact_phase_c_501_120_strict.json",
+    "python -m eval.scifact_phase_c_stats --input eval/results/scifact_phase_c_501_120_strict.json",
+    "python -m eval.scifact_systems --limit 0 --chunk-words 120 --output eval/results/scifact_systems_501.json"
+  ],
+  "known_gaps": [
+    "4 claims have missing last-frame sentence IDs: 624,751,815,816",
+    "C3 full run timed out; only 20-claim smoke",
+    "PaperQA2 native not comparable"
+  ]
+}
