@@ -34,7 +34,7 @@
     {
       "id": "orthogonal_control",
       "name": "正交控制",
-      "paths": ["eval/"],
+      "paths": [],
       "ops": ["confirmatory_experiment", "eval_param"],
       "reason": "确认性 2x2 实验或评测参数变更"
     },

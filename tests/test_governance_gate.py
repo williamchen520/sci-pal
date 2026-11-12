@@ -46,5 +46,11 @@ class GovernanceGateTests(unittest.TestCase):
         self.assertEqual(main(["--paths", "services/db/pg_pool.py", "--json"]), 2)
 
 
+
+    def test_eval_path_alone_does_not_trigger_orthogonal_gate(self) -> None:
+        result = check(paths=["eval/scifact_phase_c.py"])
+        self.assertFalse(result["blocked"])
+
+
 if __name__ == "__main__":
     unittest.main()
