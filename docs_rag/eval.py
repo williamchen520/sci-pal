@@ -1,4 +1,4 @@
-"""Retrieval evaluation for the independent docs RAG database."""
+"""Compare vector-only, lexical-only and hybrid retrieval on docs/."""
 
 from __future__ import annotations
 
@@ -8,23 +8,15 @@ from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
 
-from docs_rag.search import MODEL, search
+from docs_rag.search import MODEL, MODES, search
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--queries", default=str(Path(__file__).with_name("eval_queries.json")))
-    parser.add_argument("--top-k", type=int, default=10)
-    parser.add_argument("--json", default="")
-    args = parser.parse_args(argv)
-
-    cases = json.loads(Path(args.queries).read_text(encoding="utf-8"))
-    model = SentenceTransformer(MODEL, device="cuda")
+def run_mode(cases, *, mode: str, top_k: int, model: SentenceTransformer) -> dict:
     hits_at_1 = hits_at_5 = hits_at_10 = 0
     reciprocal = 0.0
     rows = []
     for case in cases:
-        hits = search(case["query"], top_k=args.top_k, model=model)
+        hits = search(case["query"], top_k=top_k, model=model, mode=mode)
         rank = next(
             (
                 index
@@ -48,9 +40,9 @@ def main(argv: list[str] | None = None) -> int:
                 ],
             }
         )
-
     n = len(cases)
-    result = {
+    return {
+        "mode": mode,
         "queries": n,
         "hit@1": hits_at_1 / n,
         "hit@5": hits_at_5 / n,
@@ -58,9 +50,27 @@ def main(argv: list[str] | None = None) -> int:
         "mrr@10": reciprocal / n,
         "rows": rows,
     }
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--queries", default=str(Path(__file__).with_name("eval_queries.json")))
+    parser.add_argument("--top-k", type=int, default=10)
+    parser.add_argument("--modes", default="vector,lexical,hybrid")
+    parser.add_argument("--json", default="")
+    args = parser.parse_args(argv)
+
+    cases = json.loads(Path(args.queries).read_text(encoding="utf-8"))
+    modes = [mode.strip() for mode in args.modes.split(",") if mode.strip()]
+    unknown = set(modes) - MODES
+    if unknown:
+        raise SystemExit(f"unknown modes: {sorted(unknown)}")
+    model = SentenceTransformer(MODEL, device="cuda")
+    results = {mode: run_mode(cases, mode=mode, top_k=args.top_k, model=model) for mode in modes}
+    output = {"queries": len(cases), "results": results}
+    print(json.dumps(output, ensure_ascii=False, indent=2))
     if args.json:
-        Path(args.json).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        Path(args.json).write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
     return 0
 
 

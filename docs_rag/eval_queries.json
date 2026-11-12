@@ -46,5 +46,77 @@
   {
     "query": "DSH 和 SciPal 的职责边界是什么",
     "expected": "archive/old_design/方案-DSH推理层与SciPal证据层.md"
+  },
+  {
+    "query": "core 的鉴权表为什么不放在 rebuild",
+    "expected": "架构变更-鉴权库物理隔离.md"
+  },
+  {
+    "query": "开发者 break-glass 权限怎么限制",
+    "expected": "P4e-开发者权限与break-glass.md"
+  },
+  {
+    "query": "客户端入库追踪的表由谁创建",
+    "expected": "架构变更-P7-客户端入库追踪.md"
+  },
+  {
+    "query": "HNSW 的 m 和 ef_construction 参数是多少",
+    "expected": "PostgreSQL迁移-G4-HNSW诊断.md"
+  },
+  {
+    "query": "GIN 索引恢复后怎么确认有效",
+    "expected": "临时工作安排-索引重建演练.md"
+  },
+  {
+    "query": "句子窗口是怎么设计的",
+    "expected": "召回架构-SentenceWindow设计.md"
+  },
+  {
+    "query": "seed_100 里 curated 和 auto 各多少",
+    "expected": "全文测试集来源调查.md"
+  },
+  {
+    "query": "LitQA2 本地有多少题可评估",
+    "expected": "data-cards/litqa2.md"
+  },
+  {
+    "query": "QASPER 证据为什么不能按句级 Recall 算",
+    "expected": "公共测试集选型.md"
+  },
+  {
+    "query": "P0 修了哪些数据归属问题",
+    "expected": "代码审查-20261112.md"
+  },
+  {
+    "query": "备份文件怎么加密",
+    "expected": "备份策略-双库.md"
+  },
+  {
+    "query": "SQLite research.db 什么时候退役",
+    "expected": "Changelog.md"
+  },
+  {
+    "query": "Chroma 还会在运行时初始化吗",
+    "expected": "PG-only彻底收尾计划表.md"
+  },
+  {
+    "query": "句子 trace 怎么定位到 page 和 bbox",
+    "expected": "数据重建-P3-PDF重建.md"
+  },
+  {
+    "query": "check_data_boundary 检查什么",
+    "expected": "代码审查-20261112.md"
+  },
+  {
+    "query": "optional 插件路由怎么通过 validate_arch",
+    "expected": "代码审查-20261112.md"
+  },
+  {
+    "query": "CI 门禁为什么用 base 分支脚本",
+    "expected": "工程治理门禁规范.md"
+  },
+  {
+    "query": "P0 硬编码 DSN 在哪",
+    "expected": "代码审查-20261112.md"
   }
 ]
