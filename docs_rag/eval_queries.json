@@ -1,0 +1,50 @@
+[
+  {
+    "query": "core 和 rebuild 为什么要物理隔离",
+    "expected": "架构变更-数据层物理隔离.md"
+  },
+  {
+    "query": "PaperStore 为什么会让 trace 返回 500",
+    "expected": "代码审查-20261112.md"
+  },
+  {
+    "query": "生产环境 DSN 什么时候会被拒绝",
+    "expected": "代码审查-20261112.md"
+  },
+  {
+    "query": "恢复演练后 papers 和 sentences 的数量是多少",
+    "expected": "恢复演练-20261112.md"
+  },
+  {
+    "query": "治理门禁命中后需要什么才能继续",
+    "expected": "工程治理门禁规范.md"
+  },
+  {
+    "query": "WorkBuddy 到 DSH 的重大决策时间轴",
+    "expected": "Changelog.md"
+  },
+  {
+    "query": "备份策略 core 和 corpus 的保留周期",
+    "expected": "备份策略-双库.md"
+  },
+  {
+    "query": "SciFact 和 QASPER 的证据级别有什么区别",
+    "expected": "公共测试集选型.md"
+  },
+  {
+    "query": "内部 ingest 和 embed 端点需要什么 token",
+    "expected": "P6-红队审计.md"
+  },
+  {
+    "query": "当前总共有多少 route 和 method",
+    "expected": "架构与路由全景图.md"
+  },
+  {
+    "query": "句子窗口的 context 会不会进入 Recall",
+    "expected": "实验数据契约.md"
+  },
+  {
+    "query": "DSH 和 SciPal 的职责边界是什么",
+    "expected": "archive/old_design/方案-DSH推理层与SciPal证据层.md"
+  }
+]
