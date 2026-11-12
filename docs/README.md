@@ -1,6 +1,6 @@
 # SciPal 文档索引
 
-> 更新：2026-11-12 · 共 446 篇 Markdown  
+> 更新：2026-11-12 · 共 447 篇 Markdown  
 > 分类是索引视图，不移动原文件；原路径与既有链接保持不变。
 
 ## 五大分类
@@ -8,7 +8,7 @@
 | 分类 | 数量 | 索引 |
 |---|---:|---|
 | 架构规范 | 133 | [architecture/README.md](architecture/README.md) |
-| 阶段计划 | 144 | [plans/README.md](plans/README.md) |
+| 阶段计划 | 145 | [plans/README.md](plans/README.md) |
 | 安全复盘 | 33 | [security/README.md](security/README.md) |
 | 测试报告 | 54 | [testing/README.md](testing/README.md) |
 | 废弃历史 | 82 | [legacy/README.md](legacy/README.md) |
@@ -30,6 +30,7 @@
 - [实验-PhaseC-SciFact-300](实验-PhaseC-SciFact-300.md)
 - [报告-PhaseC-SciFact](报告-PhaseC-SciFact.md)
 - [实验-PhaseC-收口](实验-PhaseC-收口.md)
+- [实验-PhaseC-Manifest](实验-PhaseC-Manifest.md)
 - [实验-系统层可行性审计](实验-系统层可行性审计.md)
 - [实验-PaperQA2-适配烟测](实验-PaperQA2-适配烟测.md)
 - [报告-PaperQA2-适配烟测](报告-PaperQA2-适配烟测.md)
