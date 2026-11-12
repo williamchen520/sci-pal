@@ -1,0 +1,629 @@
+{
+  "baseline_engine": "git grep (DSH grep equivalent, not full DSH session)",
+  "summaries": {
+    "B1_git_grep_read": {
+      "cases": 30,
+      "file_hit@1": 0.13333333333333333,
+      "file_hit@3": 0.4666666666666667,
+      "file_hit@5": 0.4666666666666667,
+      "symbol_hit@1": 0.0,
+      "symbol_hit@5": 0.0,
+      "mrr": 0.3109832190918918,
+      "ndcg@10": 0.3646187615405837,
+      "p50_latency_ms": 628.54
+    },
+    "C1_search": {
+      "cases": 30,
+      "file_hit@1": 0.7,
+      "file_hit@3": 0.9666666666666667,
+      "file_hit@5": 1.0,
+      "symbol_hit@1": 0.7666666666666667,
+      "symbol_hit@5": 1.0,
+      "mrr": 0.8305555555555556,
+      "ndcg@10": 0.8738751693167379,
+      "p50_latency_ms": 1078.65
+    }
+  },
+  "rows": [
+    {
+      "id": "s01",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 3,
+      "symbol_rank": null,
+      "file_ndcg10": 0.5,
+      "latency_ms": 552.05,
+      "tool_calls": 4
+    },
+    {
+      "id": "s01",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 5110.03,
+      "tool_calls": 1
+    },
+    {
+      "id": "s02",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 1,
+      "symbol_rank": null,
+      "file_ndcg10": 1.0,
+      "latency_ms": 736.5,
+      "tool_calls": 4
+    },
+    {
+      "id": "s02",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 1300.52,
+      "tool_calls": 1
+    },
+    {
+      "id": "s03",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 2,
+      "symbol_rank": null,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 442.92,
+      "tool_calls": 4
+    },
+    {
+      "id": "s03",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 2,
+      "symbol_rank": 1,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 1114.74,
+      "tool_calls": 1
+    },
+    {
+      "id": "s04",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 3,
+      "symbol_rank": null,
+      "file_ndcg10": 0.5,
+      "latency_ms": 509.26,
+      "tool_calls": 4
+    },
+    {
+      "id": "s04",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 2,
+      "symbol_rank": 3,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 1315.09,
+      "tool_calls": 1
+    },
+    {
+      "id": "s05",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 1,
+      "symbol_rank": null,
+      "file_ndcg10": 1.0,
+      "latency_ms": 619.82,
+      "tool_calls": 4
+    },
+    {
+      "id": "s05",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 2,
+      "symbol_rank": 1,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 1346.34,
+      "tool_calls": 1
+    },
+    {
+      "id": "s06",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 2,
+      "symbol_rank": null,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 553.07,
+      "tool_calls": 4
+    },
+    {
+      "id": "s06",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 1394.51,
+      "tool_calls": 1
+    },
+    {
+      "id": "s07",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 9,
+      "symbol_rank": null,
+      "file_ndcg10": 0.3010299956639812,
+      "latency_ms": 644.9,
+      "tool_calls": 4
+    },
+    {
+      "id": "s07",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 2,
+      "file_ndcg10": 1.0,
+      "latency_ms": 2215.56,
+      "tool_calls": 1
+    },
+    {
+      "id": "s08",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 2,
+      "symbol_rank": null,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 744.73,
+      "tool_calls": 4
+    },
+    {
+      "id": "s08",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 3,
+      "symbol_rank": 1,
+      "file_ndcg10": 0.5,
+      "latency_ms": 1773.39,
+      "tool_calls": 1
+    },
+    {
+      "id": "s09",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 2,
+      "symbol_rank": null,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 651.96,
+      "tool_calls": 4
+    },
+    {
+      "id": "s09",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 1268.06,
+      "tool_calls": 1
+    },
+    {
+      "id": "s10",
+      "category": "symbol",
+      "arm": "B1_git_grep_read",
+      "file_rank": 2,
+      "symbol_rank": null,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 476.41,
+      "tool_calls": 4
+    },
+    {
+      "id": "s10",
+      "category": "symbol",
+      "arm": "C1_search",
+      "file_rank": 3,
+      "symbol_rank": 2,
+      "file_ndcg10": 0.5,
+      "latency_ms": 1179.71,
+      "tool_calls": 1
+    },
+    {
+      "id": "s11",
+      "category": "api",
+      "arm": "B1_git_grep_read",
+      "file_rank": 2,
+      "symbol_rank": null,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 466.28,
+      "tool_calls": 4
+    },
+    {
+      "id": "s11",
+      "category": "api",
+      "arm": "C1_search",
+      "file_rank": 4,
+      "symbol_rank": 4,
+      "file_ndcg10": 0.43067655807339306,
+      "latency_ms": 1215.72,
+      "tool_calls": 1
+    },
+    {
+      "id": "s12",
+      "category": "api",
+      "arm": "B1_git_grep_read",
+      "file_rank": 1,
+      "symbol_rank": null,
+      "file_ndcg10": 1.0,
+      "latency_ms": 504.75,
+      "tool_calls": 4
+    },
+    {
+      "id": "s12",
+      "category": "api",
+      "arm": "C1_search",
+      "file_rank": 2,
+      "symbol_rank": 2,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 1356.39,
+      "tool_calls": 1
+    },
+    {
+      "id": "s13",
+      "category": "api",
+      "arm": "B1_git_grep_read",
+      "file_rank": 2,
+      "symbol_rank": null,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 561.61,
+      "tool_calls": 4
+    },
+    {
+      "id": "s13",
+      "category": "api",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 1110.92,
+      "tool_calls": 1
+    },
+    {
+      "id": "s14",
+      "category": "dataflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 2,
+      "symbol_rank": null,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 526.68,
+      "tool_calls": 4
+    },
+    {
+      "id": "s14",
+      "category": "dataflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 1400.43,
+      "tool_calls": 1
+    },
+    {
+      "id": "s15",
+      "category": "dataflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 1,
+      "symbol_rank": null,
+      "file_ndcg10": 1.0,
+      "latency_ms": 629.75,
+      "tool_calls": 4
+    },
+    {
+      "id": "s15",
+      "category": "dataflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 1078.65,
+      "tool_calls": 1
+    },
+    {
+      "id": "n01",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 52,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 754.67,
+      "tool_calls": 4
+    },
+    {
+      "id": "n01",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 779.47,
+      "tool_calls": 1
+    },
+    {
+      "id": "n02",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 105,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 826.14,
+      "tool_calls": 4
+    },
+    {
+      "id": "n02",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 950.66,
+      "tool_calls": 1
+    },
+    {
+      "id": "n03",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 49,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 635.95,
+      "tool_calls": 4
+    },
+    {
+      "id": "n03",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 837.08,
+      "tool_calls": 1
+    },
+    {
+      "id": "n04",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 46,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 628.54,
+      "tool_calls": 4
+    },
+    {
+      "id": "n04",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 739.88,
+      "tool_calls": 1
+    },
+    {
+      "id": "n05",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 10,
+      "symbol_rank": null,
+      "file_ndcg10": 0.2890648263178879,
+      "latency_ms": 633.57,
+      "tool_calls": 4
+    },
+    {
+      "id": "n05",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 720.47,
+      "tool_calls": 1
+    },
+    {
+      "id": "n06",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 52,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 528.7,
+      "tool_calls": 4
+    },
+    {
+      "id": "n06",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 720.48,
+      "tool_calls": 1
+    },
+    {
+      "id": "n07",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 49,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 757.52,
+      "tool_calls": 4
+    },
+    {
+      "id": "n07",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 869.07,
+      "tool_calls": 1
+    },
+    {
+      "id": "n08",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 72,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 719.74,
+      "tool_calls": 4
+    },
+    {
+      "id": "n08",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 703.24,
+      "tool_calls": 1
+    },
+    {
+      "id": "n09",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 12,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 986.32,
+      "tool_calls": 4
+    },
+    {
+      "id": "n09",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 846.07,
+      "tool_calls": 1
+    },
+    {
+      "id": "n10",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 20,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 473.96,
+      "tool_calls": 4
+    },
+    {
+      "id": "n10",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 663.99,
+      "tool_calls": 1
+    },
+    {
+      "id": "n11",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 31,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 533.74,
+      "tool_calls": 4
+    },
+    {
+      "id": "n11",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 611.09,
+      "tool_calls": 1
+    },
+    {
+      "id": "n12",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 179,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 468.59,
+      "tool_calls": 4
+    },
+    {
+      "id": "n12",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 2,
+      "symbol_rank": 2,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 671.77,
+      "tool_calls": 1
+    },
+    {
+      "id": "n13",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 50,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 449.01,
+      "tool_calls": 4
+    },
+    {
+      "id": "n13",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 2,
+      "symbol_rank": 2,
+      "file_ndcg10": 0.6309297535714575,
+      "latency_ms": 637.72,
+      "tool_calls": 1
+    },
+    {
+      "id": "n14",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 40,
+      "symbol_rank": null,
+      "file_ndcg10": 0.0,
+      "latency_ms": 891.93,
+      "tool_calls": 4
+    },
+    {
+      "id": "n14",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 797.83,
+      "tool_calls": 1
+    },
+    {
+      "id": "n15",
+      "category": "workflow",
+      "arm": "B1_git_grep_read",
+      "file_rank": 9,
+      "symbol_rank": null,
+      "file_ndcg10": 0.3010299956639812,
+      "latency_ms": 916.87,
+      "tool_calls": 4
+    },
+    {
+      "id": "n15",
+      "category": "workflow",
+      "arm": "C1_search",
+      "file_rank": 1,
+      "symbol_rank": 1,
+      "file_ndcg10": 1.0,
+      "latency_ms": 680.38,
+      "tool_calls": 1
+    }
+  ]
+}
