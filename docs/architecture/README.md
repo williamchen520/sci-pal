@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 140 篇 · 分类索引，文件原路径不变
+> 共 141 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -61,6 +61,7 @@
 | 实验记录：BioViz Recipe RAG Phase 0/1 | --- | [实验-BioViz-Recipe-RAG.md](../实验-BioViz-Recipe-RAG.md) |
 | 实验记录：code-rag E0 评测脚手架与 L0 审计 | --- | [实验-代码RAG-E0.md](../实验-代码RAG-E0.md) |
 | 实验记录：code-rag E2 DSH-like 对照 | --- | [实验-代码RAG-E2.md](../实验-代码RAG-E2.md) |
+| 实验记录：code-rag E3 L2 上下文闭合 | --- | [实验-代码RAG-E3.md](../实验-代码RAG-E3.md) |
 | 实验记录：code-rag P3 检索 | --- | [实验-代码RAG-P3.md](../实验-代码RAG-P3.md) |
 | 实验记录：code-rag P4 DSH MCP | --- | [实验-代码RAG-P4.md](../实验-代码RAG-P4.md) |
 | 实验记录：code-rag P5 UI「我的代码库」 | --- | [实验-代码RAG-P5.md](../实验-代码RAG-P5.md) |
