@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "description": "Deterministic preflight gates for high-risk changes. Docs/tests/read-only probes are exempt unless an op explicitly triggers a gate.",
+  "triggers": [
+    {
+      "id": "contract_lock",
+      "name": "契约锁定",
+      "paths": ["routes/", "deploy/sql/", "ARCHITECTURE.json", "ARCH_CONTRACT.json", "contracts/", "plugins/ingest_tracking/migrations/"],
+      "ops": ["api_contract", "schema", "json_contract"],
+      "reason": "API/表结构/JSON 契约变更"
+    },
+    {
+      "id": "physical_moat",
+      "name": "物理护城河",
+      "paths": ["services/db/", "services/tenancy/", "deploy/.env", "deploy/docker-compose.yml"],
+      "ops": ["dsn", "cross_db", "isolation"],
+      "reason": "跨库连接、DSN 或隔离逻辑变更"
+    },
+    {
+      "id": "slice_execution",
+      "name": "切片执行",
+      "paths": [],
+      "ops": ["refactor"],
+      "max_lines": 300,
+      "reason": "单次改动过大或重大重构"
+    },
+    {
+      "id": "anti_corruption_audit",
+      "name": "防腐审计",
+      "paths": [],
+      "ops": ["merge_core", "core_pr"],
+      "reason": "核心逻辑合并前的审计"
+    },
+    {
+      "id": "orthogonal_control",
+      "name": "正交控制",
+      "paths": ["eval/"],
+      "ops": ["confirmatory_experiment", "eval_param"],
+      "reason": "确认性 2x2 实验或评测参数变更"
+    },
+    {
+      "id": "dimensional_adaptation",
+      "name": "降维适配",
+      "paths": [],
+      "ops": ["hard_cut_500w", "runtime_splice"],
+      "reason": "500 词硬切数据或运行时接骨逻辑"
+    }
+  ]
+}
