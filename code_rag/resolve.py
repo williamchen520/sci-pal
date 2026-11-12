@@ -20,6 +20,7 @@ class Unit:
     path: str
     symbol: str
     unit_type: str
+    parent_unit_id: str | None = None
 
 
 @dataclass
@@ -84,6 +85,9 @@ def resolve_target(
     imports: dict[str, dict[str, tuple[str, str | None]]],
     file_by_module: dict[str, str],
     symbols_by_path: dict[str, dict[str, str]],
+    source_unit_id: str = "",
+    parent_by_unit: dict[str, str] | None = None,
+    class_methods: dict[str, dict[str, str]] | None = None,
 ) -> tuple[str, str] | None:
     name = target.removeprefix("unresolved:")
     if not name or name in {"dict", "list", "set", "tuple", "str", "int", "float"}:
@@ -91,6 +95,11 @@ def resolve_target(
     parts = name.split(".")
     head, tail = parts[0], parts[-1]
     aliases = imports.get(source_path, {})
+    if head in {"self", "cls"} and len(parts) > 1 and parent_by_unit and class_methods:
+        parent = parent_by_unit.get(source_unit_id)
+        candidate = class_methods.get(parent or "", {}).get(tail)
+        if candidate:
+            return candidate, "high"
 
     direct = symbols_by_path.get(source_path, {}).get(tail)
     if direct and len(parts) == 1:
@@ -108,6 +117,15 @@ def resolve_target(
                 candidate = symbols_by_path.get(module_path, {}).get(symbol)
                 if candidate:
                     return candidate, "medium"
+        if len(parts) > 1:
+            prefix = module + "."
+            matches = [
+                symbols_by_path[path][tail]
+                for path in symbols_by_path
+                if module_of(path).startswith(prefix) and tail in symbols_by_path[path]
+            ]
+            if len(matches) == 1:
+                return matches[0], "low"
     if len(parts) > 1:
         prefix = ".".join(parts[:-1])
         module_path = file_by_module.get(prefix)
@@ -129,9 +147,9 @@ def load(conn, library_id: str, snapshot_id: str):
         ).fetchall()
     }
     units = [
-        Unit(row[0], row[1], row[2] or "", row[3])
+        Unit(row[0], row[1], row[2] or "", row[3], row[4])
         for row in conn.execute(
-            "SELECT u.unit_id,f.path,u.symbol_name,u.unit_type FROM code_rag.code_units u "
+            "SELECT u.unit_id,f.path,u.symbol_name,u.unit_type,u.parent_unit_id FROM code_rag.code_units u "
             "JOIN code_rag.code_files f ON f.file_id=u.file_id "
             "WHERE u.library_id=%s AND (%s='' OR u.snapshot_id=%s) AND u.unit_type <> 'file'",
             (library_id, snapshot_id, snapshot_id),
@@ -146,6 +164,12 @@ def resolve_library(conn, library_id: str, snapshot_id: str = "") -> dict[str, i
     for unit in units:
         symbols_by_path.setdefault(unit.path, {})[unit.symbol] = unit.unit_id
     file_by_module = {module_of(path): path for path in files}
+    parent_by_unit = {unit.unit_id: unit.parent_unit_id for unit in units if unit.parent_unit_id}
+    class_ids = {unit.unit_id for unit in units if unit.unit_type == "class"}
+    class_methods: dict[str, dict[str, str]] = {}
+    for unit in units:
+        if unit.parent_unit_id in class_ids:
+            class_methods.setdefault(unit.parent_unit_id, {})[unit.symbol] = unit.unit_id
     imports = build_imports(files)
     rows = conn.execute(
         "SELECT src_unit_id,dst_unit_id FROM code_rag.code_edges "
@@ -165,6 +189,9 @@ def resolve_library(conn, library_id: str, snapshot_id: str = "") -> dict[str, i
             imports=imports,
             file_by_module=file_by_module,
             symbols_by_path=symbols_by_path,
+            source_unit_id=src,
+            parent_by_unit=parent_by_unit,
+            class_methods=class_methods,
         )
         if not hit:
             continue

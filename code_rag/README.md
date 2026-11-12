@@ -61,7 +61,7 @@ P2.5 scanpy:
 
 ```text
 calls 9,127
-resolved 760 (8.3%)
+resolved 1,425 (15.6%)
 trace normalize_total -> 4 nodes / 18 edges
 ```
 
