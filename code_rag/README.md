@@ -65,6 +65,12 @@ resolved 1,425 (15.6%)
 trace normalize_total -> 4 nodes / 18 edges
 ```
 
+## HTTP API (UI)
+
+```bash
+SCIPAL_CODE_READ_DSN=... python -m code_rag.api --port 5010
+```
+
 ## Search
 
 ```bash

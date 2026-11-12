@@ -17,9 +17,12 @@ SCHEMA_VERSION = 1
 
 
 def dsn() -> str:
-    value = os.environ.get("SCIPAL_CODE_DSN", "").strip()
+    value = (
+        os.environ.get("SCIPAL_CODE_DSN", "").strip()
+        or os.environ.get("SCIPAL_CODE_READ_DSN", "").strip()
+    )
     if not value:
-        raise SystemExit("SCIPAL_CODE_DSN is required")
+        raise SystemExit("SCIPAL_CODE_DSN or SCIPAL_CODE_READ_DSN is required")
     return value
 
 

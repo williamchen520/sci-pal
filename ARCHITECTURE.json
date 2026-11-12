@@ -2301,6 +2301,30 @@
         ],
         "endpoint": "libraries.remove",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/code/libraries/<library_id>/status",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "code_libraries.status",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/code/libraries/<library_id>/search",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "code_libraries.search",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/code/libraries/<library_id>/trace",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "code_libraries.trace",
+        "status": "implemented"
       }
     ]
   },
