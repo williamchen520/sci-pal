@@ -93,10 +93,7 @@ def parse_python(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdg
             name = _node_text(source, name_node) if name_node else node.type
             unit_type = "function" if node.type == "function_definition" else "class"
             uid = _stable_id("unit", path, unit_type, name, str(node.start_byte), str(node.end_byte))
-            doc = _python_docstring(source, node)
             body = _node_text(source, node)
-            if doc:
-                body = doc + "\n" + body
             units.append(
                 ParsedUnit(
                     unit_id=uid,

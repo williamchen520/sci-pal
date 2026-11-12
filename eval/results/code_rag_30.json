@@ -4,7 +4,7 @@
     "code_file_hit@1": 0.7,
     "code_file_hit@3": 0.9666666666666667,
     "code_file_hit@5": 1.0,
-    "code_symbol_hit@1": 0.7333333333333333,
+    "code_symbol_hit@1": 0.7666666666666667,
     "code_symbol_hit@5": 1.0,
     "baseline_file_hit@1": 0.3,
     "baseline_file_hit@3": 0.6,
@@ -31,7 +31,7 @@
       "id": "s03",
       "category": "symbol",
       "query": "highly variable genes",
-      "code_file_rank": 3,
+      "code_file_rank": 2,
       "code_symbol_rank": 1,
       "baseline_file_rank": 2
     },
@@ -39,16 +39,16 @@
       "id": "s04",
       "category": "symbol",
       "query": "neighbor graph construction",
-      "code_file_rank": 3,
-      "code_symbol_rank": 2,
+      "code_file_rank": 2,
+      "code_symbol_rank": 3,
       "baseline_file_rank": 2
     },
     {
       "id": "s05",
       "category": "symbol",
       "query": "compute UMAP embedding",
-      "code_file_rank": 3,
-      "code_symbol_rank": 2,
+      "code_file_rank": 2,
+      "code_symbol_rank": 1,
       "baseline_file_rank": 2
     },
     {

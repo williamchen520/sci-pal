@@ -1,13 +1,13 @@
 # SciPal 文档索引
 
-> 更新：2026-11-12 · 共 457 篇 Markdown  
+> 更新：2026-11-12 · 共 458 篇 Markdown  
 > 分类是索引视图，不移动原文件；原路径与既有链接保持不变。
 
 ## 五大分类
 
 | 分类 | 数量 | 索引 |
 |---|---:|---|
-| 架构规范 | 138 | [architecture/README.md](architecture/README.md) |
+| 架构规范 | 139 | [architecture/README.md](architecture/README.md) |
 | 阶段计划 | 149 | [plans/README.md](plans/README.md) |
 | 安全复盘 | 33 | [security/README.md](security/README.md) |
 | 测试报告 | 55 | [testing/README.md](testing/README.md) |
@@ -39,6 +39,7 @@
 - [实验-代码RAG-P4](实验-代码RAG-P4.md)
 - [实验-代码RAG-P5](实验-代码RAG-P5.md)
 - [实验-代码RAG-P6](实验-代码RAG-P6.md)
+- [实验-代码RAG-E0](实验-代码RAG-E0.md)
 - [计划-代码增强RAG-平台模块-v1](计划-代码增强RAG-平台模块-v1.md)
 - [计划-代码RAG评测栈-v1](计划-代码RAG评测栈-v1.md)
 - [Changelog](Changelog.md)
