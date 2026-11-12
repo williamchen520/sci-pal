@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 141 篇 · 分类索引，文件原路径不变
+> 共 142 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -55,6 +55,7 @@
 | scipal-guard P1：实体词表校验 | --- | [scipal-guard-P1.md](../scipal-guard-P1.md) |
 | 代码审查修复计划 | --- | [修复计划-代码审查P0.md](../修复计划-代码审查P0.md) |
 | 备选计划表 | --- | [备选计划表.md](../备选计划表.md) |
+| 实验 Phase C：SciFact F0 / B / C 烟测 | --- | [实验-PhaseC-SciFact-300.md](../实验-PhaseC-SciFact-300.md) |
 | 2026年10月工作日志 | 改动文件：apiserver.py、services/review/taskmanager.py（仅 create/complete/fail）、 | [2026-10.md](../工作日志/2026-10.md) |
 | 工作计划：DSH 适配与插件化 | DSH 桌面/服务器 | [工作计划-DSH适配与插件化.md](../工作计划-DSH适配与插件化.md) |
 | 工作计划：SQLite → PostgreSQL 迁移 | --- | [工作计划-PostgreSQL迁移.md](../工作计划-PostgreSQL迁移.md) |

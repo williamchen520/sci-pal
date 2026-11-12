@@ -138,6 +138,7 @@ def main() -> None:
 - [公共测试集选型](公共测试集选型.md)
 - [计划-生信代码RAG](计划-生信代码RAG.md)
 - [补充-生信代码RAG-DSH原生检索](补充-生信代码RAG-DSH原生检索.md)
+- [实验-PhaseC-SciFact-300](实验-PhaseC-SciFact-300.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
