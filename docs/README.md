@@ -1,78 +1,38 @@
-[English](en/README.md) | **简体中文**
+# SciPal 文档索引
 
-# SciPal 文档索引（docs/）
+> 更新：2026-11-12 · 共 438 篇 Markdown  
+> 分类是索引视图，不移动原文件；原路径与既有链接保持不变。
 
-> 项目总说明以仓库根目录的 [`../README.md`](../README.md) 为准。
-> 本目录存放架构、接口、评测与计划文档；历史工单与旧方案在 [`archive/`](archive/README.md)。
+## 五大分类
 
-## 从哪里开始
+| 分类 | 数量 | 索引 |
+|---|---:|---|
+| 架构规范 | 132 | [architecture/README.md](architecture/README.md) |
+| 阶段计划 | 140 | [plans/README.md](plans/README.md) |
+| 安全复盘 | 32 | [security/README.md](security/README.md) |
+| 测试报告 | 52 | [testing/README.md](testing/README.md) |
+| 废弃历史 | 82 | [legacy/README.md](legacy/README.md) |
 
-| 目的 | 文档 |
-|------|------|
-| 项目是什么、怎么启动 | [`../README.md`](../README.md) |
-| 项目交接指南 | [`HANDOVER.md`](HANDOVER.md) |
-| Research logs index | [`Research_Logs_Index.md`](Research_Logs_Index.md) |
-| 历史档案（勿参考） | [`archive_legacy/README.md`](archive_legacy/README.md) |
-| English documentation | [`en/README.md`](en/README.md) |
-| 架构、模块、路由与数据流 | [架构与路由图.md](架构与路由图.md) |
-| 文献监控 | [工作计划-自适应与文献情报.md](工作计划-自适应与文献情报.md) |
-| 领域包 | [肿瘤免疫领域包](../packs/biomed-oncoimmuno/README.md) |
-| Claim 试点 | [claim-pilot-审讯记录-01.md](claim-pilot-审讯记录-01.md) |
-| Claim 写作口径 | [claim-pilot-在线入库-01.md](claim-pilot-在线入库-01.md) |
-| Google CoE 对照 | [CoE-对照与借鉴.md](CoE-对照与借鉴.md) |
-| 插件端口与对比评测 | [工作计划-插件端口与对比评测.md](工作计划-插件端口与对比评测.md) |
-| Benchmark PostgreSQL 策略 | [benchmark-PostgreSQL策略.md](benchmark-PostgreSQL策略.md) |
-| PostgreSQL 迁移计划 | [工作计划-PostgreSQL迁移.md](工作计划-PostgreSQL迁移.md) |
-| 跨平台路径体检 | [跨平台路径体检报告.md](跨平台路径体检报告.md) |
-| 数据重建 schema v2 | [数据重建-schema-v2-按源类型建模.md](数据重建-schema-v2-按源类型建模.md) |
-| P2 XML 重建 | [数据重建-P2-XML重建.md](数据重建-P2-XML重建.md) |
-| Windows 开发警示 | [Windows开发警示与跨平台规范.md](Windows开发警示与跨平台规范.md) |
-| PostgreSQL 迁移基线 | [PostgreSQL迁移-基线.md](PostgreSQL迁移-基线.md) |
-| PostgreSQL FTS 对齐 | [PostgreSQL迁移-FTS对齐实验.md](PostgreSQL迁移-FTS对齐实验.md) |
-| PostgreSQL FTS 20 query | [PostgreSQL迁移-FTS-porter-20query.md](PostgreSQL迁移-FTS-porter-20query.md) |
-| PostgreSQL P4 双写 | [PostgreSQL迁移-P4-双写.md](PostgreSQL迁移-P4-双写.md) |
-| PostgreSQL P5 读 canary | [PostgreSQL迁移-P5-读路径Canary.md](PostgreSQL迁移-P5-读路径Canary.md) |
-| PostgreSQL ETL dry-run | [PostgreSQL迁移-ETL-dryrun.json](PostgreSQL迁移-ETL-dryrun.json) |
-| PostgreSQL ETL verify | [PostgreSQL迁移-ETL-verify.json](PostgreSQL迁移-ETL-verify.json) |
-| PostgreSQL ETL checksum | [PostgreSQL迁移-ETL-checksum.json](PostgreSQL迁移-ETL-checksum.json) |
-| PDF 三引擎解析 | [PDF解析-三引擎联合.md](PDF解析-三引擎联合.md) |
-| JATS 导入与外部文献源 | [文献源-JATS与外部源.md](文献源-JATS与外部源.md) |
-| 多用户与数据隔离 | [工作计划-多用户与数据隔离.md](工作计划-多用户与数据隔离.md) |
-| 去学科化与领域包分发 | [工作计划-去学科化与领域包分发.md](工作计划-去学科化与领域包分发.md) |
-| 自适应与文献情报 | [工作计划-自适应与文献情报.md](工作计划-自适应与文献情报.md) |
-| 项目跟踪与实验记录 | [工作计划-项目跟踪与实验记录.md](工作计划-项目跟踪与实验记录.md) |
-| DSH 适配与插件化 | [工作计划-DSH适配与插件化.md](工作计划-DSH适配与插件化.md) |
-| 全部函数签名 / 参数 / 返回值 | [接口明细.md](接口明细.md) |
-| 可选项与用户配置 | [可选项与用户配置.md](可选项与用户配置.md) |
-| 模型分层与数据隔离配置 | [DSH-模型分层配置.md](DSH-模型分层配置.md) |
-| 评测说明 | [评测说明.md](评测说明.md) |
-| 证据与评测契约 | [证据与评测契约.md](证据与评测契约.md) |
-| Contextual Retrieval | [Contextual-Retrieval.md](Contextual-Retrieval.md) |
-| QA 预算评测 | [QA预算评测.md](QA预算评测.md) |
-| 撤稿标记与 Prompt Injection | [可信度-撤稿与注入.md](可信度-撤稿与注入.md) |
-| 摘要层（RAPTOR 精简版） | [摘要层-RAPTOR精简版.md](摘要层-RAPTOR精简版.md) |
-| 引用意图 | [引用意图.md](引用意图.md) |
-| Claim–Evidence 图 | [claim-evidence.md](claim-evidence.md) |
-| 系统综述工作流 | [系统综述工作流.md](系统综述工作流.md) |
-| 项目里程碑数据表 | [项目里程碑数据表.md](项目里程碑数据表.md) |
-| Git 分支保护与本地钩子 | [Git-分支保护与钩子.md](Git-分支保护与钩子.md) |
-| 许可证与依赖合规 | [许可证说明.md](许可证说明.md) |
-| 历史工单 / 阶段验收 / 旧计划 | [archive/](archive/README.md) |
-| 协作规范 | [协作规范.md](协作规范.md) |
-| AI 最高优先级规则 | [`../.dsh_rules`](../.dsh_rules) |
-| PR 自检模板 | [`../.github/pull_request_template.md`](../.github/pull_request_template.md) |
-| 贡献指南 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) |
-| 给 AI 代码助手的项目说明 | [`../AGENTS.md`](../AGENTS.md) |
-| 机器可读架构（V33.96） | [`../ARCHITECTURE.json`](../ARCHITECTURE.json) |
+完整清单：[_index/all.md](_index/all.md)
 
-## 维护规则
+## 常用入口
 
-- 当前有效的架构、评测、五份工作计划放在 `docs/` 顶层；
-- 历史工单、阶段验收、旧设计放 `docs/archive/`；
-- 新增文档先判断是“当前规范”还是“过程记录”；
-- 根 README 只保留入口，不复制正文。
+- [架构与路由全景图](架构与路由全景图.md)
+- [开发-模块手册](开发-模块手册.md)
+- [开发流程规范](开发流程规范.md)
+- [数据层隔离审计](数据层隔离审计.md)
+- [恢复演练-20261112](恢复演练-20261112.md)
+- [代码审查-20261112](代码审查-20261112.md)
+- [工程治理门禁规范](工程治理门禁规范.md)
+- [公共测试集选型](公共测试集选型.md)
+- [Changelog](Changelog.md)
 
+## 为什么不立即 git mv
 
-## 调研档案约定
+```text
+438 篇文档，348 篇在 docs/ 根目录
+现有 43 个本地链接已经断开
+全量移动会新增断链，并让 RAG 语料出现重复/重定向
+```
 
-新增调研/实验档案时，必须在 [`Research_Logs_Index.md`](Research_Logs_Index.md) 加一行，并在同一 PR 中提交。
+所以先建立分类索引、时间轴和稳定入口；物理迁移等链接检查器就绪后再做。
