@@ -1,0 +1,213 @@
+"""Code parsers for P2 ingestion.
+
+Python uses tree-sitter; Nextflow uses a conservative block scanner until a
+Nextflow grammar is added. Parser output is deliberately lossless spans: every
+unit can be read back from the repository.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import re
+from dataclasses import dataclass
+
+from tree_sitter import Language, Parser
+import tree_sitter_python as tsp
+
+PY_LANGUAGE = Language(tsp.language())
+PY_PARSER = Parser(PY_LANGUAGE)
+
+NEXTFLOW_BLOCK = re.compile(r"\b(process|workflow)(?:\s+([A-Za-z_][A-Za-z0-9_]*))?\s*\{")
+NEXTFLOW_INCLUDE = re.compile(r"\binclude\s*\{([^}]*)\}\s*from\s*['\"]([^'\"]+)['\"]")
+
+
+@dataclass
+class ParsedUnit:
+    unit_id: str
+    file_path: str
+    symbol_name: str
+    unit_type: str
+    text: str
+    start_line: int
+    end_line: int
+    parent_unit_id: str | None = None
+
+
+@dataclass
+class ParsedEdge:
+    src_unit_id: str
+    dst_unit_id: str
+    relation: str
+    source: str = "parser"
+    confidence: str = "medium"
+
+
+def _stable_id(prefix: str, *parts: str) -> str:
+    raw = "|".join(parts).encode("utf-8")
+    return prefix + "_" + hashlib.sha1(raw).hexdigest()[:16]
+
+
+def _node_text(source: bytes, node) -> str:
+    return source[node.start_byte : node.end_byte].decode("utf-8", errors="replace")
+
+
+def _python_docstring(source: bytes, node) -> str:
+    body = node.child_by_field_name("body")
+    if body is None or not body.children:
+        return ""
+    first = body.children[0]
+    if first.type == "expression_statement" and first.children:
+        string = first.children[0]
+        if string.type in {"string", "concatenated_string"}:
+            return _node_text(source, string).strip("'\" \n")[:500]
+    return ""
+
+
+def parse_python(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdge]]:
+    source = text.encode("utf-8")
+    tree = PY_PARSER.parse(source)
+    file_id = _stable_id("unit", path, "file")
+    units: list[ParsedUnit] = [
+        ParsedUnit(
+            unit_id=file_id,
+            file_path=path,
+            symbol_name=path,
+            unit_type="file",
+            text=text,
+            start_line=1,
+            end_line=text.count("\n") + 1,
+        )
+    ]
+    edges: list[ParsedEdge] = []
+
+    def visit(node, parent_id: str | None) -> None:
+        if node.type == "call" and parent_id:
+            fn = node.child_by_field_name("function")
+            if fn:
+                target = _node_text(source, fn)
+                edges.append(
+                    ParsedEdge(parent_id, f"unresolved:{target}", "calls", "ast", "medium")
+                )
+        if node.type in {"function_definition", "class_definition"}:
+            name_node = node.child_by_field_name("name")
+            name = _node_text(source, name_node) if name_node else node.type
+            unit_type = "function" if node.type == "function_definition" else "class"
+            uid = _stable_id("unit", path, unit_type, name, str(node.start_byte), str(node.end_byte))
+            doc = _python_docstring(source, node)
+            body = _node_text(source, node)
+            if doc:
+                body = doc + "\n" + body
+            units.append(
+                ParsedUnit(
+                    unit_id=uid,
+                    file_path=path,
+                    symbol_name=name,
+                    unit_type=unit_type,
+                    text=body,
+                    start_line=node.start_point[0] + 1,
+                    end_line=node.end_point[0] + 1,
+                    parent_unit_id=parent_id or file_id,
+                )
+            )
+            for child in node.children:
+                visit(child, uid)
+            return
+        if node.type in {"import_statement", "import_from_statement"}:
+            target = _node_text(source, node).strip()
+            edges.append(
+                ParsedEdge(file_id, f"unresolved:{target}", "imports", "ast", "high")
+            )
+        for child in node.children:
+            visit(child, parent_id)
+
+    visit(tree.root_node, file_id)
+    return units, edges
+
+
+def _match_brace(text: str, start: int) -> int:
+    depth = 0
+    quote: str | None = None
+    triple = False
+    i = start
+    while i < len(text):
+        ch = text[i]
+        if quote:
+            if triple and text.startswith(quote * 3, i):
+                i += 3
+                quote = None
+                triple = False
+                continue
+            if not triple and ch == "\\":
+                i += 2
+                continue
+            if not triple and ch == quote:
+                quote = None
+            i += 1
+            continue
+        if text.startswith("//", i):
+            i = text.find("\n", i)
+            if i == -1:
+                return -1
+            continue
+        if text.startswith("/*", i):
+            i = text.find("*/", i + 2)
+            if i == -1:
+                return -1
+            i += 2
+            continue
+        if ch in {"'", '"'}:
+            quote = ch
+            triple = text.startswith(ch * 3, i)
+            i += 3 if triple else 1
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return -1
+
+
+def parse_nextflow(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdge]]:
+    file_id = _stable_id("unit", path, "file")
+    units = [
+        ParsedUnit(
+            unit_id=file_id,
+            file_path=path,
+            symbol_name=path,
+            unit_type="file",
+            text=text,
+            start_line=1,
+            end_line=text.count("\n") + 1,
+        )
+    ]
+    edges: list[ParsedEdge] = []
+    for match in NEXTFLOW_BLOCK.finditer(text):
+        kind, name = match.group(1), match.group(2)
+        if not name:
+            name = f"{kind}_anonymous"
+        open_at = match.end() - 1
+        close_at = _match_brace(text, open_at)
+        if close_at == -1:
+            continue
+        uid = _stable_id("unit", path, kind, name, str(match.start()), str(close_at))
+        units.append(
+            ParsedUnit(
+                unit_id=uid,
+                file_path=path,
+                symbol_name=name,
+                unit_type=kind,
+                text=text[match.start() : close_at + 1],
+                start_line=text[: match.start()].count("\n") + 1,
+                end_line=text[: close_at + 1].count("\n") + 1,
+                parent_unit_id=file_id,
+            )
+        )
+    for match in NEXTFLOW_INCLUDE.finditer(text):
+        names, target = match.group(1), match.group(2)
+        edges.append(
+            ParsedEdge(file_id, f"include:{target}", "imports", "nextflow", "high")
+        )
+    return units, edges
