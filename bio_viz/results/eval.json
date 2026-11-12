@@ -1,0 +1,116 @@
+{
+  "queries": 12,
+  "hit@1": 1.0,
+  "hit@3": 1.0,
+  "hit@5": 1.0,
+  "rows": [
+    {
+      "query": "差异表达火山图，标注显著基因，色盲友好",
+      "rank": 1,
+      "top": [
+        "viz_volcano",
+        "viz_heatmap",
+        "viz_ma"
+      ]
+    },
+    {
+      "query": "RNA-seq MA 图，表达均值 vs fold change",
+      "rank": 1,
+      "top": [
+        "viz_ma",
+        "viz_upset",
+        "viz_dotplot"
+      ]
+    },
+    {
+      "query": "PCA 散点图，显示样本分组和解释方差",
+      "rank": 1,
+      "top": [
+        "viz_pca",
+        "viz_boxplot",
+        "viz_spatial"
+      ]
+    },
+    {
+      "query": "单细胞 UMAP 按细胞类型着色",
+      "rank": 1,
+      "top": [
+        "viz_umap",
+        "viz_spatial",
+        "viz_dotplot"
+      ]
+    },
+    {
+      "query": "marker 基因点图，展示表达比例",
+      "rank": 1,
+      "top": [
+        "viz_dotplot",
+        "viz_ma",
+        "viz_spatial"
+      ]
+    },
+    {
+      "query": "聚类热图，按行 z-score，发散色",
+      "rank": 1,
+      "top": [
+        "viz_heatmap",
+        "viz_pca",
+        "viz_spatial"
+      ]
+    },
+    {
+      "query": "生存曲线，显示风险人数和 log-rank p",
+      "rank": 1,
+      "top": [
+        "viz_survival",
+        "viz_enrichment",
+        "viz_forest"
+      ]
+    },
+    {
+      "query": "森林图展示 hazard ratio 和置信区间",
+      "rank": 1,
+      "top": [
+        "viz_forest",
+        "viz_enrichment",
+        "viz_survival"
+      ]
+    },
+    {
+      "query": "分组箱线图叠加个体散点",
+      "rank": 1,
+      "top": [
+        "viz_boxplot",
+        "viz_pca",
+        "viz_spatial"
+      ]
+    },
+    {
+      "query": "UpSet 图展示多个基因集交集",
+      "rank": 1,
+      "top": [
+        "viz_upset",
+        "viz_umap",
+        "viz_dotplot"
+      ]
+    },
+    {
+      "query": "空间转录组切片散点图，按细胞类型着色",
+      "rank": 1,
+      "top": [
+        "viz_spatial",
+        "viz_pca",
+        "viz_umap"
+      ]
+    },
+    {
+      "query": "富集分析点图，展示 gene ratio 和通路",
+      "rank": 1,
+      "top": [
+        "viz_enrichment",
+        "viz_dotplot",
+        "viz_forest"
+      ]
+    }
+  ]
+}
