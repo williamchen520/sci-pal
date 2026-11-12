@@ -14,13 +14,12 @@ from services.quality.benchmark_db import (
 
 
 class BenchmarkDBPolicyTests(unittest.TestCase):
-    def test_default_is_postgres_and_requires_driver(self) -> None:
-        with patch.dict(os.environ, {}, clear=False), patch(
-            "services.quality.benchmark_db._has_postgres_driver", return_value=False
-        ):
+    def test_missing_url_fails_closed(self) -> None:
+        with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("SCIPAL_BENCH_DATABASE_URL", None)
-            with self.assertRaises(BenchmarkDBError):
+            with self.assertRaises(BenchmarkDBError) as ctx:
                 ensure_benchmark_backend()
+        self.assertIn("SCIPAL_BENCH_DATABASE_URL", str(ctx.exception))
 
     def test_postgres_with_driver_passes(self) -> None:
         with patch.dict(
