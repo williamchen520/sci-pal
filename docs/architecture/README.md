@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 132 篇 · 分类索引，文件原路径不变
+> 共 133 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -123,6 +123,7 @@
 | 硬件资源与 PG 调优 | CPU Intel Xeon E5-2673 v3 | [硬件资源与PG调优.md](../硬件资源与PG调优.md) |
 | 算法设计稿 v0.1：句子滑窗检索 | --- | [算法设计-句子滑窗.md](../算法设计-句子滑窗.md) |
 | 1. 表 | reviewprojects(projectid, owner, name, fieldtext, picojson, createdat) | [系统综述工作流.md](../系统综述工作流.md) |
+| 生信代码 RAG 计划：补充建议书 | --- | [补充-生信代码RAG-DSH原生检索.md](../补充-生信代码RAG-DSH原生检索.md) |
 | 领域覆盖、领域感知路由与主题级惩罚讨论书 | --- | [讨论-领域覆盖与领域感知路由.md](../讨论-领域覆盖与领域感知路由.md) |
 | 许可证说明（AGPL-3.0-only） | SPDX-License-Identifier: AGPL-3.0-only | [许可证说明.md](../许可证说明.md) |
 | PostgreSQL Write Path Productionization | --- | [设计-PostgreSQL写路径生产化.md](../设计-PostgreSQL写路径生产化.md) |

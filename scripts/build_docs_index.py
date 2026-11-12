@@ -137,6 +137,7 @@ def main() -> None:
 - [工程治理门禁规范](工程治理门禁规范.md)
 - [公共测试集选型](公共测试集选型.md)
 - [计划-生信代码RAG](计划-生信代码RAG.md)
+- [补充-生信代码RAG-DSH原生检索](补充-生信代码RAG-DSH原生检索.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
