@@ -51,16 +51,16 @@ scanpy 1.12.5：
 
 ```text
 calls candidates 9,127
-resolved            760
-unresolved        8,367
-resolved rate       8.3%
+resolved            1,425
+unresolved          7,701
+resolved rate        15.6%
 ```
 
 解释：
 
 ```text
 多数 calls 是 numpy/scipy/logging/dict 等外部调用
-8.3% 是“本地可解析比例”，不是总体正确率
+15.6% 是“本地可解析比例”，不是总体正确率
 ```
 
 ## 4. trace 前后
@@ -75,13 +75,16 @@ edges 9（全部 unresolved:）
 ### 后
 
 ```text
-nodes 4
+nodes 6
 edges 18
 ```
 
 新增节点：
 
 ```text
+info / debug
+  src/scanpy/logging.py
+
 view_to_actual
   src/scanpy/_utils/__init__.py
 

@@ -32,6 +32,19 @@ class ResolverTests(unittest.TestCase):
         )
         self.assertEqual(hit, ("unit_b", "high"))
 
+    def test_self_method_uses_enclosing_class(self) -> None:
+        hit = resolve_target(
+            source_path="src/pkg/a.py",
+            target="unresolved:self.helper",
+            imports={},
+            file_by_module={},
+            symbols_by_path={},
+            source_unit_id="unit_run",
+            parent_by_unit={"unit_run": "unit_class"},
+            class_methods={"unit_class": {"helper": "unit_helper"}},
+        )
+        self.assertEqual(hit, ("unit_helper", "high"))
+
     def test_unresolved_external_is_left_alone(self) -> None:
         hit = resolve_target(
             source_path="src/pkg/a.py",
