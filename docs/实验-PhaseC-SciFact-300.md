@@ -135,7 +135,7 @@ S / C2 显著更差
 
 ---
 
-## 6. C2：句子锚点 + 父 chunk
+## 6. C2 / C3：句子锚点 + 父 chunk
 
 设计：
 
@@ -159,6 +159,17 @@ max 聚合丢掉了 chunk 内其他句子的证据
 父 chunk 变长后，排序被单个高分句主导
 “句子锚点 + 父 chunk”没有解决首跳
 ```
+
+C3：同父 chunk 内取 top-2 / top-3 句分求和。20 条烟测：
+
+| 臂 | Hit@1 | Hit@5 | Hit@10 | Sentence Recall@10 | Context Recall@10 | MRR@10 |
+|---|---:|---:|---:|---:|---:|---:|
+| C2 max | 0.250 | 0.750 | 0.850 | 0.825 | 0.838 | 0.498 |
+| C3 top-2 sum | 0.350 | 0.850 | 0.900 | 0.825 | 0.875 | 0.553 |
+| C3 top-3 sum | 0.350 | 0.700 | 0.750 | 0.675 | 0.787 | 0.517 |
+
+C3 top-2 比 C2 好，但仍低于 F0 的 Hit@10 0.950。  
+全量 C3 运行超时，未纳入结论；**没有证据支持继续 C3**。
 
 ---
 
@@ -306,6 +317,7 @@ python -m eval.scifact_phase_c \
 # paired bootstrap
 python -m eval.scifact_phase_c_stats \
   --input eval/results/scifact_phase_c_501_120_strict.json
+eval/results/scifact_phase_c_20_C3.json
 ```
 
 结果：
@@ -319,6 +331,7 @@ eval/results/scifact_phase_c_300_200.json
 eval/results/scifact_phase_c_300_120_S.json
 eval/results/scifact_phase_c_300_120_rerank.json
 eval/results/scifact_phase_c_501_120_strict.json
+eval/results/scifact_phase_c_20_C3.json
 ```
 
 ---

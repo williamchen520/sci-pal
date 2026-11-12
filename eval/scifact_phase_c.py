@@ -231,8 +231,10 @@ def evaluate_grouped(
     model: SentenceTransformer,
     *,
     top_k: int = 10,
+    aggregate: str = "max",
+    top_sentences: int = 2,
 ) -> dict:
-    """C2: score sentences, aggregate by parent chunk, rank parent chunks."""
+    """Score sentences, aggregate by parent chunk, rank parent chunks."""
     parent_of = {}
     parent_by_id = {unit.unit_id: unit for unit in parent_units}
     for parent in parent_units:
@@ -254,11 +256,15 @@ def evaluate_grouped(
     ndcg = 0.0
     rows = []
     for claim, score_row in zip(claims, scores):
-        best: dict[str, float] = {}
+        grouped: dict[str, list[float]] = {}
         for sentence_index, score in enumerate(score_row):
             parent_id = sentence_parent[sentence_index]
-            if parent_id and score > best.get(parent_id, -1e9):
-                best[parent_id] = float(score)
+            if parent_id:
+                grouped.setdefault(parent_id, []).append(float(score))
+        best: dict[str, float] = {}
+        for parent_id, values in grouped.items():
+            values.sort(reverse=True)
+            best[parent_id] = max(values) if aggregate == "max" else sum(values[:top_sentences])
         ranked = sorted(best.items(), key=lambda item: item[1], reverse=True)[:top_k]
         gold = set(claim["evidence"])
         first = None
@@ -331,17 +337,24 @@ def main(argv: list[str] | None = None) -> int:
             ),
         }
     if "S" in units_by_arm and "C" in units_by_arm:
-        results["C2"] = {
-            "units": len(units_by_arm["C"]),
-            "metrics": evaluate_grouped(
-                claims,
-                units_by_arm["C"],
-                units_by_arm["S"],
-                vectors_by_arm["S"],
-                model,
-                top_k=args.top_k,
-            ),
-        }
+        for label, aggregate, top_sentences in (
+            ("C2", "max", 1),
+            ("C3", "sum", 2),
+            ("C3_3", "sum", 3),
+        ):
+            results[label] = {
+                "units": len(units_by_arm["C"]),
+                "metrics": evaluate_grouped(
+                    claims,
+                    units_by_arm["C"],
+                    units_by_arm["S"],
+                    vectors_by_arm["S"],
+                    model,
+                    top_k=args.top_k,
+                    aggregate=aggregate,
+                    top_sentences=top_sentences,
+                ),
+            }
     output = {
         "dataset": "scifact",
         "claims": len(claims),
