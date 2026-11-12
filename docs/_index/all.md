@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 458 篇 · 2026-11-12
+> 共 459 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -242,6 +242,7 @@
 | 阶段计划 | 实验 Phase C：SciFact F0 / B / C / S / C2 | --- | [实验-PhaseC-SciFact-300.md](../实验-PhaseC-SciFact-300.md) |
 | 阶段计划 | Phase C 收口记录 | --- | [实验-PhaseC-收口.md](../实验-PhaseC-收口.md) |
 | 架构规范 | 实验记录：code-rag E0 评测脚手架与 L0 审计 | --- | [实验-代码RAG-E0.md](../实验-代码RAG-E0.md) |
+| 架构规范 | 实验记录：code-rag E2 DSH-like 对照 | --- | [实验-代码RAG-E2.md](../实验-代码RAG-E2.md) |
 | 阶段计划 | 实验记录：code-rag P2.5 Python 符号绑定 | --- | [实验-代码RAG-P2.5.md](../实验-代码RAG-P2.5.md) |
 | 阶段计划 | 实验记录：code-rag P2 AST/结构入库 | --- | [实验-代码RAG-P2.md](../实验-代码RAG-P2.md) |
 | 架构规范 | 实验记录：code-rag P3 检索 | --- | [实验-代码RAG-P3.md](../实验-代码RAG-P3.md) |
