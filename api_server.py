@@ -344,12 +344,10 @@ app.register_blueprint(
 # Client-only ingest quality tracking plugin (off by default).
 if os.environ.get("SCIPAL_INGEST_TRACKING", "").strip().lower() in {"1", "true", "yes", "on"}:
     try:
-        from plugins.ingest_tracking import (
-            build_ingest_tracking_blueprint,
-            ensure_schema,
-        )
+        from plugins.ingest_tracking import build_ingest_tracking_blueprint
 
-        ensure_schema()
+        # Schema is created by scripts/migrate_ingest_tracking.py. The runtime
+        # role intentionally has no DDL privilege; missing tables become 503s.
         app.register_blueprint(build_ingest_tracking_blueprint(log=app.logger))
     except Exception:
         app.logger.exception("ingest tracking plugin failed to initialize")

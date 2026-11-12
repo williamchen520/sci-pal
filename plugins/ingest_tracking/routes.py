@@ -16,8 +16,16 @@ def _json() -> dict[str, Any]:
     return request.get_json(silent=True) or {}
 
 
-def build_ingest_tracking_blueprint(log=None):
+def build_ingest_tracking_blueprint(log=None, *, schema_ready=None):
     bp = Blueprint("ingest_tracking", __name__)
+    check_schema = schema_ready or store.schema_ready
+
+    @bp.before_request
+    def require_schema():
+        if not check_schema():
+            return jsonify({
+                "error": "ingest tracking schema missing; run scripts/migrate_ingest_tracking.py"
+            }), 503
 
     @bp.post("/api/ingest-tracking/batches")
     def create_batch():

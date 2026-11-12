@@ -10,15 +10,23 @@ from flask import Flask
 from plugins.ingest_tracking.routes import build_ingest_tracking_blueprint
 
 
-def make_app() -> Flask:
+def make_app(*, schema_ready=True) -> Flask:
     app = Flask(__name__)
-    app.register_blueprint(build_ingest_tracking_blueprint())
+    app.register_blueprint(
+        build_ingest_tracking_blueprint(schema_ready=lambda: schema_ready)
+    )
     return app
 
 
 class IngestTrackingRouteTests(unittest.TestCase):
     def setUp(self) -> None:
         self.app = make_app()
+
+    def test_missing_schema_returns_503(self) -> None:
+        app = make_app(schema_ready=False)
+        resp = app.test_client().get("/api/ingest-tracking/batches/b1")
+        self.assertEqual(resp.status_code, 503)
+        self.assertIn("migrate_ingest_tracking.py", resp.get_json()["error"])
 
     def test_create_batch(self) -> None:
         with mock.patch("plugins.ingest_tracking.routes.store.create_batch") as create:

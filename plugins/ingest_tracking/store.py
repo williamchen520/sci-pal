@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 from typing import Any
 
 from services.db.pg_pool import admin_connection
 
-MIGRATION = Path(__file__).resolve().parent / "migrations" / "001_ingest_tracking.sql"
 
 
 def enabled() -> bool:
@@ -18,16 +16,20 @@ def enabled() -> bool:
     }
 
 
-def ensure_schema() -> None:
-    if not enabled():
-        return
-    sql = MIGRATION.read_text(encoding="utf-8")
+def schema_ready() -> bool:
+    """Return True only when the migration has created the plugin tables.
+
+    The app must never run DDL at startup: the runtime role has no CREATE
+    privilege. Missing schema is surfaced as HTTP 503 by the routes.
+    """
     pg = admin_connection()
     try:
-        for statement in sql.split(";"):
-            if statement.strip():
-                pg.execute(statement)
-        pg.commit()
+        row = pg.execute(
+            "SELECT to_regclass('ingest_tracking_batches') IS NOT NULL AS ready"
+        ).fetchone()
+        return bool(row and row.get("ready"))
+    except Exception:
+        return False
     finally:
         pg.close()
 
