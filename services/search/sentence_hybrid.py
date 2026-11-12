@@ -201,6 +201,14 @@ class SentenceHybridRetriever:
         return units
 
 
+    def search_hits(self, query: str, top_k: int = 10) -> "RetrievalResult":
+        """Return the stable experiment contract for sentence retrieval."""
+        from services.search.result import result_from_sentence_units
+
+        return result_from_sentence_units(
+            query, self.search(query, top_k=top_k), source="sentence_backend"
+        )
+
     def to_evidence_json(self, query: str, paper_id: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         """Return the same bundle shape as UnifiedRetriever.to_evidence_json.
 
