@@ -115,3 +115,68 @@ Do **not** report security vulnerabilities in a public issue. Follow [SECURITY.m
 ## License
 
 By contributing, you agree that your contribution is licensed under the GNU Affero General Public License v3.0 only (AGPL-3.0-only). See [LICENSE](LICENSE).
+
+---
+
+## Current Data Isolation and Governance (2026-11-12)
+
+### Two databases
+
+```text
+scipal_core      users / auth / projects / experiments / notes / tasks
+scipal_rebuild   papers / paragraphs / sentences / vectors
+```
+
+Rules:
+
+```text
+no cross-database foreign keys
+logical IDs only
+routes must use core_connection() or corpus_connection()
+business reads never hit scipal_rebuild
+corpus reads never hit scipal_core
+```
+
+### Least privilege and migrations
+
+```text
+core_app          business/auth, no DDL
+corpus_reader     corpus read only
+corpus_writer     corpus write, no DDL
+app startup       must not CREATE/ALTER tables
+plugin schema     scripts/migrate_ingest_tracking.py (owner role)
+```
+
+### Production environment guard
+
+```text
+SCIPAL_ENV=production
+reject loopback/wrong-database DSNs
+require SCIPAL_CORE_DSN and SCIPAL_PG_CORPUS_DSN
+```
+
+### Governance gate
+
+```powershell
+python scripts/governance_gate.py --paths <changed> --ops <ops> --plan "..." --risk "..."
+```
+
+A blocked change requires a human “批准执行” and the `governance-approved` PR label.
+CI uses the base branch's gate script, so a PR cannot weaken the gate it is judged by.
+
+### Required checks
+
+```text
+python scripts/validate_arch.py
+python scripts/check_data_boundary.py
+python -m unittest discover -s tests -p "test_*.py"
+python scripts/smoke_http.py          # 27/27
+python scripts/smoke_group_b.py       # 13/13
+```
+
+### Backups
+
+```text
+core 6h / 7d; corpus 7d / 28d
+encrypted; restore drill includes GIN + HNSW
+```

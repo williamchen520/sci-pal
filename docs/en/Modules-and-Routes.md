@@ -405,3 +405,24 @@ new write paths start in services/papers/pg_writes.py
 ```
 
 Do not start with the 100+ experiment records under `docs/`.
+
+---
+
+## 2026-11-12 module additions
+
+| Module | Entry | Responsibility |
+|---|---|---|
+| Connection governance | `services/db/pg_pool.py`, `services/db/env_guard.py` | core/corpus factories; production DSN fail-closed |
+| Data ownership | `services/papers/paper_store.py`, `services/tenancy/scoping.py` | paper reads from corpus; workspace filter from corpus |
+| Retrieval contract | `services/search/result.py` | `RetrievalHit` / `RetrievalResult`; context is separate from scored hits |
+| Public evaluation | `eval/public_sets.py` | SciFact BEIR and QASPER loaders with explicit evidence level |
+| Plugin migration | `scripts/migrate_ingest_tracking.py` | owner-only migration; no startup DDL |
+| Governance gate | `scripts/governance_gate.py`, `scripts/governance_ci.py` | high-risk preflight and human approval label |
+
+Boundaries:
+
+```text
+app role has no DDL
+missing plugin schema returns 503
+context_sentence_ids never count as Recall
+```

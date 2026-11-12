@@ -1,178 +1,123 @@
 # Architecture Overview
 
-> This document is the "god's-eye view" — look at the diagram first, then the module descriptions, and finally the API details.
-> It is written for humans and for AI. Read this file before every new conversation.
+> **Current state — 2026-11-12**  
+> PG-only, physically separated `scipal_core` / `scipal_rebuild`.
 
-## Environment Constraints (top-level design, non-negotiable)
-
-- **Target system**: Windows 10/11, Python 3.12 (venv: `venv_sciPal_py312`)
-- **Path handling**: always use `pathlib.Path`; never hardcode `/` or `\`
-- **Do not use**: Linux commands such as `chmod`, `apt-get`, `kill`, `ps`, `grep`; Linux libraries such as `fcntl`, `resource`, `pwd`
-- **Console encoding**: entry scripts must add `sys.stdout.reconfigure(encoding='utf-8')`
-- **Database**: SQLite + ChromaDB (embedded) by default; PostgreSQL is optional for benchmarks and the v2 data rebuild
-- **LLM**: local Ollama service at `http://localhost:11434`
-
-## The Big Picture
-
-```mermaid
-graph TB
-    subgraph Frontend
-        FE[Vanilla JS frontend<br/>index.html / review.html / qa.html / viewer.html]
-    end
-
-    subgraph Routing
-        API[Flask API :5000<br/>api_server.py + routes/]
-    end
-
-    subgraph Services
-        SEARCH[Retrieval layer<br/>services/search/]
-        REVIEW[Review layer<br/>services/review/]
-        QA[Q&A layer<br/>services/qa/]
-        DL[Download layer<br/>online_downloader.py]
-    end
-
-    subgraph Models
-        LLM[Local Ollama LLM<br/>qwen2.5:3b / 7b-Q4]
-        EMB[Embedding<br/>bge-base-en-v1.5]
-        RER[Reranker<br/>bge-reranker-base]
-    end
-
-    subgraph Data
-        DB[(SQLite<br/>research.db)]
-        VEC[(ChromaDB<br/>vector store)]
-        FILES[(File storage<br/>XML/PDF/JSON)]
-    end
-
-    subgraph External
-        NCBI[NCBI E-utilities<br/>PubMed/PMC]
-        PIO[Protocols.io API]
-    end
-
-    FE -->|HTTP| API
-    API --> SEARCH
-    API --> REVIEW
-    API --> QA
-    API --> DL
-    SEARCH --> EMB
-    SEARCH --> RER
-    SEARCH --> DB
-    SEARCH --> VEC
-    REVIEW --> LLM
-    REVIEW --> DB
-    QA --> SEARCH
-    QA --> LLM
-    DL --> NCBI
-    DL --> DB
-    DL --> VEC
-    DL --> FILES
-    SEARCH -.->|Live API search| NCBI
-    SEARCH -.->|Live API search| PIO
-```
-
-> ⚠️ **Note**: this project runs on Windows, so path handling must stay cross-platform.
-> Build every file path with `pathlib.Path`; never hardcode a separator.
-
-## Module Responsibilities (one-liner version)
-
-### Frontend layer
-| Module | What it does |
-|------|--------|
-| `frontend/index.html` | Search home page: enter keywords, hybrid search across local + online papers |
-| `frontend/review.html` | Review generation page: choose outline → assign papers → generate chapter by chapter |
-| `frontend/qa.html` | Q&A page: RAG-based academic Q&A |
-| `frontend/viewer.html` | PDF reader: view source text, annotate |
-
-### Routing layer
-| Module | What it does |
-|------|--------|
-| `api_server.py` | Main Flask entry point and the registration hub for all API routes |
-| `routes/` | Route files split by business domain (search/paper/ai/writing) |
-
-### Service layer
-| Module | What it does | In one line |
-|------|--------|--------|
-| **Retrieval layer** `services/search/` | Find papers from many sources | Local vectors + FTS, NCBI online, Protocols.io methods |
-| **Review layer** `services/review/` | Generate literature reviews | Retrieve evidence → LLM drafts → review → automatic citations |
-| **Q&A layer** `services/qa/` | Answer questions | Retrieve relevant paragraphs → LLM generates an answer → parse citations |
-| **Download layer** `online_downloader.py` | Download new papers asynchronously | Background thread downloads PMC XML → ingest → build index |
-
-### Model layer
-| Module | What it does |
-|------|--------|
-| `LLMClient` | Unified wrapper around Ollama calls; supports chat and chat_json |
-| `Embedding` | Text to vectors (bge-base-en-v1.5) |
-| `Reranker` | Cross-encoder reranking (bge-reranker-base) |
-
-### Data layer
-| Store | What it holds |
-|------|--------|
-| SQLite `data/research.db` | Paper metadata, sections, paragraphs, figures and tables, evidence cards |
-| ChromaDB `data/chroma/` | Full-text paragraph vectors |
-| ChromaDB `data/chroma_abstracts/` | Abstract vectors |
-| Files `documents_xml/` | PMC full-text XML |
-
-## Module Boundaries (lines that must never be crossed)
-
-```mermaid
-graph LR
-    subgraph Allowed
-        A[Routing layer] --> B[Retrieval layer]
-        A --> C[Review layer]
-        A --> D[Q&A layer]
-        B --> E[Data layer]
-        C --> B
-        D --> B
-    end
-
-    subgraph Forbidden
-        X[Review layer] -.->|Forbidden| Y[Direct SQLite/ChromaDB access]
-        Z[Download layer] -.->|Forbidden| W[LLMClient]
-        B -.->|Forbidden| C
-    end
-```
-
-| Forbidden behavior | Reason |
-|----------|------|
-| Review layer writes to SQLite/ChromaDB directly | It must go through the retrieval layer so retrieval logic stays unified |
-| Q&A layer uses EvidenceExtractor directly | Q&A has its own evidence chain; do not mix the two |
-| Download layer calls LLMClient | Downloading only fetches data; it does no AI inference |
-| Retrieval layer calls ReviewGenerator | Retrieval is the callee; it must not depend on the business layer in reverse |
-| Any module reads or writes `data/*.db` directly | It must go through the DAO layer |
-| Frontend talks to NCBI/Protocols.io directly | It must go through the backend proxy to protect API keys |
-
-## Data Flow Overview
-
-```
-user input → routing layer → service layer (retrieval/review/Q&A) → data layer (SQLite+ChromaDB)
-                          ↓
-                    external services (NCBI/Protocols.io)
-```
-
-For function-by-function details, see [API Reference](API-Reference.md).
+This is the short English entry point. For the machine contract see
+[ARCHITECTURE.json](../../ARCHITECTURE.json); for the Chinese route map see
+[架构与路由全景图](../架构与路由全景图.md).
 
 ---
 
-## 14. Legacy Migration Lessons (2026-11)
-
-Early WorkBuddy / CodeBuddy handoff documents now live in
-[`archive_legacy/`](../archive_legacy/README.md) and are not configuration references.
-
-Research and engineering requirements retained from that period:
-
-1. **Traceability**: paper → section → paragraph → sentence must be recoverable;
-   PDF keeps page/bbox, XML keeps XPath/source_path.
-2. **Evidence first**: every claim is bound to a quote/evidence; no evidence, no assertion.
-3. **Do not force source normalization**: XML and PDF keep their native structure;
-   missing coordinates are marked `coordinate_source=unavailable`, never fabricated.
-4. **Local-first and auditable**: support offline/local models; record adjudication
-   events instead of overwriting history.
-5. **Multi-user isolation**: users / workspaces / memberships; scope data by workspace.
-
-Engineering lessons:
+## 1. Runtime shape
 
 ```text
-Two writers on one working tree → conflicts; keep one active writer and one theme per PR.
-PyTorch + Flask multithreading → possible deadlock; isolate reranking in a worker/service.
-Old V33.13 SQLite/Windows setup docs → obsolete; archived; do not copy their paths/config.
+Browser / DSH / MCP
+        │
+        ▼
+      Caddy
+        │ HTTPS + security headers
+        ▼
+   Flask API (26 blueprints; 204 route+method)
+        │
+        ├── scipal_core
+        │     users / auth / workspaces / memberships
+        │     projects / experiments / notes / tasks
+        │     claims / reviews / audit
+        │
+        └── scipal_rebuild
+              papers / sections / paragraphs / sentences
+              paragraph_embeddings / citations / figures / tables
+        │
+        ├── worker       long-running jobs
+        ├── pg-backup    encrypted dumps
+        └── watch-cron   literature monitoring
 ```
 
+With `SCIPAL_INGEST_TRACKING=1`, the optional ingest-tracking blueprint adds
+6 routes: 27 blueprints / 210 route+method.
+
+---
+
+## 2. Non-negotiable boundaries
+
+```text
+core and corpus are separate PostgreSQL databases
+no cross-database foreign keys
+logical IDs only: paper_id / user_id
+business reads never hit scipal_rebuild
+corpus reads never hit scipal_core
+```
+
+Connection factories:
+
+```text
+core_connection()          business reads/writes
+auth_connection()          auth schema, search_path=auth,public
+corpus_connection()        corpus reads
+main_read_connection()     corpus reads
+owner_connection()         corpus writes (no DDL)
+ingest_connection()        corpus ingest writes
+```
+
+`pg_connection()` is a compatibility default to the core DSN. New code should
+use a named factory.
+
+---
+
+## 3. Retrieval
+
+```text
+pgvector HNSW + PostgreSQL GIN FTS + RRF
+optional cross-encoder rerank
+sentence-level evidence
+sentence-window context
+```
+
+The stable experiment contract is in `services/search/result.py`:
+
+```text
+unit_id
+paper_id
+hit_sentence_ids       sentences actually scored
+context_sentence_ids   context added for generation, never Recall
+score
+source
+```
+
+---
+
+## 4. Security and operations
+
+```text
+global API auth       session / bearer / internal token
+internal endpoints    /api/ingest, /api/embed require internal token
+database roles        core_app / corpus_reader / corpus_writer (no DDL)
+environment guard     production rejects loopback/wrong-database DSNs
+backups               core 6h/7d; corpus 7d/28d; encrypted
+restore drill         data + GIN + HNSW validated 2026-11-12
+governance gate       high-risk changes need human approval
+```
+
+DDL belongs to migrations, not app startup:
+
+```text
+app role has no CREATE
+missing plugin schema -> HTTP 503
+scripts/migrate_ingest_tracking.py runs with owner DSN
+```
+
+---
+
+## 5. Where to look
+
+| Question | Document |
+|---|---|
+| Routes and request flow | [Architecture and Routes](Architecture-and-Routes.md) |
+| Module responsibilities | [Modules and Routes](Modules-and-Routes.md) |
+| Data ownership | [数据层隔离审计](../数据层隔离审计.md) |
+| Backup strategy | [备份策略-双库](../备份策略-双库.md) |
+| Restore drill | [恢复演练-20261112](../恢复演练-20261112.md) |
+| Code review findings | [代码审查-20261112](../代码审查-20261112.md) |
+| Governance gate | [工程治理门禁规范](../工程治理门禁规范.md) |
+| Machine contract | [ARCHITECTURE.json](../../ARCHITECTURE.json) |

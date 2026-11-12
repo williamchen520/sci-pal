@@ -1,6 +1,15 @@
 # SciPal Documentation (English)
 
-**English** | [简体中文](../README.md)
+> **Current state — 2026-11-12**
+>
+> - Stack: Flask + PostgreSQL 16 + pgvector; `scipal_core` and `scipal_rebuild` are physically separate.
+> - Routes: 26 blueprints / 204 route+method by default; 27 / 210 with `SCIPAL_INGEST_TRACKING=1`.
+> - Auth: session / bearer / internal token; production requires `SCIPAL_ENV=production`.
+> - Data: 13,201 papers / 410,270 paragraphs / 1,780,306 sentences / 343,546 embeddings.
+> - Ops: encrypted backups, GIN+HNSW restore drill, governance gate.
+> - Contract: `ARCHITECTURE.md`, `ARCHITECTURE.json`, `docs/数据层隔离审计.md`.
+
+**English** | [简体中文](../../README.zh-CN.md)
 
 This directory contains the English editions of SciPal's core architecture, routing, API, and planning documents. The Chinese documents under `docs/` remain the canonical engineering record; the English pages are maintained as a faithful translation for international contributors and reviewers.
 
