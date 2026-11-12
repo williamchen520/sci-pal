@@ -144,6 +144,7 @@ def main() -> None:
 - [实验-PaperQA2-适配烟测](实验-PaperQA2-适配烟测.md)
 - [报告-PaperQA2-适配烟测](报告-PaperQA2-适配烟测.md)
 - [实验-BioViz-Recipe-RAG](实验-BioViz-Recipe-RAG.md)
+- [实验-代码RAG-P2](实验-代码RAG-P2.md)
 - [计划-代码增强RAG-平台模块-v1](计划-代码增强RAG-平台模块-v1.md)
 - [Changelog](Changelog.md)
 

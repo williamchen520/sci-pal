@@ -6,9 +6,17 @@
 
 ```text
 schema        code_rag v1
-service       health only
-indexing      not implemented
+service       health
+indexing      Python AST + Nextflow block scanner (P2)
 search        not implemented
+embeddings    not implemented
+```
+
+P2 smoke:
+
+```text
+scanpy 1.12.5    208 files / 1,819 units / 11,437 edges
+nf-core/rnaseq   254 files / 759 units / 143 edges
 ```
 
 ## Schema
@@ -35,6 +43,16 @@ SCIPAL_CODE_DSN=... python scripts/migrate_code_rag.py
 
 ```bash
 SCIPAL_CODE_DSN=... python -m code_rag.service health
+```
+
+## Ingest
+
+```bash
+SCIPAL_CODE_DSN=... python -m code_rag.ingest \
+  --repo G:/repos/scanpy-1.12.5 \
+  --library-id lib_xxx \
+  --repo-url https://github.com/scverse/scanpy \
+  --ref 1.12.5 --language python
 ```
 
 ## Manifest

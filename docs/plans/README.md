@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 147 篇 · 分类索引，文件原路径不变
+> 共 148 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -58,6 +58,7 @@
 | Phase C 可复现 Manifest | --- | [实验-PhaseC-Manifest.md](../实验-PhaseC-Manifest.md) |
 | 实验 Phase C：SciFact F0 / B / C / S / C2 | --- | [实验-PhaseC-SciFact-300.md](../实验-PhaseC-SciFact-300.md) |
 | Phase C 收口记录 | --- | [实验-PhaseC-收口.md](../实验-PhaseC-收口.md) |
+| 实验记录：code-rag P2 AST/结构入库 | --- | [实验-代码RAG-P2.md](../实验-代码RAG-P2.md) |
 | 2026年10月工作日志 | 改动文件：apiserver.py、services/review/taskmanager.py（仅 create/complete/fail）、 | [2026-10.md](../工作日志/2026-10.md) |
 | 工作计划：DSH 适配与插件化 | DSH 桌面/服务器 | [工作计划-DSH适配与插件化.md](../工作计划-DSH适配与插件化.md) |
 | 工作计划：SQLite → PostgreSQL 迁移 | --- | [工作计划-PostgreSQL迁移.md](../工作计划-PostgreSQL迁移.md) |
