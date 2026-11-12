@@ -1,0 +1,131 @@
+{
+  "summary": {
+    "cases": 10,
+    "compile_pass": 1.0,
+    "test_pass": null,
+    "retrieval_top1": 0.7,
+    "task_compile_pass": 0.7
+  },
+  "rows": [
+    {
+      "id": "s01",
+      "query": "normalize total counts per cell",
+      "expected_symbol": "normalize_total",
+      "retrieved_symbol": "normalize_total",
+      "retrieved_path": "src/scanpy/preprocessing/_normalization.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s02",
+      "query": "read 10x h5 file",
+      "expected_symbol": "read_10x_h5",
+      "retrieved_symbol": "read_10x_h5",
+      "retrieved_path": "src/scanpy/readwrite.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s03",
+      "query": "highly variable genes",
+      "expected_symbol": "highly_variable_genes",
+      "retrieved_symbol": "highly_variable_genes",
+      "retrieved_path": "src/scanpy/experimental/pp/_highly_variable_genes.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s04",
+      "query": "neighbor graph construction",
+      "expected_symbol": "neighbors",
+      "retrieved_symbol": "test_graph_metrics_w_constant_values",
+      "retrieved_path": "tests/test_metrics.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s05",
+      "query": "compute UMAP embedding",
+      "expected_symbol": "umap",
+      "retrieved_symbol": "umap",
+      "retrieved_path": "src/scanpy/neighbors/_connectivity.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s06",
+      "query": "leiden clustering",
+      "expected_symbol": "leiden",
+      "retrieved_symbol": "leiden",
+      "retrieved_path": "src/scanpy/tools/_leiden.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s07",
+      "query": "score gene set per cell",
+      "expected_symbol": "score_genes",
+      "retrieved_symbol": "score_genes_cell_cycle",
+      "retrieved_path": "src/scanpy/tools/_score_genes.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s08",
+      "query": "PCA principal component analysis",
+      "expected_symbol": "pca",
+      "retrieved_symbol": "pca",
+      "retrieved_path": "src/scanpy/preprocessing/_scrublet/pipeline.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s09",
+      "query": "regress out covariate effects",
+      "expected_symbol": "regress_out",
+      "retrieved_symbol": "regress_out",
+      "retrieved_path": "src/scanpy/preprocessing/_simple.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    },
+    {
+      "id": "s10",
+      "query": "rank genes between groups",
+      "expected_symbol": "rank_genes_groups",
+      "retrieved_symbol": "groups",
+      "retrieved_path": "ci/scripts/low-vers.py",
+      "compile_ok": true,
+      "compile_error": "",
+      "test_ok": null,
+      "test_returncode": null,
+      "test_tail": ""
+    }
+  ]
+}
