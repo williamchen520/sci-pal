@@ -18,7 +18,7 @@
       "top": [
         "read_10x_h5",
         "_read_10x_h5",
-        "test_read_10x_h5_v1"
+        "read_10x_mtx"
       ]
     },
     {
@@ -41,11 +41,11 @@
     },
     {
       "query": "neighbor graph",
-      "rank": 4,
+      "rank": 3,
       "top": [
         "Neighbors",
-        "test_neighbors_key_obsp",
-        "_init_neighbors"
+        "_init_neighbors",
+        "neighbors"
       ]
     },
     {

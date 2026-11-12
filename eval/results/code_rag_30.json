@@ -1,0 +1,255 @@
+{
+  "summary": {
+    "queries": 30,
+    "code_file_hit@1": 0.7,
+    "code_file_hit@3": 0.9666666666666667,
+    "code_file_hit@5": 1.0,
+    "code_symbol_hit@1": 0.7333333333333333,
+    "code_symbol_hit@5": 1.0,
+    "baseline_file_hit@1": 0.3,
+    "baseline_file_hit@3": 0.6,
+    "baseline_file_hit@5": 0.8
+  },
+  "rows": [
+    {
+      "id": "s01",
+      "category": "symbol",
+      "query": "normalize total counts per cell",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 3
+    },
+    {
+      "id": "s02",
+      "category": "symbol",
+      "query": "read 10x h5 file",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 2
+    },
+    {
+      "id": "s03",
+      "category": "symbol",
+      "query": "highly variable genes",
+      "code_file_rank": 3,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 2
+    },
+    {
+      "id": "s04",
+      "category": "symbol",
+      "query": "neighbor graph construction",
+      "code_file_rank": 3,
+      "code_symbol_rank": 2,
+      "baseline_file_rank": 2
+    },
+    {
+      "id": "s05",
+      "category": "symbol",
+      "query": "compute UMAP embedding",
+      "code_file_rank": 3,
+      "code_symbol_rank": 2,
+      "baseline_file_rank": 2
+    },
+    {
+      "id": "s06",
+      "category": "symbol",
+      "query": "leiden clustering",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "s07",
+      "category": "symbol",
+      "query": "score gene set per cell",
+      "code_file_rank": 1,
+      "code_symbol_rank": 2,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "s08",
+      "category": "symbol",
+      "query": "PCA principal component analysis",
+      "code_file_rank": 3,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "s09",
+      "category": "symbol",
+      "query": "regress out covariate effects",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "s10",
+      "category": "symbol",
+      "query": "rank genes between groups",
+      "code_file_rank": 3,
+      "code_symbol_rank": 2,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "s11",
+      "category": "api",
+      "query": "read 10x mtx directory",
+      "code_file_rank": 4,
+      "code_symbol_rank": 4,
+      "baseline_file_rank": 2
+    },
+    {
+      "id": "s12",
+      "category": "api",
+      "query": "read visium spatial data",
+      "code_file_rank": 2,
+      "code_symbol_rank": 2,
+      "baseline_file_rank": 4
+    },
+    {
+      "id": "s13",
+      "category": "api",
+      "query": "write h5ad file",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "s14",
+      "category": "dataflow",
+      "query": "filter cells by qc threshold",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "s15",
+      "category": "dataflow",
+      "query": "calculate qc metrics",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "n01",
+      "category": "workflow",
+      "query": "FASTQC raw reads",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 6
+    },
+    {
+      "id": "n02",
+      "category": "workflow",
+      "query": "STAR align reads",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 8
+    },
+    {
+      "id": "n03",
+      "category": "workflow",
+      "query": "salmon quantify transcripts",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 10
+    },
+    {
+      "id": "n04",
+      "category": "workflow",
+      "query": "multiqc report",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 4
+    },
+    {
+      "id": "n05",
+      "category": "workflow",
+      "query": "fastp trim adapters",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 4
+    },
+    {
+      "id": "n06",
+      "category": "workflow",
+      "query": "bowtie2 align reads",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 7
+    },
+    {
+      "id": "n07",
+      "category": "workflow",
+      "query": "hisat2 align reads",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 5
+    },
+    {
+      "id": "n08",
+      "category": "workflow",
+      "query": "kallisto quantify reads",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 12
+    },
+    {
+      "id": "n09",
+      "category": "workflow",
+      "query": "picard mark duplicates",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 4
+    },
+    {
+      "id": "n10",
+      "category": "workflow",
+      "query": "deseq2 qc",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 1
+    },
+    {
+      "id": "n11",
+      "category": "workflow",
+      "query": "dupradar duplication rate",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 3
+    },
+    {
+      "id": "n12",
+      "category": "workflow",
+      "query": "rseqc bam statistics",
+      "code_file_rank": 2,
+      "code_symbol_rank": 2,
+      "baseline_file_rank": 12
+    },
+    {
+      "id": "n13",
+      "category": "workflow",
+      "query": "qualimap rnaseq qc",
+      "code_file_rank": 2,
+      "code_symbol_rank": 2,
+      "baseline_file_rank": 4
+    },
+    {
+      "id": "n14",
+      "category": "workflow",
+      "query": "custom tx2gene",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 2
+    },
+    {
+      "id": "n15",
+      "category": "workflow",
+      "query": "gffread convert gff",
+      "code_file_rank": 1,
+      "code_symbol_rank": 1,
+      "baseline_file_rank": 2
+    }
+  ]
+}
