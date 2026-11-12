@@ -1,0 +1,6062 @@
+{
+  "dataset": "scifact",
+  "claims": 501,
+  "skipped_claims": [
+    "624",
+    "751",
+    "815",
+    "816"
+  ],
+  "chunk_words": 120,
+  "model": "G:/models/bge-base-en-v1.5",
+  "systems": {
+    "BM25": {
+      "claims": 501,
+      "hit@1": 0.5489021956087824,
+      "hit@5": 0.7944111776447106,
+      "hit@10": 0.8522954091816367,
+      "sentence_recall@10": 0.7997269530203664,
+      "context_recall@10": 0.7997269530203664,
+      "mrr@10": 0.6534415296391342,
+      "ndcg@10": 0.7018901171139403,
+      "rows": [
+        {
+          "claim_id": "1000",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1003",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1004",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1005",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1006",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1009",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1011",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1015",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1018",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1023",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1028",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1030",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1031",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1034",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1035",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1036",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "104",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1040",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1042",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1043",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1044",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1045",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1048",
+          "first_rank": null
+        },
+        {
+          "claim_id": "105",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1050",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1054",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1055",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1056",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "106",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1065",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1069",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1072",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1073",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "108",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1081",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1084",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1087",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "109",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1090",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1097",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1101",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1102",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1103",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1105",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1106",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1109",
+          "first_rank": null
+        },
+        {
+          "claim_id": "111",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1114",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1115",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1119",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "112",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1120",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1125",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1126",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1127",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1128",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1133",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1134",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1135",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1136",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1138",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1139",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "114",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1141",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1142",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1145",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1148",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1153",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1156",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1157",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1158",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1159",
+          "first_rank": null
+        },
+        {
+          "claim_id": "116",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1162",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1169",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1170",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1171",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1173",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1176",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1177",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1181",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1182",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1184",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "119",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "12",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "120",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1205",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1209",
+          "first_rank": null
+        },
+        {
+          "claim_id": "121",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1210",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1211",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "122",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1220",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1223",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1224",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1227",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1228",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1229",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "123",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1230",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1231",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1234",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1237",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1238",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1239",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1246",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1248",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1249",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1254",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1255",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1258",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1260",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1261",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1263",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1265",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1268",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1269",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1276",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1284",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1288",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1289",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1293",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1294",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1295",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1297",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1305",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1311",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1312",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1322",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1323",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1324",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1327",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1328",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1333",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1334",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1340",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1341",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1346",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1347",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1348",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1351",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1355",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1356",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1360",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1361",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1366",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1367",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1371",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1372",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1373",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1376",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1378",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "138",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1380",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1381",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1383",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1386",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1390",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1391",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1392",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1393",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1403",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1404",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1406",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "144",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "149",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "152",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "155",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "156",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "157",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "159",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "160",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "164",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "165",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "166",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "167",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "168",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "169",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "172",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "177",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "178",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "181",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "184",
+          "first_rank": null
+        },
+        {
+          "claim_id": "189",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "196",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "197",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "2",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "200",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "201",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "203",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "210",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "22",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "220",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "221",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "222",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "223",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "227",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "228",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "235",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "241",
+          "first_rank": null
+        },
+        {
+          "claim_id": "242",
+          "first_rank": null
+        },
+        {
+          "claim_id": "243",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "245",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "246",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "250",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "251",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "256",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "258",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "263",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "264",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "265",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "266",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "267",
+          "first_rank": null
+        },
+        {
+          "claim_id": "272",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "277",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "278",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "28",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "280",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "283",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "286",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "287",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "290",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "292",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "296",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "299",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "30",
+          "first_rank": null
+        },
+        {
+          "claim_id": "305",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "306",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "308",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "309",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "317",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "32",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "330",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "331",
+          "first_rank": null
+        },
+        {
+          "claim_id": "332",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "333",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "334",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "335",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "339",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "34",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "340",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "341",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "342",
+          "first_rank": null
+        },
+        {
+          "claim_id": "346",
+          "first_rank": null
+        },
+        {
+          "claim_id": "347",
+          "first_rank": null
+        },
+        {
+          "claim_id": "349",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "355",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "356",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "366",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "367",
+          "first_rank": null
+        },
+        {
+          "claim_id": "368",
+          "first_rank": null
+        },
+        {
+          "claim_id": "369",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "370",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "371",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "372",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "375",
+          "first_rank": null
+        },
+        {
+          "claim_id": "378",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "379",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "381",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "382",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "39",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "394",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "396",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "397",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "40",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "400",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "41",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "413",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "414",
+          "first_rank": null
+        },
+        {
+          "claim_id": "416",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "417",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "420",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "426",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "428",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "430",
+          "first_rank": null
+        },
+        {
+          "claim_id": "432",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "44",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "441",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "444",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "445",
+          "first_rank": null
+        },
+        {
+          "claim_id": "447",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "448",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "453",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "454",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "455",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "458",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "46",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "461",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "463",
+          "first_rank": null
+        },
+        {
+          "claim_id": "466",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "469",
+          "first_rank": null
+        },
+        {
+          "claim_id": "47",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "470",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "479",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "480",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "482",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "483",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "488",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "495",
+          "first_rank": null
+        },
+        {
+          "claim_id": "498",
+          "first_rank": null
+        },
+        {
+          "claim_id": "499",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "500",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "504",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "505",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "506",
+          "first_rank": null
+        },
+        {
+          "claim_id": "515",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "52",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "523",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "524",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "529",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "530",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "531",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "537",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "541",
+          "first_rank": null
+        },
+        {
+          "claim_id": "542",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "547",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "548",
+          "first_rank": null
+        },
+        {
+          "claim_id": "55",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "553",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "559",
+          "first_rank": null
+        },
+        {
+          "claim_id": "562",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "563",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "564",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "565",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "566",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "568",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "570",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "571",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "576",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "579",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "58",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "580",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "584",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "590",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "591",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "592",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "594",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "595",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "60",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "600",
+          "first_rank": null
+        },
+        {
+          "claim_id": "601",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "603",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "607",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "61",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "612",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "614",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "615",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "621",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "625",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "626",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "631",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "632",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "633",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "635",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "640",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "643",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "645",
+          "first_rank": null
+        },
+        {
+          "claim_id": "646",
+          "first_rank": null
+        },
+        {
+          "claim_id": "647",
+          "first_rank": null
+        },
+        {
+          "claim_id": "648",
+          "first_rank": null
+        },
+        {
+          "claim_id": "653",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "657",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "661",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "662",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "663",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "665",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "666",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "667",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "668",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "669",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "67",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "670",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "671",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "673",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "68",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "680",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "681",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "682",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "683",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "69",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "694",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "709",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "71",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "717",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "724",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "726",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "734",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "736",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "737",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "738",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "740",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "745",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "746",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "747",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "748",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "749",
+          "first_rank": null
+        },
+        {
+          "claim_id": "752",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "76",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "760",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "764",
+          "first_rank": null
+        },
+        {
+          "claim_id": "765",
+          "first_rank": null
+        },
+        {
+          "claim_id": "766",
+          "first_rank": null
+        },
+        {
+          "claim_id": "767",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "77",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "771",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "772",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "778",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "779",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "78",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "780",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "782",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "787",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "788",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "789",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "79",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "790",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "791",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "792",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "795",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "797",
+          "first_rank": null
+        },
+        {
+          "claim_id": "798",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "801",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "802",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "803",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "804",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "807",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "810",
+          "first_rank": null
+        },
+        {
+          "claim_id": "812",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "818",
+          "first_rank": null
+        },
+        {
+          "claim_id": "822",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "825",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "835",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "840",
+          "first_rank": null
+        },
+        {
+          "claim_id": "841",
+          "first_rank": null
+        },
+        {
+          "claim_id": "844",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "846",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "85",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "853",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "854",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "855",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "856",
+          "first_rank": null
+        },
+        {
+          "claim_id": "857",
+          "first_rank": null
+        },
+        {
+          "claim_id": "858",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "86",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "860",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "861",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "863",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "867",
+          "first_rank": null
+        },
+        {
+          "claim_id": "88",
+          "first_rank": null
+        },
+        {
+          "claim_id": "881",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "883",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "884",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "885",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "886",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "893",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "9",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "901",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "902",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "909",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "910",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "912",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "917",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "919",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "923",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "925",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "926",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "927",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "928",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "929",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "93",
+          "first_rank": null
+        },
+        {
+          "claim_id": "930",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "933",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "935",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "940",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "941",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "942",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "944",
+          "first_rank": null
+        },
+        {
+          "claim_id": "951",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "952",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "953",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "954",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "955",
+          "first_rank": null
+        },
+        {
+          "claim_id": "959",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "962",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "963",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "964",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "965",
+          "first_rank": null
+        },
+        {
+          "claim_id": "972",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "973",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "977",
+          "first_rank": null
+        },
+        {
+          "claim_id": "979",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "98",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "980",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "984",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "990",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "992",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "994",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "996",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "997",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "998",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "999",
+          "first_rank": 1
+        }
+      ]
+    },
+    "Dense": {
+      "claims": 501,
+      "hit@1": 0.6047904191616766,
+      "hit@5": 0.9041916167664671,
+      "hit@10": 0.9481037924151696,
+      "sentence_recall@10": 0.9162443511245906,
+      "context_recall@10": 0.9162443511245906,
+      "mrr@10": 0.7411201406710386,
+      "ndcg@10": 0.7925750974955206,
+      "rows": [
+        {
+          "claim_id": "1000",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1003",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "1004",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1005",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1006",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1009",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1011",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1015",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1018",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "1023",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1028",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1030",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1031",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1034",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1035",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1036",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "104",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1040",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1042",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1043",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1044",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1045",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1048",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "105",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1050",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1054",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1055",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1056",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "106",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1065",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1069",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1072",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1073",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "108",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1081",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1084",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1087",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "109",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1090",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1097",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1101",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1102",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1103",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1105",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1106",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1109",
+          "first_rank": null
+        },
+        {
+          "claim_id": "111",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1114",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1115",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1119",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "112",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1120",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1125",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1126",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1127",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1128",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "1133",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1134",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1135",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1136",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1138",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1139",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "114",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1141",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1142",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1145",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1148",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1153",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1156",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1157",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1158",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1159",
+          "first_rank": null
+        },
+        {
+          "claim_id": "116",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1162",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1169",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1170",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1171",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1173",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1176",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1177",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1181",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1182",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1184",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "119",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "12",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "120",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1205",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1209",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "121",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1210",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1211",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "122",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1220",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1223",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1224",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1227",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1228",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1229",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "123",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1230",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1231",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1234",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1237",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1238",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1239",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1246",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1248",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1249",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1254",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1255",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1258",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "1260",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1261",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1263",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1265",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1268",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1269",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1276",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1284",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1288",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1289",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1293",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1294",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1295",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1297",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1305",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1311",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1312",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1322",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1323",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1324",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1327",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1328",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1333",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1334",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1340",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1341",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1346",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1347",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1348",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1351",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1355",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1356",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1360",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1361",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1366",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1367",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1371",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1372",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1373",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1376",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "1378",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "138",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1380",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1381",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1383",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1386",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1390",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1391",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1392",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1393",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1403",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1404",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1406",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "144",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "149",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "152",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "155",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "156",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "157",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "159",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "160",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "164",
+          "first_rank": null
+        },
+        {
+          "claim_id": "165",
+          "first_rank": null
+        },
+        {
+          "claim_id": "166",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "167",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "168",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "169",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "172",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "177",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "178",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "181",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "184",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "189",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "196",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "197",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "2",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "200",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "201",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "203",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "210",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "22",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "220",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "221",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "222",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "223",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "227",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "228",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "235",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "241",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "242",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "243",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "245",
+          "first_rank": null
+        },
+        {
+          "claim_id": "246",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "250",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "251",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "256",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "258",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "263",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "264",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "265",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "266",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "267",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "272",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "277",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "278",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "28",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "280",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "283",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "286",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "287",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "290",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "292",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "296",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "299",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "30",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "305",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "306",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "308",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "309",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "317",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "32",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "330",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "331",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "332",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "333",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "334",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "335",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "339",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "34",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "340",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "341",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "342",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "346",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "347",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "349",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "355",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "356",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "366",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "367",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "368",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "369",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "370",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "371",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "372",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "375",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "378",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "379",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "381",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "382",
+          "first_rank": null
+        },
+        {
+          "claim_id": "39",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "394",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "396",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "397",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "40",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "400",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "41",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "413",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "414",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "416",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "417",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "420",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "426",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "428",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "430",
+          "first_rank": null
+        },
+        {
+          "claim_id": "432",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "44",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "441",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "444",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "445",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "447",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "448",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "453",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "454",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "455",
+          "first_rank": null
+        },
+        {
+          "claim_id": "458",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "46",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "461",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "463",
+          "first_rank": null
+        },
+        {
+          "claim_id": "466",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "469",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "47",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "470",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "479",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "480",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "482",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "483",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "488",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "495",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "498",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "499",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "500",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "504",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "505",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "506",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "515",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "52",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "523",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "524",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "529",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "530",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "531",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "537",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "541",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "542",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "547",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "548",
+          "first_rank": null
+        },
+        {
+          "claim_id": "55",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "553",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "559",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "562",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "563",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "564",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "565",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "566",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "568",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "570",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "571",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "576",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "579",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "58",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "580",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "584",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "590",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "591",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "592",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "594",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "595",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "60",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "600",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "601",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "603",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "607",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "61",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "612",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "614",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "615",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "621",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "625",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "626",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "631",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "632",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "633",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "635",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "640",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "643",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "645",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "646",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "647",
+          "first_rank": null
+        },
+        {
+          "claim_id": "648",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "653",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "657",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "661",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "662",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "663",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "665",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "666",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "667",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "668",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "669",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "67",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "670",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "671",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "673",
+          "first_rank": null
+        },
+        {
+          "claim_id": "68",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "680",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "681",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "682",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "683",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "69",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "694",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "709",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "71",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "717",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "724",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "726",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "734",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "736",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "737",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "738",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "740",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "745",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "746",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "747",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "748",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "749",
+          "first_rank": null
+        },
+        {
+          "claim_id": "752",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "76",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "760",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "764",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "765",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "766",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "767",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "77",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "771",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "772",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "778",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "779",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "78",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "780",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "782",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "787",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "788",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "789",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "79",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "790",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "791",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "792",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "795",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "797",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "798",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "801",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "802",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "803",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "804",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "807",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "810",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "812",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "818",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "822",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "825",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "835",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "840",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "841",
+          "first_rank": null
+        },
+        {
+          "claim_id": "844",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "846",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "85",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "853",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "854",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "855",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "856",
+          "first_rank": null
+        },
+        {
+          "claim_id": "857",
+          "first_rank": null
+        },
+        {
+          "claim_id": "858",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "86",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "860",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "861",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "863",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "867",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "88",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "881",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "883",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "884",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "885",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "886",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "893",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "9",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "901",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "902",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "909",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "910",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "912",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "917",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "919",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "923",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "925",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "926",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "927",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "928",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "929",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "93",
+          "first_rank": null
+        },
+        {
+          "claim_id": "930",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "933",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "935",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "940",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "941",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "942",
+          "first_rank": null
+        },
+        {
+          "claim_id": "944",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "951",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "952",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "953",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "954",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "955",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "959",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "962",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "963",
+          "first_rank": null
+        },
+        {
+          "claim_id": "964",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "965",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "972",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "973",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "977",
+          "first_rank": null
+        },
+        {
+          "claim_id": "979",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "98",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "980",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "984",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "990",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "992",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "994",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "996",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "997",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "998",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "999",
+          "first_rank": 1
+        }
+      ]
+    },
+    "Hybrid": {
+      "claims": 501,
+      "hit@1": 0.590818363273453,
+      "hit@5": 0.872255489021956,
+      "hit@10": 0.9221556886227545,
+      "sentence_recall@10": 0.8889502380520347,
+      "context_recall@10": 0.8889502380520347,
+      "mrr@10": 0.7143752178183311,
+      "ndcg@10": 0.7655451228870853,
+      "rows": [
+        {
+          "claim_id": "1000",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1003",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1004",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1005",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1006",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1009",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1011",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1015",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1018",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1023",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1028",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1030",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1031",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1034",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1035",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1036",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "104",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1040",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "1042",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1043",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1044",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1045",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1048",
+          "first_rank": null
+        },
+        {
+          "claim_id": "105",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "1050",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1054",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1055",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1056",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "106",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1065",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1069",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1072",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1073",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "108",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1081",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1084",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1087",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "109",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1090",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1097",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1101",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1102",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1103",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1105",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1106",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1109",
+          "first_rank": null
+        },
+        {
+          "claim_id": "111",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1114",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1115",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1119",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "112",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1120",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1125",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1126",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1127",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1128",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1133",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1134",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1135",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1136",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1138",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1139",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "114",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1141",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1142",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1145",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1148",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1153",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1156",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1157",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1158",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1159",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "116",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1162",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1169",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1170",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1171",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1173",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1176",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1177",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1181",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1182",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1184",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "119",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "12",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "120",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1205",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1209",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "121",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "1210",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1211",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "122",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "1220",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1223",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1224",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1227",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1228",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1229",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "123",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1230",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1231",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1234",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1237",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1238",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1239",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1246",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1248",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1249",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1254",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1255",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1258",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1260",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1261",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1263",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1265",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1268",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1269",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1276",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1284",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1288",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1289",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1293",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1294",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "1295",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1297",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1305",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1311",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "1312",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1322",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1323",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1324",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1327",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1328",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1333",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1334",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1340",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1341",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1346",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "1347",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1348",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1351",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1355",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1356",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1360",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "1361",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1366",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1367",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1371",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "1372",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1373",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1376",
+          "first_rank": null
+        },
+        {
+          "claim_id": "1378",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "138",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1380",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1381",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "1383",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "1386",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1390",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1391",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1392",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1393",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "1403",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1404",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "1406",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "144",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "149",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "152",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "155",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "156",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "157",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "159",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "160",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "164",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "165",
+          "first_rank": 8
+        },
+        {
+          "claim_id": "166",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "167",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "168",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "169",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "172",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "177",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "178",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "181",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "184",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "189",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "196",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "197",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "2",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "200",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "201",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "203",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "210",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "22",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "220",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "221",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "222",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "223",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "227",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "228",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "235",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "241",
+          "first_rank": null
+        },
+        {
+          "claim_id": "242",
+          "first_rank": null
+        },
+        {
+          "claim_id": "243",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "245",
+          "first_rank": null
+        },
+        {
+          "claim_id": "246",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "250",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "251",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "256",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "258",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "263",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "264",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "265",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "266",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "267",
+          "first_rank": null
+        },
+        {
+          "claim_id": "272",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "277",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "278",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "28",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "280",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "283",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "286",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "287",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "290",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "292",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "296",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "299",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "30",
+          "first_rank": null
+        },
+        {
+          "claim_id": "305",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "306",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "308",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "309",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "317",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "32",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "330",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "331",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "332",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "333",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "334",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "335",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "339",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "34",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "340",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "341",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "342",
+          "first_rank": null
+        },
+        {
+          "claim_id": "346",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "347",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "349",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "355",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "356",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "366",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "367",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "368",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "369",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "370",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "371",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "372",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "375",
+          "first_rank": null
+        },
+        {
+          "claim_id": "378",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "379",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "381",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "382",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "39",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "394",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "396",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "397",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "40",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "400",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "41",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "413",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "414",
+          "first_rank": null
+        },
+        {
+          "claim_id": "416",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "417",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "420",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "426",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "428",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "430",
+          "first_rank": null
+        },
+        {
+          "claim_id": "432",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "44",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "441",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "444",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "445",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "447",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "448",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "453",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "454",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "455",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "458",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "46",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "461",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "463",
+          "first_rank": null
+        },
+        {
+          "claim_id": "466",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "469",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "47",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "470",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "479",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "480",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "482",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "483",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "488",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "495",
+          "first_rank": null
+        },
+        {
+          "claim_id": "498",
+          "first_rank": null
+        },
+        {
+          "claim_id": "499",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "500",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "504",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "505",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "506",
+          "first_rank": null
+        },
+        {
+          "claim_id": "515",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "52",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "523",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "524",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "529",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "530",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "531",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "537",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "541",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "542",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "547",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "548",
+          "first_rank": null
+        },
+        {
+          "claim_id": "55",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "553",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "559",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "562",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "563",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "564",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "565",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "566",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "568",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "570",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "571",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "576",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "579",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "58",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "580",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "584",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "590",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "591",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "592",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "594",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "595",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "60",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "600",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "601",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "603",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "607",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "61",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "612",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "614",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "615",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "621",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "625",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "626",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "631",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "632",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "633",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "635",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "640",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "643",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "645",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "646",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "647",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "648",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "653",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "657",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "661",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "662",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "663",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "665",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "666",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "667",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "668",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "669",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "67",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "670",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "671",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "673",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "68",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "680",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "681",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "682",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "683",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "69",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "694",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "709",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "71",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "717",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "724",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "726",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "734",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "736",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "737",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "738",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "740",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "745",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "746",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "747",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "748",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "749",
+          "first_rank": null
+        },
+        {
+          "claim_id": "752",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "76",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "760",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "764",
+          "first_rank": null
+        },
+        {
+          "claim_id": "765",
+          "first_rank": null
+        },
+        {
+          "claim_id": "766",
+          "first_rank": null
+        },
+        {
+          "claim_id": "767",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "77",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "771",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "772",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "778",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "779",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "78",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "780",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "782",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "787",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "788",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "789",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "79",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "790",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "791",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "792",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "795",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "797",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "798",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "801",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "802",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "803",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "804",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "807",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "810",
+          "first_rank": null
+        },
+        {
+          "claim_id": "812",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "818",
+          "first_rank": null
+        },
+        {
+          "claim_id": "822",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "825",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "835",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "840",
+          "first_rank": null
+        },
+        {
+          "claim_id": "841",
+          "first_rank": null
+        },
+        {
+          "claim_id": "844",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "846",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "85",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "853",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "854",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "855",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "856",
+          "first_rank": null
+        },
+        {
+          "claim_id": "857",
+          "first_rank": null
+        },
+        {
+          "claim_id": "858",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "86",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "860",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "861",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "863",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "867",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "88",
+          "first_rank": 5
+        },
+        {
+          "claim_id": "881",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "883",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "884",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "885",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "886",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "893",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "9",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "901",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "902",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "909",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "910",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "912",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "917",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "919",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "923",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "925",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "926",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "927",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "928",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "929",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "93",
+          "first_rank": null
+        },
+        {
+          "claim_id": "930",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "933",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "935",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "940",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "941",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "942",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "944",
+          "first_rank": 9
+        },
+        {
+          "claim_id": "951",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "952",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "953",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "954",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "955",
+          "first_rank": 10
+        },
+        {
+          "claim_id": "959",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "962",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "963",
+          "first_rank": 7
+        },
+        {
+          "claim_id": "964",
+          "first_rank": 6
+        },
+        {
+          "claim_id": "965",
+          "first_rank": 4
+        },
+        {
+          "claim_id": "972",
+          "first_rank": 3
+        },
+        {
+          "claim_id": "973",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "977",
+          "first_rank": null
+        },
+        {
+          "claim_id": "979",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "98",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "980",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "984",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "990",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "992",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "994",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "996",
+          "first_rank": 1
+        },
+        {
+          "claim_id": "997",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "998",
+          "first_rank": 2
+        },
+        {
+          "claim_id": "999",
+          "first_rank": 1
+        }
+      ]
+    }
+  }
+}
