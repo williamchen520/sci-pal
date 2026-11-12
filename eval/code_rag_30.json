@@ -1,0 +1,242 @@
+[
+  {
+    "id": "s01",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "normalize total counts per cell",
+    "expected_symbol": "normalize_total",
+    "expected_path": "src/scanpy/preprocessing/_normalization.py"
+  },
+  {
+    "id": "s02",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "read 10x h5 file",
+    "expected_symbol": "read_10x_h5",
+    "expected_path": "src/scanpy/readwrite.py"
+  },
+  {
+    "id": "s03",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "highly variable genes",
+    "expected_symbol": "highly_variable_genes",
+    "expected_path": "src/scanpy/preprocessing/_highly_variable_genes.py"
+  },
+  {
+    "id": "s04",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "neighbor graph construction",
+    "expected_symbol": "neighbors",
+    "expected_path": "src/scanpy/neighbors/__init__.py"
+  },
+  {
+    "id": "s05",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "compute UMAP embedding",
+    "expected_symbol": "umap",
+    "expected_path": "src/scanpy/tools/_umap.py"
+  },
+  {
+    "id": "s06",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "leiden clustering",
+    "expected_symbol": "leiden",
+    "expected_path": "src/scanpy/tools/_leiden.py"
+  },
+  {
+    "id": "s07",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "score gene set per cell",
+    "expected_symbol": "score_genes",
+    "expected_path": "src/scanpy/tools/_score_genes.py"
+  },
+  {
+    "id": "s08",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "PCA principal component analysis",
+    "expected_symbol": "pca",
+    "expected_path": "src/scanpy/preprocessing/_pca/__init__.py"
+  },
+  {
+    "id": "s09",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "regress out covariate effects",
+    "expected_symbol": "regress_out",
+    "expected_path": "src/scanpy/preprocessing/_simple.py"
+  },
+  {
+    "id": "s10",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "rank genes between groups",
+    "expected_symbol": "rank_genes_groups",
+    "expected_path": "src/scanpy/tools/_rank_genes_groups.py"
+  },
+  {
+    "id": "s11",
+    "category": "api",
+    "library_id": "lib_2c5709b07c77",
+    "query": "read 10x mtx directory",
+    "expected_symbol": "read_10x_mtx",
+    "expected_path": "src/scanpy/readwrite.py"
+  },
+  {
+    "id": "s12",
+    "category": "api",
+    "library_id": "lib_2c5709b07c77",
+    "query": "read visium spatial data",
+    "expected_symbol": "read_visium",
+    "expected_path": "src/scanpy/readwrite.py"
+  },
+  {
+    "id": "s13",
+    "category": "api",
+    "library_id": "lib_2c5709b07c77",
+    "query": "write h5ad file",
+    "expected_symbol": "write_h5ad",
+    "expected_path": "src/scanpy/readwrite.py"
+  },
+  {
+    "id": "s14",
+    "category": "dataflow",
+    "library_id": "lib_2c5709b07c77",
+    "query": "filter cells by qc threshold",
+    "expected_symbol": "filter_cells",
+    "expected_path": "src/scanpy/preprocessing/_simple.py"
+  },
+  {
+    "id": "s15",
+    "category": "dataflow",
+    "library_id": "lib_2c5709b07c77",
+    "query": "calculate qc metrics",
+    "expected_symbol": "calculate_qc_metrics",
+    "expected_path": "src/scanpy/preprocessing/_qc.py"
+  },
+  {
+    "id": "n01",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "FASTQC raw reads",
+    "expected_symbol": "FASTQC",
+    "expected_path": "modules/nf-core/fastqc/main.nf"
+  },
+  {
+    "id": "n02",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "STAR align reads",
+    "expected_symbol": "STAR_ALIGN",
+    "expected_path": "modules/nf-core/star/align/main.nf"
+  },
+  {
+    "id": "n03",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "salmon quantify transcripts",
+    "expected_symbol": "SALMON_QUANT",
+    "expected_path": "modules/nf-core/salmon/quant/main.nf"
+  },
+  {
+    "id": "n04",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "multiqc report",
+    "expected_symbol": "MULTIQC",
+    "expected_path": "modules/nf-core/multiqc/main.nf"
+  },
+  {
+    "id": "n05",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "fastp trim adapters",
+    "expected_symbol": "FASTP",
+    "expected_path": "modules/nf-core/fastp/main.nf"
+  },
+  {
+    "id": "n06",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "bowtie2 align reads",
+    "expected_symbol": "BOWTIE2_ALIGN",
+    "expected_path": "modules/nf-core/bowtie2/align/main.nf"
+  },
+  {
+    "id": "n07",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "hisat2 align reads",
+    "expected_symbol": "HISAT2_ALIGN",
+    "expected_path": "modules/nf-core/hisat2/align/main.nf"
+  },
+  {
+    "id": "n08",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "kallisto quantify reads",
+    "expected_symbol": "KALLISTO_QUANT",
+    "expected_path": "modules/nf-core/kallisto/quant/main.nf"
+  },
+  {
+    "id": "n09",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "picard mark duplicates",
+    "expected_symbol": "PICARD_MARKDUPLICATES",
+    "expected_path": "modules/nf-core/picard/markduplicates/main.nf"
+  },
+  {
+    "id": "n10",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "deseq2 qc",
+    "expected_symbol": "DESEQ2_QC",
+    "expected_path": "modules/local/deseq2_qc/main.nf"
+  },
+  {
+    "id": "n11",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "dupradar duplication rate",
+    "expected_symbol": "DUPRADAR",
+    "expected_path": "modules/nf-core/dupradar/main.nf"
+  },
+  {
+    "id": "n12",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "rseqc bam statistics",
+    "expected_symbol": "RSEQC_BAMSTAT",
+    "expected_path": "modules/nf-core/rseqc/bamstat/main.nf"
+  },
+  {
+    "id": "n13",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "qualimap rnaseq qc",
+    "expected_symbol": "QUALIMAP_RNASEQ",
+    "expected_path": "modules/nf-core/qualimap/rnaseq/main.nf"
+  },
+  {
+    "id": "n14",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "custom tx2gene",
+    "expected_symbol": "CUSTOM_TX2GENE",
+    "expected_path": "modules/nf-core/custom/tx2gene/main.nf"
+  },
+  {
+    "id": "n15",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "gffread convert gff",
+    "expected_symbol": "GFFREAD",
+    "expected_path": "modules/nf-core/gffread/main.nf"
+  }
+]

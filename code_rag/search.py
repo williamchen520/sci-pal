@@ -93,7 +93,7 @@ def search(
                 SELECT unit_id, symbol_name FROM code_rag.code_units
                 WHERE library_id=%s AND (%s='' OR snapshot_id=%s)
                   AND lower(symbol_name) LIKE ANY(%s)
-                LIMIT 100
+                LIMIT 500
                 """,
                 (library_id, snapshot_id, snapshot_id, [f"%{token}%" for token in tokens]),
             ).fetchall()
@@ -122,10 +122,9 @@ def search(
             else:
                 boost = 1.2 * matched / max(len(tokens), 1)
             scores[unit_id] = scores.get(unit_id, 0.0) + boost
-        ordered = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:top_k]
-        if not ordered:
+        if not scores:
             return []
-        ids = [unit_id for unit_id, _ in ordered]
+        ids = list(scores)
         rows = conn.execute(
             """
             SELECT u.unit_id, u.library_id, u.snapshot_id, u.symbol_name, u.unit_type,
@@ -137,6 +136,11 @@ def search(
             (ids,),
         ).fetchall()
         by_id = {row[0]: row for row in rows}
+        for unit_id, row in by_id.items():
+            path = (row[8] or "").lower()
+            if path.startswith("tests/") or "/tests/" in path or "benchmarks/" in path:
+                scores[unit_id] *= 0.55
+        ordered = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:top_k]
     result = []
     for unit_id, score in ordered:
         row = by_id.get(unit_id)
