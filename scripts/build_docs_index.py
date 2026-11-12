@@ -146,6 +146,7 @@ def main() -> None:
 - [实验-PaperQA2-适配烟测](实验-PaperQA2-适配烟测.md)
 - [报告-PaperQA2-适配烟测](报告-PaperQA2-适配烟测.md)
 - [实验-BioViz-Recipe-RAG](实验-BioViz-Recipe-RAG.md)
+- [计划-代码增强RAG-v1](计划-代码增强RAG-v1.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
