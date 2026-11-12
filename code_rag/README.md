@@ -51,6 +51,20 @@ SCIPAL_CODE_DSN=... python -m code_rag.service health
 SCIPAL_CODE_DSN=... python -m code_rag.index --library-id lib_xxx
 ```
 
+## Resolve calls
+
+```bash
+SCIPAL_CODE_DSN=... python -m code_rag.resolve --library-id lib_xxx
+```
+
+P2.5 scanpy:
+
+```text
+calls 9,127
+resolved 760 (8.3%)
+trace normalize_total -> 4 nodes / 18 edges
+```
+
 ## Search
 
 ```bash
