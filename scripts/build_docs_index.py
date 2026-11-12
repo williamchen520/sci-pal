@@ -151,6 +151,7 @@ def main() -> None:
 - [实验-代码RAG-P5](实验-代码RAG-P5.md)
 - [实验-代码RAG-P6](实验-代码RAG-P6.md)
 - [计划-代码增强RAG-平台模块-v1](计划-代码增强RAG-平台模块-v1.md)
+- [计划-代码RAG评测栈-v1](计划-代码RAG评测栈-v1.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
