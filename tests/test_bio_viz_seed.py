@@ -13,6 +13,7 @@ class BioVizSeedTests(unittest.TestCase):
     def test_recipe_ids_are_unique(self) -> None:
         ids = [recipe["recipe_id"] for recipe in RECIPES]
         self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(len(ids), 20)
 
     def test_every_recipe_has_style_and_compilable_code(self) -> None:
         styles = {style["style_id"] for style in STYLES}

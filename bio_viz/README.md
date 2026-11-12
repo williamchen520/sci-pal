@@ -1,7 +1,7 @@
 # BioViz Recipe RAG（Phase 0/1）
 
 > 独立 `scipal_code`，不进入 SciPal 主程序。  
-> 当前：12 个配方、2 个样式、12 条查询烟测。
+> 当前：20 个配方、2 个样式、12 条查询烟测。
 
 ---
 
@@ -28,7 +28,7 @@ scipal_docs
 ## 2. 当前内容
 
 ```text
-recipes   12
+recipes   20
 styles     2（nature_single / nature_double）
 queries   12
 ```
@@ -85,7 +85,7 @@ python -m bio_viz.seed
 输出：
 
 ```text
-BIOVIZ_SEED_OK recipes=12 styles=2 dim=512
+BIOVIZ_SEED_OK recipes=20 styles=2 dim=512
 ```
 
 ---
