@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import unittest
+from unittest import mock
 
 from flask import Flask, jsonify
 
@@ -92,6 +94,34 @@ class ValidateArchTests(unittest.TestCase):
         }
         result = validate(arch, _app())
         self.assertTrue(result["ok"])
+
+
+
+    def test_optional_route_skipped_when_flag_disabled(self):
+        arch = {"api": {"endpoints": [{
+            "rule": "/api/optional",
+            "endpoint": "optional",
+            "methods": ["GET"],
+            "optional": True,
+            "feature_flag": "TEST_OPTIONAL_FEATURE",
+        }]}}
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("TEST_OPTIONAL_FEATURE", None)
+            result = validate(arch, Flask(__name__))
+        self.assertTrue(result["ok"], result["errors"])
+
+    def test_optional_route_required_when_flag_enabled(self):
+        arch = {"api": {"endpoints": [{
+            "rule": "/api/optional",
+            "endpoint": "optional",
+            "methods": ["GET"],
+            "optional": True,
+            "feature_flag": "TEST_OPTIONAL_FEATURE",
+        }]}}
+        with mock.patch.dict(os.environ, {"TEST_OPTIONAL_FEATURE": "1"}, clear=False):
+            result = validate(arch, Flask(__name__))
+        self.assertFalse(result["ok"])
+        self.assertTrue(any("missing from Flask" in item for item in result["errors"]))
 
 
 if __name__ == "__main__":
