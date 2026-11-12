@@ -146,6 +146,7 @@ def main() -> None:
 - [实验-BioViz-Recipe-RAG](实验-BioViz-Recipe-RAG.md)
 - [实验-代码RAG-P2](实验-代码RAG-P2.md)
 - [实验-代码RAG-P3](实验-代码RAG-P3.md)
+- [实验-代码RAG-P4](实验-代码RAG-P4.md)
 - [计划-代码增强RAG-平台模块-v1](计划-代码增强RAG-平台模块-v1.md)
 - [Changelog](Changelog.md)
 
