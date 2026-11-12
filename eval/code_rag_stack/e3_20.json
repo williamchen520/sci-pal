@@ -1,0 +1,182 @@
+[
+  {
+    "id": "s01",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "normalize total counts per cell",
+    "expected_symbol": "normalize_total",
+    "expected_path": "src/scanpy/preprocessing/_normalization.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s02",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "read 10x h5 file",
+    "expected_symbol": "read_10x_h5",
+    "expected_path": "src/scanpy/readwrite.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s03",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "highly variable genes",
+    "expected_symbol": "highly_variable_genes",
+    "expected_path": "src/scanpy/preprocessing/_highly_variable_genes.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s04",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "neighbor graph construction",
+    "expected_symbol": "neighbors",
+    "expected_path": "src/scanpy/neighbors/__init__.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s05",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "compute UMAP embedding",
+    "expected_symbol": "umap",
+    "expected_path": "src/scanpy/tools/_umap.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s06",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "leiden clustering",
+    "expected_symbol": "leiden",
+    "expected_path": "src/scanpy/tools/_leiden.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s07",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "score gene set per cell",
+    "expected_symbol": "score_genes",
+    "expected_path": "src/scanpy/tools/_score_genes.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s08",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "PCA principal component analysis",
+    "expected_symbol": "pca",
+    "expected_path": "src/scanpy/preprocessing/_pca/__init__.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s09",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "regress out covariate effects",
+    "expected_symbol": "regress_out",
+    "expected_path": "src/scanpy/preprocessing/_simple.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s10",
+    "category": "symbol",
+    "library_id": "lib_2c5709b07c77",
+    "query": "rank genes between groups",
+    "expected_symbol": "rank_genes_groups",
+    "expected_path": "src/scanpy/tools/_rank_genes_groups.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s11",
+    "category": "api",
+    "library_id": "lib_2c5709b07c77",
+    "query": "read 10x mtx directory",
+    "expected_symbol": "read_10x_mtx",
+    "expected_path": "src/scanpy/readwrite.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s12",
+    "category": "api",
+    "library_id": "lib_2c5709b07c77",
+    "query": "read visium spatial data",
+    "expected_symbol": "read_visium",
+    "expected_path": "src/scanpy/readwrite.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s13",
+    "category": "api",
+    "library_id": "lib_2c5709b07c77",
+    "query": "write h5ad file",
+    "expected_symbol": "write_h5ad",
+    "expected_path": "src/scanpy/readwrite.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s14",
+    "category": "dataflow",
+    "library_id": "lib_2c5709b07c77",
+    "query": "filter cells by qc threshold",
+    "expected_symbol": "filter_cells",
+    "expected_path": "src/scanpy/preprocessing/_simple.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "s15",
+    "category": "dataflow",
+    "library_id": "lib_2c5709b07c77",
+    "query": "calculate qc metrics",
+    "expected_symbol": "calculate_qc_metrics",
+    "expected_path": "src/scanpy/preprocessing/_qc.py",
+    "expected_ref": "1.12.5"
+  },
+  {
+    "id": "n01",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "FASTQC raw reads",
+    "expected_symbol": "FASTQC",
+    "expected_path": "modules/nf-core/fastqc/main.nf",
+    "expected_ref": "3.28.0"
+  },
+  {
+    "id": "n02",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "STAR align reads",
+    "expected_symbol": "STAR_ALIGN",
+    "expected_path": "modules/nf-core/star/align/main.nf",
+    "expected_ref": "3.28.0"
+  },
+  {
+    "id": "n03",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "salmon quantify transcripts",
+    "expected_symbol": "SALMON_QUANT",
+    "expected_path": "modules/nf-core/salmon/quant/main.nf",
+    "expected_ref": "3.28.0"
+  },
+  {
+    "id": "n04",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "multiqc report",
+    "expected_symbol": "MULTIQC",
+    "expected_path": "modules/nf-core/multiqc/main.nf",
+    "expected_ref": "3.28.0"
+  },
+  {
+    "id": "n05",
+    "category": "workflow",
+    "library_id": "lib_12473817b941",
+    "query": "fastp trim adapters",
+    "expected_symbol": "FASTP",
+    "expected_path": "modules/nf-core/fastp/main.nf",
+    "expected_ref": "3.28.0"
+  }
+]
