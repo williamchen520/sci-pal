@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import CrossEncoder, SentenceTransformer
 
 from eval.scifact_units import Sentence, Unit, boundary_chunks, context_window, hard_chunks
 
@@ -120,7 +120,7 @@ def encode_units(
     return vectors
 
 
-def load_claims(db: Path, gold_path: Path, limit: int) -> list[dict]:
+def load_claims(db: Path, gold_path: Path, limit: int) -> tuple[list[dict], list[str]]:
     gold = []
     for line in gold_path.read_text(encoding="utf-8").splitlines():
         if line.strip():
@@ -131,10 +131,19 @@ def load_claims(db: Path, gold_path: Path, limit: int) -> list[dict]:
         str(row[0]): row[1]
         for row in conn.execute("SELECT claim_id, claim FROM claims").fetchall()
     }
+    sentence_ids = {row[0] for row in conn.execute("SELECT sentence_id FROM sentences").fetchall()}
     conn.close()
+    mapped = []
+    skipped = []
     for item in gold:
+        evidence = [sentence_id for sentence_id in item["evidence"] if sentence_id in sentence_ids]
+        if len(evidence) != len(item["evidence"]):
+            skipped.append(item["claim_id"])
+            continue
         item["claim"] = existing.get(item["claim_id"], item["claim"])
-    return gold[:limit] if limit else gold
+        item["evidence"] = evidence
+        mapped.append(item)
+    return (mapped[:limit] if limit else mapped), skipped
 
 
 def evaluate(
@@ -144,6 +153,8 @@ def evaluate(
     model: SentenceTransformer,
     *,
     top_k: int = 10,
+    reranker: CrossEncoder | None = None,
+    rerank_top: int = 20,
 ) -> dict:
     sentence_to_anchor = {}
     for index, unit in enumerate(units):
@@ -165,7 +176,13 @@ def evaluate(
     rows = []
     for claim, score_row in zip(claims, scores):
         gold = set(claim["evidence"])
-        order = np.argsort(-score_row)[:top_k]
+        order = np.argsort(-score_row)
+        if reranker is not None:
+            candidates = order[:rerank_top]
+            pairs = [(claim["claim"], units[int(index)].text) for index in candidates]
+            rerank_scores = reranker.predict(pairs)
+            order = [int(index) for _, index in sorted(zip(rerank_scores, candidates), reverse=True)]
+        order = order[:top_k]
         first = None
         found = set()
         context_found = set()
@@ -205,6 +222,76 @@ def evaluate(
     }
 
 
+
+def evaluate_grouped(
+    claims: list[dict],
+    parent_units: list[Unit],
+    sentence_units: list[Unit],
+    sentence_vectors: np.ndarray,
+    model: SentenceTransformer,
+    *,
+    top_k: int = 10,
+) -> dict:
+    """C2: score sentences, aggregate by parent chunk, rank parent chunks."""
+    parent_of = {}
+    parent_by_id = {unit.unit_id: unit for unit in parent_units}
+    for parent in parent_units:
+        for sentence_id in parent.anchors:
+            parent_of[sentence_id] = parent.unit_id
+    sentence_parent = [parent_of.get(unit.anchors[0], "") for unit in sentence_units]
+    query_vectors = model.encode(
+        [QUERY_PREFIX + claim["claim"] for claim in claims],
+        batch_size=32,
+        normalize_embeddings=True,
+        show_progress_bar=False,
+        convert_to_numpy=True,
+    )
+    scores = query_vectors @ sentence_vectors.T
+    hit1 = hit5 = hit10 = 0
+    sent_recall = 0.0
+    context_recall = 0.0
+    rr = 0.0
+    ndcg = 0.0
+    rows = []
+    for claim, score_row in zip(claims, scores):
+        best: dict[str, float] = {}
+        for sentence_index, score in enumerate(score_row):
+            parent_id = sentence_parent[sentence_index]
+            if parent_id and score > best.get(parent_id, -1e9):
+                best[parent_id] = float(score)
+        ranked = sorted(best.items(), key=lambda item: item[1], reverse=True)[:top_k]
+        gold = set(claim["evidence"])
+        first = None
+        found = set()
+        context_found = set()
+        for rank, (parent_id, _) in enumerate(ranked, 1):
+            parent = parent_by_id[parent_id]
+            overlap = gold & set(parent.anchors)
+            if overlap and first is None:
+                first = rank
+            found |= overlap
+            context_found |= gold & (set(parent.anchors) | set(parent.context))
+        hit1 += int(first == 1)
+        hit5 += int(first is not None and first <= 5)
+        hit10 += int(first is not None and first <= 10)
+        sent_recall += len(found) / max(len(gold), 1)
+        context_recall += len(context_found) / max(len(gold), 1)
+        rr += 1.0 / first if first else 0.0
+        ndcg += 1.0 / math.log2(first + 1) if first else 0.0
+        rows.append({"claim_id": claim["claim_id"], "first_rank": first, "gold": sorted(gold)})
+    n = len(claims)
+    return {
+        "claims": n,
+        "hit@1": hit1 / n,
+        "hit@5": hit5 / n,
+        "hit@10": hit10 / n,
+        "sentence_recall@10": sent_recall / n,
+        "context_recall@10": context_recall / n,
+        "mrr@10": rr / n,
+        "ndcg@10": ndcg / n,
+        "rows": rows,
+    }
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", default=str(DEFAULT_DB))
@@ -214,6 +301,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--chunk-words", type=int, default=500)
     parser.add_argument("--include-sentence", action="store_true")
+    parser.add_argument("--rerank", action="store_true")
+    parser.add_argument("--reranker-model", default=r"G:/models/bge-reranker-base")
     parser.add_argument("--cache", default=str(ROOT / "eval" / "cache"))
     parser.add_argument("--output", default="")
     args = parser.parse_args(argv)
@@ -222,20 +311,44 @@ def main(argv: list[str] | None = None) -> int:
     units_by_arm = build_units(
         grouped, words=args.chunk_words, include_sentence=args.include_sentence
     )
-    claims = load_claims(Path(args.db), Path(args.gold), args.limit)
+    claims, skipped = load_claims(Path(args.db), Path(args.gold), args.limit)
     model = SentenceTransformer(args.model, device="cuda")
+    reranker = CrossEncoder(args.reranker_model, device="cuda") if args.rerank else None
     results = {}
+    vectors_by_arm = {}
     for arm, units in units_by_arm.items():
         vectors = encode_units(model, units, cache=Path(args.cache), model_name=args.model)
+        vectors_by_arm[arm] = vectors
         results[arm] = {
             "units": len(units),
-            "metrics": evaluate(claims, units, vectors, model, top_k=args.top_k),
+            "metrics": evaluate(
+                claims,
+                units,
+                vectors,
+                model,
+                top_k=args.top_k,
+                reranker=reranker,
+            ),
+        }
+    if "S" in units_by_arm and "C" in units_by_arm:
+        results["C2"] = {
+            "units": len(units_by_arm["C"]),
+            "metrics": evaluate_grouped(
+                claims,
+                units_by_arm["C"],
+                units_by_arm["S"],
+                vectors_by_arm["S"],
+                model,
+                top_k=args.top_k,
+            ),
         }
     output = {
         "dataset": "scifact",
         "claims": len(claims),
+        "skipped_claims": skipped,
         "model": args.model,
         "chunk_words": args.chunk_words,
+        "rerank": args.rerank,
         "arms": results,
     }
     print(json.dumps({k: v["metrics"] for k, v in results.items()}, ensure_ascii=False, indent=2))
