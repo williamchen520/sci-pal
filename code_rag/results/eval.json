@@ -1,0 +1,97 @@
+{
+  "queries": 10,
+  "hit@1": 0.8,
+  "hit@5": 1.0,
+  "rows": [
+    {
+      "query": "normalize total counts per cell",
+      "rank": 1,
+      "top": [
+        "normalize_total",
+        "test_normalize_total_target_sum_ignores_zero_count_cells",
+        "normalize_per_cell"
+      ]
+    },
+    {
+      "query": "read 10x h5 file",
+      "rank": 1,
+      "top": [
+        "read_10x_h5",
+        "_read_10x_h5",
+        "test_read_10x_h5_v1"
+      ]
+    },
+    {
+      "query": "compute UMAP embedding",
+      "rank": 2,
+      "top": [
+        "embedding",
+        "umap",
+        "umap"
+      ]
+    },
+    {
+      "query": "highly variable genes",
+      "rank": 1,
+      "top": [
+        "highly_variable_genes",
+        "highly_variable_genes",
+        "highly_variable_genes"
+      ]
+    },
+    {
+      "query": "neighbor graph",
+      "rank": 4,
+      "top": [
+        "Neighbors",
+        "test_neighbors_key_obsp",
+        "_init_neighbors"
+      ]
+    },
+    {
+      "query": "FASTQC raw reads",
+      "rank": 1,
+      "top": [
+        "FASTQC",
+        "FASTQ_FASTQC_UMITOOLS_FASTP",
+        "FASTQ_FASTQC_UMITOOLS_TRIMGALORE"
+      ]
+    },
+    {
+      "query": "STAR align reads",
+      "rank": 1,
+      "top": [
+        "STAR_ALIGN",
+        "ALIGN_STAR",
+        "SENTIEON_STARALIGN"
+      ]
+    },
+    {
+      "query": "salmon quantify transcripts",
+      "rank": 1,
+      "top": [
+        "SALMON_QUANT",
+        "conf/modules/quantify_bam_salmon.config",
+        "modules/nf-core/salmon/quant/main.nf"
+      ]
+    },
+    {
+      "query": "multiqc report",
+      "rank": 1,
+      "top": [
+        "MULTIQC",
+        "MULTIQC_RNASEQ",
+        "CUSTOM_MULTIQCCUSTOMBIOTYPE"
+      ]
+    },
+    {
+      "query": "fastp trim adapters",
+      "rank": 1,
+      "top": [
+        "FASTP",
+        "FASTQ_FASTQC_UMITOOLS_FASTP",
+        "FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS"
+      ]
+    }
+  ]
+}
