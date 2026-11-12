@@ -1,0 +1,52 @@
+[
+  {
+    "query": "normalize total counts per cell",
+    "library_id": "lib_2c5709b07c77",
+    "expected": "normalize_total"
+  },
+  {
+    "query": "read 10x h5 file",
+    "library_id": "lib_2c5709b07c77",
+    "expected": "read_10x_h5"
+  },
+  {
+    "query": "compute UMAP embedding",
+    "library_id": "lib_2c5709b07c77",
+    "expected": "umap"
+  },
+  {
+    "query": "highly variable genes",
+    "library_id": "lib_2c5709b07c77",
+    "expected": "highly_variable_genes"
+  },
+  {
+    "query": "neighbor graph",
+    "library_id": "lib_2c5709b07c77",
+    "expected": "neighbors"
+  },
+  {
+    "query": "FASTQC raw reads",
+    "library_id": "lib_12473817b941",
+    "expected": "FASTQC"
+  },
+  {
+    "query": "STAR align reads",
+    "library_id": "lib_12473817b941",
+    "expected": "STAR_ALIGN"
+  },
+  {
+    "query": "salmon quantify transcripts",
+    "library_id": "lib_12473817b941",
+    "expected": "SALMON_QUANT"
+  },
+  {
+    "query": "multiqc report",
+    "library_id": "lib_12473817b941",
+    "expected": "MULTIQC"
+  },
+  {
+    "query": "fastp trim adapters",
+    "library_id": "lib_12473817b941",
+    "expected": "FASTP"
+  }
+]

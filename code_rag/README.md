@@ -8,8 +8,8 @@
 schema        code_rag v1
 service       health
 indexing      Python AST + Nextflow block scanner (P2)
-search        not implemented
-embeddings    not implemented
+search        hybrid code_search (P3)
+embeddings    bge-small-zh 512
 ```
 
 P2 smoke:
@@ -43,6 +43,26 @@ SCIPAL_CODE_DSN=... python scripts/migrate_code_rag.py
 
 ```bash
 SCIPAL_CODE_DSN=... python -m code_rag.service health
+```
+
+## Embedding
+
+```bash
+SCIPAL_CODE_DSN=... python -m code_rag.index --library-id lib_xxx
+```
+
+## Search
+
+```bash
+SCIPAL_CODE_READ_DSN=... python -m code_rag.search \
+  "normalize total counts" --library-id lib_xxx --top-k 5
+```
+
+P3 smoke (10 questions):
+
+```text
+Hit@1 0.80
+Hit@5 1.00
 ```
 
 ## Ingest
