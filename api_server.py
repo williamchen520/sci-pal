@@ -64,6 +64,10 @@ DOCUMENTS_DIR = PROJECT_ROOT / "documents"
 OUTLINE_DIR = PROJECT_ROOT / "data" / "outlines"
 
 app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
+
+from services.db.env_guard import check_env
+
+check_env()
 app.secret_key = os.environ.get("SCIPAL_SECRET_KEY") or os.urandom(32)
 try:
     bootstrap_default_workspace(db_path=DB_PATH)
