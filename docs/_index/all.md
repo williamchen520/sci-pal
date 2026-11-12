@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 447 篇 · 2026-11-12
+> 共 448 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -236,6 +236,7 @@
 | 架构规范 | 1. 结论 | 在建立向量索引前，原先没有段落级审查。 | [向量索引污染审查.md](../向量索引污染审查.md) |
 | 安全复盘 | 双库备份策略 | --- | [备份策略-双库.md](../备份策略-双库.md) |
 | 阶段计划 | 备选计划表 | --- | [备选计划表.md](../备选计划表.md) |
+| 架构规范 | 实验记录：BioViz Recipe RAG Phase 0/1 | --- | [实验-BioViz-Recipe-RAG.md](../实验-BioViz-Recipe-RAG.md) |
 | 测试报告 | PaperQA2 适配烟测 | --- | [实验-PaperQA2-适配烟测.md](../实验-PaperQA2-适配烟测.md) |
 | 阶段计划 | Phase C 可复现 Manifest | --- | [实验-PhaseC-Manifest.md](../实验-PhaseC-Manifest.md) |
 | 阶段计划 | 实验 Phase C：SciFact F0 / B / C / S / C2 | --- | [实验-PhaseC-SciFact-300.md](../实验-PhaseC-SciFact-300.md) |

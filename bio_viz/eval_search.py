@@ -1,0 +1,36 @@
+"""BioViz recipe retrieval evaluation."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+
+from bio_viz.search import search
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--queries", default=str(Path(__file__).with_name("queries.json")))
+    parser.add_argument("--json", default="")
+    args = parser.parse_args()
+    cases = json.loads(Path(args.queries).read_text(encoding="utf-8"))
+    hit1 = hit3 = hit5 = 0
+    rows = []
+    for case in cases:
+        hits = search(case["query"], top_k=5)
+        rank = next((i for i, hit in enumerate(hits, 1) if hit["recipe_id"] == case["expected"]), None)
+        hit1 += int(rank == 1)
+        hit3 += int(rank is not None and rank <= 3)
+        hit5 += int(rank is not None and rank <= 5)
+        rows.append({"query": case["query"], "rank": rank, "top": [hit["recipe_id"] for hit in hits[:3]]})
+    n = len(cases)
+    result = {"queries": n, "hit@1": hit1 / n, "hit@3": hit3 / n, "hit@5": hit5 / n, "rows": rows}
+    print(json.dumps({k: v for k, v in result.items() if k != "rows"}, ensure_ascii=False, indent=2))
+    if args.json:
+        Path(args.json).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
