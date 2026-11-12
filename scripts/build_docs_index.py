@@ -136,8 +136,6 @@ def main() -> None:
 - [代码审查-20261112](代码审查-20261112.md)
 - [工程治理门禁规范](工程治理门禁规范.md)
 - [公共测试集选型](公共测试集选型.md)
-- [计划-生信代码RAG](计划-生信代码RAG.md)
-- [补充-生信代码RAG-DSH原生检索](补充-生信代码RAG-DSH原生检索.md)
 - [实验-PhaseC-SciFact-300](实验-PhaseC-SciFact-300.md)
 - [报告-PhaseC-SciFact](报告-PhaseC-SciFact.md)
 - [实验-PhaseC-收口](实验-PhaseC-收口.md)
@@ -146,7 +144,7 @@ def main() -> None:
 - [实验-PaperQA2-适配烟测](实验-PaperQA2-适配烟测.md)
 - [报告-PaperQA2-适配烟测](报告-PaperQA2-适配烟测.md)
 - [实验-BioViz-Recipe-RAG](实验-BioViz-Recipe-RAG.md)
-- [计划-代码增强RAG-v1](计划-代码增强RAG-v1.md)
+- [计划-代码增强RAG-平台模块-v1](计划-代码增强RAG-平台模块-v1.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv

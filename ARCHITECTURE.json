@@ -2269,6 +2269,38 @@
         "parameters": [
           "workspace_id"
         ]
+      },
+      {
+        "rule": "/api/libraries",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "libraries.list_all",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/libraries",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "libraries.create",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/libraries/<library_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "libraries.detail",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/libraries/<library_id>",
+        "methods": [
+          "DELETE"
+        ],
+        "endpoint": "libraries.remove",
+        "status": "implemented"
       }
     ]
   },

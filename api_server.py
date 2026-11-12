@@ -55,6 +55,7 @@ from routes.system import build_system_blueprint
 from routes.systematic_review import build_systematic_review_blueprint
 from routes.tasks import build_tasks_blueprint
 from routes.tenancy import build_tenancy_blueprint
+from routes.libraries import build_libraries_blueprint
 from routes.watch import build_watch_blueprint
 from services.tenancy import bootstrap_default_workspace
 
@@ -308,6 +309,7 @@ app.register_blueprint(build_watch_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_claims_blueprint(db_path=DB_PATH, log=app.logger, get_llm=get_llm_client, get_retriever=get_retriever))
 app.register_blueprint(build_domain_packs_blueprint(log=app.logger))
 app.register_blueprint(build_tenancy_blueprint(db_path=DB_PATH, log=app.logger))
+app.register_blueprint(build_libraries_blueprint(db_path=str(DB_PATH)))
 app.register_blueprint(build_notes_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_projects_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_experiments_blueprint(db_path=DB_PATH, log=app.logger))
