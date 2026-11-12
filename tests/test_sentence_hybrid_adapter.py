@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import unittest
 
+from services.search.result import RetrievalResult, result_from_sentence_units
 from services.search.sentence_hybrid import SentenceHybridRetriever
 
 
@@ -53,6 +54,44 @@ class SentenceEvidenceAdapterTests(unittest.TestCase):
         item = bundle["evidence"][0]
         self.assertEqual(item["text"], "anchor")
         self.assertNotIn("context_scored", item)
+
+
+
+    def test_search_hits_separates_context_from_scored_sentences(self) -> None:
+        retriever = object.__new__(SentenceHybridRetriever)
+        retriever.search = lambda query, top_k=10: [
+            {
+                "sentence_id": "s2",
+                "paper_id": "p1",
+                "anchor_text": "anchor",
+                "anchor_score": 0.8,
+                "text": "anchor",
+                "window_sentences": [
+                    {"sentence_id": "s1", "text": "left"},
+                    {"sentence_id": "s2", "text": "anchor"},
+                    {"sentence_id": "s3", "text": "right"},
+                ],
+            }
+        ]
+        result = retriever.search_hits("q")
+        self.assertIsInstance(result, RetrievalResult)
+        self.assertEqual(result.sentence_ids(), ["s2"])
+        self.assertEqual(
+            result.hits[0].context_sentence_ids,
+            ["s1", "s2", "s3"],
+        )
+        self.assertEqual(result.hits[0].source, "sentence_backend")
+
+    def test_result_contract_deduplicates_sentence_ids(self) -> None:
+        result = result_from_sentence_units(
+            "q",
+            [
+                {"sentence_id": "s1", "paper_id": "p1", "anchor_text": "a"},
+                {"sentence_id": "s1", "paper_id": "p1", "anchor_text": "a"},
+                {"sentence_id": "s2", "paper_id": "p2", "anchor_text": "b"},
+            ],
+        )
+        self.assertEqual(result.sentence_ids(), ["s1", "s2"])
 
 
 if __name__ == "__main__":
