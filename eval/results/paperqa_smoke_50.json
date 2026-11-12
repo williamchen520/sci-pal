@@ -1,0 +1,463 @@
+{
+  "system": "PaperQA2 sparse retrieval (adapted)",
+  "claims": 50,
+  "k": 10,
+  "docs": 5183,
+  "hit@1": 0.08,
+  "hit@5": 0.18,
+  "hit@10": 0.22,
+  "sentence_recall@10": 0.14444444444444446,
+  "mrr@10": 0.13202380952380954,
+  "rows": [
+    {
+      "claim_id": "1000",
+      "first_rank": null,
+      "top": [
+        "scifact_17991818_s6",
+        "scifact_23830488_s4",
+        "scifact_2659805_s9"
+      ]
+    },
+    {
+      "claim_id": "1003",
+      "first_rank": null,
+      "top": [
+        "scifact_14332945_s0",
+        "scifact_1982286_s0",
+        "scifact_83308790_s0"
+      ]
+    },
+    {
+      "claim_id": "1004",
+      "first_rank": null,
+      "top": [
+        "scifact_16701509_s3",
+        "scifact_13282296_s5",
+        "scifact_22334300_s4"
+      ]
+    },
+    {
+      "claim_id": "1005",
+      "first_rank": null,
+      "top": [
+        "scifact_22334300_s4",
+        "scifact_16180601_s5",
+        "scifact_13282296_s5"
+      ]
+    },
+    {
+      "claim_id": "1006",
+      "first_rank": 1,
+      "top": [
+        "scifact_4926049_s3",
+        "scifact_30861948_s9",
+        "scifact_9301606_s5"
+      ]
+    },
+    {
+      "claim_id": "1009",
+      "first_rank": 1,
+      "top": [
+        "scifact_1982286_s5",
+        "scifact_1982286_s3",
+        "scifact_29090823_s9"
+      ]
+    },
+    {
+      "claim_id": "1011",
+      "first_rank": 3,
+      "top": [
+        "scifact_9745001_s0",
+        "scifact_9745001_s2",
+        "scifact_9745001_s12"
+      ]
+    },
+    {
+      "claim_id": "1015",
+      "first_rank": null,
+      "top": [
+        "scifact_18344910_s0",
+        "scifact_24632480_s9",
+        "scifact_19343151_s9"
+      ]
+    },
+    {
+      "claim_id": "1018",
+      "first_rank": null,
+      "top": [
+        "scifact_23908217_s5",
+        "scifact_28894097_s10",
+        "scifact_25816994_s12"
+      ]
+    },
+    {
+      "claim_id": "1023",
+      "first_rank": null,
+      "top": [
+        "scifact_140907540_s2",
+        "scifact_21260231_s2",
+        "scifact_14185503_s1"
+      ]
+    },
+    {
+      "claim_id": "1028",
+      "first_rank": null,
+      "top": [
+        "scifact_13940200_s3",
+        "scifact_11360768_s9",
+        "scifact_207972_s3"
+      ]
+    },
+    {
+      "claim_id": "1030",
+      "first_rank": 2,
+      "top": [
+        "scifact_6441369_s6",
+        "scifact_6441369_s2",
+        "scifact_7426741_s3"
+      ]
+    },
+    {
+      "claim_id": "1031",
+      "first_rank": 8,
+      "top": [
+        "scifact_40558887_s3",
+        "scifact_7111021_s10",
+        "scifact_41133176_s1"
+      ]
+    },
+    {
+      "claim_id": "1034",
+      "first_rank": null,
+      "top": [
+        "scifact_15803282_s2",
+        "scifact_15803282_s3",
+        "scifact_4455466_s7"
+      ]
+    },
+    {
+      "claim_id": "1035",
+      "first_rank": null,
+      "top": [
+        "scifact_15803282_s2",
+        "scifact_15803282_s3",
+        "scifact_4455466_s7"
+      ]
+    },
+    {
+      "claim_id": "1036",
+      "first_rank": null,
+      "top": [
+        "scifact_15803282_s3",
+        "scifact_4455466_s7",
+        "scifact_4455466_s5"
+      ]
+    },
+    {
+      "claim_id": "104",
+      "first_rank": null,
+      "top": [
+        "scifact_5597586_s7",
+        "scifact_5572127_s3",
+        "scifact_24323369_s14"
+      ]
+    },
+    {
+      "claim_id": "1040",
+      "first_rank": null,
+      "top": [
+        "scifact_9451052_s4",
+        "scifact_11844791_s1",
+        "scifact_9451052_s1"
+      ]
+    },
+    {
+      "claim_id": "1042",
+      "first_rank": null,
+      "top": [
+        "scifact_6070278_s2",
+        "scifact_13923069_s6",
+        "scifact_9169645_s8"
+      ]
+    },
+    {
+      "claim_id": "1043",
+      "first_rank": null,
+      "top": [
+        "scifact_17671145_s0",
+        "scifact_3203590_s1",
+        "scifact_30805636_s4"
+      ]
+    },
+    {
+      "claim_id": "1044",
+      "first_rank": null,
+      "top": [
+        "scifact_26030079_s7",
+        "scifact_23830488_s7",
+        "scifact_31884697_s2"
+      ]
+    },
+    {
+      "claim_id": "1045",
+      "first_rank": null,
+      "top": [
+        "scifact_5386514_s2",
+        "scifact_31884697_s2",
+        "scifact_14145440_s9"
+      ]
+    },
+    {
+      "claim_id": "1048",
+      "first_rank": null,
+      "top": [
+        "scifact_15795880_s2",
+        "scifact_19854543_s0",
+        "scifact_20109325_s6"
+      ]
+    },
+    {
+      "claim_id": "105",
+      "first_rank": null,
+      "top": [
+        "scifact_12705056_s3",
+        "scifact_18446525_s5",
+        "scifact_21626639_s2"
+      ]
+    },
+    {
+      "claim_id": "1050",
+      "first_rank": null,
+      "top": [
+        "scifact_26000593_s10",
+        "scifact_26000593_s0",
+        "scifact_19878070_s1"
+      ]
+    },
+    {
+      "claim_id": "1054",
+      "first_rank": null,
+      "top": [
+        "scifact_10072941_s9",
+        "scifact_14121786_s0",
+        "scifact_20221907_s2"
+      ]
+    },
+    {
+      "claim_id": "1055",
+      "first_rank": null,
+      "top": [
+        "scifact_17775228_s3",
+        "scifact_16495649_s3",
+        "scifact_6540064_s10"
+      ]
+    },
+    {
+      "claim_id": "1056",
+      "first_rank": null,
+      "top": [
+        "scifact_38493521_s2",
+        "scifact_8604837_s5",
+        "scifact_1032372_s0"
+      ]
+    },
+    {
+      "claim_id": "106",
+      "first_rank": null,
+      "top": [
+        "scifact_6828370_s0",
+        "scifact_38745690_s3",
+        "scifact_5702790_s4"
+      ]
+    },
+    {
+      "claim_id": "1065",
+      "first_rank": null,
+      "top": [
+        "scifact_20943272_s1",
+        "scifact_17625068_s6",
+        "scifact_14782049_s2"
+      ]
+    },
+    {
+      "claim_id": "1069",
+      "first_rank": null,
+      "top": [
+        "scifact_8604837_s5",
+        "scifact_10812605_s3",
+        "scifact_1032372_s0"
+      ]
+    },
+    {
+      "claim_id": "1072",
+      "first_rank": null,
+      "top": [
+        "scifact_24918110_s5",
+        "scifact_8906858_s3",
+        "scifact_12224536_s6"
+      ]
+    },
+    {
+      "claim_id": "1073",
+      "first_rank": null,
+      "top": [
+        "scifact_25079962_s5",
+        "scifact_456304_s2",
+        "scifact_23868856_s7"
+      ]
+    },
+    {
+      "claim_id": "108",
+      "first_rank": 1,
+      "top": [
+        "scifact_23865182_s0",
+        "scifact_37118634_s0",
+        "scifact_22995579_s0"
+      ]
+    },
+    {
+      "claim_id": "1081",
+      "first_rank": null,
+      "top": [
+        "scifact_13831842_s9",
+        "scifact_25973484_s1",
+        "scifact_24704139_s7"
+      ]
+    },
+    {
+      "claim_id": "1084",
+      "first_rank": null,
+      "top": [
+        "scifact_21700295_s3",
+        "scifact_7647224_s14",
+        "scifact_4841908_s4"
+      ]
+    },
+    {
+      "claim_id": "1087",
+      "first_rank": 2,
+      "top": [
+        "scifact_39281140_s1",
+        "scifact_39281140_s9",
+        "scifact_18806488_s6"
+      ]
+    },
+    {
+      "claim_id": "109",
+      "first_rank": null,
+      "top": [
+        "scifact_13070316_s14",
+        "scifact_29381091_s1",
+        "scifact_38944245_s0"
+      ]
+    },
+    {
+      "claim_id": "1090",
+      "first_rank": 2,
+      "top": [
+        "scifact_17628888_s4",
+        "scifact_17628888_s7",
+        "scifact_17628888_s2"
+      ]
+    },
+    {
+      "claim_id": "1097",
+      "first_rank": null,
+      "top": [
+        "scifact_6327940_s6",
+        "scifact_40343416_s6",
+        "scifact_27615329_s6"
+      ]
+    },
+    {
+      "claim_id": "1101",
+      "first_rank": null,
+      "top": [
+        "scifact_21164071_s6",
+        "scifact_13779605_s5",
+        "scifact_20313748_s2"
+      ]
+    },
+    {
+      "claim_id": "1102",
+      "first_rank": null,
+      "top": [
+        "scifact_21164071_s6",
+        "scifact_13779605_s5",
+        "scifact_20313748_s2"
+      ]
+    },
+    {
+      "claim_id": "1103",
+      "first_rank": 1,
+      "top": [
+        "scifact_3898784_s13",
+        "scifact_34338075_s1",
+        "scifact_3898784_s6"
+      ]
+    },
+    {
+      "claim_id": "1105",
+      "first_rank": null,
+      "top": [
+        "scifact_37156349_s1",
+        "scifact_13934676_s11",
+        "scifact_27408104_s0"
+      ]
+    },
+    {
+      "claim_id": "1106",
+      "first_rank": null,
+      "top": [
+        "scifact_4587978_s1",
+        "scifact_37156349_s1",
+        "scifact_13934676_s1"
+      ]
+    },
+    {
+      "claim_id": "1109",
+      "first_rank": null,
+      "top": [
+        "scifact_21387297_s0",
+        "scifact_15155862_s0",
+        "scifact_21383026_s0"
+      ]
+    },
+    {
+      "claim_id": "111",
+      "first_rank": null,
+      "top": [
+        "scifact_1744097_s3",
+        "scifact_12991445_s5",
+        "scifact_13777706_s1"
+      ]
+    },
+    {
+      "claim_id": "1114",
+      "first_rank": 2,
+      "top": [
+        "scifact_58564850_s7",
+        "scifact_12824568_s7",
+        "scifact_14934137_s7"
+      ]
+    },
+    {
+      "claim_id": "1115",
+      "first_rank": 7,
+      "top": [
+        "scifact_44048701_s1",
+        "scifact_27712433_s0",
+        "scifact_36066871_s4"
+      ]
+    },
+    {
+      "claim_id": "1119",
+      "first_rank": null,
+      "top": [
+        "scifact_20008796_s14",
+        "scifact_1241113_s1",
+        "scifact_20761364_s8"
+      ]
+    }
+  ]
+}

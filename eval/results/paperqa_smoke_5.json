@@ -1,0 +1,58 @@
+{
+  "system": "PaperQA2 sparse retrieval (adapted)",
+  "claims": 5,
+  "k": 10,
+  "docs": 5183,
+  "hit@1": 0.2,
+  "hit@5": 0.2,
+  "hit@10": 0.2,
+  "sentence_recall@10": 0.2,
+  "mrr@10": 0.2,
+  "rows": [
+    {
+      "claim_id": "1000",
+      "first_rank": null,
+      "top": [
+        "scifact_17991818_s6",
+        "scifact_23830488_s4",
+        "scifact_2659805_s9"
+      ]
+    },
+    {
+      "claim_id": "1003",
+      "first_rank": null,
+      "top": [
+        "scifact_14332945_s0",
+        "scifact_1982286_s0",
+        "scifact_83308790_s0"
+      ]
+    },
+    {
+      "claim_id": "1004",
+      "first_rank": null,
+      "top": [
+        "scifact_16701509_s3",
+        "scifact_13282296_s5",
+        "scifact_22334300_s4"
+      ]
+    },
+    {
+      "claim_id": "1005",
+      "first_rank": null,
+      "top": [
+        "scifact_22334300_s4",
+        "scifact_16180601_s5",
+        "scifact_13282296_s5"
+      ]
+    },
+    {
+      "claim_id": "1006",
+      "first_rank": 1,
+      "top": [
+        "scifact_4926049_s3",
+        "scifact_30861948_s9",
+        "scifact_9301606_s5"
+      ]
+    }
+  ]
+}
