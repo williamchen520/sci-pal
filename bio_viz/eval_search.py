@@ -6,7 +6,9 @@ import argparse
 import json
 from pathlib import Path
 
-from bio_viz.search import search
+from sentence_transformers import SentenceTransformer
+
+from bio_viz.search import MODEL, search
 
 
 def main() -> int:
@@ -15,10 +17,11 @@ def main() -> int:
     parser.add_argument("--json", default="")
     args = parser.parse_args()
     cases = json.loads(Path(args.queries).read_text(encoding="utf-8"))
+    model = SentenceTransformer(MODEL, device="cuda")
     hit1 = hit3 = hit5 = 0
     rows = []
     for case in cases:
-        hits = search(case["query"], top_k=5)
+        hits = search(case["query"], top_k=5, model=model)
         rank = next((i for i, hit in enumerate(hits, 1) if hit["recipe_id"] == case["expected"]), None)
         hit1 += int(rank == 1)
         hit3 += int(rank is not None and rank <= 3)

@@ -60,7 +60,7 @@ scipal_docs
 ## 3. 配方
 
 ```text
-12 个配方
+20 个配方
 2 个样式（nature_single / nature_double）
 ```
 

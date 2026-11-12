@@ -10,7 +10,7 @@
       "top": [
         "viz_volcano",
         "viz_heatmap",
-        "viz_ma"
+        "viz_manhattan"
       ]
     },
     {
@@ -18,8 +18,8 @@
       "rank": 1,
       "top": [
         "viz_ma",
-        "viz_upset",
-        "viz_dotplot"
+        "viz_bar_error",
+        "viz_manhattan"
       ]
     },
     {
@@ -27,8 +27,8 @@
       "rank": 1,
       "top": [
         "viz_pca",
-        "viz_boxplot",
-        "viz_spatial"
+        "viz_scatter_reg",
+        "viz_boxplot"
       ]
     },
     {
@@ -73,7 +73,7 @@
       "top": [
         "viz_forest",
         "viz_enrichment",
-        "viz_survival"
+        "viz_scatter_reg"
       ]
     },
     {
@@ -81,8 +81,8 @@
       "rank": 1,
       "top": [
         "viz_boxplot",
-        "viz_pca",
-        "viz_spatial"
+        "viz_violin",
+        "viz_bar_error"
       ]
     },
     {
@@ -99,8 +99,8 @@
       "rank": 1,
       "top": [
         "viz_spatial",
-        "viz_pca",
-        "viz_umap"
+        "viz_umap",
+        "viz_pca"
       ]
     },
     {
