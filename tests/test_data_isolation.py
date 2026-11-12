@@ -124,3 +124,68 @@ class PaperStoreOwnershipTests(unittest.TestCase):
             paper_store.PaperStore().assign_workspace("p1", "ws_default")
 
         self.assertEqual(seen, ["owner"])
+
+
+class ReadPathOwnershipTests(unittest.TestCase):
+    def test_experiments_use_core(self) -> None:
+        from services.experiments import pg_read
+
+        seen = []
+
+        def core():
+            seen.append("core")
+            return object()
+
+        with mock.patch.object(pg_read, "pg_connection", side_effect=core),              mock.patch.object(pg_read, "set_search_path"):
+            pg_read._pg()
+        self.assertEqual(seen, ["core"])
+
+    def test_claims_use_core(self) -> None:
+        from services.claims import pg_read
+
+        seen = []
+
+        def core():
+            seen.append("core")
+            return object()
+
+        with mock.patch.object(pg_read, "pg_connection", side_effect=core),              mock.patch.object(pg_read, "set_search_path"):
+            pg_read._pg()
+        self.assertEqual(seen, ["core"])
+
+    def test_abstracts_use_corpus(self) -> None:
+        from routes import abstracts
+
+        seen = []
+
+        def corpus():
+            seen.append("corpus")
+            return object()
+
+        with mock.patch("services.db.pg_pool.corpus_connection", side_effect=corpus):
+            abstracts._pg()
+        self.assertEqual(seen, ["corpus"])
+
+    def test_evidence_fts_uses_corpus(self) -> None:
+        from routes import evidence
+
+        class EmptyConn:
+            def execute(self, *args, **kwargs):
+                return self
+
+            def fetchall(self):
+                return []
+
+            def close(self):
+                return None
+
+        seen = []
+
+        def corpus():
+            seen.append("corpus")
+            return EmptyConn()
+
+        with mock.patch("services.db.pg_pool.corpus_connection", side_effect=corpus):
+            with self.assertRaises(RuntimeError):
+                evidence._fts_bundle("hepatitis", 3)
+        self.assertEqual(seen, ["corpus"])
