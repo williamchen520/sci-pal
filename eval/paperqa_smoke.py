@@ -15,7 +15,7 @@ import math
 import sqlite3
 from pathlib import Path
 
-from lmi import SparseEmbeddingModel
+from lmi import SentenceTransformerEmbeddingModel, SparseEmbeddingModel
 from paperqa import Doc, Docs, Text
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -43,10 +43,15 @@ def load_rows():
     return papers, grouped, claims
 
 
-async def run(limit: int, k: int) -> dict:
+async def run(limit: int, k: int, embedding: str, model: str, device: str) -> dict:
     papers, grouped, claims = load_rows()
     claims = claims[:limit]
-    embeddings = SparseEmbeddingModel()
+    if embedding == "dense":
+        embeddings = SentenceTransformerEmbeddingModel(
+            name=model, config={"device": device}
+        )
+    else:
+        embeddings = SparseEmbeddingModel()
     docs = Docs()
     added = 0
     for paper_id, title in papers.items():
@@ -85,7 +90,7 @@ async def run(limit: int, k: int) -> dict:
         )
     n = len(claims)
     return {
-        "system": "PaperQA2 sparse retrieval (adapted)",
+        "system": f"PaperQA2 {embedding} retrieval (adapted)",
         "claims": n,
         "k": k,
         "docs": added,
@@ -102,9 +107,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=50)
     parser.add_argument("--k", type=int, default=10)
+    parser.add_argument("--embedding", choices=["sparse", "dense"], default="sparse")
+    parser.add_argument("--model", default=r"G:/models/bge-small-en-v1.5")
+    parser.add_argument("--device", default="cpu")
     parser.add_argument("--output", default="")
     args = parser.parse_args()
-    result = asyncio.run(run(args.limit, args.k))
+    result = asyncio.run(
+        run(args.limit, args.k, args.embedding, args.model, args.device)
+    )
     print(json.dumps({key: value for key, value in result.items() if key != "rows"}, ensure_ascii=False, indent=2))
     if args.output:
         Path(args.output).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")

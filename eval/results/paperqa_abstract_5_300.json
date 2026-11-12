@@ -1,0 +1,36 @@
+{
+  "system": "PaperQA2 dense abstract retrieval (adapted)",
+  "claims": 5,
+  "docs": 300,
+  "max_docs": 300,
+  "k": 10,
+  "model": "G:/models/bge-small-en-v1.5",
+  "device": "cpu",
+  "hit@1": 1.0,
+  "hit@5": 1.0,
+  "hit@10": 1.0,
+  "evidence_paper_recall@10": 1.0,
+  "mrr@10": 1.0,
+  "rows": [
+    {
+      "claim_id": "1000",
+      "first_rank": 1
+    },
+    {
+      "claim_id": "1003",
+      "first_rank": 1
+    },
+    {
+      "claim_id": "1004",
+      "first_rank": 1
+    },
+    {
+      "claim_id": "1005",
+      "first_rank": 1
+    },
+    {
+      "claim_id": "1006",
+      "first_rank": 1
+    }
+  ]
+}

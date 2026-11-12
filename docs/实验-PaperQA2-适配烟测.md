@@ -232,3 +232,68 @@ F0 / Dense 是当前可靠检索基线
 B 是上下文层
 PaperQA2 尚无可用原生结果
 ```
+
+---
+
+## 8. Dense 适配（abstract 级采样）
+
+### 安装补充
+
+```text
+torch 2.15.0 (CPU) 已安装
+transformers 5.22.2
+sentence-transformers 6.3.0
+scikit-learn 1.9.1
+```
+
+隔离 venv 的 torch 是 CPU 版，不能用 CUDA。
+
+### 为什么用 abstract 采样
+
+```text
+sentence-level 45k dense 在 CPU 上超时
+改为 paper abstract 级
+每篇 1 个 Text，name = paper_id
+50 claims 的 gold papers + distractor 组成采样语料
+```
+
+### 50 claims，500 docs
+
+```text
+docs                          500
+Hit@1                         0.960
+Hit@5                         1.000
+Hit@10                        1.000
+Evidence paper recall@10      1.000
+MRR@10                        0.980
+```
+
+### 5 claims，300 docs
+
+```text
+Hit@1/5/10 1.000
+MRR        1.000
+```
+
+### 解释边界
+
+```text
+这是 paper-level，不是 sentence-level
+采样语料包含全部 gold papers
+500 docs 比 5,183 全量容易
+不能与 F0/Dense 的 sentence Recall 0.948 直接比较
+```
+
+结论：
+
+```text
+PaperQA dense 适配路径可用
+但当前结果只证明集成，不证明方法优劣
+```
+
+结果：
+
+```text
+eval/results/paperqa_abstract_5_300.json
+eval/results/paperqa_abstract_50_500.json
+```
