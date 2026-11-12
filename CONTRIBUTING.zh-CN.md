@@ -93,3 +93,68 @@ python eval/retrieval_eval.py --limit 30
 python scripts/collect_milestones.py
 python scripts/plot_milestones.py --metric Recall@10 --output docs/milestones_recall.svg
 ```
+
+---
+
+## 2026-11-12 增补：双库隔离与治理门禁
+
+### 两个数据库
+
+```text
+scipal_core      用户 / 鉴权 / 项目 / 实验 / 笔记 / 任务
+scipal_rebuild   论文 / 段落 / 句子 / 向量
+```
+
+规则：
+
+```text
+没有跨库外键
+只用逻辑 ID
+路由只能走 core_connection() 或 corpus_connection()
+业务读不碰 scipal_rebuild
+语料读不碰 scipal_core
+```
+
+### 最小权限与迁移
+
+```text
+core_app       业务/鉴权，无 DDL
+corpus_reader  语料只读
+corpus_writer  语料写入，无 DDL
+app 启动       不得 CREATE/ALTER 表
+插件建表       scripts/migrate_ingest_tracking.py（owner 角色）
+```
+
+### 生产环境校验
+
+```text
+SCIPAL_ENV=production
+拒绝 loopback / 错库 DSN
+必须有 SCIPAL_CORE_DSN 和 SCIPAL_PG_CORPUS_DSN
+```
+
+### 治理门禁
+
+```powershell
+python scripts/governance_gate.py --paths <changed> --ops <ops> --plan "..." --risk "..."
+```
+
+命中后需要人类回复“批准执行”，并给 PR 加 `governance-approved` 标签。
+CI 使用 base 分支的门禁脚本，防止 PR 改门禁绕过门禁。
+
+### 必跑检查
+
+```text
+python scripts/validate_arch.py
+python scripts/check_data_boundary.py
+python -m unittest discover -s tests -p "test_*.py"
+python scripts/smoke_http.py          # 27/27
+python scripts/smoke_group_b.py       # 13/13
+```
+
+### 备份
+
+```text
+core 6h / 7d；corpus 7d / 28d
+加密；恢复演练包含 GIN + HNSW
+```

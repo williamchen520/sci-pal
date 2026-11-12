@@ -1,5 +1,3 @@
-> 🗺️ **Architecture and route map:** [docs/架构与路由全景图.md](docs/架构与路由全景图.md) — 26 blueprints / 185 API routes
-
 # SciPal — Retrieval-Augmented Research Workbench
 
 > **Status: active development / PG-only.** No stable release.  
@@ -7,56 +5,61 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-SciPal is a locally deployable system for literature search, structured evidence extraction, systematic review and traceable writing. Its core is a deterministic retrieval layer: pgvector recall, PostgreSQL full-text search, reciprocal-rank fusion (RRF), cross-encoder reranking and adaptive context expansion.
+SciPal is a locally deployable system for literature search, structured evidence
+extraction, systematic review, and traceable writing. Its core is a deterministic
+retrieval layer: pgvector recall, PostgreSQL full-text search, reciprocal-rank
+fusion (RRF), optional cross-encoder reranking, and sentence-aware context.
 
-Generation is optional and pluggable: a small local model for orchestration, a cloud or DSH model for reasoning.
+Generation is optional and pluggable: a local model for orchestration, a cloud or
+DSH model for reasoning.
 
 ---
 
 ## Architecture
 
 ```text
-Browser / DSH
-    │ HTTP / MCP
-    ▼
-Flask API (26 blueprints, 185 API routes)
-    │
-    ├─ services/search        pgvector + PG FTS + RRF + rerank
-    ├─ services/review        reviews + systematic review
-    ├─ services/claims        claim cards + evidence
-    ├─ services/projects      projects / experiments / runs
-    ├─ services/watch         monitoring + digest
-    └─ build_db/*             parsing, JATS import, PG writes
-    │
-    ▼
-PostgreSQL 16 + pgvector
-    + documents/ (PDF / XML)
-    + packs/
+Browser / DSH / MCP
+        │
+        ▼
+      Caddy
+        │  HTTPS, security headers
+        ▼
+   Flask API (26 blueprints, 204 route+method; 210 with ingest-tracking)
+        │
+        ├── scipal_core
+        │     users / auth / workspaces / projects / experiments
+        │     notes / tasks / claims / reviews / audit
+        │
+        └── scipal_rebuild
+              papers / sections / paragraphs / sentences
+              paragraph_embeddings / citations / figures / tables
 ```
 
-Retired from runtime:
+Retrieval:
 
 ```text
-SQLite research.db    archived, not mounted, not created
-Chroma                archived, not initialized
+pgvector HNSW + PostgreSQL GIN FTS + RRF
+sentence-level evidence
+sentence-window context
 ```
 
----
+Operations:
 
-## Technology Stack
+```text
+worker          long-running jobs
+pg-backup       encrypted PostgreSQL dumps
+watch-cron      literature monitoring
+```
 
-| Layer | Choice |
-|---|---|
-| Runtime | Python 3.12, Flask 3 |
-| Primary store | PostgreSQL 16 |
-| Vector | pgvector + HNSW |
-| Full text | PostgreSQL GIN `tsvector`; optional ParadeDB path |
-| Embeddings | `BAAI/bge-base-en-v1.5` |
-| Reranker | `BAAI/bge-reranker-base` |
-| Parsing | PyMuPDF, Docling, GROBID, MinerU, JATS XML |
-| Generation | OpenAI-compatible cloud API, Ollama fallback, DSH optional |
-| Frontend | vanilla HTML/CSS/JS + PDF.js |
-| Deployment | Docker Compose: app + watch-cron + Caddy + PostgreSQL |
+Data ownership is physical, not just a naming convention:
+
+```text
+core and corpus are separate PostgreSQL databases
+no cross-database foreign keys
+logical IDs only (paper_id / user_id)
+business reads never hit the corpus database
+corpus reads never hit the business database
+```
 
 ---
 
@@ -64,21 +67,13 @@ Chroma                archived, not initialized
 
 | Item | Value |
 |---|---:|
-| papers | 10,102 |
-| paragraphs | 331,263 |
-| sentences | 1,492,661 |
-| sections | 124,216 |
-| paragraph embeddings | 320,928 |
-| summaries | 69,128 |
-| HNSW index | 1.235 GB, valid |
-| PostgreSQL size | ~5.4 GB |
-
-Archived:
-
-```text
-research.db   I:\_archive\research.db-20261107
-Chroma        I:\_archive\chroma-20261107
-```
+| papers | 13,201 |
+| paragraphs | 410,270 |
+| sentences | 1,780,306 |
+| sections | 156,208 |
+| paragraph embeddings | 343,546 |
+| HNSW index | 1.326 GB, valid |
+| PostgreSQL (rebuild) | ~5.5 GB |
 
 ---
 
@@ -86,21 +81,36 @@ Chroma        I:\_archive\chroma-20261107
 
 | Capability | Description |
 |---|---|
-| Literature search | pgvector + PG FTS, RRF, rerank, section expansion |
+| Literature search | pgvector + PG FTS, RRF, optional rerank |
 | Structured parsing | PDF engines + native JATS XML |
-| Section / paragraph / sentence tree | explicit IDs, page and bbox |
-| Citation / figure / table links | sentence-level provenance |
-| Sentence traceability | `/api/papers/<id>/trace`, page crops |
-| Evidence envelopes | parent context + matched sentences + links |
+| Sentence traceability | `/api/papers/<id>/trace`, page/bbox |
+| Evidence envelopes | matched sentences + parent context + links |
 | RAG QA | citations, refusal, local or cloud models |
 | Review generation | outline → section retrieval → drafting → verification |
-| Systematic review | screening, PRISMA, evidence, risk of bias, reports |
+| Systematic review | screening, PRISMA, evidence, risk of bias |
 | Claims | claim cards, qualifiers, supporting/opposing evidence |
-| Projects / experiments | members, runs, revisions, audit, signatures |
+| Projects / experiments | members, runs, revisions, audit |
 | Literature monitoring | profiles, journals, runs, digests |
-| Multi-user isolation | users, workspaces, roles |
+| Multi-user isolation | users, workspaces, roles, least-privilege DSNs |
 | Domain packs | taxonomy / section types / evidence schema |
-| Plugins | ingest tracking, ports, experimental GraphRAG/RAPTOR |
+| Optional plugins | ingest tracking, experimental GraphRAG/RAPTOR |
+
+---
+
+## Security & Operations
+
+```text
+global API auth        session / bearer / internal service token
+internal endpoints     /api/ingest, /api/embed require internal token
+database roles         core_app / corpus_reader / corpus_writer (no DDL)
+environment guard      production rejects loopback/wrong-database DSNs
+backups                core every 6h (7d), corpus every 7d (28d)
+backup encryption      AES-256-CBC + PBKDF2, files mode 600
+restore drill          data + GIN + HNSW validated 2026-11-12
+governance gate        high-risk PRs require human approval
+```
+
+Do not put production credentials in `.env` files committed to git.
 
 ---
 
@@ -110,9 +120,21 @@ Chroma        I:\_archive\chroma-20261107
 
 ```bash
 cp deploy/.env.example deploy/.env
-# edit SCIPAL_PG_DSN, SCIPAL_SECRET_KEY
+# set the DSNs, SCIPAL_SECRET_KEY, and backup passphrase
 docker compose -f deploy/docker-compose.yml up -d --build
 curl http://127.0.0.1/api/health
+```
+
+Required DSNs:
+
+```text
+SCIPAL_CORE_DSN            -> scipal_core (business/auth)
+SCIPAL_AUTH_DSN            -> scipal_core (auth schema)
+SCIPAL_PG_DSN              -> scipal_core (compatibility default)
+SCIPAL_PG_CORPUS_DSN       -> scipal_rebuild (read)
+SCIPAL_PG_MAIN_READ_DSN    -> scipal_rebuild (read)
+SCIPAL_PG_OWNER_DSN        -> scipal_rebuild (write, no DDL)
+SCIPAL_PG_INGEST_DSN       -> scipal_rebuild (ingest write)
 ```
 
 Services:
@@ -120,8 +142,9 @@ Services:
 ```text
 app         Flask API
 postgres    PostgreSQL 16 + pgvector
-watch-cron  literature monitoring scheduler
-caddy       reverse proxy
+pg-backup   encrypted dumps
+watch-cron  literature monitoring
+caddy       reverse proxy / TLS
 ```
 
 ### Local Development
@@ -130,26 +153,48 @@ caddy       reverse proxy
 python -m venv venv
 venv\Scripts\activate          # Windows
 pip install -r requirements.txt
-set SCIPAL_PG_DSN=postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench
+# configure .env or environment variables
 python api_server.py
 ```
 
-Development server only. For production use:
+Development server only. For production use `APP_MODE=PROD_MODE` with gunicorn.
+
+---
+
+## Testing
+
+```bash
+python -m unittest discover -s tests -p "test_*.py"
+python scripts/smoke_http.py        # A: 27 light GETs
+python scripts/smoke_group_b.py     # B: 13 medium GETs
+python scripts/check_data_boundary.py
+python scripts/validate_arch.py
+```
+
+Current known smoke result:
 
 ```text
-APP_MODE=PROD_MODE  -> gunicorn
+A 27/27 200
+B 13/13 200
+```
+
+Route count:
+
+```text
+26 blueprints / 204 route+method by default
+27 blueprints / 210 route+method with SCIPAL_INGEST_TRACKING=1
+```
+
+Recorded retrieval results:
+
+```text
+SciFact 300        Recall@10 0.8669 / nDCG@10 0.7458
+rebuild_20 hybrid  Recall@10 0.7000 / nDCG@10 0.4894
 ```
 
 ---
 
 ## Configuration
-
-Required:
-
-```text
-SCIPAL_PG_DSN=postgresql://user:pass@host:5432/scipal_bench
-SCIPAL_SECRET_KEY=<random>
-```
 
 PG-only defaults:
 
@@ -157,57 +202,29 @@ PG-only defaults:
 SCIPAL_VECTOR_BACKEND=pgvector
 SCIPAL_FTS_BACKEND=postgres
 SCIPAL_SEARCH_META_BACKEND=postgres
-SCIPAL_SQLITE_QUERY_ONLY=1
-SCIPAL_ABSTRACTS_BACKEND=postgres
-SCIPAL_PROJECTS_BACKEND=postgres
-SCIPAL_RUNS_BACKEND=postgres
-SCIPAL_EXPERIMENTS_BACKEND=postgres
-SCIPAL_REVIEWS_BACKEND=postgres
-SCIPAL_SYSTEMATIC_BACKEND=postgres
-SCIPAL_CLAIMS_BACKEND=postgres
-SCIPAL_NOTES_BACKEND=postgres
-SCIPAL_TASKS_BACKEND=postgres
 SCIPAL_PAPERS_READ_BACKEND=postgres
 SCIPAL_INGEST_PG_ONLY=1
 SCIPAL_TENANCY_PG_ONLY=1
-```
-
-Auth:
-
-```text
 SCIPAL_AUTH_REQUIRED=1
+SCIPAL_ENV=production
 ```
 
----
-
-## API Examples
-
-```bash
-curl http://127.0.0.1/api/health
-
-curl -X POST http://127.0.0.1/api/evidence/search \
-  -H "Content-Type: application/json" \
-  -d '{"query":"hepatocellular carcinoma","top_paragraphs":5}'
-
-curl "http://127.0.0.1/api/papers?limit=5"
-```
-
-Main groups:
+Auth-related:
 
 ```text
-/api/papers
-/api/search
-/api/evidence
-/api/qa
-/api/reviews
-/api/review-projects
-/api/projects
-/api/experiments
-/api/claims
-/api/watch
-/api/workspaces
-/api/tasks
+SCIPAL_AUTH_DSN
+SCIPAL_INTERNAL_TOKEN
+SCIPAL_INTERNAL_USER_ID
+SCIPAL_INTERNAL_WORKSPACE_ID
 ```
+
+Backup:
+
+```text
+SCIPAL_BACKUP_PASSPHRASE
+```
+
+Do not commit real values.
 
 ---
 
@@ -217,52 +234,16 @@ Main groups:
 api_server.py              Flask app and blueprint registration
 routes/                    26 blueprints
 services/                  search, review, claims, projects, watch, ...
+services/db/               connection factories, env guard, pool
+eval/                      retrieval/QA evaluation, public dataset loaders
 build_db/                  parsers, JATS import, PG writers
 plugins/                   optional plugins
 frontend/                  HTML/CSS/JS
-docs/                      architecture, migration, operations
-scripts/                   smoke tests, audits, backfills
-deploy/                    Dockerfile, compose, env
-tests/                     pytest suites
-```
-
----
-
-## Testing
-
-```bash
-pytest
-
-python scripts/smoke_http.py        # A: 31 light GETs
-python scripts/smoke_group_b.py     # B: 14 medium GETs
-python scripts/smoke_group_c.py     # C: 5 heavy GETs
-```
-
-Current smoke result:
-
-```text
-50 routes / 0 5xx
-research.db absent
-```
-
-Retrieval:
-
-```text
-20-question regression   Recall@10 0.675 / nDCG@10 0.461
-SciFact 300              Recall@10 0.8669 / nDCG@10 0.7458
-```
-
----
-
-## Known Limitations
-
-```text
-12 title-duplicate groups with different PMCIDs are not merged
-300-question full-text gold set is deferred
-GraphRAG / RAPTOR remain plugin experiments
-Client ingest tracking is not wired to the real import UI
-Base image still contains chromadb package although runtime does not use it
-Some cold POST endpoints are not covered by automated smoke tests
+docs/                      architecture, migration, operations, research
+scripts/                   smoke, audits, backfills, governance gate
+deploy/                    Dockerfile, compose, env, SQL
+tests/                     unittest/pytest suites
+config/                    governance gates
 ```
 
 ---
@@ -271,11 +252,28 @@ Some cold POST endpoints are not covered by automated smoke tests
 
 | Document | Purpose |
 |---|---|
-| [Architecture and Routes](docs/架构与路由图.md) | system flow and route map |
-| [Module Manual](docs/开发-模块手册.md) | module responsibilities and entry points |
-| [PG-only Final Report](docs/PG-only迁移总报告-2026-11-08.md) | migration decisions and verification |
-| [ARCHITECTURE.json](ARCHITECTURE.json) | machine-readable architecture |
-| [Smoke Plan](docs/全站端点分层烟测计划.md) | layered endpoint testing |
+| [Architecture and Routes](docs/en/Architecture-and-Routes.md) | routes, layers, data flow |
+| [Module Manual](docs/en/Modules-and-Routes.md) | module responsibilities |
+| [Architecture JSON](ARCHITECTURE.json) | machine-readable contract |
+| [Data isolation audit](docs/数据层隔离审计.md) | table/DSN ownership |
+| [Backup strategy](docs/备份策略-双库.md) | backup and restore |
+| [Restore drill 2026-11-12](docs/恢复演练-20261112.md) | data + GIN + HNSW validation |
+| [Code review 2026-11-12](docs/代码审查-20261112.md) | P0/P1 findings |
+| [Governance gates](docs/工程治理门禁规范.md) | preflight and approval |
+| [Public evaluation sets](docs/公共测试集选型.md) | SciFact / LitQA2 / QASPER |
+
+---
+
+## Known Limitations
+
+```text
+LitQA2 local coverage: 82/199 evaluable
+QASPER evidence is paragraph-level, not sentence-level
+A full-text benchmark for SciFact claims is not available
+GraphRAG / RAPTOR remain experiments, not core paths
+Client ingest tracking requires the separate migration
+No stable release; APIs and schemas may change
+```
 
 ---
 
