@@ -1,0 +1,858 @@
+{
+  "dataset": "scifact",
+  "claims": 20,
+  "skipped_claims": [
+    "624",
+    "751",
+    "815",
+    "816"
+  ],
+  "model": "G:/models/bge-base-en-v1.5",
+  "chunk_words": 120,
+  "rerank": true,
+  "arms": {
+    "F0": {
+      "units": 11475,
+      "metrics": {
+        "claims": 20,
+        "hit@1": 0.55,
+        "hit@5": 0.85,
+        "hit@10": 0.95,
+        "sentence_recall@10": 0.9125,
+        "context_recall@10": 0.9125,
+        "mrr@10": 0.6933333333333334,
+        "ndcg@10": 0.7561493097868208,
+        "rows": [
+          {
+            "claim_id": "1000",
+            "first_rank": 1,
+            "gold": [
+              "scifact_16472469_s4"
+            ],
+            "top": [
+              "scifact_16472469:hard:0000",
+              "scifact_26118532:hard:0001",
+              "scifact_26118532:hard:0002"
+            ]
+          },
+          {
+            "claim_id": "1003",
+            "first_rank": 6,
+            "gold": [
+              "scifact_14332945_s6",
+              "scifact_4319844_s2",
+              "scifact_4899981_s1",
+              "scifact_4899981_s5"
+            ],
+            "top": [
+              "scifact_7151961:hard:0001",
+              "scifact_14332945:hard:0000",
+              "scifact_12086599:hard:0001"
+            ]
+          },
+          {
+            "claim_id": "1004",
+            "first_rank": 1,
+            "gold": [
+              "scifact_2734421_s2",
+              "scifact_2734421_s3",
+              "scifact_2734421_s4",
+              "scifact_2734421_s5",
+              "scifact_301838_s1",
+              "scifact_301838_s3",
+              "scifact_3952288_s3",
+              "scifact_3952288_s4"
+            ],
+            "top": [
+              "scifact_3952288:hard:0000",
+              "scifact_39128592:hard:0000",
+              "scifact_2734421:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "1005",
+            "first_rank": 1,
+            "gold": [
+              "scifact_2734421_s2",
+              "scifact_2734421_s3",
+              "scifact_2734421_s4",
+              "scifact_2734421_s5",
+              "scifact_301838_s1",
+              "scifact_301838_s3",
+              "scifact_3952288_s3",
+              "scifact_3952288_s4"
+            ],
+            "top": [
+              "scifact_3952288:hard:0000",
+              "scifact_2734421:hard:0000",
+              "scifact_39128592:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "1006",
+            "first_rank": 1,
+            "gold": [
+              "scifact_4926049_s3"
+            ],
+            "top": [
+              "scifact_4926049:hard:0000",
+              "scifact_4926049:hard:0001",
+              "scifact_7848113:hard:0001"
+            ]
+          },
+          {
+            "claim_id": "1009",
+            "first_rank": 1,
+            "gold": [
+              "scifact_1982286_s3",
+              "scifact_1982286_s5"
+            ],
+            "top": [
+              "scifact_1982286:hard:0000",
+              "scifact_9076196:hard:0000",
+              "scifact_1982286:hard:0001"
+            ]
+          },
+          {
+            "claim_id": "1011",
+            "first_rank": 2,
+            "gold": [
+              "scifact_9745001_s12",
+              "scifact_9745001_s6"
+            ],
+            "top": [
+              "scifact_9745001:hard:0000",
+              "scifact_9745001:hard:0002",
+              "scifact_9745001:hard:0001"
+            ]
+          },
+          {
+            "claim_id": "1015",
+            "first_rank": 6,
+            "gold": [
+              "scifact_6277638_s2"
+            ],
+            "top": [
+              "scifact_15975146:hard:0001",
+              "scifact_11527822:hard:0001",
+              "scifact_4434951:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "1018",
+            "first_rank": 3,
+            "gold": [
+              "scifact_11603066_s6"
+            ],
+            "top": [
+              "scifact_11603066:hard:0000",
+              "scifact_1225513:hard:0001",
+              "scifact_11603066:hard:0001"
+            ]
+          },
+          {
+            "claim_id": "1023",
+            "first_rank": 1,
+            "gold": [
+              "scifact_16927286_s4"
+            ],
+            "top": [
+              "scifact_16927286:hard:0000",
+              "scifact_23342686:hard:0000",
+              "scifact_9505448:hard:0002"
+            ]
+          },
+          {
+            "claim_id": "1028",
+            "first_rank": 2,
+            "gold": [
+              "scifact_11899391_s6",
+              "scifact_13923140_s2",
+              "scifact_13923140_s3"
+            ],
+            "top": [
+              "scifact_13940200:hard:0001",
+              "scifact_13923140:hard:0000",
+              "scifact_36642096:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "1030",
+            "first_rank": 1,
+            "gold": [
+              "scifact_6441369_s2"
+            ],
+            "top": [
+              "scifact_6441369:hard:0000",
+              "scifact_23418635:hard:0000",
+              "scifact_4462419:hard:0001"
+            ]
+          },
+          {
+            "claim_id": "1031",
+            "first_rank": 1,
+            "gold": [
+              "scifact_12486491_s2"
+            ],
+            "top": [
+              "scifact_12486491:hard:0000",
+              "scifact_18987782:hard:0001",
+              "scifact_18987782:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "1034",
+            "first_rank": 2,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:hard:0000",
+              "scifact_4547102:hard:0000",
+              "scifact_18998807:hard:0001"
+            ]
+          },
+          {
+            "claim_id": "1035",
+            "first_rank": 2,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:hard:0000",
+              "scifact_4547102:hard:0000",
+              "scifact_12100854:hard:0001"
+            ]
+          },
+          {
+            "claim_id": "1036",
+            "first_rank": 5,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:hard:0000",
+              "scifact_12100854:hard:0001",
+              "scifact_12100854:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "104",
+            "first_rank": 1,
+            "gold": [
+              "scifact_40164383_s11",
+              "scifact_40164383_s15",
+              "scifact_40164383_s8",
+              "scifact_40164383_s9"
+            ],
+            "top": [
+              "scifact_40164383:hard:0002",
+              "scifact_40164383:hard:0000",
+              "scifact_6270720:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "1040",
+            "first_rank": null,
+            "gold": [
+              "scifact_25254425_s3"
+            ],
+            "top": [
+              "scifact_24311787:hard:0000",
+              "scifact_9451052:hard:0000",
+              "scifact_9881829:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "1042",
+            "first_rank": 1,
+            "gold": [
+              "scifact_17421851_s6",
+              "scifact_17421851_s7"
+            ],
+            "top": [
+              "scifact_17421851:hard:0000",
+              "scifact_17421851:hard:0001",
+              "scifact_24384587:hard:0000"
+            ]
+          },
+          {
+            "claim_id": "1043",
+            "first_rank": 1,
+            "gold": [
+              "scifact_17671145_s6",
+              "scifact_17671145_s7"
+            ],
+            "top": [
+              "scifact_17671145:hard:0001",
+              "scifact_17671145:hard:0000",
+              "scifact_27167110:hard:0000"
+            ]
+          }
+        ]
+      }
+    },
+    "B": {
+      "units": 11475,
+      "metrics": {
+        "claims": 20,
+        "hit@1": 0.55,
+        "hit@5": 0.85,
+        "hit@10": 0.95,
+        "sentence_recall@10": 0.9125,
+        "context_recall@10": 0.9375,
+        "mrr@10": 0.6933333333333334,
+        "ndcg@10": 0.7561493097868208,
+        "rows": [
+          {
+            "claim_id": "1000",
+            "first_rank": 1,
+            "gold": [
+              "scifact_16472469_s4"
+            ],
+            "top": [
+              "scifact_16472469:win:0000",
+              "scifact_26118532:win:0001",
+              "scifact_26118532:win:0002"
+            ]
+          },
+          {
+            "claim_id": "1003",
+            "first_rank": 6,
+            "gold": [
+              "scifact_14332945_s6",
+              "scifact_4319844_s2",
+              "scifact_4899981_s1",
+              "scifact_4899981_s5"
+            ],
+            "top": [
+              "scifact_7151961:win:0001",
+              "scifact_14332945:win:0000",
+              "scifact_12086599:win:0001"
+            ]
+          },
+          {
+            "claim_id": "1004",
+            "first_rank": 1,
+            "gold": [
+              "scifact_2734421_s2",
+              "scifact_2734421_s3",
+              "scifact_2734421_s4",
+              "scifact_2734421_s5",
+              "scifact_301838_s1",
+              "scifact_301838_s3",
+              "scifact_3952288_s3",
+              "scifact_3952288_s4"
+            ],
+            "top": [
+              "scifact_3952288:win:0000",
+              "scifact_39128592:win:0000",
+              "scifact_2734421:win:0000"
+            ]
+          },
+          {
+            "claim_id": "1005",
+            "first_rank": 1,
+            "gold": [
+              "scifact_2734421_s2",
+              "scifact_2734421_s3",
+              "scifact_2734421_s4",
+              "scifact_2734421_s5",
+              "scifact_301838_s1",
+              "scifact_301838_s3",
+              "scifact_3952288_s3",
+              "scifact_3952288_s4"
+            ],
+            "top": [
+              "scifact_3952288:win:0000",
+              "scifact_2734421:win:0000",
+              "scifact_39128592:win:0000"
+            ]
+          },
+          {
+            "claim_id": "1006",
+            "first_rank": 1,
+            "gold": [
+              "scifact_4926049_s3"
+            ],
+            "top": [
+              "scifact_4926049:win:0000",
+              "scifact_4926049:win:0001",
+              "scifact_7848113:win:0001"
+            ]
+          },
+          {
+            "claim_id": "1009",
+            "first_rank": 1,
+            "gold": [
+              "scifact_1982286_s3",
+              "scifact_1982286_s5"
+            ],
+            "top": [
+              "scifact_1982286:win:0000",
+              "scifact_9076196:win:0000",
+              "scifact_1982286:win:0001"
+            ]
+          },
+          {
+            "claim_id": "1011",
+            "first_rank": 2,
+            "gold": [
+              "scifact_9745001_s12",
+              "scifact_9745001_s6"
+            ],
+            "top": [
+              "scifact_9745001:win:0000",
+              "scifact_9745001:win:0002",
+              "scifact_9745001:win:0001"
+            ]
+          },
+          {
+            "claim_id": "1015",
+            "first_rank": 6,
+            "gold": [
+              "scifact_6277638_s2"
+            ],
+            "top": [
+              "scifact_15975146:win:0001",
+              "scifact_11527822:win:0001",
+              "scifact_4434951:win:0000"
+            ]
+          },
+          {
+            "claim_id": "1018",
+            "first_rank": 3,
+            "gold": [
+              "scifact_11603066_s6"
+            ],
+            "top": [
+              "scifact_11603066:win:0000",
+              "scifact_1225513:win:0001",
+              "scifact_11603066:win:0001"
+            ]
+          },
+          {
+            "claim_id": "1023",
+            "first_rank": 1,
+            "gold": [
+              "scifact_16927286_s4"
+            ],
+            "top": [
+              "scifact_16927286:win:0000",
+              "scifact_23342686:win:0000",
+              "scifact_9505448:win:0002"
+            ]
+          },
+          {
+            "claim_id": "1028",
+            "first_rank": 2,
+            "gold": [
+              "scifact_11899391_s6",
+              "scifact_13923140_s2",
+              "scifact_13923140_s3"
+            ],
+            "top": [
+              "scifact_13940200:win:0001",
+              "scifact_13923140:win:0000",
+              "scifact_36642096:win:0000"
+            ]
+          },
+          {
+            "claim_id": "1030",
+            "first_rank": 1,
+            "gold": [
+              "scifact_6441369_s2"
+            ],
+            "top": [
+              "scifact_6441369:win:0000",
+              "scifact_23418635:win:0000",
+              "scifact_4462419:win:0001"
+            ]
+          },
+          {
+            "claim_id": "1031",
+            "first_rank": 1,
+            "gold": [
+              "scifact_12486491_s2"
+            ],
+            "top": [
+              "scifact_12486491:win:0000",
+              "scifact_18987782:win:0001",
+              "scifact_18987782:win:0000"
+            ]
+          },
+          {
+            "claim_id": "1034",
+            "first_rank": 2,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:win:0000",
+              "scifact_4547102:win:0000",
+              "scifact_18998807:win:0001"
+            ]
+          },
+          {
+            "claim_id": "1035",
+            "first_rank": 2,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:win:0000",
+              "scifact_4547102:win:0000",
+              "scifact_12100854:win:0001"
+            ]
+          },
+          {
+            "claim_id": "1036",
+            "first_rank": 5,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:win:0000",
+              "scifact_12100854:win:0001",
+              "scifact_12100854:win:0000"
+            ]
+          },
+          {
+            "claim_id": "104",
+            "first_rank": 1,
+            "gold": [
+              "scifact_40164383_s11",
+              "scifact_40164383_s15",
+              "scifact_40164383_s8",
+              "scifact_40164383_s9"
+            ],
+            "top": [
+              "scifact_40164383:win:0002",
+              "scifact_40164383:win:0000",
+              "scifact_6270720:win:0000"
+            ]
+          },
+          {
+            "claim_id": "1040",
+            "first_rank": null,
+            "gold": [
+              "scifact_25254425_s3"
+            ],
+            "top": [
+              "scifact_24311787:win:0000",
+              "scifact_9451052:win:0000",
+              "scifact_9881829:win:0000"
+            ]
+          },
+          {
+            "claim_id": "1042",
+            "first_rank": 1,
+            "gold": [
+              "scifact_17421851_s6",
+              "scifact_17421851_s7"
+            ],
+            "top": [
+              "scifact_17421851:win:0000",
+              "scifact_17421851:win:0001",
+              "scifact_24384587:win:0000"
+            ]
+          },
+          {
+            "claim_id": "1043",
+            "first_rank": 1,
+            "gold": [
+              "scifact_17671145_s6",
+              "scifact_17671145_s7"
+            ],
+            "top": [
+              "scifact_17671145:win:0001",
+              "scifact_17671145:win:0000",
+              "scifact_27167110:win:0000"
+            ]
+          }
+        ]
+      }
+    },
+    "C": {
+      "units": 11933,
+      "metrics": {
+        "claims": 20,
+        "hit@1": 0.45,
+        "hit@5": 0.85,
+        "hit@10": 0.95,
+        "sentence_recall@10": 0.89375,
+        "context_recall@10": 0.9125,
+        "mrr@10": 0.6326984126984126,
+        "ndcg@10": 0.7096823732447572,
+        "rows": [
+          {
+            "claim_id": "1000",
+            "first_rank": 1,
+            "gold": [
+              "scifact_16472469_s4"
+            ],
+            "top": [
+              "scifact_16472469:c0000-0005",
+              "scifact_26118532:c0004-0008",
+              "scifact_10486817:c0005-0007"
+            ]
+          },
+          {
+            "claim_id": "1003",
+            "first_rank": 5,
+            "gold": [
+              "scifact_14332945_s6",
+              "scifact_4319844_s2",
+              "scifact_4899981_s1",
+              "scifact_4899981_s5"
+            ],
+            "top": [
+              "scifact_14332945:c0000-0004",
+              "scifact_12086599:c0006-0008",
+              "scifact_15659108:c0000-0003"
+            ]
+          },
+          {
+            "claim_id": "1004",
+            "first_rank": 2,
+            "gold": [
+              "scifact_2734421_s2",
+              "scifact_2734421_s3",
+              "scifact_2734421_s4",
+              "scifact_2734421_s5",
+              "scifact_301838_s1",
+              "scifact_301838_s3",
+              "scifact_3952288_s3",
+              "scifact_3952288_s4"
+            ],
+            "top": [
+              "scifact_3952288:c0000-0002",
+              "scifact_2734421:c0000-0004",
+              "scifact_39128592:c0000-0004"
+            ]
+          },
+          {
+            "claim_id": "1005",
+            "first_rank": 2,
+            "gold": [
+              "scifact_2734421_s2",
+              "scifact_2734421_s3",
+              "scifact_2734421_s4",
+              "scifact_2734421_s5",
+              "scifact_301838_s1",
+              "scifact_301838_s3",
+              "scifact_3952288_s3",
+              "scifact_3952288_s4"
+            ],
+            "top": [
+              "scifact_3952288:c0000-0002",
+              "scifact_2734421:c0000-0004",
+              "scifact_39128592:c0000-0004"
+            ]
+          },
+          {
+            "claim_id": "1006",
+            "first_rank": 1,
+            "gold": [
+              "scifact_4926049_s3"
+            ],
+            "top": [
+              "scifact_4926049:c0000-0003",
+              "scifact_4926049:c0004-0005",
+              "scifact_7848113:c0000-0005"
+            ]
+          },
+          {
+            "claim_id": "1009",
+            "first_rank": 1,
+            "gold": [
+              "scifact_1982286_s3",
+              "scifact_1982286_s5"
+            ],
+            "top": [
+              "scifact_1982286:c0000-0004",
+              "scifact_9076196:c0000-0004",
+              "scifact_1982286:c0005-0005"
+            ]
+          },
+          {
+            "claim_id": "1011",
+            "first_rank": 2,
+            "gold": [
+              "scifact_9745001_s12",
+              "scifact_9745001_s6"
+            ],
+            "top": [
+              "scifact_9745001:c0000-0003",
+              "scifact_9745001:c0008-0012",
+              "scifact_26026009:c0000-0004"
+            ]
+          },
+          {
+            "claim_id": "1015",
+            "first_rank": 7,
+            "gold": [
+              "scifact_6277638_s2"
+            ],
+            "top": [
+              "scifact_11527822:c0005-0005",
+              "scifact_6277638:c0005-0005",
+              "scifact_10790846:c0009-0011"
+            ]
+          },
+          {
+            "claim_id": "1018",
+            "first_rank": null,
+            "gold": [
+              "scifact_11603066_s6"
+            ],
+            "top": [
+              "scifact_11603066:c0000-0003",
+              "scifact_1225513:c0009-0011",
+              "scifact_1225513:c0005-0008"
+            ]
+          },
+          {
+            "claim_id": "1023",
+            "first_rank": 1,
+            "gold": [
+              "scifact_16927286_s4"
+            ],
+            "top": [
+              "scifact_16927286:c0000-0004",
+              "scifact_23342686:c0000-0004",
+              "scifact_22482024:c0000-0004"
+            ]
+          },
+          {
+            "claim_id": "1028",
+            "first_rank": 1,
+            "gold": [
+              "scifact_11899391_s6",
+              "scifact_13923140_s2",
+              "scifact_13923140_s3"
+            ],
+            "top": [
+              "scifact_11899391:c0004-0007",
+              "scifact_13923140:c0000-0003",
+              "scifact_11899391:c0000-0003"
+            ]
+          },
+          {
+            "claim_id": "1030",
+            "first_rank": 1,
+            "gold": [
+              "scifact_6441369_s2"
+            ],
+            "top": [
+              "scifact_6441369:c0000-0004",
+              "scifact_4462419:c0003-0005",
+              "scifact_23418635:c0000-0005"
+            ]
+          },
+          {
+            "claim_id": "1031",
+            "first_rank": 1,
+            "gold": [
+              "scifact_12486491_s2"
+            ],
+            "top": [
+              "scifact_12486491:c0000-0004",
+              "scifact_18987782:c0004-0006",
+              "scifact_18987782:c0000-0003"
+            ]
+          },
+          {
+            "claim_id": "1034",
+            "first_rank": 2,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:c0000-0003",
+              "scifact_4547102:c0000-0003",
+              "scifact_4547102:c0004-0006"
+            ]
+          },
+          {
+            "claim_id": "1035",
+            "first_rank": 2,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:c0000-0003",
+              "scifact_4547102:c0000-0003",
+              "scifact_15803282:c0004-0005"
+            ]
+          },
+          {
+            "claim_id": "1036",
+            "first_rank": 5,
+            "gold": [
+              "scifact_4547102_s3"
+            ],
+            "top": [
+              "scifact_15803282:c0000-0003",
+              "scifact_8150638:c0008-0008",
+              "scifact_12100854:c0000-0003"
+            ]
+          },
+          {
+            "claim_id": "104",
+            "first_rank": 1,
+            "gold": [
+              "scifact_40164383_s11",
+              "scifact_40164383_s15",
+              "scifact_40164383_s8",
+              "scifact_40164383_s9"
+            ],
+            "top": [
+              "scifact_40164383:c0008-0012",
+              "scifact_40164383:c0000-0003",
+              "scifact_40164383:c0013-0017"
+            ]
+          },
+          {
+            "claim_id": "1040",
+            "first_rank": 9,
+            "gold": [
+              "scifact_25254425_s3"
+            ],
+            "top": [
+              "scifact_24311787:c0000-0005",
+              "scifact_9451052:c0000-0004",
+              "scifact_9881829:c0000-0004"
+            ]
+          },
+          {
+            "claim_id": "1042",
+            "first_rank": 2,
+            "gold": [
+              "scifact_17421851_s6",
+              "scifact_17421851_s7"
+            ],
+            "top": [
+              "scifact_17421851:c0000-0005",
+              "scifact_17421851:c0006-0007",
+              "scifact_24384587:c0000-0005"
+            ]
+          },
+          {
+            "claim_id": "1043",
+            "first_rank": 1,
+            "gold": [
+              "scifact_17671145_s6",
+              "scifact_17671145_s7"
+            ],
+            "top": [
+              "scifact_17671145:c0006-0007",
+              "scifact_17671145:c0000-0005",
+              "scifact_14131683:c0000-0002"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
