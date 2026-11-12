@@ -248,6 +248,8 @@ config/                    治理门禁配置
 
 | 文档 | 用途 |
 |---|---|
+| [文档总索引](docs/README.md) | 全部分类与完整清单 |
+| [研发时间轴](docs/Changelog.md) | WorkBuddy 到 DSH 的重大决策 |
 | [架构与路由](docs/架构与路由全景图.md) | 路由、分层、数据流 |
 | [开发-模块手册](docs/开发-模块手册.md) | 模块职责与入口 |
 | [ARCHITECTURE.json](ARCHITECTURE.json) | 机器可读契约 |

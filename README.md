@@ -252,6 +252,8 @@ config/                    governance gates
 
 | Document | Purpose |
 |---|---|
+| [Documentation index](docs/README.md) | all docs, five categories, full listing |
+| [Changelog](docs/Changelog.md) | timeline from WorkBuddy to DSH |
 | [Architecture and Routes](docs/en/Architecture-and-Routes.md) | routes, layers, data flow |
 | [Module Manual](docs/en/Modules-and-Routes.md) | module responsibilities |
 | [Architecture JSON](ARCHITECTURE.json) | machine-readable contract |
