@@ -1,0 +1,17 @@
+{
+  "module_id": "code",
+  "version": "0.1.0",
+  "database": "scipal_code",
+  "schema": "code_rag",
+  "schema_version": 1,
+  "entrypoint": "code_rag.service",
+  "capabilities": [
+    "code_search",
+    "code_trace",
+    "code_status",
+    "bioviz_search"
+  ],
+  "status": "alpha",
+  "writes": false,
+  "notes": "P1 skeleton only; indexing and search are not implemented yet."
+}

@@ -49,5 +49,5 @@ CREATE TABLE IF NOT EXISTS code_rag.ingest_runs (
 
 CREATE INDEX IF NOT EXISTS recipes_trgm ON code_rag.recipes
   USING GIN (title gin_trgm_ops, intent gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS code_embeddings_hnsw ON code_rag.embeddings
+CREATE INDEX IF NOT EXISTS recipe_embeddings_hnsw ON code_rag.embeddings
   USING hnsw (embedding vector_cosine_ops) WITH (m=16, ef_construction=64);
