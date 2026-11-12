@@ -13,7 +13,6 @@ import importlib.util
 import os
 from urllib.parse import urlparse
 
-DEFAULT_BENCH_DATABASE_URL = "postgresql://scipal:scipal@127.0.0.1:5432/scipal_bench"
 ALLOW_SQLITE_ENV = "SCIPAL_BENCH_ALLOW_SQLITE"
 URL_ENV = "SCIPAL_BENCH_DATABASE_URL"
 LARGE_THRESHOLD = 100
@@ -24,7 +23,12 @@ class BenchmarkDBError(RuntimeError):
 
 
 def benchmark_database_url() -> str:
-    return os.environ.get(URL_ENV) or DEFAULT_BENCH_DATABASE_URL
+    url = os.environ.get(URL_ENV, "").strip()
+    if not url:
+        raise BenchmarkDBError(
+            f"{URL_ENV} is required; no default DSN or credentials are provided"
+        )
+    return url
 
 
 def _scheme(url: str) -> str:
