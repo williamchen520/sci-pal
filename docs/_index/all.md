@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 492 篇 · 2026-11-12
+> 共 493 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -237,6 +237,7 @@
 | 安全复盘 | 双库备份策略 | --- | [备份策略-双库.md](../备份策略-双库.md) |
 | 阶段计划 | 备选计划表 | --- | [备选计划表.md](../备选计划表.md) |
 | 架构规范 | 实验记录：BioViz Recipe RAG Phase 0/1 | --- | [实验-BioViz-Recipe-RAG.md](../实验-BioViz-Recipe-RAG.md) |
+| 架构规范 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |
 | 测试报告 | PaperQA2 适配烟测 | --- | [实验-PaperQA2-适配烟测.md](../实验-PaperQA2-适配烟测.md) |
 | 阶段计划 | Phase C 可复现 Manifest | --- | [实验-PhaseC-Manifest.md](../实验-PhaseC-Manifest.md) |
 | 阶段计划 | 实验 Phase C：SciFact F0 / B / C / S / C2 | --- | [实验-PhaseC-SciFact-300.md](../实验-PhaseC-SciFact-300.md) |
