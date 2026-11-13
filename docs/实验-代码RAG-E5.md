@@ -408,3 +408,37 @@ C1 pure 文件 29/30、符号 23/30
 C1 只用于文件定位
 符号定位交给 C3/read
 ```
+
+## 14. 决策：C1 只做文件级
+
+```text
+C1 = file retrieval
+C3 = symbol retrieval
+```
+
+数据：
+
+```text
+C1 file   29/30
+C1 symbol 23/30
+C3 file   30/30
+C3 symbol 30/30
+```
+
+尝试符号 boost 后：
+
+```text
+file 26/30
+symbol 22/30
+```
+
+所以回退，不保留。
+
+后续验收：
+
+```text
+文件定位：C1
+符号定位：C3
+```
+
+不再把 C1 的 29/30 写成“符号 29/30”。

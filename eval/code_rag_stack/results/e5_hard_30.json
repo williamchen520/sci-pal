@@ -695,5 +695,9 @@
     "C2": "code_search + code_trace",
     "C3": "code_search + trace + read/grep fallback"
   },
-  "reclassification": "Original C1 rows used grep fallback; relabeled C3. Pure C1 is in e5_pure_c1_retest.json."
+  "reclassification": "Original C1 rows used grep fallback; relabeled C3. Pure C1 is in e5_pure_c1_retest.json.",
+  "usage": {
+    "C1": "file-level retrieval only",
+    "C3": "symbol-level retrieval with read/grep"
+  }
 }
