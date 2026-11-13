@@ -188,6 +188,7 @@ def main() -> None:
 - [实验-RAG控制面-R18-公钥目录](实验-RAG控制面-R18-公钥目录.md)
 - [实验-Paper-to-Code-HCC-LAM案例](实验-Paper-to-Code-HCC-LAM案例.md)
 - [实验-Paper-to-Code-HCC-基因组案例](实验-Paper-to-Code-HCC-基因组案例.md)
+- [实验-HTML解析器](实验-HTML解析器.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)
 
