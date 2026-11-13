@@ -109,6 +109,11 @@ def _require_api_token():
             session["user_id"] = os.environ.get("SCIPAL_INTERNAL_USER_ID", "")
             session["workspace_id"] = os.environ.get("SCIPAL_INTERNAL_WORKSPACE_ID", "ws_default")
         return None
+    worker = request.headers.get("X-SCIPAL-RAG-Worker-Token", "")
+    expected_worker = os.environ.get("SCIPAL_RAG_WORKER_TOKEN", "").strip()
+    if expected_worker and worker == expected_worker:
+        g.owner = "rag-worker"
+        return None
     if _TOKENS:
         owner = _TOKENS.get(token)
         if owner:
