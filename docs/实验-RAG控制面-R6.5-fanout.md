@@ -101,3 +101,21 @@ tests.test_rag_gateway 5 passed
 去重 / 冲突展示
 证据合并的 presentation layer
 ```
+
+
+## 证据裁决原则
+
+```text
+每个 RAG 分组保留原始证据与分数
+不跨库归一化、不投票、不合成唯一结论
+机器只能给初步信号：supported / conflicting / insufficient
+冲突必须并排展示，不能折叠成一个分数
+最终裁决由人完成
+```
+
+这不是能力缺失，而是科研平台的责任边界：
+
+```text
+机器负责检索、分组、初步判断
+人负责证据取舍、冲突裁决、结论署名
+```
