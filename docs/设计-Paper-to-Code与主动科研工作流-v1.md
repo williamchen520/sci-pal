@@ -1389,7 +1389,208 @@ code RAG 不能只有一个 parser
 跨语言低置信
 ```
 
-## 27. 结论
+## 27. 网页/HTML 优先的文献获取
+
+### 27.1 获取优先级
+
+```text
+1. PMC JATS XML
+2. 出版社 OA HTML
+3. PDF
+4. 补充材料
+```
+
+不是因为 HTML 一定更准，而是因为 HTML 更适合：
+
+```text
+章节
+段落
+表格
+图注
+参考文献
+Code availability
+Data availability
+```
+
+PDF 仍然需要，用于：
+
+```text
+页面/bbox
+图表版式
+补充材料
+最终引用页
+HTML 不可用时的 fallback
+```
+
+### 27.2 HTML 的优势
+
+```text
+结构化章节
+链接可直接提取
+表格不丢列
+图注和正文在一起
+DOI/作者/日期在 meta 里
+```
+
+对代码获取尤其重要：
+
+```text
+Code availability 里的 GitHub/Zenodo 链接
+可以直接正则/HTML 选择器提取
+不需要从 PDF 断行里拼 URL
+```
+
+### 27.3 第二篇的验证
+
+论文：
+
+```text
+DOI 10.1038/s41467-026-73212-y
+Nature Communications OA
+```
+
+HTML：
+
+```text
+约 720 KB
+可解析 title / abstract / sections / code availability
+```
+
+代码：
+
+```text
+Zenodo DOI 10.5281/zenodo.17236540
+6 个 R 文件
+GPL-3.0-or-later
+```
+
+说明：
+
+```text
+HTML 直接拿到 code availability
+Zenodo API 直接拿到文件、license、checksum
+比 PDF 断行拼 URL 稳定
+```
+
+### 27.4 不能只存 HTML
+
+HTML 会变、会 302 到登录、会动态加载。
+
+必须存：
+
+```text
+source_url
+retrieved_at
+content_hash
+raw_html
+parser_version
+```
+
+并保留 PDF：
+
+```text
+pdf_url
+pdf_hash
+```
+
+同一 paper：
+
+```text
+HTML 段落为主
+PDF 页面/图表/补充材料为辅
+```
+
+### 27.5 数据模型补充
+
+```text
+paper_sources
+  source_id
+  paper_id
+  source_kind       jats / html / pdf
+  source_url
+  content_hash
+  retrieved_at
+  parser
+  parser_version
+  status
+```
+
+```text
+paper_assets
+  paper_id
+  source_id
+  kind              pdf / html / figure / supplementary
+  uri
+  sha256
+  license
+```
+
+### 27.6 代码链接与 Zenodo
+
+```text
+HTML Code availability
+  -> repo/zenodo URL
+  -> validate HTTP
+  -> Zenodo API metadata
+  -> license
+  -> files + checksum
+  -> per-paper code library
+```
+
+Zenodo 文件逐个下载，保留：
+
+```text
+record DOI
+file key
+checksum
+license
+```
+
+### 27.7 许可证
+
+第二篇代码：
+
+```text
+GPL-3.0-or-later
+```
+
+意味着：
+
+```text
+可阅读/学习方法
+默认不复制进我们的项目
+需要 clean-room 重写
+```
+
+HTML/PDF 的论文文本也受版权约束，只做本地研究/引用。
+
+### 27.8 反爬与边界
+
+```text
+不绕过付费墙
+不使用盗版 PDF
+不伪装登录
+不批量抓取出版社
+```
+
+只处理：
+
+```text
+OA HTML
+PMC JATS
+用户合法提供的 PDF
+用户合法提供的链接
+```
+
+### 27.9 结论
+
+```text
+HTML 优先用于文本/章节/代码链接
+PDF 用于页面/图表/补充材料
+两者都存，不要只存一种
+```
+
+## 28. 结论
 
 ```text
 文献监控 -> 入库      可行
