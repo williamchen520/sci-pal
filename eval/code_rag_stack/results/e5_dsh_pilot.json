@@ -1,0 +1,179 @@
+{
+  "scope": "6-question DSH pilot; not full 30",
+  "baseline": "B1 grep/read only; no code MCP",
+  "code_arm": "C1 code_search/trace/read",
+  "rows": [
+    {
+      "id": "s01",
+      "library_id": "lib_2c5709b07c77",
+      "query": "normalize total counts per cell",
+      "expected_path": "src/scanpy/preprocessing/_normalization.py",
+      "expected_symbol": "normalize_total",
+      "arm": "B1",
+      "path": "src/scanpy/preprocessing/_normalization.py",
+      "symbol": "normalize_total",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "s01",
+      "library_id": "lib_2c5709b07c77",
+      "query": "normalize total counts per cell",
+      "expected_path": "src/scanpy/preprocessing/_normalization.py",
+      "expected_symbol": "normalize_total",
+      "arm": "C1",
+      "path": "src/scanpy/preprocessing/_normalization.py",
+      "symbol": "normalize_total",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "s03",
+      "library_id": "lib_2c5709b07c77",
+      "query": "highly variable genes",
+      "expected_path": "src/scanpy/preprocessing/_highly_variable_genes.py",
+      "expected_symbol": "highly_variable_genes",
+      "arm": "B1",
+      "path": "src/scanpy/preprocessing/_highly_variable_genes.py",
+      "symbol": "highly_variable_genes",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "s03",
+      "library_id": "lib_2c5709b07c77",
+      "query": "highly variable genes",
+      "expected_path": "src/scanpy/preprocessing/_highly_variable_genes.py",
+      "expected_symbol": "highly_variable_genes",
+      "arm": "C1",
+      "path": "src/scanpy/preprocessing/_highly_variable_genes.py",
+      "symbol": "highly_variable_genes",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "s08",
+      "library_id": "lib_2c5709b07c77",
+      "query": "PCA principal component analysis",
+      "expected_path": "src/scanpy/preprocessing/_pca/__init__.py",
+      "expected_symbol": "pca",
+      "arm": "B1",
+      "path": "src/scanpy/preprocessing/_pca/__init__.py",
+      "symbol": "pca",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "s08",
+      "library_id": "lib_2c5709b07c77",
+      "query": "PCA principal component analysis",
+      "expected_path": "src/scanpy/preprocessing/_pca/__init__.py",
+      "expected_symbol": "pca",
+      "arm": "C1",
+      "path": "src/scanpy/preprocessing/_pca/__init__.py",
+      "symbol": "pca",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "n01",
+      "library_id": "lib_12473817b941",
+      "query": "FASTQC raw reads",
+      "expected_path": "modules/nf-core/fastqc/main.nf",
+      "expected_symbol": "FASTQC",
+      "arm": "B1",
+      "path": "modules/nf-core/fastqc/main.nf",
+      "symbol": "FASTQC",
+      "confidence": "medium",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "n01",
+      "library_id": "lib_12473817b941",
+      "query": "FASTQC raw reads",
+      "expected_path": "modules/nf-core/fastqc/main.nf",
+      "expected_symbol": "FASTQC",
+      "arm": "C1",
+      "path": "modules/nf-core/fastqc/main.nf",
+      "symbol": "FASTQC",
+      "confidence": "medium",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "n02",
+      "library_id": "lib_12473817b941",
+      "query": "STAR align reads",
+      "expected_path": "modules/nf-core/star/align/main.nf",
+      "expected_symbol": "STAR_ALIGN",
+      "arm": "B1",
+      "path": "modules/nf-core/star/align/main.nf",
+      "symbol": "STAR_ALIGN",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "n02",
+      "library_id": "lib_12473817b941",
+      "query": "STAR align reads",
+      "expected_path": "modules/nf-core/star/align/main.nf",
+      "expected_symbol": "STAR_ALIGN",
+      "arm": "C1",
+      "path": "modules/nf-core/star/align/main.nf",
+      "symbol": "STAR_ALIGN",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "n10",
+      "library_id": "lib_12473817b941",
+      "query": "deseq2 qc",
+      "expected_path": "modules/local/deseq2_qc/main.nf",
+      "expected_symbol": "DESEQ2_QC",
+      "arm": "B1",
+      "path": "modules/local/deseq2_qc/main.nf",
+      "symbol": "DESEQ2_QC",
+      "confidence": "medium",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "n10",
+      "library_id": "lib_12473817b941",
+      "query": "deseq2 qc",
+      "expected_path": "modules/local/deseq2_qc/main.nf",
+      "expected_symbol": "DESEQ2_QC",
+      "arm": "C1",
+      "path": "modules/local/deseq2_qc/main.nf",
+      "symbol": "DESEQ2_QC",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    }
+  ],
+  "summary": {
+    "B1": {
+      "cases": 6,
+      "file_correct": 6,
+      "symbol_correct": 6,
+      "file_accuracy": 1.0,
+      "symbol_accuracy": 1.0
+    },
+    "C1": {
+      "cases": 6,
+      "file_correct": 6,
+      "symbol_correct": 6,
+      "file_accuracy": 1.0,
+      "symbol_accuracy": 1.0
+    }
+  }
+}
