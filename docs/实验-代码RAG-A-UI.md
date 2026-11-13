@@ -163,3 +163,99 @@ app pg_service 查询 role_id
 登录表单        BLOCKED（schema）
 生产容器        FAIL（旧镜像 404）
 ```
+
+## 9. 真实登录验收（PASS）
+
+使用真实登录表单，而不是 internal-token 代理：
+
+```text
+POST /api/auth/login
+username: ui_admin
+password: UiAdmin-2026!
+-> 200
+-> redirect /
+```
+
+随后打开 `/libraries.html`：
+
+```text
+选择 scanpy
+units 1819
+搜索 normalize total counts
+8 条结果
+Top1 normalize_total
+```
+
+截图：
+
+![真实登录后的代码库搜索](assets/libraries-ui-real-login.png)
+
+## 10. 登录链路修复
+
+真实问题不是 role/role_id 代码，而是两套 schema：
+
+```text
+auth.memberships      role_id   <- app 实际使用
+public.memberships    role      <- 手工插入用错了
+```
+
+验证：
+
+```text
+create_admin.py 写入 auth schema -> 成功
+authenticate('ui_admin', ...) -> 返回 user + ws_default owner
+```
+
+测试管理员：
+
+```text
+username: ui_admin
+password: UiAdmin-2026!
+```
+
+这是本地验证账号；生产使用前应改密码或删除。
+
+## 11. 最终 A 结论
+
+```text
+静态页面          PASS
+真实登录          PASS
+认证态搜索        PASS
+生产容器          FAIL（旧镜像 404）
+```
+
+登录地址：
+
+```text
+http://127.0.0.1:5000/login.html   （生产，旧镜像）
+http://127.0.0.1:5001/login.html   （本地源码，已验证）
+```
+
+## 12. UX 修复
+
+修了两个问题：
+
+```text
+默认选中 units 最多的库（scanpy 1819）
+placeholder 改为通用 normalize_total
+代理在 units>0 时回写 libraries.status=ready
+```
+
+验证：
+
+```text
+打开 /libraries.html
+默认选中 scanpy
+units 1819
+```
+
+截图：
+
+![修复后的代码库默认选择](assets/libraries-ui-fixed.png)
+
+注意：
+
+```text
+status=ready 的回写需要重启 app 进程
+当前运行进程仍是旧路由
+```
