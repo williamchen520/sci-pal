@@ -85,6 +85,24 @@ def get_plan(plan_id: str) -> dict[str, Any] | None:
         pg.close()
 
 
+def list_plans(*, status: str = "", limit: int = 50) -> list[dict[str, Any]]:
+    pg = core_connection()
+    try:
+        if status:
+            rows = pg.execute(
+                "SELECT * FROM rag_plans WHERE status=%s ORDER BY created_at DESC LIMIT %s",
+                (status, max(1, min(int(limit), 100))),
+            ).fetchall()
+        else:
+            rows = pg.execute(
+                "SELECT * FROM rag_plans ORDER BY created_at DESC LIMIT %s",
+                (max(1, min(int(limit), 100)),),
+            ).fetchall()
+        return [_read_plan(pg, row["plan_id"]) for row in rows]
+    finally:
+        pg.close()
+
+
 def create_plan(*, intent: str, steps: list[dict[str, Any]], created_by: str) -> dict[str, Any]:
     intent = (intent or "").strip()
     if not intent:
@@ -177,6 +195,10 @@ def approve_plan(*, plan_id: str, approved_by: str, plan_hash: str) -> dict[str,
             "UPDATE rag_plans SET status='approved',approved_by=%s,approved_at=now(),"
             "expires_at=now()+interval '1 hour',updated_at=now() WHERE plan_id=%s",
             (approved_by, plan_id),
+        )
+        pg.execute(
+            "UPDATE rag_plan_steps SET status='approved' WHERE plan_id=%s AND status='proposed'",
+            (plan_id,),
         )
         pg.commit()
         return _read_plan(pg, plan_id)
