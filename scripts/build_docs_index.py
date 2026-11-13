@@ -162,6 +162,7 @@ def main() -> None:
 - [设计-SciPal-RAG控制面与科研追溯-v1](设计-SciPal-RAG控制面与科研追溯-v1.md)
 - [实验-RAG控制面-R0](实验-RAG控制面-R0.md)
 - [实验-RAG控制面-R1](实验-RAG控制面-R1.md)
+- [实验-RAG控制面-R2](实验-RAG控制面-R2.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv

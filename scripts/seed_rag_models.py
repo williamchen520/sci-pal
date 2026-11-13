@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""Seed RAG model registry."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from services.rag_control.models import seed
+
+
+def main() -> int:
+    print(f"RAG_MODELS_SEEDED count={seed()}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

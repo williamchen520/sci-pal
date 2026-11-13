@@ -19,6 +19,7 @@ from services.rag_control.plans import (
     heartbeat,
     lease_job,
 )
+from services.rag_control.models import ModelError, get_model, list_bindings, list_models, register_binding
 from services.rag_control.registry import check_health, get_provider, list_providers
 
 
@@ -167,5 +168,47 @@ def build_rag_control_blueprint() -> Blueprint:
         if not result:
             return jsonify({"error": "job not owned by worker"}), 409
         return jsonify(result)
+
+    @bp.get("/api/rag/models")
+    def models():
+        return jsonify({"models": list_models()})
+
+    @bp.get("/api/rag/models/<model_id>")
+    def model(model_id: str):
+        value = get_model(model_id)
+        if not value:
+            return jsonify({"error": "model not found"}), 404
+        return jsonify(value)
+
+    @bp.get("/api/rag/index-bindings")
+    def bindings():
+        return jsonify(
+            {
+                "bindings": list_bindings(
+                    rag_id=str(request.args.get("rag_id") or ""),
+                    library_id=str(request.args.get("library_id") or ""),
+                )
+            }
+        )
+
+    @bp.post("/api/rag/index-bindings")
+    def binding_register():
+        if not _worker_ok():
+            return jsonify({"error": "worker token required"}), 403
+        body = request.get_json(silent=True) or {}
+        try:
+            value = register_binding(
+                rag_id=str(body.get("rag_id") or ""),
+                library_id=str(body.get("library_id") or ""),
+                index_name=str(body.get("index_name") or ""),
+                embedding_model=str(body.get("embedding_model") or ""),
+                dimension=body.get("dimension"),
+                schema_version=int(body.get("schema_version") or 1),
+                snapshot=str(body.get("snapshot") or ""),
+                status=str(body.get("status") or "active"),
+            )
+        except ModelError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(value), 201
 
     return bp
