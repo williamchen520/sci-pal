@@ -21,6 +21,7 @@ from services.rag_control.plans import (
     lease_job,
 )
 from services.rag_control.adjudication import AdjudicationError, add_adjudication, add_conflict, get_multi, list_multi
+from services.rag_control.agreement import agreement
 from services.rag_control.audit import list_adjudications, list_conflicts, ro_crate
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
 from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
@@ -388,5 +389,12 @@ def build_rag_control_blueprint() -> Blueprint:
                 "Content-Disposition": f'attachment; filename="{multi_run_id}.ro-crate.zip"'
             },
         )
+
+    @bp.get("/api/rag/multi/<multi_run_id>/agreement")
+    def multi_agreement(multi_run_id: str):
+        value = agreement(multi_run_id)
+        if not value:
+            return jsonify({"error": "multi run not found"}), 404
+        return jsonify(value)
 
     return bp

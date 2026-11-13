@@ -2573,6 +2573,14 @@
         ],
         "endpoint": "rag_control.multi_ro_crate",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi/<multi_run_id>/agreement",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.multi_agreement",
+        "status": "implemented"
       }
     ]
   },
