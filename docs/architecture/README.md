@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 173 篇 · 分类索引，文件原路径不变
+> 共 174 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -60,6 +60,7 @@
 | 1. 结论 | 在建立向量索引前，原先没有段落级审查。 | [向量索引污染审查.md](../向量索引污染审查.md) |
 | 实验记录：BioViz Recipe RAG Phase 0/1 | --- | [实验-BioViz-Recipe-RAG.md](../实验-BioViz-Recipe-RAG.md) |
 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |
+| 案例：HCC 多组学分子分型论文（HTML + Zenodo） | --- | [实验-Paper-to-Code-HCC-基因组案例.md](../实验-Paper-to-Code-HCC-基因组案例.md) |
 | 实验记录：RAG 控制面 R0 Provider Registry | --- | [实验-RAG控制面-R0.md](../实验-RAG控制面-R0.md) |
 | 实验记录：RAG 控制面 R1 Plans / Jobs / Lease | --- | [实验-RAG控制面-R1.md](../实验-RAG控制面-R1.md) |
 | 实验记录：R10 Reviewer 权限 | --- | [实验-RAG控制面-R10-reviewer.md](../实验-RAG控制面-R10-reviewer.md) |
