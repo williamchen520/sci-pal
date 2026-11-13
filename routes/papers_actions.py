@@ -18,6 +18,7 @@ from flask import Blueprint, Response, jsonify, request, send_from_directory
 from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 from services.papers.pg_writes import enabled as paper_pg_enabled, update_workspace as pg_update_workspace
 from services.papers.paper_store import PaperStore
+from services.papers.reader import paper_first_paragraph, paper_outline, paper_paragraphs, paragraph_sentences
 
 from build_db.parse_service import (
     PARSE_MAX_CONCURRENT,
@@ -133,6 +134,39 @@ def build_papers_actions_blueprint(
     # V33.2: åœ¨çº¿æ–‡çŒ®ä¸‹è½½ APIï¼ˆå¼‚æ­¥ä¸‹è½½+å¢žé‡å¯¼å…¥+å¢žé‡å»ºç´¢å¼•ï¼‰
     # ============================================================
 
+
+    @bp.route("/api/papers/<paper_id>/outline", methods=["GET"])
+    def get_paper_outline(paper_id):
+        sections = paper_outline(paper_id)
+        if not sections:
+            return jsonify({"error": "Paper not found or empty"}), 404
+        return jsonify({"paper_id": paper_id, "sections": sections})
+
+    @bp.route("/api/papers/<paper_id>/paragraphs", methods=["GET"])
+    def get_paper_paragraphs(paper_id):
+        try:
+            offset = int(request.args.get("offset", 0))
+            limit = int(request.args.get("limit", 50))
+        except ValueError:
+            return jsonify({"error": "offset/limit must be integers"}), 400
+        section = request.args.get("section", "")
+        rows = paper_paragraphs(paper_id, section=section, offset=offset, limit=limit)
+        return jsonify({"paper_id": paper_id, "section": section, "paragraphs": rows})
+
+    @bp.route("/api/papers/<paper_id>/paragraphs/first", methods=["GET"])
+    def get_paper_first_paragraph(paper_id):
+        section = request.args.get("section", "")
+        row = paper_first_paragraph(paper_id, section=section)
+        if not row:
+            return jsonify({"error": "Paragraph not found", "section": section}), 404
+        return jsonify({"paper_id": paper_id, "section": section, "paragraph": row})
+
+    @bp.route("/api/papers/<paper_id>/paragraphs/<para_id>/sentences", methods=["GET"])
+    def get_paragraph_sentences(paper_id, para_id):
+        rows = paragraph_sentences(paper_id, para_id)
+        if not rows:
+            return jsonify({"error": "Sentence tree not found", "para_id": para_id}), 404
+        return jsonify({"paper_id": paper_id, "para_id": para_id, "sentences": rows})
 
     @bp.route("/api/papers/parse", methods=["POST"])
     def parse_local_paper():
