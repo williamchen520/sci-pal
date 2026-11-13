@@ -174,6 +174,7 @@ def main() -> None:
 - [实验-RAG控制面-R6.4-docs](实验-RAG控制面-R6.4-docs.md)
 - [实验-RAG控制面-R6.5-fanout](实验-RAG控制面-R6.5-fanout.md)
 - [实验-RAG控制面-R7-裁决](实验-RAG控制面-R7-裁决.md)
+- [实验-RAG控制面-R8-去重冲突导出](实验-RAG控制面-R8-去重冲突导出.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)
 

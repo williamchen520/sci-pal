@@ -65,6 +65,12 @@ function groupNode(group) {
     for (const item of existing) list.appendChild(el("li", "", `${item.decision} · ${item.decided_by} · ${item.note}`));
     decisions.appendChild(list);
   }
+  const conflicts = (group.conflicts || []);
+  if (conflicts.length) {
+    const list = el("ul", "");
+    for (const item of conflicts) list.appendChild(el("li", "", `冲突 · ${item.flagged_by} · ${item.note}`));
+    decisions.appendChild(list);
+  }
   card.appendChild(decisions);
 
   const form = el("div", "decision");
@@ -95,9 +101,26 @@ function groupNode(group) {
       submit.disabled = false;
     }
   });
+  const flag = el("button", "flag", "标记冲突");
+  flag.addEventListener("click", async () => {
+    const reason = window.prompt("冲突说明（会写入审计）");
+    if (!reason) return;
+    flag.disabled = true;
+    try {
+      await api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/conflicts`, {
+        method: "POST",
+        body: JSON.stringify({ rag_id: group.rag_id, note: reason }),
+      });
+      await load();
+    } catch (error) {
+      errorBox.textContent = error.message;
+      flag.disabled = false;
+    }
+  });
   form.appendChild(select);
   form.appendChild(note);
   form.appendChild(submit);
+  form.appendChild(flag);
   card.appendChild(form);
   return card;
 }
@@ -106,6 +129,7 @@ function attachAdjudications(run, group) {
   group.adjudications = (run.adjudications || []).filter(
     (item) => item.rag_id === group.rag_id || item.rag_id === "*"
   );
+  group.conflicts = (run.conflicts || []).filter((item) => item.rag_id === group.rag_id);
   return group;
 }
 
@@ -130,6 +154,9 @@ async function load() {
   const header = el("section", "group");
   header.appendChild(el("h2", "", run.query));
   header.appendChild(el("div", "meta", `${run.multi_run_id} · ${(run.rag_ids || []).join(", ")}`));
+  const exportLink = el("a", "source", "导出审计 JSON");
+  exportLink.href = `/api/rag/multi/${encodeURIComponent(multiRunId)}/export.json`;
+  header.appendChild(exportLink);
   content.appendChild(header);
   for (const raw of run.groups) content.appendChild(groupNode(attachAdjudications(run, raw)));
 }
