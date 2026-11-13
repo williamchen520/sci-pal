@@ -33,6 +33,20 @@ class RagGatewayTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_multi_route(self) -> None:
+        with mock.patch("routes.rag_control.multi_query", return_value={"groups": [], "partial": False}):
+            response = self.client.post(
+                "/api/rag/query",
+                json={"capability": "multi_search", "rag_ids": ["code", "docs"], "query": "x"},
+            )
+        self.assertEqual(response.status_code, 200)
+
+    def test_multi_rejects_unknown_rag(self) -> None:
+        from services.rag_control.gateway import multi_query
+
+        with self.assertRaises(GatewayError):
+            multi_query(rag_ids=["nope"], library_id="lib", query_text="x")
+
     def test_gateway_rejects_unknown_capability(self) -> None:
         with self.assertRaises(GatewayError):
             query(capability="paper_search", library_id="lib", query_text="x")

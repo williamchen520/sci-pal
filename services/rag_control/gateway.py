@@ -192,6 +192,52 @@ def _query_docs(*, query_text: str, top_k: int, timeout: int) -> dict[str, Any]:
     }
 
 
+_RAG_CAPABILITY = {
+    "code": "code_search",
+    "literature": "evidence_search",
+    "docs": "doc_search",
+}
+
+
+def multi_query(
+    *,
+    rag_ids: list[str] | str,
+    library_id: str,
+    query_text: str,
+    top_k: int = 10,
+    timeout: int = 30,
+) -> dict[str, Any]:
+    if isinstance(rag_ids, str):
+        rag_ids = [item.strip() for item in rag_ids.split(",") if item.strip()]
+    requested = []
+    for rag_id in rag_ids or []:
+        if rag_id not in _RAG_CAPABILITY:
+            raise GatewayError(f"unsupported rag_id: {rag_id}")
+        if rag_id not in requested:
+            requested.append(rag_id)
+    if not requested:
+        raise GatewayError("rag_ids is required")
+    groups = []
+    for rag_id in requested:
+        try:
+            result = query(
+                capability=_RAG_CAPABILITY[rag_id],
+                library_id=library_id if rag_id == "code" else "",
+                query_text=query_text,
+                top_k=top_k,
+                timeout=timeout,
+            )
+            groups.append({"rag_id": rag_id, "status": "ok", **result})
+        except GatewayError as exc:
+            groups.append({"rag_id": rag_id, "status": "error", "error": str(exc)})
+    return {
+        "query": query_text,
+        "rag_ids": requested,
+        "groups": groups,
+        "partial": any(group["status"] == "error" for group in groups),
+    }
+
+
 def query(*, capability: str, library_id: str, query_text: str, top_k: int = 10, timeout: int = 30) -> dict[str, Any]:
     capability = (capability or "").strip()
     if not (query_text or "").strip():

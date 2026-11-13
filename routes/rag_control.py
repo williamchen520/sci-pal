@@ -20,7 +20,7 @@ from services.rag_control.plans import (
     heartbeat,
     lease_job,
 )
-from services.rag_control.gateway import GatewayError, query as gateway_query
+from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
 from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
 from services.rag_control.models import ModelError, get_model, list_bindings, list_models, register_binding
 from services.rag_control.registry import check_health, get_provider, list_providers
@@ -246,14 +246,24 @@ def build_rag_control_blueprint() -> Blueprint:
     @bp.post("/api/rag/query")
     def rag_query():
         body = request.get_json(silent=True) or {}
+        capability = str(body.get("capability") or "")
         try:
-            result = gateway_query(
-                capability=str(body.get("capability") or ""),
-                library_id=str(body.get("library_id") or ""),
-                query_text=str(body.get("query") or ""),
-                top_k=int(body.get("top_k") or 10),
-                timeout=int(body.get("timeout") or 30),
-            )
+            if capability == "multi_search":
+                result = multi_query(
+                    rag_ids=body.get("rag_ids") or [],
+                    library_id=str(body.get("library_id") or ""),
+                    query_text=str(body.get("query") or ""),
+                    top_k=int(body.get("top_k") or 10),
+                    timeout=int(body.get("timeout") or 30),
+                )
+            else:
+                result = gateway_query(
+                    capability=capability,
+                    library_id=str(body.get("library_id") or ""),
+                    query_text=str(body.get("query") or ""),
+                    top_k=int(body.get("top_k") or 10),
+                    timeout=int(body.get("timeout") or 30),
+                )
         except GatewayError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(result)
