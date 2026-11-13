@@ -179,3 +179,61 @@ test_pass@1 仍为 null
 容器/conda 固定环境
 或明确不做 L4
 ```
+
+## 9. L4 容器结果（已跑）
+
+固定环境：
+
+```text
+image   scipal-base@sha256:889cb45e...
+python  3.12.16
+scanpy  1.12.5
+pandas  2.3.3
+pytest  9.2.0
+numpy   2.5.4
+anndata 0.13.4
+```
+
+5 个目标测试：
+
+```text
+test_normalize_total
+test_score_genes_sparse_vs_dense
+test_read_10x_h5
+test_runs
+test_pca_shapes
+```
+
+结果：
+
+```text
+5/5 target tests passed
+12 passed, 10 skipped
+```
+
+指标：
+
+```text
+target_test_pass@1 = 1.0
+```
+
+重要边界：
+
+```text
+这是“目标函数在 repo 测试中通过”
+不是“模型生成代码 Pass@1”
+不是“RAG 生成的补丁通过”
+```
+
+Gate：
+
+```text
+G5 target_test_pass  PASS（target-level）
+G5 generated-code Pass@1 NOT MEASURED
+```
+
+复现：
+
+```text
+eval/code_rag_stack/e4_container.sh
+```
