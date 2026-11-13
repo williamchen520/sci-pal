@@ -157,6 +157,9 @@ async function load() {
   const exportLink = el("a", "source", "导出审计 JSON");
   exportLink.href = `/api/rag/multi/${encodeURIComponent(multiRunId)}/export.json`;
   header.appendChild(exportLink);
+  const crateLink = el("a", "source", "导出 RO-Crate ZIP");
+  crateLink.href = `/api/rag/multi/${encodeURIComponent(multiRunId)}/export/ro-crate.zip`;
+  header.appendChild(crateLink);
   content.appendChild(header);
   for (const raw of run.groups) content.appendChild(groupNode(attachAdjudications(run, raw)));
 }

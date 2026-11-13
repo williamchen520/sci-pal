@@ -21,6 +21,7 @@ from services.rag_control.plans import (
     lease_job,
 )
 from services.rag_control.adjudication import AdjudicationError, add_adjudication, add_conflict, get_multi, list_multi
+from services.rag_control.audit import list_adjudications, list_conflicts, ro_crate
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
 from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
 from services.rag_control.models import ModelError, get_model, list_bindings, list_models, register_binding
@@ -337,5 +338,43 @@ def build_rag_control_blueprint() -> Blueprint:
             f'attachment; filename="{multi_run_id}.json"'
         )
         return response
+
+    @bp.get("/api/rag/audit/adjudications")
+    def audit_adjudications():
+        return jsonify(
+            {
+                "adjudications": list_adjudications(
+                    decision=str(request.args.get("decision") or ""),
+                    rag_id=str(request.args.get("rag_id") or ""),
+                    limit=int(request.args.get("limit") or 100),
+                )
+            }
+        )
+
+    @bp.get("/api/rag/audit/conflicts")
+    def audit_conflicts():
+        return jsonify(
+            {
+                "conflicts": list_conflicts(
+                    rag_id=str(request.args.get("rag_id") or ""),
+                    limit=int(request.args.get("limit") or 100),
+                )
+            }
+        )
+
+    @bp.get("/api/rag/multi/<multi_run_id>/export/ro-crate.zip")
+    def multi_ro_crate(multi_run_id: str):
+        blob = ro_crate(multi_run_id)
+        if blob is None:
+            return jsonify({"error": "multi run not found"}), 404
+        from flask import Response
+
+        return Response(
+            blob,
+            mimetype="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="{multi_run_id}.ro-crate.zip"'
+            },
+        )
 
     return bp

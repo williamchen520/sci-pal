@@ -2549,6 +2549,30 @@
         ],
         "endpoint": "rag_control.multi_export",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/audit/adjudications",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.audit_adjudications",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/audit/conflicts",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.audit_conflicts",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi/<multi_run_id>/export/ro-crate.zip",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.multi_ro_crate",
+        "status": "implemented"
       }
     ]
   },
