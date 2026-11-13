@@ -1123,7 +1123,273 @@ embargo
 
 如果每次加功能都要补权限 if，说明架构开始失控。
 
-## 26. 结论
+## 26. 多语言代码与 R/Python 混合
+
+### 26.1 现状
+
+已有：
+
+```text
+Python   tree-sitter
+Nextflow 保守 block scanner
+```
+
+没有：
+
+```text
+R
+Rmd / Quarto
+Snakemake
+Bash / Shell
+混合仓库自动识别
+```
+
+所以当前不能声称“生信代码都能入库”。
+
+### 26.2 不能用一个 language 参数
+
+现有 ingest 是：
+
+```text
+--language python|nextflow
+```
+
+这对混合仓库不够。
+
+需要：
+
+```text
+--language auto
+```
+
+按文件识别：
+
+```text
+.py       python
+.R/.r     r
+.Rmd/.qmd rmarkdown/quarto
+.nf       nextflow
+.sh/.bash bash
+```
+
+每个文件独立 parser，同一个 snapshot 可含多语言。
+
+### 26.3 Language Provider
+
+```text
+language_id
+extensions
+detector
+parser
+edge_resolver
+test_fixtures
+```
+
+接口：
+
+```text
+detect(path, content) -> language_id
+parse(path, content) -> units, edges
+resolve(units, imports) -> edges
+```
+
+新增语言只加 provider，不改 ingest 主流程。
+
+### 26.4 R 解析
+
+R 不能只按函数切。
+
+需要覆盖：
+
+```text
+function
+S4 setClass / setGeneric / setMethod
+R6Class
+top-level assignment/script
+Rmd/Quarto code chunk
+package R/*.R
+tests/testthat
+```
+
+解析器候选：
+
+```text
+tree-sitter-r
+R parse() + srcref
+```
+
+推荐：
+
+```text
+tree-sitter-r 主解析
+Rscript parse 作 fallback/校验
+```
+
+### 26.5 R 的依赖与调用
+
+需要识别：
+
+```text
+library(pkg)
+require(pkg)
+pkg::fun
+source("file.R")
+reticulate::source_python()
+reticulate::import()
+system("python ...")
+```
+
+静态能解析的：
+
+```text
+同文件函数调用
+source()
+pkg::fun
+```
+
+不可靠的：
+
+```text
+reticulate 动态调用
+system 字符串
+```
+
+必须标：
+
+```text
+unresolved:
+cross_language:
+confidence=low
+```
+
+不能假装解析成功。
+
+### 26.6 Rmd / Quarto
+
+按 chunk 切：
+
+```text
+code chunk -> unit
+chunk label -> symbol
+setup chunk -> context
+```
+
+一个 Rmd 可以产生：
+
+```text
+chunk units
+function units
+edge: chunk -> function
+```
+
+### 26.7 混合仓库
+
+示例：
+
+```text
+repo/
+  R/
+  python/
+  workflow.nf
+  scripts/run.sh
+```
+
+规则：
+
+```text
+同一 library_id
+同一 snapshot_id
+不同 language
+unit_id 仍按 library/snapshot 作用域
+```
+
+跨语言边：
+
+```text
+reticulate / system / Nextflow script
+```
+
+只能标低置信，不要生成确定调用图。
+
+### 26.8 检索
+
+查询必须能按语言过滤：
+
+```text
+language=python
+language=r
+language=any
+```
+
+不要把 R 函数和 Python 函数混排后只给一个分数。
+
+证据必须带：
+
+```text
+language
+parser
+parser_version
+```
+
+### 26.9 Schema 补充
+
+```text
+code_files.language
+code_units.language
+code_units.parser
+code_units.parser_version
+code_edges.edge_kind
+code_edges.confidence
+```
+
+`unresolved:` / `cross_language:` 前缀保留。
+
+### 26.10 评估
+
+L0 必须按语言分开：
+
+```text
+Python parse_ok
+R parse_ok
+Rmd chunk_ok
+Nextflow parse_ok
+Mixed repo parse_ok
+```
+
+不能把 R 失败平均进 Python 成功率。
+
+### 26.11 分阶段
+
+| 阶段 | 工作 | 人日 |
+|---|---|---:|
+| L0 | language registry + auto detect | 2 |
+| L1 | R tree-sitter parser + fixtures | 4 |
+| L2 | Rmd/Quarto chunk parser | 2 |
+| L3 | R 依赖/调用解析 | 2 |
+| L4 | mixed repo + cross-language low-confidence | 2 |
+| L5 | 按语言评估 | 1 |
+| 合计 |  | **13 人日** |
+
+先做 L0/L1，不先做整库重索引。
+
+### 26.12 结论
+
+```text
+生信代码不是一种语言
+code RAG 不能只有一个 parser
+```
+
+正确结构：
+
+```text
+一个 ingest 主流程
+多个 Language Provider
+按文件解析
+按语言评估
+跨语言低置信
+```
+
+## 27. 结论
 
 ```text
 文献监控 -> 入库      可行
