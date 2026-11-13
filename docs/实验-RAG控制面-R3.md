@@ -1,8 +1,8 @@
-# 实验记录：RAG 控制面 R3 Local Worker
+# 实验记录：RAG 控制面 R3 Local Worker + E2E
 
 > 日期：2026-11-13  
-> 状态：**worker 代码/单元测试完成；未做 app 端到端执行**  
-> 代码：`scripts/rag_worker.py`
+> 状态：**E2E 通过；临时数据已清理**  
+> 代码：`scripts/rag_worker.py`、`code_rag/ingest.py`
 
 ---
 
@@ -37,39 +37,110 @@ POST /api/rag/jobs/lease
   -> POST /api/rag/jobs/<id>/complete
 ```
 
-失败：
+## 3. E2E 结果
+
+临时 repo：
 
 ```text
-POST /api/rag/jobs/<id>/fail
+G:/repos/rag-e2e-demo
+f8bd141
+demo.py
 ```
 
-## 3. 安全
+临时 library：
 
 ```text
-repo path 必须在 allowlist
-不支持任意 shell
-不支持任意 URL
-token 只走 header
+lib_38261ec44aee
 ```
 
-## 4. 验证
+Plan：
 
 ```text
-tests.test_rag_worker 2 passed
+plan_1bdb58aaf073
 ```
 
-## 5. 未完成
+状态：
 
 ```text
-没有启动 app 做真实 lease->ingest->complete
-没有 evidence/artifact
+plan      succeeded
+job       succeeded
+run       1, exit_code 0
+binding   BAAI/bge-small-zh-v1.5 / 512
+          snapshot snap_fbfcd666c9c5744b
+units     3
+```
+
+## 4. 发现并修复的问题
+
+### 4.1 worker 丢失 library_id
+
+`library_id` 在 job 顶层，worker 只从 step params 取，导致 binding 400。
+
+修复：
+
+```text
+params.setdefault("library_id", job["library_id"])
+```
+
+### 4.2 跨库 unit_id 碰撞
+
+`code_units.unit_id` 只按文件/符号生成，不带 library/snapshot。
+
+结果：
+
+```text
+第一个库（空 library_id）写入 3 units
+第二个库同路径 -> 主键冲突 -> DO NOTHING
+-> 第二个库 0 units，但 ingest 仍 exit 0
+```
+
+修复：
+
+```text
+unit_id = stable("unit", library_id, snapshot_id, parsed_unit_id)
+parent / edges 同步映射
+```
+
+回归：
+
+```text
+tests.test_code_rag_unit_scope 3 passed
+```
+
+## 5. 验证
+
+```text
+tests.test_code_rag_unit_scope 3
+tests.test_code_rag_parsers
+tests.test_rag_worker 2
+tests.test_rag_plans 5
+tests.test_rag_models 4
+tests.test_rag_control 5
+合计 20 passed
+```
+
+## 6. 清理
+
+```text
+临时 plan/job/run 已删除
+临时 library 已删除
+临时 index binding 已删除
+临时 code units 已删除
+临时 repo 已删除
+```
+
+## 7. 边界
+
+```text
+只验证 code_ingest
 没有 rag_query worker
-没有 remote/HPC
+没有 evidence/artifact
 ```
 
-## 6. 下一步
+## 8. 下一步 R4
 
 ```text
-R4 evidence + artifact ledger
-或先做 worker 端到端 app 联调
+evidence ledger
+artifact ledger
+run manifest
 ```
