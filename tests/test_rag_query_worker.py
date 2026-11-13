@@ -40,5 +40,33 @@ class QueryWorkerTests(unittest.TestCase):
         self.assertEqual(body["evidence"][0]["metadata"]["symbol_name"], "normalize_total")
 
 
+    def test_literature_worker_sends_evidence(self) -> None:
+        job = {
+            "job_id": "job_lit",
+            "rag_id": "literature",
+            "library_id": "",
+            "job_type": "rag_query",
+            "payload": {"query": "normalization", "params": {"top_k": 1}},
+        }
+        response = mock.Mock()
+        response.json.return_value = {
+            "evidence": [
+                {
+                    "paper_id": "paper_1",
+                    "para_id": "para_1",
+                    "matched_sentences": [{"sentence_id": "s1", "text": "normalized"}],
+                    "highlight": [{"score": 0.8}],
+                }
+            ]
+        }
+        response.raise_for_status.return_value = None
+        with mock.patch("scripts.rag_worker.requests.post", return_value=response), \
+             mock.patch("scripts.rag_worker._post") as post:
+            worker._execute_literature_query(job, "w")
+        body = post.call_args_list[-1].args[1]
+        self.assertEqual(body["evidence"][0]["rag_id"], "literature")
+        self.assertEqual(body["evidence"][0]["metadata"]["paper_id"], "paper_1")
+
+
 if __name__ == "__main__":
     unittest.main()
