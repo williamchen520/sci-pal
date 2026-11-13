@@ -21,6 +21,7 @@ def _multi(row) -> dict[str, Any]:
         "query": row["query"],
         "rag_ids": row["rag_ids"] or [],
         "library_id": row["library_id"],
+        "workspace_id": row["workspace_id"],
         "created_by": row["created_by"],
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
     }

@@ -26,6 +26,7 @@ from services.rag_control.gateway import GatewayError, multi_query, query as gat
 from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
 from services.rag_control.models import ModelError, get_model, list_bindings, list_models, register_binding
 from services.rag_control.registry import check_health, get_provider, list_providers
+from services.tenancy.service import authorize
 
 
 def build_rag_control_blueprint() -> Blueprint:
@@ -258,6 +259,7 @@ def build_rag_control_blueprint() -> Blueprint:
                     top_k=int(body.get("top_k") or 10),
                     timeout=int(body.get("timeout") or 30),
                     created_by=session.get("user_id") or "internal",
+                    workspace_id=session.get("workspace_id") or "ws_default",
                 )
             else:
                 result = gateway_query(
@@ -298,6 +300,11 @@ def build_rag_control_blueprint() -> Blueprint:
         user_id = _human()
         if not user_id:
             return jsonify({"error": "human adjudication required"}), 403
+        multi = get_multi(multi_run_id)
+        if not multi:
+            return jsonify({"error": "multi run not found"}), 404
+        if not authorize(user_id, multi["workspace_id"], "review_evidence"):
+            return jsonify({"error": "reviewer permission required"}), 403
         body = request.get_json(silent=True) or {}
         try:
             value = add_adjudication(
@@ -316,6 +323,11 @@ def build_rag_control_blueprint() -> Blueprint:
         user_id = _human()
         if not user_id:
             return jsonify({"error": "human conflict flag required"}), 403
+        multi = get_multi(multi_run_id)
+        if not multi:
+            return jsonify({"error": "multi run not found"}), 404
+        if not authorize(user_id, multi["workspace_id"], "review_evidence"):
+            return jsonify({"error": "reviewer permission required"}), 403
         body = request.get_json(silent=True) or {}
         try:
             value = add_conflict(

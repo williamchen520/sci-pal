@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 import threading
 
-ROLES = ("owner", "pi", "member", "viewer")
+ROLES = ("owner", "pi", "member", "reviewer", "viewer")
 
 SCHEMA = (
     """

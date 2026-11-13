@@ -44,6 +44,29 @@ class AdjudicationRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("attachment", response.headers.get("Content-Disposition", ""))
 
+    def test_reviewer_permission_required(self) -> None:
+        with self.client.session_transaction() as session:
+            session["user_id"] = "u"
+        with mock.patch("routes.rag_control.get_multi", return_value={"workspace_id": "ws"}), \
+             mock.patch("routes.rag_control.authorize", return_value=False):
+            response = self.client.post(
+                "/api/rag/multi/m/adjudications",
+                json={"rag_id": "code", "decision": "accept"},
+            )
+        self.assertEqual(response.status_code, 403)
+
+    def test_reviewer_can_adjudicate(self) -> None:
+        with self.client.session_transaction() as session:
+            session["user_id"] = "u"
+        with mock.patch("routes.rag_control.get_multi", return_value={"workspace_id": "ws"}), \
+             mock.patch("routes.rag_control.authorize", return_value=True), \
+             mock.patch("routes.rag_control.add_adjudication", return_value={"adjudication_id": "a"}):
+            response = self.client.post(
+                "/api/rag/multi/m/adjudications",
+                json={"rag_id": "code", "decision": "accept"},
+            )
+        self.assertEqual(response.status_code, 201)
+
     def test_adjudication_requires_human(self) -> None:
         response = self.client.post(
             "/api/rag/multi/m/adjudications",
