@@ -1,7 +1,7 @@
 # 实验记录：代码库 UI 验收（A）
 
 > 日期：2026-11-13  
-> 状态：**本地源码可渲染；API 可通；浏览器未登录；生产容器旧镜像**  
+> 状态：**本地源码可渲染；internal-token 会话下搜索通过；登录表单受 schema 不一致阻塞；生产容器旧镜像**  
 > 页面：`http://127.0.0.1:5001/libraries.html`
 
 ---
@@ -113,4 +113,53 @@ C. 版本/API 迁移题
 
 ```text
 补登录会话后再做浏览器完整验收
+```
+
+## 6. 登录态浏览器验收（internal token）
+
+本地 app 用临时同源代理注入 `X-SCIPAL-Internal-Token`，不绕过权限模型，只替代登录会话。
+
+结果：
+
+```text
+选择 scanpy
+status: schema v1 / snapshots 1 / units 1819 / healthy
+搜索: normalize total counts
+结果: 8 条
+Top1: normalize_total
+       src/scanpy/preprocessing/_normalization.py:136-315
+```
+
+截图：
+
+![登录态代码库搜索](assets/libraries-ui-auth.png)
+
+## 7. 登录表单仍阻塞
+
+`POST /api/auth/login` 返回 401。
+
+现场：
+
+```text
+users/memberships 表有 role
+app pg_service 查询 role_id
+```
+
+这是 schema 不一致，不是密码错误。
+
+未修：
+
+```text
+不在这轮擅自改 auth schema
+```
+
+测试用户已删除。
+
+## 8. A 验收结论
+
+```text
+静态页面        PASS
+认证后搜索      PASS（internal token）
+登录表单        BLOCKED（schema）
+生产容器        FAIL（旧镜像 404）
 ```
