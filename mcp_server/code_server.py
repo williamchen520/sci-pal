@@ -224,17 +224,24 @@ def rag_job_status(job_id: str) -> str:
 
 @mcp.tool(
     description=(
-        "通过 RAG Gateway 做只读查询；支持 code_search / evidence_search / doc_search。"
-        "code_search 需要 library_id；evidence_search 不需要。返回 run_id 和带 evidence_id 的结果。"
+        "通过 RAG Gateway 做只读查询；支持 code_search / evidence_search / doc_search / multi_search。"
+        "multi_search 用 rag_ids 逗号分隔（code,literature,docs），分组返回，不跨库合并分数。"
+        "code_search 需要 library_id；其他不需要。返回 run_id 和带 evidence_id 的结果。"
     )
 )
-def rag_query(capability: str, query: str, library_id: str = "", top_k: int = 10) -> str:
+def rag_query(capability: str, query: str, library_id: str = "", top_k: int = 10, rag_ids: str = "") -> str:
     try:
         return json.dumps(
             _api(
                 "/api/rag/query",
                 "POST",
-                {"capability": capability, "library_id": library_id, "query": query, "top_k": top_k},
+                {
+                    "capability": capability,
+                    "library_id": library_id,
+                    "query": query,
+                    "top_k": top_k,
+                    "rag_ids": [item.strip() for item in rag_ids.split(",") if item.strip()],
+                },
             ),
             ensure_ascii=False,
         )
