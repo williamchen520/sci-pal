@@ -90,10 +90,16 @@ def ro_crate(multi_run_id: str) -> bytes | None:
             f"multi_run_id: {multi_run_id}\n\n"
             f"query: {run['query']}\n\n"
             "Human adjudications and conflicts are included; machine signals are retrieval signals only.\n"
+            + (
+                "This package contains a signed finalization; verify with verify-seal.\n"
+                if run.get("finalization")
+                else "This package is not finalized.\n"
+            )
         ),
         "data/evidence.json": json.dumps(evidence, ensure_ascii=False, indent=2),
         "data/adjudications.json": json.dumps(run["adjudications"], ensure_ascii=False, indent=2),
         "data/conflicts.json": json.dumps(run["conflicts"], ensure_ascii=False, indent=2),
+        "data/finalization.json": json.dumps(run.get("finalization"), ensure_ascii=False, indent=2),
         "data/duplicates.json": json.dumps(
             {
                 "duplicate_count": run.get("duplicate_count", 0),
