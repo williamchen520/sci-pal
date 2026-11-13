@@ -442,3 +442,30 @@ symbol 22/30
 ```
 
 不再把 C1 的 29/30 写成“符号 29/30”。
+
+## 15. C3 证据包工具
+
+新增：
+
+```text
+mcp__scipal-code__code_context
+```
+
+返回：
+
+```text
+目标 unit
++ 目标文件 import
++ 直接邻居
++ edges
+```
+
+用途：
+
+```text
+C3 = search + context + read
+```
+
+不改变 C1/C3 指标。
+
+DSH 需重启后才会出现第 4 个 code 工具（总数 39）。

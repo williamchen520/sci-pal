@@ -8,6 +8,7 @@
   "capabilities": [
     "code_search",
     "code_trace",
+    "code_context",
     "code_status",
     "bioviz_search"
   ],
