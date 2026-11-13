@@ -46,6 +46,7 @@ def _step(row) -> dict[str, Any]:
         "status": row["status"],
         "risk_level": row["risk_level"],
         "timeout_seconds": row["timeout_seconds"],
+        "params": row["params"] or {},
     }
 
 
@@ -116,6 +117,7 @@ def create_plan(*, intent: str, steps: list[dict[str, Any]], created_by: str) ->
                 "depends_on": list(step.get("depends_on") or []),
                 "risk_level": step_risk,
                 "timeout_seconds": max(1, min(int(step.get("timeout_seconds") or 300), 86400)),
+                "params": dict(step.get("params") or {}),
             }
         )
     plan_id = "plan_" + uuid.uuid4().hex[:12]
@@ -134,8 +136,8 @@ def create_plan(*, intent: str, steps: list[dict[str, Any]], created_by: str) ->
                 """
                 INSERT INTO rag_plan_steps
                   (step_id,plan_id,step_order,action,rag_id,library_id,query,snapshot,
-                   depends_on,status,risk_level,timeout_seconds)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,'proposed',%s,%s)
+                   depends_on,status,risk_level,timeout_seconds,params)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,'proposed',%s,%s,%s::jsonb)
                 """,
                 (
                     "step_" + uuid.uuid4().hex[:12],
@@ -149,6 +151,7 @@ def create_plan(*, intent: str, steps: list[dict[str, Any]], created_by: str) ->
                     json.dumps(step["depends_on"]),
                     step["risk_level"],
                     step["timeout_seconds"],
+                    json.dumps(step["params"], ensure_ascii=False),
                 ),
             )
         pg.commit()
@@ -216,6 +219,7 @@ def dispatch_plan(*, plan_id: str) -> dict[str, Any] | None:
                             "query": step["query"],
                             "snapshot": step["snapshot"],
                             "timeout_seconds": step["timeout_seconds"],
+                            "params": step["params"] or {},
                         },
                         ensure_ascii=False,
                     ),

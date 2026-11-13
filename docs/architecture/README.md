@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 149 篇 · 分类索引，文件原路径不变
+> 共 150 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -62,6 +62,7 @@
 | 实验记录：RAG 控制面 R0 Provider Registry | --- | [实验-RAG控制面-R0.md](../实验-RAG控制面-R0.md) |
 | 实验记录：RAG 控制面 R1 Plans / Jobs / Lease | --- | [实验-RAG控制面-R1.md](../实验-RAG控制面-R1.md) |
 | 实验记录：RAG 控制面 R2 模型与索引绑定 | --- | [实验-RAG控制面-R2.md](../实验-RAG控制面-R2.md) |
+| 实验记录：RAG 控制面 R3 Local Worker | --- | [实验-RAG控制面-R3.md](../实验-RAG控制面-R3.md) |
 | 实验记录：代码库 UI 验收（A） | --- | [实验-代码RAG-A-UI.md](../实验-代码RAG-A-UI.md) |
 | 实验记录：code-rag E0 评测脚手架与 L0 审计 | --- | [实验-代码RAG-E0.md](../实验-代码RAG-E0.md) |
 | 实验记录：code-rag E2 DSH-like 对照 | --- | [实验-代码RAG-E2.md](../实验-代码RAG-E2.md) |
