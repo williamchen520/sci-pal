@@ -1,5 +1,5 @@
 {
-  "scope": "6-question hard DSH pilot; not full 30",
+  "scope": "12-question hard DSH pilot; not full 30",
   "baseline": "B1 grep/read only; no code MCP",
   "code_arm": "C1 code_search/trace/read",
   "rows": [
@@ -146,20 +146,164 @@
       "confidence": "high",
       "file_correct": true,
       "symbol_correct": true
+    },
+    {
+      "id": "h07",
+      "query": "which function computes QC metrics for cells and genes",
+      "expected_path": "src/scanpy/preprocessing/_qc.py",
+      "expected_symbol": "calculate_qc_metrics",
+      "arm": "B1",
+      "path": "src/scanpy/preprocessing/_qc.py",
+      "symbol": "calculate_qc_metrics",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h07",
+      "query": "which function computes QC metrics for cells and genes",
+      "expected_path": "src/scanpy/preprocessing/_qc.py",
+      "expected_symbol": "calculate_qc_metrics",
+      "arm": "C1",
+      "path": "src/scanpy/preprocessing/_qc.py",
+      "symbol": "calculate_qc_metrics",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h08",
+      "query": "which function filters cells by minimum gene count",
+      "expected_path": "src/scanpy/preprocessing/_simple.py",
+      "expected_symbol": "filter_cells",
+      "arm": "B1",
+      "path": "src/scanpy/preprocessing/_simple.py",
+      "symbol": "filter_cells",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h08",
+      "query": "which function filters cells by minimum gene count",
+      "expected_path": "src/scanpy/preprocessing/_simple.py",
+      "expected_symbol": "filter_cells",
+      "arm": "C1",
+      "path": "src/scanpy/preprocessing/_simple.py",
+      "symbol": "filter_cells",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h09",
+      "query": "where is the sparse PCA fallback for older scikit-learn versions",
+      "expected_path": "src/scanpy/preprocessing/_pca/_compat.py",
+      "expected_symbol": "_pca_compat_sparse",
+      "arm": "B1",
+      "path": "src/scanpy/preprocessing/_pca/_compat.py",
+      "symbol": "_pca_compat_sparse",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h09",
+      "query": "where is the sparse PCA fallback for older scikit-learn versions",
+      "expected_path": "src/scanpy/preprocessing/_pca/_compat.py",
+      "expected_symbol": "_pca_compat_sparse",
+      "arm": "C1",
+      "path": "src/scanpy/preprocessing/_pca/_compat.py",
+      "symbol": "_pca_compat_sparse",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h10",
+      "query": "which config file overrides fastp trimming arguments",
+      "expected_path": "conf/modules/fastp.config",
+      "expected_symbol": "conf/modules/fastp.config",
+      "arm": "B1",
+      "path": "conf/modules/fastp.config",
+      "symbol": "conf/modules/fastp.config",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h10",
+      "query": "which config file overrides fastp trimming arguments",
+      "expected_path": "conf/modules/fastp.config",
+      "expected_symbol": "conf/modules/fastp.config",
+      "arm": "C1",
+      "path": "conf/modules/fastp.config",
+      "symbol": "conf/modules/fastp.config",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h11",
+      "query": "which config file sets MultiQC report options",
+      "expected_path": "assets/multiqc_config.yml",
+      "expected_symbol": "assets/multiqc_config.yml",
+      "arm": "B1",
+      "path": "assets/multiqc_config.yml",
+      "symbol": "assets/multiqc_config.yml",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h11",
+      "query": "which config file sets MultiQC report options",
+      "expected_path": "assets/multiqc_config.yml",
+      "expected_symbol": "assets/multiqc_config.yml",
+      "arm": "C1",
+      "path": "assets/multiqc_config.yml",
+      "symbol": "assets/multiqc_config.yml",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h12",
+      "query": "which subworkflow prepares genome references and indexes",
+      "expected_path": "subworkflows/local/prepare_genome_references/main.nf",
+      "expected_symbol": "PREPARE_GENOME_REFERENCES",
+      "arm": "B1",
+      "path": "subworkflows/local/prepare_genome_references/main.nf",
+      "symbol": "PREPARE_GENOME_REFERENCES",
+      "confidence": "medium",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h12",
+      "query": "which subworkflow prepares genome references and indexes",
+      "expected_path": "subworkflows/local/prepare_genome_references/main.nf",
+      "expected_symbol": "PREPARE_GENOME_REFERENCES",
+      "arm": "C1",
+      "path": "subworkflows/local/prepare_genome_references/main.nf",
+      "symbol": "PREPARE_GENOME_REFERENCES",
+      "confidence": "medium",
+      "file_correct": true,
+      "symbol_correct": true
     }
   ],
   "summary": {
     "B1": {
-      "cases": 6,
-      "file_correct": 5,
-      "symbol_correct": 5,
-      "file_accuracy": 0.8333333333333334,
-      "symbol_accuracy": 0.8333333333333334
+      "cases": 12,
+      "file_correct": 11,
+      "symbol_correct": 11,
+      "file_accuracy": 0.9166666666666666,
+      "symbol_accuracy": 0.9166666666666666
     },
     "C1": {
-      "cases": 6,
-      "file_correct": 6,
-      "symbol_correct": 6,
+      "cases": 12,
+      "file_correct": 12,
+      "symbol_correct": 12,
       "file_accuracy": 1.0,
       "symbol_accuracy": 1.0
     }

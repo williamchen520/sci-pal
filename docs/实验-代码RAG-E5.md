@@ -173,3 +173,49 @@ C1 找到 normalize_total 的直接 helper
 ```
 
 仍需 30 题完整对照。
+
+## 8. 硬题扩到 12（仍不是 30）
+
+新增 6 题：
+
+```text
+calculate_qc_metrics
+filter_cells
+_pca_compat_sparse
+fastp config
+MultiQC config
+PREPARE_GENOME_REFERENCES
+```
+
+结果：
+
+| 臂 | File 正确 | Symbol 正确 |
+|---|---:|---:|
+| B1 | 11/12 | 11/12 |
+| C1 | 12/12 | 12/12 |
+
+新增 6 题两边全对。
+
+唯一分差仍是：
+
+```text
+h01 numeric helper
+  B1: axis_mul_or_truediv
+  C1: _normalize_total_helper
+```
+
+修正 gold：
+
+```text
+h11 改为 assets/multiqc_config.yml
+因为两边都正确指向报告配置文件
+```
+
+结论：
+
+```text
+12 题不能证明 code RAG 更好
+只能说明 h01 这类“直接 caller vs 底层 callee”题有区分潜力
+```
+
+还剩 18 题才到 30。
