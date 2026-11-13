@@ -154,6 +154,7 @@ def main() -> None:
 - [实验-代码RAG-E2](实验-代码RAG-E2.md)
 - [实验-代码RAG-E3](实验-代码RAG-E3.md)
 - [实验-代码RAG-E4](实验-代码RAG-E4.md)
+- [实验-代码RAG-E5](实验-代码RAG-E5.md)
 - [计划-代码增强RAG-平台模块-v1](计划-代码增强RAG-平台模块-v1.md)
 - [计划-代码RAG评测栈-v1](计划-代码RAG评测栈-v1.md)
 - [Changelog](Changelog.md)
