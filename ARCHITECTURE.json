@@ -2653,6 +2653,38 @@
         ],
         "endpoint": "rag_control.seal_keys",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/outline",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_outline",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/paragraphs",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_paragraphs",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/paragraphs/first",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_first_paragraph",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/paragraphs/<para_id>/sentences",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paragraph_sentences",
+        "status": "implemented"
       }
     ]
   },
