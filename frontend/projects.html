@@ -141,7 +141,7 @@ function renderProject() {
     ${p.owner_user_id === state.user ? `
       <form id="member-form" class="row" style="margin-top:10px">
         <select id="member-select">${state.workspaceMembers.map((m) => `<option value="${esc(m.user_id)}">${esc(m.username)}</option>`).join("")}</select>
-        <select id="member-role"><option value="member">member</option><option value="viewer">viewer</option></select>
+        <select id="member-role"><option value="member">member</option><option value="reviewer">reviewer</option><option value="viewer">viewer</option></select>
         <button type="submit">加入项目</button>
       </form>` : ""}
     <h3 style="margin-top:18px">实验</h3>

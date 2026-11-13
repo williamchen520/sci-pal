@@ -208,6 +208,7 @@ def multi_query(
     top_k: int = 10,
     timeout: int = 30,
     created_by: str = "",
+    workspace_id: str = "ws_default",
 ) -> dict[str, Any]:
     if isinstance(rag_ids, str):
         rag_ids = [item.strip() for item in rag_ids.split(",") if item.strip()]
@@ -223,9 +224,9 @@ def multi_query(
     pg = core_connection()
     try:
         pg.execute(
-            "INSERT INTO rag_multi_queries (multi_run_id,query,rag_ids,library_id,created_by) "
-            "VALUES (%s,%s,%s::jsonb,%s,%s)",
-            (multi_run_id, query_text, json.dumps(requested), library_id, created_by or ""),
+            "INSERT INTO rag_multi_queries (multi_run_id,query,rag_ids,library_id,created_by,workspace_id) "
+            "VALUES (%s,%s,%s::jsonb,%s,%s,%s)",
+            (multi_run_id, query_text, json.dumps(requested), library_id, created_by or "", workspace_id or "ws_default"),
         )
         pg.commit()
     finally:
