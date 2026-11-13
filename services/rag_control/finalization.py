@@ -21,7 +21,7 @@ class FinalizationError(ValueError):
     pass
 
 
-def _hash(run: dict[str, Any], agreement_data: dict[str, Any]) -> str:
+def canonical_json(run: dict[str, Any], agreement_data: dict[str, Any]) -> str:
     payload = {
         "multi_run_id": run["multi_run_id"],
         "query": run["query"],
@@ -31,8 +31,11 @@ def _hash(run: dict[str, Any], agreement_data: dict[str, Any]) -> str:
         "conflicts": run["conflicts"],
         "agreement": agreement_data,
     }
-    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _hash(run: dict[str, Any], agreement_data: dict[str, Any]) -> str:
+    return hashlib.sha256(canonical_json(run, agreement_data).encode("utf-8")).hexdigest()
 
 
 def finalize(

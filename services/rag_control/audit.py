@@ -11,6 +11,8 @@ from typing import Any
 
 from services.db.pg_pool import core_connection
 from services.rag_control.adjudication import get_multi
+from services.rag_control.agreement import agreement
+from services.rag_control.finalization import canonical_json
 
 
 def list_adjudications(
@@ -81,6 +83,8 @@ def ro_crate(multi_run_id: str) -> bytes | None:
     if not run:
         return None
     now = datetime.now(timezone.utc).isoformat()
+    agreement_data = agreement(multi_run_id) or {}
+    canonical = canonical_json(run, agreement_data)
     evidence = []
     for group in run["groups"]:
         for item in group["evidence"]:
@@ -100,6 +104,7 @@ def ro_crate(multi_run_id: str) -> bytes | None:
         "data/evidence.json": json.dumps(evidence, ensure_ascii=False, indent=2),
         "data/adjudications.json": json.dumps(run["adjudications"], ensure_ascii=False, indent=2),
         "data/conflicts.json": json.dumps(run["conflicts"], ensure_ascii=False, indent=2),
+        "data/canonical.json": canonical,
         "data/finalization.json": json.dumps(run.get("finalization"), ensure_ascii=False, indent=2),
         "data/duplicates.json": json.dumps(
             {
