@@ -2533,6 +2533,22 @@
         ],
         "endpoint": "rag_control.multi_adjudicate",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi/<multi_run_id>/conflicts",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.multi_conflict",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi/<multi_run_id>/export.json",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.multi_export",
+        "status": "implemented"
       }
     ]
   },

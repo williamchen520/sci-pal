@@ -20,7 +20,7 @@ from services.rag_control.plans import (
     heartbeat,
     lease_job,
 )
-from services.rag_control.adjudication import AdjudicationError, add_adjudication, get_multi, list_multi
+from services.rag_control.adjudication import AdjudicationError, add_adjudication, add_conflict, get_multi, list_multi
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
 from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
 from services.rag_control.models import ModelError, get_model, list_bindings, list_models, register_binding
@@ -309,5 +309,33 @@ def build_rag_control_blueprint() -> Blueprint:
         except AdjudicationError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(value), 201
+
+    @bp.post("/api/rag/multi/<multi_run_id>/conflicts")
+    def multi_conflict(multi_run_id: str):
+        user_id = _human()
+        if not user_id:
+            return jsonify({"error": "human conflict flag required"}), 403
+        body = request.get_json(silent=True) or {}
+        try:
+            value = add_conflict(
+                multi_run_id=multi_run_id,
+                rag_id=str(body.get("rag_id") or ""),
+                note=str(body.get("note") or ""),
+                flagged_by=user_id,
+            )
+        except AdjudicationError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(value), 201
+
+    @bp.get("/api/rag/multi/<multi_run_id>/export.json")
+    def multi_export(multi_run_id: str):
+        value = get_multi(multi_run_id)
+        if not value:
+            return jsonify({"error": "multi run not found"}), 404
+        response = jsonify(value)
+        response.headers["Content-Disposition"] = (
+            f'attachment; filename="{multi_run_id}.json"'
+        )
+        return response
 
     return bp

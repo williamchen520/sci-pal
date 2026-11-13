@@ -31,6 +31,19 @@ class AdjudicationRouteTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
+    def test_conflict_requires_human(self) -> None:
+        response = self.client.post(
+            "/api/rag/multi/m/conflicts",
+            json={"rag_id": "code", "note": "x"},
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_export(self) -> None:
+        with mock.patch("routes.rag_control.get_multi", return_value={"multi_run_id": "m"}):
+            response = self.client.get("/api/rag/multi/m/export.json")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("attachment", response.headers.get("Content-Disposition", ""))
+
     def test_adjudication_requires_human(self) -> None:
         response = self.client.post(
             "/api/rag/multi/m/adjudications",
