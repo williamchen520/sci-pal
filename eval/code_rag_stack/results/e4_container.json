@@ -1,0 +1,25 @@
+{
+  "environment": {
+    "image": "scipal-base@sha256:889cb45e36a1610d7a049ba0730255b9a853e819e6dda25e529d22d0cf8ea493",
+    "python": "3.12.16",
+    "scanpy": "1.12.5",
+    "pandas": "2.3.3",
+    "pytest": "9.2.0",
+    "numpy": "2.5.4",
+    "anndata": "0.13.4"
+  },
+  "command": "python -m pytest -q --no-header -o cache_dir=/tmp/pytest-cache <5 selectors>",
+  "tests": [
+    "test_normalize_total",
+    "test_score_genes_sparse_vs_dense",
+    "test_read_10x_h5",
+    "test_runs",
+    "test_pca_shapes"
+  ],
+  "target_tests": 5,
+  "target_tests_passed": 5,
+  "test_nodes_passed": 12,
+  "test_nodes_skipped": 10,
+  "target_test_pass@1": 1.0,
+  "scope": "repository tests for retrieved target symbols; not generated-code Pass@1"
+}
