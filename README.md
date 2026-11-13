@@ -1,284 +1,506 @@
-# SciPal — Retrieval-Augmented Research Workbench
+# SciPal
 
-> **Status: active development / PG-only.** No stable release.  
-> Do not use for clinical or regulated decisions.
-
-**English** | [简体中文](README.zh-CN.md)
-
-SciPal is a locally deployable system for literature search, structured evidence
-extraction, systematic review, and traceable writing. Its core is a deterministic
-retrieval layer: pgvector recall, PostgreSQL full-text search, reciprocal-rank
-fusion (RRF), optional cross-encoder reranking, and sentence-aware context.
-
-Generation is optional and pluggable: a local model for orchestration, a cloud or
-DSH model for reasoning.
+> 本地可部署的科研 RAG 工作台：文献、代码、证据链、综述与控制面。  
+> 状态：active development / PG-only。  
+> 不用于临床或受监管决策。
 
 ---
 
-## Architecture
+## 1. 今天完成了什么（2026-11-13）
 
 ```text
-Browser / DSH / MCP
-        │
-        ▼
-      Caddy
-        │  HTTPS, security headers
-        ▼
-   Flask API (26 blueprints, 204 route+method; 210 with ingest-tracking)
-        │
-        ├── scipal_core
-        │     users / auth / workspaces / projects / experiments
-        │     notes / tasks / claims / reviews / audit
-        │
-        └── scipal_rebuild
-              papers / sections / paragraphs / sentences
-              paragraph_embeddings / citations / figures / tables
+PDF 获取与解析
+HTML/JATS 优先的获取设计
+章-节-句树
+sentence FTS
+embedding 输入审计
+paper reader API
+scipal-paper 插件设计
 ```
 
-Retrieval:
+当前真实数据：
 
 ```text
-pgvector HNSW + PostgreSQL GIN FTS + RRF
-sentence-level evidence
-sentence-window context
+HCC LAM 论文
+  paragraphs   112
+  sentences    621
+  embeddings   106
+  orphan       0
 ```
 
-Operations:
+HCC 基因组论文：
 
 ```text
-worker          long-running jobs
-pg-backup       encrypted PostgreSQL dumps
-watch-cron      literature monitoring
-```
-
-Data ownership is physical, not just a naming convention:
-
-```text
-core and corpus are separate PostgreSQL databases
-no cross-database foreign keys
-logical IDs only (paper_id / user_id)
-business reads never hit the corpus database
-corpus reads never hit the business database
+HTML         720 KB
+R 文件       6
+License      GPL-3.0-or-later
 ```
 
 ---
 
-## Current Data
+## 2. 系统定位
 
-| Item | Value |
-|---|---:|
-| papers | 13,201 |
-| paragraphs | 410,270 |
-| sentences | 1,780,306 |
-| sections | 156,208 |
-| paragraph embeddings | 343,546 |
-| HNSW index | 1.326 GB, valid |
-| PostgreSQL (rebuild) | ~5.5 GB |
+SciPal 不是“一个聊天框 + 一个向量库”。
 
----
-
-## Capabilities
-
-| Capability | Description |
-|---|---|
-| Literature search | pgvector + PG FTS, RRF, optional rerank |
-| Structured parsing | PDF engines + native JATS XML |
-| Sentence traceability | `/api/papers/<id>/trace`, page/bbox |
-| Evidence envelopes | matched sentences + parent context + links |
-| RAG QA | citations, refusal, local or cloud models |
-| Review generation | outline → section retrieval → drafting → verification |
-| Systematic review | screening, PRISMA, evidence, risk of bias |
-| Claims | claim cards, qualifiers, supporting/opposing evidence |
-| Projects / experiments | members, runs, revisions, audit |
-| Literature monitoring | profiles, journals, runs, digests |
-| Multi-user isolation | users, workspaces, roles, least-privilege DSNs |
-| Domain packs | taxonomy / section types / evidence schema |
-| Optional plugins | ingest tracking, experimental GraphRAG/RAPTOR |
-
----
-
-## Security & Operations
+它是：
 
 ```text
-global API auth        session / bearer / internal service token
-internal endpoints     /api/ingest, /api/embed require internal token
-database roles         core_app / corpus_reader / corpus_writer (no DDL)
-environment guard      production rejects loopback/wrong-database DSNs
-backups                core every 6h (7d), corpus every 7d (28d)
-backup encryption      AES-256-CBC + PBKDF2, files mode 600
-restore drill          data + GIN + HNSW validated 2026-11-12
-governance gate        high-risk PRs require human approval
+检索层
+  + 证据层
+  + 代码层
+  + 控制面
+  + 人工裁决
+  + 可追溯导出
 ```
 
-Do not put production credentials in `.env` files committed to git.
+核心原则：
+
+```text
+机器负责召回与建议
+人负责批准与最终判断
+```
+
+```text
+不做：
+  把 null 变成 0
+  把 compile 当 Pass@1
+  把 C3 当 C1
+  跨 RAG 合并分数
+  LLM 会议式投票
+  自动吞下整个领域
+```
 
 ---
 
-## Quick Start
+## 3. 架构总览
+
+```mermaid
+flowchart TB
+    U["Browser / DSH / MCP"] --> API["Flask API<br/>256 route-method"]
+    API --> AUTH["Auth / Workspace / Role"]
+    API --> CORE[("scipal_core<br/>users · projects · reviews · audit")]
+    API --> CORPUS[("scipal_rebuild<br/>papers · sections · paragraphs · sentences")]
+    API --> CODE[("scipal_code<br/>libraries · snapshots · units · edges")]
+    API --> DOCS[("scipal_docs<br/>document libraries")]
+
+    API --> CP["RAG Control Plane<br/>plans · approvals · jobs · evidence · artifacts"]
+    CP --> WORKER["Workers<br/>parse · ingest · embed · query"]
+    WORKER --> CORPUS
+    WORKER --> CODE
+    WORKER --> DOCS
+
+    API --> PROV["RAG Providers"]
+    PROV --> LIT["literature RAG"]
+    PROV --> CRAG["code RAG"]
+    PROV --> DRAG["docs RAG"]
+```
+
+### 数据库边界
+
+```text
+scipal_core     业务 / 用户 / 项目 / 审计
+scipal_rebuild  论文 / 段落 / 句子 / embedding
+scipal_code     代码库 / snapshot / code units
+scipal_docs     文档 RAG
+```
+
+原则：
+
+```text
+物理分库
+无跨库外键
+逻辑 ID 关联
+读路径不跨库写
+写路径按 DSN 最小权限
+```
+
+---
+
+## 4. 文献树：章 → 节 → 段 → 句
+
+```text
+paper
+  └── section_level1
+        └── section_level2
+              └── paragraph
+                    └── sentence
+```
+
+稳定 ID：
+
+```text
+paper_id
+section_id
+para_id       = paper_id + section + sequence
+sentence_id   = para_id + _sent_NNN
+```
+
+索引分工：
+
+```text
+paragraph vector     语义召回
+sentence inverted    句级证据 / FTS
+section              导航 / 引用 / 权限，不单独建向量
+```
+
+查询链：
+
+```text
+query
+  -> paragraph vector recall
+  -> sentence FTS
+  -> rerank
+  -> evidence: sentence_id + para_id + section_path
+```
+
+> 不把 section/paragraph/sentence 编号拼进 embedding 文本。  
+> embedding 前必须经过 `index_skip_reason`。
+
+---
+
+## 5. 单篇论文分析
+
+`scipal-paper` 的设计目标：
+
+```text
+outline
+  -> paragraph
+  -> sentence
+  -> evidence
+  -> code links
+  -> module map
+  -> data flow
+  -> replication plan
+```
+
+当前可用：
+
+```text
+GET /api/papers/<paper_id>/outline
+GET /api/papers/<paper_id>/paragraphs
+GET /api/papers/<paper_id>/paragraphs/first
+GET /api/papers/<paper_id>/paragraphs/<para_id>/sentences
+```
+
+当前状态：
+
+```text
+reader service       PASS
+HTTP routes          PASS（256 route-method）
+outline 归一化       PASS（服务层）
+scipal-paper 插件    设计完成，未实现
+```
+
+---
+
+## 6. 代码 RAG
+
+```text
+repo
+  -> library_id
+  -> snapshot / commit
+  -> file
+  -> unit / function / class
+  -> import / call / edge
+```
+
+能力：
+
+```text
+code_search
+code_context
+code_trace
+per-library / per-commit
+evidence / artifact
+```
+
+解析器现状：
+
+```text
+Python      支持
+Nextflow    支持
+R           未实现
+Rmd/Quarto  未实现
+混合仓库    未实现
+```
+
+所以：
+
+```text
+不能声称“生信代码都能入库”
+```
+
+设计已明确：
+
+```text
+Language Provider
+  detect
+  parse
+  resolve edges
+  fixtures
+```
+
+---
+
+## 7. 路由总览
+
+`ARCHITECTURE.json` 是机器可读契约。当前校验：
+
+```text
+json_routes=256
+app_routes=256
+OK
+```
+
+主要路由组：
+
+| 组 | endpoints | 作用 |
+|---|---:|---|
+| `rag_control` | 41 | RAG 控制面、plan、job、evidence、finalization、seal |
+| `review_projects` | 26 | 系统综述、筛选、PRISMA、证据 |
+| `papers_actions` | 18 | 本地 PDF、解析、附件、reader |
+| `protocols` | 14 | 实验协议 |
+| `watch` | 14 | 文献监控 |
+| `data` | 12 | 数据沙箱 / profile |
+| `experiments` | 12 | 实验与运行 |
+| `tenancy` | 9 | workspace / role |
+| `claims` | 9 | claim cards |
+| `review_actions` | 9 | 综述动作 |
+| `search` | 6 | 混合检索 |
+| `ingest_tracking` | 6 | 入库跟踪 |
+| `qa` | 5 | 问答 |
+| `code_libraries` | 3 | 代码库 |
+| 其他 | 60 | auth、libraries、notes、tasks、references 等 |
+
+完整路由：
+
+```text
+ARCHITECTURE.json
+docs/en/Architecture-and-Routes.md
+```
+
+---
+
+## 8. RAG 控制面
+
+```mermaid
+sequenceDiagram
+    participant H as Human
+    participant D as DSH
+    participant C as Control Plane
+    participant W as Worker
+    H->>D: 目标
+    D->>C: rag_plan
+    C-->>H: plan_id / plan_hash
+    H->>C: approve
+    C->>W: dispatch
+    W->>W: query / ingest / evaluate
+    W-->>C: evidence / artifact
+    C-->>H: review / finalize / seal
+```
+
+规则：
+
+```text
+DSH 提案
+人批准
+控制面执行
+证据落 artifacts
+```
+
+封存：
+
+```text
+content_hash
+Ed25519 signature
+public key directory
+RO-Crate / canonical.json
+verify-seal
+```
+
+明确不做：
+
+```text
+外部 TSA
+```
+
+时间戳仍标注：
+
+```text
+timestamp_source = local_clock
+```
+
+---
+
+## 9. 多租户
+
+```text
+workspace
+  -> library
+  -> object
+```
+
+scope：
+
+```text
+private / main / both
+```
+
+规则：
+
+```text
+A 可查自己的私有库
+A 可联合查主库
+A 不能读 B
+普通用户不能写主库
+主库 curator/admin 才能写
+```
+
+所有入口必须带：
+
+```text
+workspace_id
+scope
+```
+
+缓存/任务/evidence/export 都必须带租户上下文。
+
+---
+
+## 10. 快速开始
 
 ### Docker Compose
 
 ```bash
 cp deploy/.env.example deploy/.env
-# set the DSNs, SCIPAL_SECRET_KEY, and backup passphrase
+# 设置 DSN、SCIPAL_SECRET_KEY、backup passphrase
 docker compose -f deploy/docker-compose.yml up -d --build
 curl http://127.0.0.1/api/health
 ```
 
-Required DSNs:
-
-```text
-SCIPAL_CORE_DSN            -> scipal_core (business/auth)
-SCIPAL_AUTH_DSN            -> scipal_core (auth schema)
-SCIPAL_PG_DSN              -> scipal_core (compatibility default)
-SCIPAL_PG_CORPUS_DSN       -> scipal_rebuild (read)
-SCIPAL_PG_MAIN_READ_DSN    -> scipal_rebuild (read)
-SCIPAL_PG_OWNER_DSN        -> scipal_rebuild (write, no DDL)
-SCIPAL_PG_INGEST_DSN       -> scipal_rebuild (ingest write)
-```
-
-Services:
-
-```text
-app         Flask API
-postgres    PostgreSQL 16 + pgvector
-pg-backup   encrypted dumps
-watch-cron  literature monitoring
-caddy       reverse proxy / TLS
-```
-
-### Local Development
+### 本地开发
 
 ```bash
 python -m venv venv
-venv\Scripts\activate          # Windows
+venv\Scripts\activate
 pip install -r requirements.txt
-# configure .env or environment variables
 python api_server.py
 ```
 
-Development server only. For production use `APP_MODE=PROD_MODE` with gunicorn.
+本地 app：
+
+```text
+http://127.0.0.1:5001
+```
+
+### 关键 DSN
+
+```text
+SCIPAL_CORE_DSN          -> scipal_core
+SCIPAL_AUTH_DSN          -> scipal_core
+SCIPAL_PG_DSN            -> scipal_core
+SCIPAL_PG_CORPUS_DSN     -> scipal_rebuild（read）
+SCIPAL_PG_MAIN_READ_DSN  -> scipal_rebuild（read）
+SCIPAL_PG_OWNER_DSN      -> scipal_rebuild（write）
+SCIPAL_PG_INGEST_DSN     -> scipal_rebuild（ingest）
+```
+
+本地启动时，所有 `host.docker.internal:5433` 要替换为 `127.0.0.1:5433`，否则会出现：
+
+```text
+198.18.1.238:5433 connection failed
+```
 
 ---
 
-## Testing
+## 11. 测试与校验
 
 ```bash
 python -m unittest discover -s tests -p "test_*.py"
-python scripts/smoke_http.py        # A: 27 light GETs
-python scripts/smoke_group_b.py     # B: 13 medium GETs
-python scripts/check_data_boundary.py
 python scripts/validate_arch.py
+python scripts/audit_embedding_inputs.py --paper-id <id>
 ```
 
-Current known smoke result:
+当前相关测试：
 
 ```text
-A 27/27 200
-B 13/13 200
+test_html_parser        3 passed
+test_sentence_tree      3 passed
+test_paper_reader       4 passed
 ```
 
-Route count:
+架构：
 
 ```text
-26 blueprints / 204 route+method by default
-27 blueprints / 210 route+method with SCIPAL_INGEST_TRACKING=1
-```
-
-Recorded retrieval results:
-
-```text
-SciFact 300        Recall@10 0.8669 / nDCG@10 0.7458
-rebuild_20 hybrid  Recall@10 0.7000 / nDCG@10 0.4894
+json_routes=256
+app_routes=256
+OK
 ```
 
 ---
 
-## Configuration
-
-PG-only defaults:
+## 12. 当前缺口
 
 ```text
-SCIPAL_VECTOR_BACKEND=pgvector
-SCIPAL_FTS_BACKEND=postgres
-SCIPAL_SEARCH_META_BACKEND=postgres
-SCIPAL_PAPERS_READ_BACKEND=postgres
-SCIPAL_INGEST_PG_ONLY=1
-SCIPAL_TENANCY_PG_ONLY=1
-SCIPAL_AUTH_REQUIRED=1
-SCIPAL_ENV=production
-```
-
-Auth-related:
-
-```text
-SCIPAL_AUTH_DSN
-SCIPAL_INTERNAL_TOKEN
-SCIPAL_INTERNAL_USER_ID
-SCIPAL_INTERNAL_WORKSPACE_ID
-```
-
-Backup:
-
-```text
-SCIPAL_BACKUP_PASSPHRASE
-```
-
-Do not commit real values.
-
----
-
-## Repository Layout
-
-```text
-api_server.py              Flask app and blueprint registration
-routes/                    26 blueprints
-services/                  search, review, claims, projects, watch, ...
-services/db/               connection factories, env guard, pool
-eval/                      retrieval/QA evaluation, public dataset loaders
-build_db/                  parsers, JATS import, PG writers
-plugins/                   optional plugins
-frontend/                  HTML/CSS/JS
-docs/                      architecture, migration, operations, research
-scripts/                   smoke, audits, backfills, governance gate
-deploy/                    Dockerfile, compose, env, SQL
-tests/                     unittest/pytest suites
-config/                    governance gates
+R parser 未实现
+Rmd/Quarto 未实现
+混合仓库未实现
+HTML 尚未接入 corpus ingest
+scipal-paper 插件未实现
+sentence evidence 链未接
+figure_caption 仍可能被当作正文
+app 重启后需再验证 outline 归一化
+全库低质量 embedding 只修了 HCC 一篇
 ```
 
 ---
 
-## Documentation
+## 13. 文档
 
-| Document | Purpose |
+| 文档 | 用途 |
 |---|---|
-| [Documentation index](docs/README.md) | all docs, five categories, full listing |
-| [Changelog](docs/Changelog.md) | timeline from WorkBuddy to DSH |
-| [Architecture and Routes](docs/en/Architecture-and-Routes.md) | routes, layers, data flow |
-| [Module Manual](docs/en/Modules-and-Routes.md) | module responsibilities |
-| [Architecture JSON](ARCHITECTURE.json) | machine-readable contract |
-| [Data isolation audit](docs/数据层隔离审计.md) | table/DSN ownership |
-| [Backup strategy](docs/备份策略-双库.md) | backup and restore |
-| [Restore drill 2026-11-12](docs/恢复演练-20261112.md) | data + GIN + HNSW validation |
-| [Code review 2026-11-12](docs/代码审查-20261112.md) | P0/P1 findings |
-| [Governance gates](docs/工程治理门禁规范.md) | preflight and approval |
-| [Public evaluation sets](docs/公共测试集选型.md) | SciFact / LitQA2 / QASPER |
+| [设计-Paper-to-Code与主动科研工作流-v1](docs/设计-Paper-to-Code与主动科研工作流-v1.md) | 文献 → 代码 → 复刻总设计 |
+| [设计-scipal-paper-单篇论文分析插件-v1](docs/设计-scipal-paper-单篇论文分析插件-v1.md) | 单篇论文插件设计 |
+| [实验-Sentence-Tree](docs/实验-Sentence-Tree.md) | 句树入库 |
+| [实验-Paper-Reader-API](docs/实验-Paper-Reader-API.md) | reader API |
+| [实验-Embedding输入审计](docs/实验-Embedding输入审计.md) | 向量输入审计 |
+| [实验-HTML解析器](docs/实验-HTML解析器.md) | HTML 解析 |
+| [Architecture JSON](ARCHITECTURE.json) | 机器可读路由契约 |
+| [Documentation index](docs/README.md) | 全部文档 |
 
 ---
 
-## Known Limitations
+## 14. 仓库结构
 
 ```text
-LitQA2 local coverage: 82/199 evaluable
-QASPER evidence is paragraph-level, not sentence-level
-A full-text benchmark for SciFact claims is not available
-GraphRAG / RAPTOR remain experiments, not core paths
-Client ingest tracking requires the separate migration
-No stable release; APIs and schemas may change
+api_server.py          Flask 入口
+routes/                路由 blueprints
+services/              search / papers / rag_control / review / tenancy
+build_db/              parser / JATS / PG writer
+frontend/              HTML/CSS/JS
+docs/                  设计、实验、迁移、操作
+scripts/               smoke / audit / validate / backfill
+tests/                 unittest
+deploy/                Docker / compose / SQL
+ARCHITECTURE.json      路由契约
 ```
 
 ---
 
-## License
+## 15. 一句话
 
-See [LICENSE](LICENSE).
+```text
+论文不是一段文本
+而是一棵可引用的树
+代码不是一个 repo
+而是一组可定位的模块
+```
+
+SciPal 的工作是：
+
+```text
+把树建好
+把证据留住
+把代码定位准
+把最终判断留给人
+```
