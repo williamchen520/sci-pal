@@ -24,7 +24,7 @@ from services.rag_control.adjudication import AdjudicationError, add_adjudicatio
 from services.rag_control.agreement import agreement
 from services.rag_control.finalization import FinalizationError, finalize, get_finalization, verify_seal
 from services.rag_control.assignments import AssignmentError, assign, complete_assignment, list_assignments
-from services.rag_control.audit import list_adjudications, list_conflicts, ro_crate
+from services.rag_control.audit import adjudications_csv, conflicts_csv, evidence_csv, list_adjudications, list_conflicts, ro_crate
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
 from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
 from services.rag_control.models import ModelError, get_model, list_bindings, list_models, register_binding
@@ -462,5 +462,38 @@ def build_rag_control_blueprint() -> Blueprint:
         if not value:
             return jsonify({"error": "seal not found"}), 404
         return jsonify(value)
+
+    @bp.get("/api/rag/audit/adjudications.csv")
+    def audit_adjudications_csv():
+        from flask import Response
+
+        return Response(
+            "\ufeff" + adjudications_csv(),
+            mimetype="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="rag-adjudications.csv"'},
+        )
+
+    @bp.get("/api/rag/audit/conflicts.csv")
+    def audit_conflicts_csv():
+        from flask import Response
+
+        return Response(
+            "\ufeff" + conflicts_csv(),
+            mimetype="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="rag-conflicts.csv"'},
+        )
+
+    @bp.get("/api/rag/multi/<multi_run_id>/export/evidence.csv")
+    def multi_evidence_csv(multi_run_id: str):
+        from flask import Response
+
+        value = evidence_csv(multi_run_id)
+        if value is None:
+            return jsonify({"error": "multi run not found"}), 404
+        return Response(
+            "\ufeff" + value,
+            mimetype="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{multi_run_id}-evidence.csv"'},
+        )
 
     return bp

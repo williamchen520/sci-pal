@@ -2621,6 +2621,30 @@
         ],
         "endpoint": "rag_control.verify_seal_route",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/audit/adjudications.csv",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.audit_adjudications_csv",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/audit/conflicts.csv",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.audit_conflicts_csv",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi/<multi_run_id>/export/evidence.csv",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.multi_evidence_csv",
+        "status": "implemented"
       }
     ]
   },

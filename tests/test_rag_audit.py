@@ -26,6 +26,18 @@ class AuditRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["adjudications"][0]["adjudication_id"], "a")
 
+    def test_adjudications_csv(self) -> None:
+        with mock.patch("routes.rag_control.adjudications_csv", return_value="a,b\n1,2\n"):
+            response = self.client.get("/api/rag/audit/adjudications.csv")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/csv", response.mimetype)
+
+    def test_evidence_csv(self) -> None:
+        with mock.patch("routes.rag_control.evidence_csv", return_value="a,b\n1,2\n"):
+            response = self.client.get("/api/rag/multi/m/export/evidence.csv")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("attachment", response.headers.get("Content-Disposition", ""))
+
     def test_ro_crate_route(self) -> None:
         with mock.patch("routes.rag_control.ro_crate", return_value=b"zip"):
             response = self.client.get("/api/rag/multi/m/export/ro-crate.zip")
