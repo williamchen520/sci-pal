@@ -98,16 +98,17 @@ def code_status(library_id: str = "") -> str:
 
 @mcp.tool(
     description=(
-        "构建 C3 证据包：目标 unit + 目标文件 import + 直接邻居。"
-        "用于符号定位后再 read 确认；不生成最终答案。"
+        "构建 C3 证据包：目标 unit + 目标文件 import + 直接出向依赖。"
+        "direction=out（默认）/in/both；不生成最终答案。"
     )
 )
-def code_context(unit_id: str, library_id: str, max_neighbors: int = 10) -> str:
+def code_context(unit_id: str, library_id: str, max_neighbors: int = 10, direction: str = "out") -> str:
     try:
         result = rag_context(
             unit_id=unit_id,
             library_id=library_id,
             max_neighbors=max(1, min(int(max_neighbors), 30)),
+            direction=direction,
         )
         return json.dumps(result, ensure_ascii=False)
     except Exception as exc:  # noqa: BLE001

@@ -32,7 +32,10 @@ def build_context(
     library_id: str,
     dsn: str | None = None,
     max_neighbors: int = 10,
+    direction: str = "out",
 ) -> dict[str, Any]:
+    if direction not in {"out", "in", "both"}:
+        raise ValueError("direction must be out, in, or both")
     dsn = dsn or os.environ.get("SCIPAL_CODE_READ_DSN") or os.environ.get("SCIPAL_CODE_DSN", "")
     if not dsn:
         raise SystemExit("SCIPAL_CODE_READ_DSN is required")
@@ -56,14 +59,28 @@ def build_context(
             (library_id, row[3]),
         ).fetchone()
         imports = parse_imports(file_row[0] if file_row else "")
+        if direction == "out":
+            edge_where = "src_unit_id=%s"
+            edge_params = (library_id, unit_id, max_neighbors * 2)
+        elif direction == "in":
+            edge_where = "dst_unit_id=%s"
+            edge_params = (library_id, unit_id, max_neighbors * 2)
+        else:
+            edge_where = "(src_unit_id=%s OR dst_unit_id=%s)"
+            edge_params = (library_id, unit_id, unit_id, max_neighbors * 2)
         edges = conn.execute(
-            "SELECT src_unit_id,dst_unit_id,relation FROM code_rag.code_edges "
-            "WHERE library_id=%s AND (src_unit_id=%s OR dst_unit_id=%s) LIMIT %s",
-            (library_id, unit_id, unit_id, max_neighbors * 2),
+            f"SELECT src_unit_id,dst_unit_id,relation FROM code_rag.code_edges "
+            f"WHERE library_id=%s AND {edge_where} LIMIT %s",
+            edge_params,
         ).fetchall()
-        neighbor_ids = list(
-            {dst if src == unit_id else src for src, dst, _ in edges if not (dst if src == unit_id else src).startswith("unresolved:")}
-        )[:max_neighbors]
+        neighbor_ids = []
+        for src, dst, _ in edges:
+            other = dst if src == unit_id else src
+            if other.startswith("unresolved:") or other in neighbor_ids:
+                continue
+            neighbor_ids.append(other)
+            if len(neighbor_ids) >= max_neighbors:
+                break
         neighbors = []
         if neighbor_ids:
             for n in conn.execute(
@@ -86,6 +103,7 @@ def build_context(
             "end_line": row[5],
             "ref": row[6] or row[7] or "",
         },
+        "direction": direction,
         "imports": imports,
         "neighbors": neighbors,
         "edges": [{"src": s, "dst": d, "relation": r} for s, d, r in edges],
