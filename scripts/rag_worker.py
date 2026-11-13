@@ -23,6 +23,7 @@ REPO_ROOT = Path(os.environ.get("SCIPAL_RAG_REPO_ROOT", r"G:/repos")).resolve()
 EMBED_MODEL = os.environ.get("SCIPAL_RAG_EMBED_MODEL", "BAAI/bge-small-zh-v1.5")
 DIMENSION = int(os.environ.get("SCIPAL_RAG_EMBED_DIM", "512"))
 ARTIFACT_ROOT = Path(os.environ.get("SCIPAL_RAG_ARTIFACT_ROOT", r"G:/runs/rag_artifacts")).resolve()
+CODE_API_BASE = os.environ.get("SCIPAL_CODE_API_URL", "http://127.0.0.1:5010").rstrip("/")
 
 
 def _headers() -> dict[str, str]:
@@ -107,8 +108,69 @@ def _heartbeat(job_id: str, worker_id: str, seconds: int, stop: threading.Event)
             return
 
 
+def _execute_query(job: dict, worker_id: str) -> None:
+    job_id = job["job_id"]
+    payload = job.get("payload") or {}
+    params = payload.get("params") or {}
+    query_text = str(payload.get("query") or "")
+    library_id = str(job.get("library_id") or params.get("library_id") or "")
+    if not query_text or not library_id:
+        _post(f"/api/rag/jobs/{job_id}/fail", {"worker_id": worker_id, "error": "query/library_id required"})
+        return
+    started = time.time()
+    try:
+        response = requests.post(
+            f"{CODE_API_BASE}/libraries/{library_id}/search",
+            json={"query": query_text, "top_k": max(1, min(int(params.get("top_k") or 10), 50))},
+            timeout=60,
+        )
+        response.raise_for_status()
+        hits = response.json().get("hits") or []
+    except Exception as exc:  # noqa: BLE001
+        _post(f"/api/rag/jobs/{job_id}/fail", {"worker_id": worker_id, "error": str(exc)[:2000]})
+        return
+    evidence = []
+    snapshot = ""
+    for hit in hits:
+        snapshot = snapshot or str(hit.get("snapshot_id") or "")
+        snippet = str(hit.get("snippet") or "")
+        evidence.append(
+            {
+                "rag_id": "code",
+                "library_id": library_id,
+                "snapshot": str(hit.get("snapshot_id") or ""),
+                "source_path": str(hit.get("path") or ""),
+                "start_line": hit.get("start_line"),
+                "end_line": hit.get("end_line"),
+                "content_hash": hashlib.sha256(snippet.encode("utf-8")).hexdigest(),
+                "model_version": EMBED_MODEL,
+                "score": hit.get("score"),
+                "metadata": {
+                    "unit_id": hit.get("unit_id"),
+                    "symbol_name": hit.get("symbol_name"),
+                    "unit_type": hit.get("unit_type"),
+                },
+            }
+        )
+    _post(
+        f"/api/rag/jobs/{job_id}/complete",
+        {
+            "worker_id": worker_id,
+            "snapshot": snapshot,
+            "model_version": EMBED_MODEL,
+            "exit_code": 0,
+            "metrics": {"hits": len(hits), "seconds": round(time.time() - started, 2)},
+            "evidence": evidence,
+        },
+    )
+
+
+
 def execute(job: dict, worker_id: str) -> None:
     job_id = job["job_id"]
+    if job.get("job_type") == "rag_query":
+        _execute_query(job, worker_id)
+        return
     if job.get("job_type") != "rag_ingest":
         _post(f"/api/rag/jobs/{job_id}/fail", {"worker_id": worker_id, "error": f"unsupported job: {job.get('job_type')}"})
         return

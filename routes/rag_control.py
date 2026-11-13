@@ -152,6 +152,7 @@ def build_rag_control_blueprint() -> Blueprint:
             job_id=job_id,
             worker_id=str(body.get("worker_id") or "").strip(),
             payload=body,
+            evidence=body.get("evidence") or [],
         )
         if not result:
             return jsonify({"error": "job not owned by worker"}), 409
