@@ -224,11 +224,11 @@ def rag_job_status(job_id: str) -> str:
 
 @mcp.tool(
     description=(
-        "通过 RAG Gateway 做只读查询；当前只支持 capability=code_search。"
-        "返回 query run_id 和带 evidence_id 的结果。"
+        "通过 RAG Gateway 做只读查询；支持 code_search / evidence_search。"
+        "code_search 需要 library_id；evidence_search 不需要。返回 run_id 和带 evidence_id 的结果。"
     )
 )
-def rag_query(capability: str, library_id: str, query: str, top_k: int = 10) -> str:
+def rag_query(capability: str, query: str, library_id: str = "", top_k: int = 10) -> str:
     try:
         return json.dumps(
             _api(

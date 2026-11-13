@@ -108,7 +108,64 @@ def _heartbeat(job_id: str, worker_id: str, seconds: int, stop: threading.Event)
             return
 
 
+def _execute_literature_query(job: dict, worker_id: str) -> None:
+    job_id = job["job_id"]
+    payload = job.get("payload") or {}
+    query_text = str(payload.get("query") or "")
+    if not query_text:
+        _post(f"/api/rag/jobs/{job_id}/fail", {"worker_id": worker_id, "error": "query required"})
+        return
+    started = time.time()
+    try:
+        response = requests.post(
+            API_BASE + "/api/evidence/search",
+            json={"query": query_text, "top_k": max(1, min(int((payload.get("params") or {}).get("top_k") or 10), 50))},
+            headers=_headers(),
+            timeout=90,
+        )
+        response.raise_for_status()
+        entries = response.json().get("evidence") or []
+    except Exception as exc:  # noqa: BLE001
+        _post(f"/api/rag/jobs/{job_id}/fail", {"worker_id": worker_id, "error": str(exc)[:2000]})
+        return
+    evidence = []
+    for entry in entries:
+        matched = entry.get("matched_sentences") or []
+        text = " ".join(str(item.get("text") or "") for item in matched)
+        highlights = entry.get("highlight") or []
+        evidence.append(
+            {
+                "rag_id": "literature",
+                "library_id": "",
+                "snapshot": "",
+                "source_path": f"literature/{entry.get('paper_id')}/{entry.get('para_id')}",
+                "content_hash": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                "model_version": "BAAI/bge-base-en-v1.5",
+                "score": highlights[0].get("score") if highlights else None,
+                "metadata": {
+                    "paper_id": entry.get("paper_id"),
+                    "para_id": entry.get("para_id"),
+                    "sentence_ids": [item.get("sentence_id") for item in matched],
+                },
+            }
+        )
+    _post(
+        f"/api/rag/jobs/{job_id}/complete",
+        {
+            "worker_id": worker_id,
+            "snapshot": "",
+            "model_version": "BAAI/bge-base-en-v1.5",
+            "exit_code": 0,
+            "metrics": {"hits": len(entries), "seconds": round(time.time() - started, 2)},
+            "evidence": evidence,
+        },
+    )
+
+
 def _execute_query(job: dict, worker_id: str) -> None:
+    if job.get("rag_id") == "literature":
+        _execute_literature_query(job, worker_id)
+        return
     job_id = job["job_id"]
     payload = job.get("payload") or {}
     params = payload.get("params") or {}
