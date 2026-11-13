@@ -1,0 +1,167 @@
+{
+  "scope": "6-question hard DSH pilot; not full 30",
+  "baseline": "B1 grep/read only; no code MCP",
+  "code_arm": "C1 code_search/trace/read",
+  "rows": [
+    {
+      "id": "h01",
+      "query": "which numeric helper is called by normalize_total to do the per-cell normalization",
+      "expected_path": "src/scanpy/preprocessing/_normalization.py",
+      "expected_symbol": "_normalize_total_helper",
+      "arm": "B1",
+      "path": "src/scanpy/_utils/__init__.py",
+      "symbol": "axis_mul_or_truediv",
+      "confidence": "high",
+      "file_correct": false,
+      "symbol_correct": false
+    },
+    {
+      "id": "h01",
+      "query": "which numeric helper is called by normalize_total to do the per-cell normalization",
+      "expected_path": "src/scanpy/preprocessing/_normalization.py",
+      "expected_symbol": "_normalize_total_helper",
+      "arm": "C1",
+      "path": "src/scanpy/preprocessing/_normalization.py",
+      "symbol": "_normalize_total_helper",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h02",
+      "query": "which utility copies a view before mutating it",
+      "expected_path": "src/scanpy/_utils/__init__.py",
+      "expected_symbol": "view_to_actual",
+      "arm": "B1",
+      "path": "src/scanpy/_utils/__init__.py",
+      "symbol": "view_to_actual",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h02",
+      "query": "which utility copies a view before mutating it",
+      "expected_path": "src/scanpy/_utils/__init__.py",
+      "expected_symbol": "view_to_actual",
+      "arm": "C1",
+      "path": "src/scanpy/_utils/__init__.py",
+      "symbol": "view_to_actual",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h03",
+      "query": "where is the public read wrapper that delegates to anndata read_h5ad",
+      "expected_path": "src/scanpy/readwrite.py",
+      "expected_symbol": "read",
+      "arm": "B1",
+      "path": "src/scanpy/readwrite.py",
+      "symbol": "read",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h03",
+      "query": "where is the public read wrapper that delegates to anndata read_h5ad",
+      "expected_path": "src/scanpy/readwrite.py",
+      "expected_symbol": "read",
+      "arm": "C1",
+      "path": "src/scanpy/readwrite.py",
+      "symbol": "read",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h04",
+      "query": "which config file overrides STAR aligner arguments",
+      "expected_path": "conf/modules/align_star.config",
+      "expected_symbol": "conf/modules/align_star.config",
+      "arm": "B1",
+      "path": "conf/modules/align_star.config",
+      "symbol": "conf/modules/align_star.config",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h04",
+      "query": "which config file overrides STAR aligner arguments",
+      "expected_path": "conf/modules/align_star.config",
+      "expected_symbol": "conf/modules/align_star.config",
+      "arm": "C1",
+      "path": "conf/modules/align_star.config",
+      "symbol": "conf/modules/align_star.config",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h05",
+      "query": "which subworkflow dispatches STAR vs Sentieon vs Parabricks alignment",
+      "expected_path": "subworkflows/local/align_star/main.nf",
+      "expected_symbol": "ALIGN_STAR",
+      "arm": "B1",
+      "path": "subworkflows/local/align_star/main.nf",
+      "symbol": "ALIGN_STAR",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h05",
+      "query": "which subworkflow dispatches STAR vs Sentieon vs Parabricks alignment",
+      "expected_path": "subworkflows/local/align_star/main.nf",
+      "expected_symbol": "ALIGN_STAR",
+      "arm": "C1",
+      "path": "subworkflows/local/align_star/main.nf",
+      "symbol": "ALIGN_STAR",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h06",
+      "query": "which workflow runs FastQC on raw reads before trimming",
+      "expected_path": "subworkflows/nf-core/fastq_qc_trim_filter_setstrandedness/main.nf",
+      "expected_symbol": "FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS",
+      "arm": "B1",
+      "path": "subworkflows/nf-core/fastq_qc_trim_filter_setstrandedness/main.nf",
+      "symbol": "FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    },
+    {
+      "id": "h06",
+      "query": "which workflow runs FastQC on raw reads before trimming",
+      "expected_path": "subworkflows/nf-core/fastq_qc_trim_filter_setstrandedness/main.nf",
+      "expected_symbol": "FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS",
+      "arm": "C1",
+      "path": "subworkflows/nf-core/fastq_qc_trim_filter_setstrandedness/main.nf",
+      "symbol": "FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS",
+      "confidence": "high",
+      "file_correct": true,
+      "symbol_correct": true
+    }
+  ],
+  "summary": {
+    "B1": {
+      "cases": 6,
+      "file_correct": 5,
+      "symbol_correct": 5,
+      "file_accuracy": 0.8333333333333334,
+      "symbol_accuracy": 0.8333333333333334
+    },
+    "C1": {
+      "cases": 6,
+      "file_correct": 6,
+      "symbol_correct": 6,
+      "file_accuracy": 1.0,
+      "symbol_accuracy": 1.0
+    }
+  }
+}
