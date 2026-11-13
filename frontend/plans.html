@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SciPal · RAG 计划</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0b1020; color: #e2e8f0; font-family: system-ui, "Microsoft YaHei", sans-serif; }
+    header {
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+      padding: 18px 28px; border-bottom: 1px solid #1e3a5f;
+    }
+    header .brand { color: #f5c542; font-size: 22px; font-weight: 800; }
+    header a { color: #7dd3fc; text-decoration: none; font-size: 13px; }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tabs button {
+      border: 1px solid #27405f; background: #101a2e; color: #cbd5e1;
+      padding: 8px 14px; border-radius: 9px; cursor: pointer; font-size: 13px;
+    }
+    .tabs button.active { background: #f5c542; border-color: #f5c542; color: #111827; font-weight: 700; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .toolbar .hint { color: #64748b; font-size: 12px; }
+    .toolbar button { border: 1px solid #27405f; background: #101a2e; color: #cbd5e1; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+    #error { min-height: 20px; color: #f87171; font-size: 13px; margin-bottom: 8px; }
+    .plan {
+      background: #131c31; border: 1px solid #1e3a5f; border-radius: 14px;
+      padding: 18px; margin-bottom: 14px;
+    }
+    .plan h2 { margin: 0 0 4px; font-size: 17px; }
+    .meta { color: #64748b; font-size: 12px; margin-bottom: 12px; word-break: break-all; }
+    .badge {
+      display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px;
+      border: 1px solid #27405f; margin-left: 6px; color: #cbd5e1;
+    }
+    .badge.high { border-color: #b91c1c; color: #fca5a5; }
+    .badge.medium { border-color: #a16207; color: #fcd34d; }
+    .steps { display: grid; gap: 8px; margin: 12px 0; }
+    .step {
+      background: #0f1a2e; border: 1px solid #1e3a5f; border-radius: 9px;
+      padding: 10px 12px; font-size: 13px;
+    }
+    .step .step-main { color: #e2e8f0; }
+    .step .step-meta { color: #64748b; font-size: 12px; margin-top: 4px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .actions button { border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 700; }
+    .approve { background: #f5c542; color: #111827; }
+    .dispatch { background: #38bdf8; color: #082f49; }
+    .cancel { background: #1e293b; color: #cbd5e1; border: 1px solid #334155 !important; }
+    .empty { color: #64748b; padding: 30px 0; text-align: center; }
+    .note { color: #64748b; font-size: 12px; line-height: 1.7; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">RAG 计划</span>
+    <a href="/">← 返回工作台</a>
+    <a href="/libraries.html">代码库</a>
+    <a href="/login.html" id="login-link" hidden>登录</a>
+  </header>
+  <main>
+    <div class="tabs" id="tabs">
+      <button data-status="proposed" class="active">待审批</button>
+      <button data-status="approved">已批准</button>
+      <button data-status="dispatched">已派发</button>
+      <button data-status="">全部</button>
+    </div>
+    <div class="toolbar">
+      <span class="hint">审批只在这里进行；DSH 不能自批。</span>
+      <button id="refresh" type="button">刷新</button>
+    </div>
+    <div id="error" role="alert"></div>
+    <div id="list"></div>
+    <div class="note">
+      计划由 DSH 通过 <code>rag_plan</code> 提交。批准后可派发；查询任务由 worker 执行，
+      结果写入 evidence ledger。
+    </div>
+  </main>
+  <script src="/src/plans.js"></script>
+</body>
+</html>

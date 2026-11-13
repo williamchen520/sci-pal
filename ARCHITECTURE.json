@@ -2501,6 +2501,14 @@
         ],
         "endpoint": "rag_control.rag_query",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/plans",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.plans_list",
+        "status": "implemented"
       }
     ]
   },

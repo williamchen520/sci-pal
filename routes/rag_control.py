@@ -16,6 +16,7 @@ from services.rag_control.plans import (
     fail_job,
     get_job,
     get_plan,
+    list_plans,
     heartbeat,
     lease_job,
 )
@@ -256,5 +257,16 @@ def build_rag_control_blueprint() -> Blueprint:
         except GatewayError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(result)
+
+    @bp.get("/api/rag/plans")
+    def plans_list():
+        return jsonify(
+            {
+                "plans": list_plans(
+                    status=str(request.args.get("status") or ""),
+                    limit=int(request.args.get("limit") or 50),
+                )
+            }
+        )
 
     return bp

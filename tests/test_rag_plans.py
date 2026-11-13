@@ -37,6 +37,12 @@ class PlanRouteTests(unittest.TestCase):
         response = self.client.post("/api/rag/plans/plan_1/approve", json={"plan_hash": "x"})
         self.assertEqual(response.status_code, 403)
 
+    def test_plans_list(self) -> None:
+        with mock.patch("routes.rag_control.list_plans", return_value=[{"plan_id": "p"}]):
+            response = self.client.get("/api/rag/plans?status=proposed")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["plans"][0]["plan_id"], "p")
+
     def test_worker_lease_requires_token(self) -> None:
         with mock.patch.dict("os.environ", {"SCIPAL_RAG_WORKER_TOKEN": "secret"}):
             response = self.client.post("/api/rag/jobs/lease", json={"worker_id": "w"})
