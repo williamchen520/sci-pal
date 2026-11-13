@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from code_rag.context import parse_imports
+from code_rag.context import build_context, parse_imports
 
 
 class ContextBuilderTests(unittest.TestCase):
@@ -14,6 +14,10 @@ class ContextBuilderTests(unittest.TestCase):
 
     def test_bad_source_returns_empty(self) -> None:
         self.assertEqual(parse_imports("def broken(:\n"), [])
+
+    def test_invalid_direction(self) -> None:
+        with self.assertRaises(ValueError):
+            build_context(unit_id="u", library_id="lib", direction="sideways", dsn="unused")
 
 
 if __name__ == "__main__":

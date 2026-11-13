@@ -77,7 +77,7 @@ SCIPAL_CODE_READ_DSN=... python -m code_rag.api --port 5010
 SCIPAL_CODE_READ_DSN=... python -m code_rag.context <unit_id> --library-id lib_xxx
 ```
 
-Returns target unit + file imports + direct neighbors.
+Returns target unit + file imports + outbound dependencies (direction=out/in/both).
 
 ## Search
 

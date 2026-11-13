@@ -456,7 +456,7 @@ mcp__scipal-code__code_context
 ```text
 目标 unit
 + 目标文件 import
-+ 直接邻居
++ 出向依赖（默认 out）
 + edges
 ```
 
