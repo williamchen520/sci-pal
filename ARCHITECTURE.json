@@ -2349,6 +2349,86 @@
         ],
         "endpoint": "rag_control.health",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/plans",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.plan_create",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/plans/<plan_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.plan_get",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/plans/<plan_id>/approve",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.plan_approve",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/plans/<plan_id>/dispatch",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.plan_dispatch",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/plans/<plan_id>/cancel",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.plan_cancel",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/jobs/<job_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.job_get",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/jobs/lease",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.job_lease",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/jobs/<job_id>/heartbeat",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.job_heartbeat",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/jobs/<job_id>/complete",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.job_complete",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/jobs/<job_id>/fail",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.job_fail",
+        "status": "implemented"
       }
     ]
   },

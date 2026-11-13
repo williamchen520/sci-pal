@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 466 篇 · 2026-11-12
+> 共 467 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -242,6 +242,7 @@
 | 阶段计划 | 实验 Phase C：SciFact F0 / B / C / S / C2 | --- | [实验-PhaseC-SciFact-300.md](../实验-PhaseC-SciFact-300.md) |
 | 阶段计划 | Phase C 收口记录 | --- | [实验-PhaseC-收口.md](../实验-PhaseC-收口.md) |
 | 架构规范 | 实验记录：RAG 控制面 R0 Provider Registry | --- | [实验-RAG控制面-R0.md](../实验-RAG控制面-R0.md) |
+| 架构规范 | 实验记录：RAG 控制面 R1 Plans / Jobs / Lease | --- | [实验-RAG控制面-R1.md](../实验-RAG控制面-R1.md) |
 | 架构规范 | 实验记录：代码库 UI 验收（A） | --- | [实验-代码RAG-A-UI.md](../实验-代码RAG-A-UI.md) |
 | 架构规范 | 实验记录：code-rag E0 评测脚手架与 L0 审计 | --- | [实验-代码RAG-E0.md](../实验-代码RAG-E0.md) |
 | 架构规范 | 实验记录：code-rag E2 DSH-like 对照 | --- | [实验-代码RAG-E2.md](../实验-代码RAG-E2.md) |

@@ -1,14 +1,40 @@
-"""Read-only RAG control plane API (R0)."""
+"""RAG control plane API: registry (R0) + plans/jobs (R1)."""
 
 from __future__ import annotations
 
-from flask import Blueprint, jsonify
+import os
 
+from flask import Blueprint, jsonify, request, session
+
+from services.rag_control.plans import (
+    PlanError,
+    approve_plan,
+    cancel_plan,
+    complete_job,
+    create_plan,
+    dispatch_plan,
+    fail_job,
+    get_job,
+    get_plan,
+    heartbeat,
+    lease_job,
+)
 from services.rag_control.registry import check_health, get_provider, list_providers
 
 
 def build_rag_control_blueprint() -> Blueprint:
     bp = Blueprint("rag_control", __name__)
+
+    def _worker_ok() -> bool:
+        expected = os.environ.get("SCIPAL_RAG_WORKER_TOKEN", "").strip()
+        supplied = request.headers.get("X-SCIPAL-RAG-Worker-Token", "").strip()
+        return bool(expected and supplied and supplied == expected)
+
+    def _human() -> str | None:
+        # A request carrying the internal agent token cannot self-approve.
+        if request.headers.get("X-SCIPAL-Internal-Token"):
+            return None
+        return session.get("user_id")
 
     @bp.get("/api/rag/providers")
     def providers():
@@ -27,5 +53,119 @@ def build_rag_control_blueprint() -> Blueprint:
         if not value:
             return jsonify({"error": "provider not found"}), 404
         return jsonify(value)
+
+    @bp.post("/api/rag/plans")
+    def plan_create():
+        body = request.get_json(silent=True) or {}
+        try:
+            plan = create_plan(
+                intent=str(body.get("intent") or ""),
+                steps=body.get("steps") or [],
+                created_by=session.get("user_id") or "internal",
+            )
+        except PlanError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(plan), 201
+
+    @bp.get("/api/rag/plans/<plan_id>")
+    def plan_get(plan_id: str):
+        plan = get_plan(plan_id)
+        if not plan:
+            return jsonify({"error": "plan not found"}), 404
+        return jsonify(plan)
+
+    @bp.post("/api/rag/plans/<plan_id>/approve")
+    def plan_approve(plan_id: str):
+        user_id = _human()
+        if not user_id:
+            return jsonify({"error": "human approval required"}), 403
+        body = request.get_json(silent=True) or {}
+        try:
+            plan = approve_plan(
+                plan_id=plan_id,
+                approved_by=user_id,
+                plan_hash=str(body.get("plan_hash") or ""),
+            )
+        except PlanError as exc:
+            return jsonify({"error": str(exc)}), 400
+        if not plan:
+            return jsonify({"error": "plan not found"}), 404
+        return jsonify(plan)
+
+    @bp.post("/api/rag/plans/<plan_id>/dispatch")
+    def plan_dispatch(plan_id: str):
+        try:
+            plan = dispatch_plan(plan_id=plan_id)
+        except PlanError as exc:
+            return jsonify({"error": str(exc)}), 400
+        if not plan:
+            return jsonify({"error": "plan not found"}), 404
+        return jsonify(plan)
+
+    @bp.post("/api/rag/plans/<plan_id>/cancel")
+    def plan_cancel(plan_id: str):
+        if not cancel_plan(plan_id):
+            return jsonify({"error": "plan not cancellable"}), 404
+        return jsonify({"ok": True, "plan_id": plan_id})
+
+    @bp.get("/api/rag/jobs/<job_id>")
+    def job_get(job_id: str):
+        job = get_job(job_id)
+        if not job:
+            return jsonify({"error": "job not found"}), 404
+        return jsonify(job)
+
+    @bp.post("/api/rag/jobs/lease")
+    def job_lease():
+        if not _worker_ok():
+            return jsonify({"error": "worker token required"}), 403
+        body = request.get_json(silent=True) or {}
+        job = lease_job(
+            worker_id=str(body.get("worker_id") or "").strip(),
+            lease_seconds=int(body.get("lease_seconds") or 60),
+        )
+        if not job:
+            return jsonify({"job": None})
+        return jsonify({"job": job})
+
+    @bp.post("/api/rag/jobs/<job_id>/heartbeat")
+    def job_heartbeat(job_id: str):
+        if not _worker_ok():
+            return jsonify({"error": "worker token required"}), 403
+        body = request.get_json(silent=True) or {}
+        ok = heartbeat(
+            job_id=job_id,
+            worker_id=str(body.get("worker_id") or "").strip(),
+            lease_seconds=int(body.get("lease_seconds") or 60),
+        )
+        return jsonify({"ok": ok})
+
+    @bp.post("/api/rag/jobs/<job_id>/complete")
+    def job_complete(job_id: str):
+        if not _worker_ok():
+            return jsonify({"error": "worker token required"}), 403
+        body = request.get_json(silent=True) or {}
+        result = complete_job(
+            job_id=job_id,
+            worker_id=str(body.get("worker_id") or "").strip(),
+            payload=body,
+        )
+        if not result:
+            return jsonify({"error": "job not owned by worker"}), 409
+        return jsonify(result)
+
+    @bp.post("/api/rag/jobs/<job_id>/fail")
+    def job_fail(job_id: str):
+        if not _worker_ok():
+            return jsonify({"error": "worker token required"}), 403
+        body = request.get_json(silent=True) or {}
+        result = fail_job(
+            job_id=job_id,
+            worker_id=str(body.get("worker_id") or "").strip(),
+            error=str(body.get("error") or "worker failed"),
+        )
+        if not result:
+            return jsonify({"error": "job not owned by worker"}), 409
+        return jsonify(result)
 
     return bp
