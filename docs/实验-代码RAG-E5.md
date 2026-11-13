@@ -219,3 +219,77 @@ h11 改为 assets/multiqc_config.yml
 ```
 
 还剩 18 题才到 30。
+
+## 9. 30 题硬题完成
+
+结果：
+
+| 臂 | File 正确 | Symbol 正确 |
+|---|---:|---:|
+| B1 | 29/30 | 29/30 |
+| C1 | 30/30 | 30/30 |
+
+B1 唯一错误：
+
+```text
+h01 numeric helper
+  B1: axis_mul_or_truediv / _utils/__init__.py
+  C1: _normalize_total_helper / _normalization.py
+```
+
+但 C1 有协议偏差：
+
+```text
+e02 C1 使用 grep 兜底
+e05 C1 使用 grep 兜底
+```
+
+原因：
+
+```text
+code index 没有把 tests/ 排在前面
+C1 最终靠 grep 才找到
+```
+
+所以：
+
+```text
+C1 30/30 不能全部算 code_search 的功劳
+纯 C1：28/28
+```
+
+这不是小问题：
+
+```text
+代码 RAG 对测试定位的覆盖不足
+真实 DSH 会话里会退化成 grep
+```
+
+## 10. 当前结论
+
+```text
+30 题硬集已完成
+B1 29/30
+C1 30/30（2 题 grep 兜底）
+```
+
+能说明：
+
+```text
+在 h01 这类跨文件 helper 题上
+code_search 有优势
+```
+
+不能说明：
+
+```text
+code RAG 全面优于 DSH
+测试定位已被 code_search 覆盖
+```
+
+下一步：
+
+```text
+补测试文件索引/权重
+或把 C1 改成 C3（允许 grep）重新定义
+```
