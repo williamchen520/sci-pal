@@ -1,0 +1,20 @@
+{
+  "rag_id": "literature",
+  "version": "0.1.0",
+  "display_name": "Literature RAG",
+  "capabilities": ["evidence_search", "paper_search", "citation_graph"],
+  "endpoint": "internal://scipal-rebuild",
+  "database_name": "scipal_rebuild",
+  "schema_version": 1,
+  "model_bindings": {
+    "embedding": "BAAI/bge-base-en-v1.5",
+    "rerank": "BAAI/bge-reranker-base"
+  },
+  "resource_profile": {"cpu": 2, "ram_gb": 4, "gpu": "optional"},
+  "data_residency": "local",
+  "health": {
+    "type": "postgres",
+    "dsn_env": "SCIPAL_PG_CORPUS_DSN",
+    "query": "SELECT to_regclass('public.papers') IS NOT NULL"
+  }
+}

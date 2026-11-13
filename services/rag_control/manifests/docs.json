@@ -1,0 +1,20 @@
+{
+  "rag_id": "docs",
+  "version": "0.1.0",
+  "display_name": "Docs RAG",
+  "capabilities": ["doc_search"],
+  "endpoint": "internal://scipal-docs",
+  "database_name": "scipal_docs",
+  "schema_version": 1,
+  "model_bindings": {
+    "embedding": "BAAI/bge-small-zh-v1.5",
+    "rerank": "none"
+  },
+  "resource_profile": {"cpu": 1, "ram_gb": 2, "gpu": "none"},
+  "data_residency": "local",
+  "health": {
+    "type": "postgres",
+    "dsn_env": "SCIPAL_DOCS_DSN",
+    "query": "SELECT to_regclass('docs_rag.documents') IS NOT NULL"
+  }
+}
