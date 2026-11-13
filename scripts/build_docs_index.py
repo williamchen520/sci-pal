@@ -180,6 +180,7 @@ def main() -> None:
 - [实验-RAG控制面-R11-双人kappa](实验-RAG控制面-R11-双人kappa.md)
 - [实验-RAG控制面-R12-指派](实验-RAG控制面-R12-指派.md)
 - [实验-RAG控制面-R13-最终确认](实验-RAG控制面-R13-最终确认.md)
+- [实验-RAG控制面-R14-封存签名](实验-RAG控制面-R14-封存签名.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)
 

@@ -220,9 +220,27 @@ async function load() {
       el(
         "div",
         "meta",
-        `FINALIZED ${fin.decision} · ${fin.finalized_by} · seal ${fin.content_hash.slice(0, 16)}…`
+        `FINALIZED ${fin.decision} · ${fin.finalized_by} · seal ${fin.content_hash.slice(0, 16)}… · key ${fin.key_id || "?"}`
       )
     );
+    const verifyButton = el("button", "flag", "验证封存");
+    verifyButton.addEventListener("click", async () => {
+      try {
+        const verification = await api(
+          `/api/rag/multi/${encodeURIComponent(multiRunId)}/verify-seal`
+        );
+        header.appendChild(
+          el(
+            "div",
+            "meta",
+            `verify: signature=${verification.signature_valid} hash=${verification.content_hash_match} · ${verification.timestamp_source}`
+          )
+        );
+      } catch (error) {
+        errorBox.textContent = error.message;
+      }
+    });
+    header.appendChild(verifyButton);
   } else if (agreement.reviewer_count >= 2) {
     const finalBox = el("div", "decision");
     const finalSelect = document.createElement("select");

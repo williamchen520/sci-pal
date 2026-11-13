@@ -2613,6 +2613,14 @@
         ],
         "endpoint": "rag_control.multi_finalize",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi/<multi_run_id>/verify-seal",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.verify_seal_route",
+        "status": "implemented"
       }
     ]
   },
