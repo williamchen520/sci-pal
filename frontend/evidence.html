@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SciPal · 证据裁决</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0b1020; color: #e2e8f0; font-family: system-ui, "Microsoft YaHei", sans-serif; }
+    header { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 18px 28px; border-bottom: 1px solid #1e3a5f; }
+    header .brand { color: #f5c542; font-size: 22px; font-weight: 800; }
+    header a { color: #7dd3fc; text-decoration: none; font-size: 13px; }
+    main { max-width: 1150px; margin: 0 auto; padding: 24px 20px 60px; }
+    .hint { color: #64748b; font-size: 12px; line-height: 1.7; margin-bottom: 18px; }
+    .run { display: block; background: #131c31; border: 1px solid #1e3a5f; border-radius: 10px; padding: 14px; margin-bottom: 10px; color: #e2e8f0; text-decoration: none; }
+    .run:hover { border-color: #38bdf8; }
+    .run .meta { color: #64748b; font-size: 12px; margin-top: 5px; word-break: break-all; }
+    .group { background: #131c31; border: 1px solid #1e3a5f; border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+    .group h2 { margin: 0 0 8px; font-size: 17px; }
+    .signal { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; border: 1px solid #27405f; margin-left: 8px; color: #cbd5e1; }
+    .signal.has_evidence { border-color: #15803d; color: #86efac; }
+    .signal.insufficient_evidence { border-color: #a16207; color: #fcd34d; }
+    .signal.error { border-color: #b91c1c; color: #fca5a5; }
+    .evidence { background: #0f1a2e; border: 1px solid #1e3a5f; border-radius: 9px; padding: 12px; margin: 10px 0; }
+    .evidence .source { color: #7dd3fc; font-size: 12px; word-break: break-all; }
+    .evidence .text { color: #cbd5e1; font-size: 13px; line-height: 1.6; margin-top: 6px; white-space: pre-wrap; }
+    .decision { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; margin-top: 12px; padding-top: 12px; border-top: 1px solid #1e3a5f; }
+    select, textarea { background: #0f1a2e; color: #e2e8f0; border: 1px solid #27405f; border-radius: 8px; padding: 9px; font: inherit; }
+    textarea { min-width: min(520px, 100%); min-height: 60px; }
+    button { border: 0; border-radius: 8px; padding: 9px 14px; cursor: pointer; font-weight: 700; background: #f5c542; color: #111827; }
+    button:disabled { opacity: .6; cursor: wait; }
+    #error { min-height: 20px; color: #f87171; font-size: 13px; margin-bottom: 8px; }
+    .decisions { margin-top: 10px; font-size: 12px; color: #94a3b8; }
+    .decisions li { margin: 4px 0; }
+    .empty { color: #64748b; padding: 28px 0; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">证据裁决</span>
+    <a href="/">← 返回工作台</a>
+    <a href="/plans.html">RAG 计划</a>
+    <a href="/libraries.html">代码库</a>
+  </header>
+  <main>
+    <div class="hint">
+      每个 RAG 分组保留原始证据与分数；机器只给检索信号，不合成结论。
+      最终 accept / reject / needs_more_evidence 由人记录。
+    </div>
+    <div id="error" role="alert"></div>
+    <div id="content"></div>
+  </main>
+  <script src="/src/evidence.js"></script>
+</body>
+</html>

@@ -177,6 +177,7 @@ def _query_docs(*, query_text: str, top_k: int, timeout: int) -> dict[str, Any]:
                     "title": hit.get("title"),
                     "heading": hit.get("heading"),
                     "category": hit.get("category"),
+                    "text": text,
                 },
             },
         )
@@ -206,6 +207,7 @@ def multi_query(
     query_text: str,
     top_k: int = 10,
     timeout: int = 30,
+    created_by: str = "",
 ) -> dict[str, Any]:
     if isinstance(rag_ids, str):
         rag_ids = [item.strip() for item in rag_ids.split(",") if item.strip()]
@@ -217,6 +219,17 @@ def multi_query(
             requested.append(rag_id)
     if not requested:
         raise GatewayError("rag_ids is required")
+    multi_run_id = "multi_" + uuid.uuid4().hex[:12]
+    pg = core_connection()
+    try:
+        pg.execute(
+            "INSERT INTO rag_multi_queries (multi_run_id,query,rag_ids,library_id,created_by) "
+            "VALUES (%s,%s,%s::jsonb,%s,%s)",
+            (multi_run_id, query_text, json.dumps(requested), library_id, created_by or ""),
+        )
+        pg.commit()
+    finally:
+        pg.close()
     groups = []
     for rag_id in requested:
         try:
@@ -227,14 +240,53 @@ def multi_query(
                 top_k=top_k,
                 timeout=timeout,
             )
-            groups.append({"rag_id": rag_id, "status": "ok", **result})
+            group = {"rag_id": rag_id, "status": "ok", **result}
+            group["machine_signal"] = "has_evidence" if result.get("results") else "insufficient_evidence"
+            groups.append(group)
         except GatewayError as exc:
-            groups.append({"rag_id": rag_id, "status": "error", "error": str(exc)})
+            groups.append(
+                {
+                    "rag_id": rag_id,
+                    "status": "error",
+                    "error": str(exc),
+                    "machine_signal": "error",
+                }
+            )
+    pg = core_connection()
+    try:
+        for group in groups:
+            pg.execute(
+                """
+                INSERT INTO rag_multi_groups
+                  (multi_run_id,rag_id,run_id,status,result_count,machine_signal)
+                VALUES (%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (multi_run_id,rag_id) DO UPDATE SET
+                  run_id=EXCLUDED.run_id,
+                  status=EXCLUDED.status,
+                  result_count=EXCLUDED.result_count,
+                  machine_signal=EXCLUDED.machine_signal
+                """,
+                (
+                    multi_run_id,
+                    group["rag_id"],
+                    group.get("run_id"),
+                    group["status"],
+                    len(group.get("results") or []),
+                    group.get("machine_signal") or "unknown",
+                ),
+            )
+        pg.commit()
+    finally:
+        pg.close()
+    errors = any(group["status"] == "error" for group in groups)
+    has_evidence = any(group.get("results") for group in groups)
     return {
+        "multi_run_id": multi_run_id,
         "query": query_text,
         "rag_ids": requested,
         "groups": groups,
-        "partial": any(group["status"] == "error" for group in groups),
+        "partial": errors,
+        "machine_signal": "partial" if errors else ("has_evidence" if has_evidence else "insufficient_evidence"),
     }
 
 
@@ -305,6 +357,7 @@ def query(*, capability: str, library_id: str, query_text: str, top_k: int = 10,
                     "unit_id": hit.get("unit_id"),
                     "symbol_name": hit.get("symbol_name"),
                     "unit_type": hit.get("unit_type"),
+                    "snippet": snippet,
                 },
             },
         )

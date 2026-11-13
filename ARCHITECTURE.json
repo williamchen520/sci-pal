@@ -2509,6 +2509,30 @@
         ],
         "endpoint": "rag_control.plans_list",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.multi_list",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi/<multi_run_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.multi_get",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/multi/<multi_run_id>/adjudications",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.multi_adjudicate",
+        "status": "implemented"
       }
     ]
   },
