@@ -10,6 +10,8 @@ import re
 import psycopg
 from sentence_transformers import SentenceTransformer
 
+from code_rag.ranking import path_weight
+
 MODEL = os.environ.get("SCIPAL_CODE_EMBED_MODEL", r"G:/models/bge-small-zh-v1.5")
 
 
@@ -18,6 +20,7 @@ def _dsn() -> str:
     if not value:
         raise SystemExit("SCIPAL_CODE_READ_DSN or SCIPAL_CODE_DSN is required")
     return value
+
 
 
 def search(
@@ -93,7 +96,7 @@ def search(
                 SELECT unit_id, symbol_name FROM code_rag.code_units
                 WHERE library_id=%s AND (%s='' OR snapshot_id=%s)
                   AND lower(symbol_name) LIKE ANY(%s)
-                LIMIT 500
+                LIMIT 2000
                 """,
                 (library_id, snapshot_id, snapshot_id, [f"%{token}%" for token in tokens]),
             ).fetchall()
@@ -137,9 +140,7 @@ def search(
         ).fetchall()
         by_id = {row[0]: row for row in rows}
         for unit_id, row in by_id.items():
-            path = (row[8] or "").lower()
-            if path.startswith("tests/") or "/tests/" in path or "benchmarks/" in path:
-                scores[unit_id] *= 0.55
+            scores[unit_id] *= path_weight(query, row[8] or "")
         ordered = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:top_k]
     result = []
     for unit_id, score in ordered:

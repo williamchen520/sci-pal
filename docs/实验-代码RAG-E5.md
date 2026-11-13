@@ -293,3 +293,59 @@ code RAG 全面优于 DSH
 补测试文件索引/权重
 或把 C1 改成 C3（允许 grep）重新定义
 ```
+
+## 11. A 项：修 test 权重后的纯检索
+
+改动：
+
+```text
+query 明确问 test/error 时
+tests/ 不再 *0.55，而是 *1.10
+非 test 问题仍降权
+symbol 候选 500 -> 2000
+```
+
+e02/e05 纯 code_search：
+
+```text
+e02 test_regress_out_view     top1
+e05 test_score_genes_sparse   top1
+```
+
+30 题纯 code_search top-10 复测：
+
+```text
+file_correct   29/30
+symbol_correct 23/30
+file_accuracy  0.967
+symbol_accuracy 0.767
+```
+
+失败项：
+
+```text
+h03  read     -> wrapper
+h06  workflow -> FASTQC
+h11  assets   -> conf/modules/multiqc.config
+v01  write    -> write_h5ad
+v05  read_params -> settings
+v06  write_params -> settings
+m05  write    -> write_sparse_npz
+```
+
+结论：
+
+```text
+C1 的 30/30 不是纯 code_search
+它用了 read/grep 兜底
+纯检索 file 29/30，symbol 23/30
+```
+
+这比“30/30”更诚实，也更有用。
+
+下一步：
+
+```text
+修 wrapper/write/params 符号排序
+或正式定义 C3 = search + read/grep
+```

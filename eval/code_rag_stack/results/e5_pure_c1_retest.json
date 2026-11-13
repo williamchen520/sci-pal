@@ -1,0 +1,22 @@
+{
+  "scope": "30 hard questions, pure code_search top-10 retest after test-aware weighting",
+  "cases": 30,
+  "file_correct": 29,
+  "symbol_correct": 23,
+  "file_accuracy": 0.9666666666666667,
+  "symbol_accuracy": 0.7666666666666667,
+  "fixed_cases": [
+    "e02",
+    "e05"
+  ],
+  "fails": [
+    "h03 symbol",
+    "h06 symbol",
+    "h11 file/symbol",
+    "v01 symbol",
+    "v05 symbol",
+    "v06 symbol",
+    "m05 symbol"
+  ],
+  "note": "DSH C1 session used code_search/trace/read and reached 30/30; pure search is lower."
+}
