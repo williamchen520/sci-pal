@@ -1,6 +1,6 @@
 # 安全复盘
 
-> 共 34 篇 · 分类索引，文件原路径不变
+> 共 35 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -13,6 +13,7 @@
 | PostgreSQL SQL 提取与方言解析 | --- | [PostgreSQL方言审计-SQL提取.md](../PostgreSQL方言审计-SQL提取.md) |
 | PostgreSQL 方言审计清单 | --- | [PostgreSQL方言审计-清单.md](../PostgreSQL方言审计-清单.md) |
 | 双库备份策略 | --- | [备份策略-双库.md](../备份策略-双库.md) |
+| 实验记录：Embedding 输入审计与修复 | --- | [实验-Embedding输入审计.md](../实验-Embedding输入审计.md) |
 | 实验记录：R9 审计列表与 RO-Crate 导出 | --- | [实验-RAG控制面-R9-审计与RO-Crate.md](../实验-RAG控制面-R9-审计与RO-Crate.md) |
 | 实验系统层可行性审计：PaperQA2 / GraphRAG | --- | [实验-系统层可行性审计.md](../实验-系统层可行性审计.md) |
 | ID / 向量契约审计结果（2026-11-03） | vectorresolutionrate = 0.9328 | [审计-ID与向量契约结果.md](../审计-ID与向量契约结果.md) |

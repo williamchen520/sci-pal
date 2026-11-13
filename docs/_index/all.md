@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 497 篇 · 2026-11-12
+> 共 498 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -237,6 +237,7 @@
 | 安全复盘 | 双库备份策略 | --- | [备份策略-双库.md](../备份策略-双库.md) |
 | 阶段计划 | 备选计划表 | --- | [备选计划表.md](../备选计划表.md) |
 | 架构规范 | 实验记录：BioViz Recipe RAG Phase 0/1 | --- | [实验-BioViz-Recipe-RAG.md](../实验-BioViz-Recipe-RAG.md) |
+| 安全复盘 | 实验记录：Embedding 输入审计与修复 | --- | [实验-Embedding输入审计.md](../实验-Embedding输入审计.md) |
 | 架构规范 | 实验记录：HTML 论文解析器 | --- | [实验-HTML解析器.md](../实验-HTML解析器.md) |
 | 架构规范 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |
 | 架构规范 | 案例：HCC 多组学分子分型论文（HTML + Zenodo） | --- | [实验-Paper-to-Code-HCC-基因组案例.md](../实验-Paper-to-Code-HCC-基因组案例.md) |

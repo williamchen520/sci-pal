@@ -191,6 +191,7 @@ def main() -> None:
 - [实验-Paper-to-Code-HCC-基因组案例](实验-Paper-to-Code-HCC-基因组案例.md)
 - [实验-HTML解析器](实验-HTML解析器.md)
 - [实验-Sentence-Tree](实验-Sentence-Tree.md)
+- [实验-Embedding输入审计](实验-Embedding输入审计.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)
 
