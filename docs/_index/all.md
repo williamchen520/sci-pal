@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 483 篇 · 2026-11-12
+> 共 484 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -244,6 +244,7 @@
 | 架构规范 | 实验记录：RAG 控制面 R0 Provider Registry | --- | [实验-RAG控制面-R0.md](../实验-RAG控制面-R0.md) |
 | 架构规范 | 实验记录：RAG 控制面 R1 Plans / Jobs / Lease | --- | [实验-RAG控制面-R1.md](../实验-RAG控制面-R1.md) |
 | 架构规范 | 实验记录：R10 Reviewer 权限 | --- | [实验-RAG控制面-R10-reviewer.md](../实验-RAG控制面-R10-reviewer.md) |
+| 架构规范 | 实验记录：R11 双人 Reviewer 与 Kappa | --- | [实验-RAG控制面-R11-双人kappa.md](../实验-RAG控制面-R11-双人kappa.md) |
 | 架构规范 | 实验记录：RAG 控制面 R2 模型与索引绑定 | --- | [实验-RAG控制面-R2.md](../实验-RAG控制面-R2.md) |
 | 架构规范 | 实验记录：RAG 控制面 R3 Local Worker + E2E | --- | [实验-RAG控制面-R3.md](../实验-RAG控制面-R3.md) |
 | 架构规范 | 实验记录：RAG 控制面 R4 Evidence / Artifact Ledger | --- | [实验-RAG控制面-R4.md](../实验-RAG控制面-R4.md) |

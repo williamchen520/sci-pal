@@ -177,6 +177,7 @@ def main() -> None:
 - [实验-RAG控制面-R8-去重冲突导出](实验-RAG控制面-R8-去重冲突导出.md)
 - [实验-RAG控制面-R9-审计与RO-Crate](实验-RAG控制面-R9-审计与RO-Crate.md)
 - [实验-RAG控制面-R10-reviewer](实验-RAG控制面-R10-reviewer.md)
+- [实验-RAG控制面-R11-双人kappa](实验-RAG控制面-R11-双人kappa.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)
 

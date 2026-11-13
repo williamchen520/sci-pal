@@ -150,7 +150,10 @@ async function load() {
     }
     return;
   }
-  const run = await api(`/api/rag/multi/${encodeURIComponent(multiRunId)}`);
+  const [run, agreement] = await Promise.all([
+    api(`/api/rag/multi/${encodeURIComponent(multiRunId)}`),
+    api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/agreement`),
+  ]);
   const header = el("section", "group");
   header.appendChild(el("h2", "", run.query));
   header.appendChild(el("div", "meta", `${run.multi_run_id} · ${(run.rag_ids || []).join(", ")}`));
@@ -160,6 +163,18 @@ async function load() {
   const crateLink = el("a", "source", "导出 RO-Crate ZIP");
   crateLink.href = `/api/rag/multi/${encodeURIComponent(multiRunId)}/export/ro-crate.zip`;
   header.appendChild(crateLink);
+  if (agreement.reviewer_count >= 2) {
+    const pairwise = agreement.pairwise || [];
+    const kappas = pairwise.map((item) => item.kappa).filter((value) => value !== null);
+    const summary = el(
+      "div",
+      "meta",
+      `reviewers ${agreement.reviewer_count} · kappa ${
+        kappas.length ? (kappas.reduce((a, b) => a + b, 0) / kappas.length).toFixed(3) : "N/A"
+      } · disagreements ${agreement.disagreements.length}`
+    );
+    header.appendChild(summary);
+  }
   content.appendChild(header);
   for (const raw of run.groups) content.appendChild(groupNode(attachAdjudications(run, raw)));
 }
