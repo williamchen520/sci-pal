@@ -2493,6 +2493,14 @@
         ],
         "endpoint": "rag_control.artifact_append",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/query",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.rag_query",
+        "status": "implemented"
       }
     ]
   },
