@@ -161,6 +161,7 @@ def main() -> None:
 - [设计-RAG控制面-v1](设计-RAG控制面-v1.md)
 - [设计-SciPal-RAG控制面与科研追溯-v1](设计-SciPal-RAG控制面与科研追溯-v1.md)
 - [设计-Paper-to-Code与主动科研工作流-v1](设计-Paper-to-Code与主动科研工作流-v1.md)
+- [设计-scipal-paper-单篇论文分析插件-v1](设计-scipal-paper-单篇论文分析插件-v1.md)
 - [实验-RAG控制面-R0](实验-RAG控制面-R0.md)
 - [实验-RAG控制面-R1](实验-RAG控制面-R1.md)
 - [实验-RAG控制面-R2](实验-RAG控制面-R2.md)
