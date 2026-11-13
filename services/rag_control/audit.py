@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import io
 import json
 import zipfile
@@ -147,3 +148,65 @@ def ro_crate(multi_run_id: str) -> bytes | None:
         for path, content in files.items():
             archive.writestr(path, content)
     return buffer.getvalue()
+
+
+def _safe(value: Any) -> str:
+    text = "" if value is None else str(value)
+    if text.startswith(("=", "+", "-", "@")):
+        return "'" + text
+    return text
+
+
+def _csv(rows: list[list[Any]], headers: list[str]) -> str:
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(headers)
+    for row in rows:
+        writer.writerow([_safe(value) for value in row])
+    return buffer.getvalue()
+
+
+def adjudications_csv() -> str:
+    return _csv(
+        [
+            [item["created_at"], item["multi_run_id"], item["query"], item["rag_id"], item["decision"], item["decided_by"], item["note"]]
+            for item in list_adjudications(limit=500)
+        ],
+        ["created_at", "multi_run_id", "query", "rag_id", "decision", "decided_by", "note"],
+    )
+
+
+def conflicts_csv() -> str:
+    return _csv(
+        [
+            [item["created_at"], item["multi_run_id"], item["query"], item["rag_id"], item["flagged_by"], item["note"]]
+            for item in list_conflicts(limit=500)
+        ],
+        ["created_at", "multi_run_id", "query", "rag_id", "flagged_by", "note"],
+    )
+
+
+def evidence_csv(multi_run_id: str) -> str | None:
+    run = get_multi(multi_run_id)
+    if not run:
+        return None
+    rows = []
+    for group in run["groups"]:
+        for item in group["evidence"]:
+            rows.append(
+                [
+                    group["rag_id"],
+                    item["evidence_id"],
+                    item.get("source_path"),
+                    item.get("start_line"),
+                    item.get("end_line"),
+                    item.get("score"),
+                    item.get("content_hash"),
+                    json.dumps(item.get("metadata") or {}, ensure_ascii=False),
+                    item.get("duplicate_of", ""),
+                ]
+            )
+    return _csv(
+        rows,
+        ["rag_id", "evidence_id", "source_path", "start_line", "end_line", "score", "content_hash", "metadata", "duplicate_of"],
+    )

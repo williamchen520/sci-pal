@@ -202,6 +202,9 @@ async function load() {
   const crateLink = el("a", "source", "导出 RO-Crate ZIP");
   crateLink.href = `/api/rag/multi/${encodeURIComponent(multiRunId)}/export/ro-crate.zip`;
   header.appendChild(crateLink);
+  const csvLink = el("a", "source", "导出证据 CSV");
+  csvLink.href = `/api/rag/multi/${encodeURIComponent(multiRunId)}/export/evidence.csv`;
+  header.appendChild(csvLink);
   if (agreement.reviewer_count >= 2) {
     const pairwise = agreement.pairwise || [];
     const kappas = pairwise.map((item) => item.kappa).filter((value) => value !== null);
