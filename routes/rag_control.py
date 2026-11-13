@@ -19,6 +19,7 @@ from services.rag_control.plans import (
     heartbeat,
     lease_job,
 )
+from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
 from services.rag_control.models import ModelError, get_model, list_bindings, list_models, register_binding
 from services.rag_control.registry import check_health, get_provider, list_providers
 
@@ -208,6 +209,34 @@ def build_rag_control_blueprint() -> Blueprint:
                 status=str(body.get("status") or "active"),
             )
         except ModelError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(value), 201
+
+    @bp.get("/api/rag/runs/<run_id>/evidence")
+    def evidence_list(run_id: str):
+        return jsonify({"evidence": list_evidence(run_id)})
+
+    @bp.post("/api/rag/runs/<run_id>/evidence")
+    def evidence_append(run_id: str):
+        if not _worker_ok():
+            return jsonify({"error": "worker token required"}), 403
+        try:
+            value = append_evidence(run_id, request.get_json(silent=True) or {})
+        except LedgerError as exc:
+            return jsonify({"error": str(exc)}), 404
+        return jsonify(value), 201
+
+    @bp.get("/api/rag/runs/<run_id>/artifacts")
+    def artifacts_list(run_id: str):
+        return jsonify({"artifacts": list_artifacts(run_id)})
+
+    @bp.post("/api/rag/runs/<run_id>/artifacts")
+    def artifact_append(run_id: str):
+        if not _worker_ok():
+            return jsonify({"error": "worker token required"}), 403
+        try:
+            value = append_artifact(run_id, request.get_json(silent=True) or {})
+        except LedgerError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(value), 201
 

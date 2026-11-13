@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -21,6 +22,7 @@ TOKEN = os.environ.get("SCIPAL_RAG_WORKER_TOKEN", "").strip()
 REPO_ROOT = Path(os.environ.get("SCIPAL_RAG_REPO_ROOT", r"G:/repos")).resolve()
 EMBED_MODEL = os.environ.get("SCIPAL_RAG_EMBED_MODEL", "BAAI/bge-small-zh-v1.5")
 DIMENSION = int(os.environ.get("SCIPAL_RAG_EMBED_DIM", "512"))
+ARTIFACT_ROOT = Path(os.environ.get("SCIPAL_RAG_ARTIFACT_ROOT", r"G:/runs/rag_artifacts")).resolve()
 
 
 def _headers() -> dict[str, str]:
@@ -64,6 +66,37 @@ def _command(params: dict) -> list[str]:
     if limit:
         command += ["--limit", str(limit)]
     return command
+
+
+def _write_manifest(job: dict, run_id: str, params: dict, snapshot: str, seconds: float) -> None:
+    ARTIFACT_ROOT.mkdir(parents=True, exist_ok=True)
+    path = ARTIFACT_ROOT / f"run_{run_id}.json"
+    manifest = {
+        "run_id": run_id,
+        "job_id": job["job_id"],
+        "plan_id": job["plan_id"],
+        "rag_id": job["rag_id"],
+        "library_id": job["library_id"],
+        "snapshot": snapshot,
+        "repo_path": params.get("repo_path"),
+        "repo_url": params.get("repo_url"),
+        "ref": params.get("ref"),
+        "exit_code": 0,
+        "seconds": round(seconds, 2),
+    }
+    path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    raw = path.read_bytes()
+    _post(
+        f"/api/rag/runs/{run_id}/artifacts",
+        {
+            "kind": "run_manifest",
+            "uri": str(path),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "size_bytes": len(raw),
+            "license": "internal",
+            "metadata": {"job_id": job["job_id"], "snapshot": snapshot},
+        },
+    )
 
 
 def _heartbeat(job_id: str, worker_id: str, seconds: int, stop: threading.Event) -> None:
@@ -116,7 +149,7 @@ def execute(job: dict, worker_id: str) -> None:
                 "status": "active",
             },
         )
-        _post(
+        completed = _post(
             f"/api/rag/jobs/{job_id}/complete",
             {
                 "worker_id": worker_id,
@@ -126,6 +159,9 @@ def execute(job: dict, worker_id: str) -> None:
                 "metrics": {"seconds": round(time.time() - started, 2)},
             },
         )
+        run_id = str(completed.get("run_id") or "")
+        if run_id:
+            _write_manifest(job, run_id, params, snapshot, time.time() - started)
     finally:
         stop.set()
 
