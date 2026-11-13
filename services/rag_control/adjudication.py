@@ -117,11 +117,13 @@ def add_adjudication(
         raise AdjudicationError("rag_id required")
     pg = core_connection()
     try:
-        exists = pg.execute(
-            "SELECT 1 FROM rag_multi_queries WHERE multi_run_id=%s", (multi_run_id,)
+        row = pg.execute(
+            "SELECT status FROM rag_multi_queries WHERE multi_run_id=%s", (multi_run_id,)
         ).fetchone()
-        if not exists:
+        if not row:
             raise AdjudicationError("multi run not found")
+        if row["status"] == "finalized":
+            raise AdjudicationError("multi run finalized")
         if rag_id != "*":
             group = pg.execute(
                 "SELECT 1 FROM rag_multi_groups WHERE multi_run_id=%s AND rag_id=%s",
@@ -156,11 +158,13 @@ def add_conflict(*, multi_run_id: str, rag_id: str, note: str, flagged_by: str) 
         raise AdjudicationError("rag_id required")
     pg = core_connection()
     try:
-        exists = pg.execute(
-            "SELECT 1 FROM rag_multi_queries WHERE multi_run_id=%s", (multi_run_id,)
+        row = pg.execute(
+            "SELECT status FROM rag_multi_queries WHERE multi_run_id=%s", (multi_run_id,)
         ).fetchone()
-        if not exists:
+        if not row:
             raise AdjudicationError("multi run not found")
+        if row["status"] == "finalized":
+            raise AdjudicationError("multi run finalized")
         group = pg.execute(
             "SELECT 1 FROM rag_multi_groups WHERE multi_run_id=%s AND rag_id=%s",
             (multi_run_id, rag_id),

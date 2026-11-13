@@ -22,7 +22,7 @@ from services.rag_control.plans import (
 )
 from services.rag_control.adjudication import AdjudicationError, add_adjudication, add_conflict, get_multi, list_multi
 from services.rag_control.agreement import agreement
-from services.rag_control.finalization import FinalizationError, finalize, get_finalization
+from services.rag_control.finalization import FinalizationError, finalize, get_finalization, verify_seal
 from services.rag_control.assignments import AssignmentError, assign, complete_assignment, list_assignments
 from services.rag_control.audit import list_adjudications, list_conflicts, ro_crate
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
@@ -320,7 +320,7 @@ def build_rag_control_blueprint() -> Blueprint:
             )
             complete_assignment(multi_run_id=multi_run_id, rag_id=rag_id, reviewer_user_id=user_id)
         except AdjudicationError as exc:
-            return jsonify({"error": str(exc)}), 400
+            return jsonify({"error": str(exc)}), 409 if "finalized" in str(exc) else 400
         return jsonify(value), 201
 
     @bp.post("/api/rag/multi/<multi_run_id>/conflicts")
@@ -342,7 +342,7 @@ def build_rag_control_blueprint() -> Blueprint:
                 flagged_by=user_id,
             )
         except AdjudicationError as exc:
-            return jsonify({"error": str(exc)}), 400
+            return jsonify({"error": str(exc)}), 409 if "finalized" in str(exc) else 400
         return jsonify(value), 201
 
     @bp.get("/api/rag/multi/<multi_run_id>/export.json")
@@ -424,7 +424,7 @@ def build_rag_control_blueprint() -> Blueprint:
                 assigned_by=user_id,
             )
         except AssignmentError as exc:
-            return jsonify({"error": str(exc)}), 400
+            return jsonify({"error": str(exc)}), 409 if "finalized" in str(exc) else 400
         return jsonify(value), 201
 
     @bp.get("/api/rag/multi/<multi_run_id>/finalization")
@@ -455,5 +455,12 @@ def build_rag_control_blueprint() -> Blueprint:
         except FinalizationError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(value), 201
+
+    @bp.get("/api/rag/multi/<multi_run_id>/verify-seal")
+    def verify_seal_route(multi_run_id: str):
+        value = verify_seal(multi_run_id)
+        if not value:
+            return jsonify({"error": "seal not found"}), 404
+        return jsonify(value)
 
     return bp

@@ -48,10 +48,12 @@ def assign(
     pg = core_connection()
     try:
         multi = pg.execute(
-            "SELECT workspace_id FROM rag_multi_queries WHERE multi_run_id=%s", (multi_run_id,)
+            "SELECT workspace_id,status FROM rag_multi_queries WHERE multi_run_id=%s", (multi_run_id,)
         ).fetchone()
         if not multi:
             raise AssignmentError("multi run not found")
+        if multi["status"] == "finalized":
+            raise AssignmentError("multi run finalized")
         group = pg.execute(
             "SELECT 1 FROM rag_multi_groups WHERE multi_run_id=%s AND rag_id=%s",
             (multi_run_id, rag_id),
