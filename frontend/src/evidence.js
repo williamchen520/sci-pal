@@ -45,7 +45,7 @@ function evidenceNode(item) {
   return box;
 }
 
-function groupNode(group) {
+function groupNode(group, members, assignments) {
   const card = el("section", "group");
   const title = el("h2", "", `${group.rag_id} · ${group.result_count} 条`);
   title.appendChild(el("span", `signal ${group.machine_signal}`, group.machine_signal || "unknown"));
@@ -121,6 +121,39 @@ function groupNode(group) {
   form.appendChild(note);
   form.appendChild(submit);
   form.appendChild(flag);
+  const assigned = assignments.filter((item) => item.rag_id === group.rag_id);
+  if (assigned.length) {
+    const list = el("ul", "");
+    for (const item of assigned) list.appendChild(el("li", "", `reviewer ${item.reviewer_user_id} · ${item.status}`));
+    form.appendChild(list);
+  }
+  const assignSelect = document.createElement("select");
+  assignSelect.appendChild(el("option", "指派 reviewer"));
+  assignSelect.firstChild.value = "";
+  for (const member of members) {
+    if (!["owner", "pi", "reviewer"].includes(member.role)) continue;
+    const option = document.createElement("option");
+    option.value = member.user_id;
+    option.textContent = `${member.user_id} (${member.role})`;
+    assignSelect.appendChild(option);
+  }
+  const assignButton = el("button", "flag", "指派");
+  assignButton.addEventListener("click", async () => {
+    if (!assignSelect.value) return;
+    assignButton.disabled = true;
+    try {
+      await api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/assignments`, {
+        method: "POST",
+        body: JSON.stringify({ rag_id: group.rag_id, reviewer_user_id: assignSelect.value }),
+      });
+      await load();
+    } catch (error) {
+      errorBox.textContent = error.message;
+      assignButton.disabled = false;
+    }
+  });
+  form.appendChild(assignSelect);
+  form.appendChild(assignButton);
   card.appendChild(form);
   return card;
 }
@@ -150,10 +183,15 @@ async function load() {
     }
     return;
   }
-  const [run, agreement] = await Promise.all([
+  const [run, agreement, assignmentData] = await Promise.all([
     api(`/api/rag/multi/${encodeURIComponent(multiRunId)}`),
     api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/agreement`),
+    api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/assignments`),
   ]);
+  const workspace = run.workspace_id || "ws_default";
+  const memberData = await api(`/api/workspaces/${encodeURIComponent(workspace)}/members`).catch(() => ({ members: [] }));
+  const assignments = assignmentData.assignments || [];
+  const members = memberData.members || [];
   const header = el("section", "group");
   header.appendChild(el("h2", "", run.query));
   header.appendChild(el("div", "meta", `${run.multi_run_id} · ${(run.rag_ids || []).join(", ")}`));
@@ -176,7 +214,7 @@ async function load() {
     header.appendChild(summary);
   }
   content.appendChild(header);
-  for (const raw of run.groups) content.appendChild(groupNode(attachAdjudications(run, raw)));
+  for (const raw of run.groups) content.appendChild(groupNode(attachAdjudications(run, raw), members, assignments));
 }
 
 async function init() {
