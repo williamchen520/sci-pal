@@ -230,3 +230,32 @@ password: UiAdmin-2026!
 http://127.0.0.1:5000/login.html   （生产，旧镜像）
 http://127.0.0.1:5001/login.html   （本地源码，已验证）
 ```
+
+## 12. UX 修复
+
+修了两个问题：
+
+```text
+默认选中 units 最多的库（scanpy 1819）
+placeholder 改为通用 normalize_total
+代理在 units>0 时回写 libraries.status=ready
+```
+
+验证：
+
+```text
+打开 /libraries.html
+默认选中 scanpy
+units 1819
+```
+
+截图：
+
+![修复后的代码库默认选择](assets/libraries-ui-fixed.png)
+
+注意：
+
+```text
+status=ready 的回写需要重启 app 进程
+当前运行进程仍是旧路由
+```

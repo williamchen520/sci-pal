@@ -12,7 +12,7 @@ from typing import Any
 from flask import Blueprint, jsonify, request, session
 
 from config.settings import DATABASE_PATH
-from services.platform.libraries import get_library
+from services.platform.libraries import get_library, set_status
 from services.tenancy.service import authorize
 from services.tenancy.web import auth_required, resolve_workspace
 
@@ -42,7 +42,7 @@ def build_code_libraries_blueprint(*, db_path: str = str(DATABASE_PATH)) -> Blue
             return None, (jsonify({"error": "workspace access denied"}), 403)
         return library, None
 
-    def _call(method: str, path: str, payload: dict[str, Any] | None = None):
+    def _fetch(method: str, path: str, payload: dict[str, Any] | None = None):
         data = json.dumps(payload).encode("utf-8") if payload is not None else None
         request_obj = urllib.request.Request(
             base + path,
@@ -52,19 +52,28 @@ def build_code_libraries_blueprint(*, db_path: str = str(DATABASE_PATH)) -> Blue
         )
         try:
             with urllib.request.urlopen(request_obj, timeout=60) as response:
-                return jsonify(json.loads(response.read().decode("utf-8")))
+                return json.loads(response.read().decode("utf-8")), getattr(response, "status", 200)
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
-            return jsonify({"error": "code service rejected request", "detail": detail}), 502
+            return {"error": "code service rejected request", "detail": detail}, 502
         except Exception as exc:  # noqa: BLE001
-            return jsonify({"error": f"code service unavailable: {exc}"}), 502
+            return {"error": f"code service unavailable: {exc}"}, 502
+
+    def _call(method: str, path: str, payload: dict[str, Any] | None = None):
+        data, status_code = _fetch(method, path, payload)
+        return jsonify(data), status_code
 
     @bp.get("/api/code/libraries/<library_id>/status")
     def status(library_id: str):
-        _, error = _library(library_id)
+        library, error = _library(library_id)
         if error:
             return error
-        return _call("GET", f"/libraries/{urllib.parse.quote(library_id)}/status")
+        data, status_code = _fetch("GET", f"/libraries/{urllib.parse.quote(library_id)}/status")
+        if status_code == 200 and (data.get("library") or {}).get("units", 0) > 0:
+            if library["status"] != "ready":
+                set_status(library_id, "ready")
+                data["library"]["status"] = "ready"
+        return jsonify(data), status_code
 
     @bp.post("/api/code/libraries/<library_id>/search")
     def search(library_id: str):

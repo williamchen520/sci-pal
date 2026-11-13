@@ -41,10 +41,23 @@ async function loadLibraries() {
     const body = await api("/api/libraries?kind=code");
     state.libraries = body.libraries || [];
     renderLibraries();
-    if (!state.selected && state.libraries.length) selectLibrary(state.libraries[0]);
+    if (!state.selected && state.libraries.length) await selectBestLibrary();
   } catch (error) {
     $("message").textContent = error.message;
   }
+}
+
+async function selectBestLibrary() {
+  const checked = await Promise.all(state.libraries.map(async (library) => {
+    try {
+      const body = await api(`/api/code/libraries/${encodeURIComponent(library.library_id)}/status`);
+      return { library, units: body.library?.units || 0 };
+    } catch {
+      return { library, units: 0 };
+    }
+  }));
+  checked.sort((a, b) => b.units - a.units);
+  await selectLibrary(checked[0].library);
 }
 
 async function selectLibrary(library) {
