@@ -22,6 +22,7 @@ from services.rag_control.plans import (
 )
 from services.rag_control.adjudication import AdjudicationError, add_adjudication, add_conflict, get_multi, list_multi
 from services.rag_control.agreement import agreement
+from services.rag_control.assignments import AssignmentError, assign, complete_assignment, list_assignments
 from services.rag_control.audit import list_adjudications, list_conflicts, ro_crate
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
 from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
@@ -308,13 +309,15 @@ def build_rag_control_blueprint() -> Blueprint:
             return jsonify({"error": "reviewer permission required"}), 403
         body = request.get_json(silent=True) or {}
         try:
+            rag_id = str(body.get("rag_id") or "")
             value = add_adjudication(
                 multi_run_id=multi_run_id,
-                rag_id=str(body.get("rag_id") or ""),
+                rag_id=rag_id,
                 decision=str(body.get("decision") or ""),
                 note=str(body.get("note") or ""),
                 decided_by=user_id,
             )
+            complete_assignment(multi_run_id=multi_run_id, rag_id=rag_id, reviewer_user_id=user_id)
         except AdjudicationError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(value), 201
@@ -396,5 +399,31 @@ def build_rag_control_blueprint() -> Blueprint:
         if not value:
             return jsonify({"error": "multi run not found"}), 404
         return jsonify(value)
+
+    @bp.get("/api/rag/multi/<multi_run_id>/assignments")
+    def assignments_list(multi_run_id: str):
+        return jsonify({"assignments": list_assignments(multi_run_id)})
+
+    @bp.post("/api/rag/multi/<multi_run_id>/assignments")
+    def assignments_create(multi_run_id: str):
+        user_id = _human()
+        if not user_id:
+            return jsonify({"error": "human assigner required"}), 403
+        multi = get_multi(multi_run_id)
+        if not multi:
+            return jsonify({"error": "multi run not found"}), 404
+        if not authorize(user_id, multi["workspace_id"], "manage_members"):
+            return jsonify({"error": "workspace owner required"}), 403
+        body = request.get_json(silent=True) or {}
+        try:
+            value = assign(
+                multi_run_id=multi_run_id,
+                rag_id=str(body.get("rag_id") or ""),
+                reviewer_user_id=str(body.get("reviewer_user_id") or ""),
+                assigned_by=user_id,
+            )
+        except AssignmentError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(value), 201
 
     return bp
