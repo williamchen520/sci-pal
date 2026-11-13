@@ -2,10 +2,7 @@
   "scope": "30-question hard DSH set",
   "baseline": "B1 grep/read only",
   "code_arm": "C1 code_search/trace/read",
-  "protocol_deviations": [
-    "e02 C1 used grep fallback",
-    "e05 C1 used grep fallback"
-  ],
+  "protocol_deviations": [],
   "pure_c1_cases": 28,
   "rows": [
     {
@@ -22,7 +19,7 @@
     {
       "id": "h01",
       "query": "which numeric helper is called by normalize_total",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/preprocessing/_normalization.py",
       "expected_symbol": "_normalize_total_helper",
       "path": "src/scanpy/preprocessing/_normalization.py",
@@ -44,7 +41,7 @@
     {
       "id": "h02",
       "query": "which utility copies a view before mutating it",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/_utils/__init__.py",
       "expected_symbol": "view_to_actual",
       "path": "src/scanpy/_utils/__init__.py",
@@ -66,7 +63,7 @@
     {
       "id": "h03",
       "query": "public read wrapper delegating to anndata read_h5ad",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "read",
       "path": "src/scanpy/readwrite.py",
@@ -88,7 +85,7 @@
     {
       "id": "h04",
       "query": "config overrides STAR aligner arguments",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "conf/modules/align_star.config",
       "expected_symbol": "conf/modules/align_star.config",
       "path": "conf/modules/align_star.config",
@@ -110,7 +107,7 @@
     {
       "id": "h05",
       "query": "subworkflow dispatches STAR/Sentieon/Parabricks",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "subworkflows/local/align_star/main.nf",
       "expected_symbol": "ALIGN_STAR",
       "path": "subworkflows/local/align_star/main.nf",
@@ -132,7 +129,7 @@
     {
       "id": "h06",
       "query": "workflow runs FastQC on raw reads before trimming",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "subworkflows/nf-core/fastq_qc_trim_filter_setstrandedness/main.nf",
       "expected_symbol": "FASTQ_QC_TRIM_FILTER_SETSTRANDEDNESS",
       "path": "subworkflows/nf-core/fastq_qc_trim_filter_setstrandedness/main.nf",
@@ -154,7 +151,7 @@
     {
       "id": "h07",
       "query": "computes QC metrics for cells and genes",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/preprocessing/_qc.py",
       "expected_symbol": "calculate_qc_metrics",
       "path": "src/scanpy/preprocessing/_qc.py",
@@ -176,7 +173,7 @@
     {
       "id": "h08",
       "query": "filters cells by minimum gene count",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/preprocessing/_simple.py",
       "expected_symbol": "filter_cells",
       "path": "src/scanpy/preprocessing/_simple.py",
@@ -198,7 +195,7 @@
     {
       "id": "h09",
       "query": "sparse PCA fallback for older sklearn",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/preprocessing/_pca/_compat.py",
       "expected_symbol": "_pca_compat_sparse",
       "path": "src/scanpy/preprocessing/_pca/_compat.py",
@@ -220,7 +217,7 @@
     {
       "id": "h10",
       "query": "config overrides fastp trimming arguments",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "conf/modules/fastp.config",
       "expected_symbol": "conf/modules/fastp.config",
       "path": "conf/modules/fastp.config",
@@ -242,7 +239,7 @@
     {
       "id": "h11",
       "query": "config sets MultiQC report options",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "assets/multiqc_config.yml",
       "expected_symbol": "assets/multiqc_config.yml",
       "path": "assets/multiqc_config.yml",
@@ -264,7 +261,7 @@
     {
       "id": "h12",
       "query": "subworkflow prepares genome references",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "subworkflows/local/prepare_genome_references/main.nf",
       "expected_symbol": "PREPARE_GENOME_REFERENCES",
       "path": "subworkflows/local/prepare_genome_references/main.nf",
@@ -286,7 +283,7 @@
     {
       "id": "v01",
       "query": "writes AnnData to h5ad",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "write",
       "path": "src/scanpy/readwrite.py",
@@ -308,7 +305,7 @@
     {
       "id": "v02",
       "query": "reads 10x mtx directory",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "read_10x_mtx",
       "path": "src/scanpy/readwrite.py",
@@ -330,7 +327,7 @@
     {
       "id": "v03",
       "query": "reads Visium spatial data",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "read_visium",
       "path": "src/scanpy/readwrite.py",
@@ -352,7 +349,7 @@
     {
       "id": "v04",
       "query": "reads 10x h5 matrix",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "read_10x_h5",
       "path": "src/scanpy/readwrite.py",
@@ -374,7 +371,7 @@
     {
       "id": "v05",
       "query": "reads parameter settings file",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "read_params",
       "path": "src/scanpy/readwrite.py",
@@ -396,7 +393,7 @@
     {
       "id": "v06",
       "query": "writes parameter settings file",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "write_params",
       "path": "src/scanpy/readwrite.py",
@@ -418,7 +415,7 @@
     {
       "id": "e01",
       "query": "test verifies normalize_total copies a view",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "tests/test_normalization.py",
       "expected_symbol": "test_normalize_total_view",
       "path": "tests/test_normalization.py",
@@ -440,7 +437,7 @@
     {
       "id": "e02",
       "query": "test verifies regress_out copies a view",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "tests/test_preprocessing.py",
       "expected_symbol": "test_regress_out_view",
       "path": "tests/test_preprocessing.py",
@@ -462,7 +459,7 @@
     {
       "id": "e03",
       "query": "test reads legacy 10x h5 v1",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "tests/test_read_10x.py",
       "expected_symbol": "test_read_10x_h5_v1",
       "path": "tests/test_read_10x.py",
@@ -484,7 +481,7 @@
     {
       "id": "e04",
       "query": "test covers basic Leiden clustering",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "tests/test_clustering.py",
       "expected_symbol": "test_leiden_basic",
       "path": "tests/test_clustering.py",
@@ -506,7 +503,7 @@
     {
       "id": "e05",
       "query": "test compares sparse/dense score_genes",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "tests/test_score_genes.py",
       "expected_symbol": "test_score_genes_sparse_vs_dense",
       "path": "tests/test_score_genes.py",
@@ -528,7 +525,7 @@
     {
       "id": "e06",
       "query": "test covers UMAP init dtype",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "tests/test_embedding.py",
       "expected_symbol": "test_umap_init_dtype",
       "path": "tests/test_embedding.py",
@@ -550,7 +547,7 @@
     {
       "id": "m01",
       "query": "canonical public highly_variable_genes",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/preprocessing/_highly_variable_genes.py",
       "expected_symbol": "highly_variable_genes",
       "path": "src/scanpy/preprocessing/_highly_variable_genes.py",
@@ -572,7 +569,7 @@
     {
       "id": "m02",
       "query": "canonical neighbors graph construction",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/neighbors/__init__.py",
       "expected_symbol": "neighbors",
       "path": "src/scanpy/neighbors/__init__.py",
@@ -594,7 +591,7 @@
     {
       "id": "m03",
       "query": "umap computes embedding",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/tools/_umap.py",
       "expected_symbol": "umap",
       "path": "src/scanpy/tools/_umap.py",
@@ -616,7 +613,7 @@
     {
       "id": "m04",
       "query": "public read wrapper not test helper",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "read",
       "path": "src/scanpy/readwrite.py",
@@ -638,7 +635,7 @@
     {
       "id": "m05",
       "query": "public write writer not private shim",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/readwrite.py",
       "expected_symbol": "write",
       "path": "src/scanpy/readwrite.py",
@@ -660,7 +657,7 @@
     {
       "id": "m06",
       "query": "public pca preprocessing",
-      "arm": "C1",
+      "arm": "C3",
       "expected_path": "src/scanpy/preprocessing/_pca/__init__.py",
       "expected_symbol": "pca",
       "path": "src/scanpy/preprocessing/_pca/__init__.py",
@@ -677,12 +674,26 @@
       "file_accuracy": 0.9666666666666667,
       "symbol_accuracy": 0.9666666666666667
     },
-    "C1": {
+    "C1_pure": {
+      "cases": 30,
+      "file_correct": 29,
+      "symbol_correct": 23,
+      "file_accuracy": 0.9666666666666667,
+      "symbol_accuracy": 0.7666666666666667
+    },
+    "C3": {
       "cases": 30,
       "file_correct": 30,
       "symbol_correct": 30,
       "file_accuracy": 1.0,
       "symbol_accuracy": 1.0
     }
-  }
+  },
+  "arms": {
+    "B1": "grep/read only",
+    "C1": "code_search only (pure retest)",
+    "C2": "code_search + code_trace",
+    "C3": "code_search + trace + read/grep fallback"
+  },
+  "reclassification": "Original C1 rows used grep fallback; relabeled C3. Pure C1 is in e5_pure_c1_retest.json."
 }
