@@ -25,6 +25,11 @@ def repo_commit(path: Path) -> str:
     return subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
 
 
+def scoped_unit_id(library_id: str, snapshot_id: str, parsed_unit_id: str) -> str:
+    """Unit ids must not collide when two libraries contain the same path."""
+    return stable("unit", library_id, snapshot_id, parsed_unit_id)
+
+
 def files_for(repo: Path, language: str, limit: int) -> list[Path]:
     if language == "python":
         patterns = ["**/*.py"]
@@ -119,6 +124,10 @@ def main() -> int:
                     hashlib.sha256(text.encode()).hexdigest(),
                 ),
             )
+            unit_ids = {
+                unit.unit_id: scoped_unit_id(args.library_id, snapshot_id, unit.unit_id)
+                for unit in units
+            }
             for unit in units:
                 conn.execute(
                     """
@@ -129,7 +138,7 @@ def main() -> int:
                     ON CONFLICT (unit_id) DO NOTHING
                     """,
                     (
-                        unit.unit_id,
+                        unit_ids[unit.unit_id],
                         snapshot_id,
                         args.library_id,
                         file_id,
@@ -138,7 +147,7 @@ def main() -> int:
                         unit.text,
                         unit.start_line,
                         unit.end_line,
-                        unit.parent_unit_id,
+                        unit_ids.get(unit.parent_unit_id, unit.parent_unit_id),
                     ),
                 )
                 total_units += 1
@@ -151,8 +160,8 @@ def main() -> int:
                     ON CONFLICT DO NOTHING
                     """,
                     (
-                        edge.src_unit_id,
-                        edge.dst_unit_id,
+                        unit_ids.get(edge.src_unit_id, edge.src_unit_id),
+                        unit_ids.get(edge.dst_unit_id, edge.dst_unit_id),
                         args.library_id,
                         edge.relation,
                         edge.source,

@@ -79,7 +79,8 @@ def execute(job: dict, worker_id: str) -> None:
     if job.get("job_type") != "rag_ingest":
         _post(f"/api/rag/jobs/{job_id}/fail", {"worker_id": worker_id, "error": f"unsupported job: {job.get('job_type')}"})
         return
-    params = (job.get("payload") or {}).get("params") or {}
+    params = dict((job.get("payload") or {}).get("params") or {})
+    params.setdefault("library_id", job.get("library_id") or "")
     command = _command(params)
     stop = threading.Event()
     heartbeat = threading.Thread(target=_heartbeat, args=(job_id, worker_id, 30, stop), daemon=True)
@@ -107,7 +108,7 @@ def execute(job: dict, worker_id: str) -> None:
             "/api/rag/index-bindings",
             {
                 "rag_id": "code",
-                "library_id": str(params.get("library_id") or ""),
+                "library_id": str(job.get("library_id") or params.get("library_id") or ""),
                 "index_name": "code_units",
                 "embedding_model": EMBED_MODEL,
                 "dimension": DIMENSION,
