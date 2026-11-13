@@ -142,3 +142,40 @@ L4 未完成前：
 不声称“代码能跑”
 不进入主路径
 ```
+
+## 8. L4 环境尝试（blocked）
+
+已尝试：
+
+```text
+pytest 9.2.0          成功
+scanpy 1.12.5         no-deps 成功
+anndata 0.13.4        no-deps 成功
+scverse-misc/h5py     no-deps 成功
+zarr 3.4.2            numpy StringDType 冲突
+zarr 2.18.3           numcodecs cbuffer_sizes 冲突
+numcodecs 0.12.1      np.bool 缺失
+完整依赖解析          长时间无进展，停止
+```
+
+结论：
+
+```text
+L4 BLOCKED
+不是 PASS
+不是 FAIL
+```
+
+不降低 G5：
+
+```text
+test_pass@1 仍为 null
+不声称代码能跑
+```
+
+下一步只能：
+
+```text
+容器/conda 固定环境
+或明确不做 L4
+```
