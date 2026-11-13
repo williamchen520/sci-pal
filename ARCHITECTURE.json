@@ -2429,6 +2429,38 @@
         ],
         "endpoint": "rag_control.job_fail",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/models",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.models",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/models/<model_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.model",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/index-bindings",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.bindings",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/index-bindings",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.binding_register",
+        "status": "implemented"
       }
     ]
   },
