@@ -2325,6 +2325,30 @@
         ],
         "endpoint": "code_libraries.trace",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/providers",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.providers",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/providers/<rag_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.provider",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/providers/<rag_id>/health",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.health",
+        "status": "implemented"
       }
     ]
   },

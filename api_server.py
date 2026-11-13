@@ -57,6 +57,7 @@ from routes.tasks import build_tasks_blueprint
 from routes.tenancy import build_tenancy_blueprint
 from routes.libraries import build_libraries_blueprint
 from routes.code_libraries import build_code_libraries_blueprint
+from routes.rag_control import build_rag_control_blueprint
 from routes.watch import build_watch_blueprint
 from services.tenancy import bootstrap_default_workspace
 
@@ -312,6 +313,7 @@ app.register_blueprint(build_domain_packs_blueprint(log=app.logger))
 app.register_blueprint(build_tenancy_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_libraries_blueprint(db_path=str(DB_PATH)))
 app.register_blueprint(build_code_libraries_blueprint(db_path=str(DB_PATH)))
+app.register_blueprint(build_rag_control_blueprint())
 app.register_blueprint(build_notes_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_projects_blueprint(db_path=DB_PATH, log=app.logger))
 app.register_blueprint(build_experiments_blueprint(db_path=DB_PATH, log=app.logger))

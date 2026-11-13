@@ -1,0 +1,21 @@
+{
+  "rag_id": "code",
+  "version": "0.2.0",
+  "display_name": "Code RAG",
+  "capabilities": ["code_search", "code_context", "code_trace", "code_status"],
+  "endpoint": "http://127.0.0.1:5010",
+  "database_name": "scipal_code",
+  "schema_version": 1,
+  "model_bindings": {
+    "embedding": "BAAI/bge-small-zh-v1.5",
+    "rerank": "none"
+  },
+  "resource_profile": {"cpu": 2, "ram_gb": 4, "gpu": "optional"},
+  "data_residency": "local",
+  "health": {
+    "type": "http",
+    "url_env": "SCIPAL_CODE_API_URL",
+    "default_url": "http://127.0.0.1:5010",
+    "path": "/health"
+  }
+}
