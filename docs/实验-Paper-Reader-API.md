@@ -87,7 +87,53 @@ outline 目前直接暴露 section_level1=body
 HTTP 层只完成注册与架构校验
 ```
 
-## 7. 下一步
+## 7. HTTP 在线验证
+
+app 起来后：
+
+```text
+login                 200
+outline               200
+paragraphs/first      200
+paragraphs            200
+sentences (para_0022) 200, 7 句
+```
+
+启动脚本修复：
+
+```text
+SCIPAL_PG_MAIN_READ_DSN
+SCIPAL_PG_OWNER_DSN
+SCIPAL_PG_INGEST_DSN
+SCIPAL_PG_ADMIN_DSN
+SCIPAL_PG_TENANT_WRITE_DSN
+```
+
+都从 `host.docker.internal` 替换为 `127.0.0.1`，解决 `198.18.1.238:5433` 连接失败。
+
+## 8. Outline 归一化
+
+reader 服务已把：
+
+```text
+body > Heading
+```
+
+归一化为：
+
+```text
+Heading
+```
+
+服务层实测：
+
+```text
+sections 43（归一化后）
+```
+
+但当前 app 进程仍是旧代码，HTTP 还返回 44 个含 `body` 的节；重启后才生效。
+
+## 9. 下一步
 
 ```text
 1. 等 app 起来后验证 4 个 HTTP 路由
