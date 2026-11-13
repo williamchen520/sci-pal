@@ -2645,6 +2645,14 @@
         ],
         "endpoint": "rag_control.multi_evidence_csv",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/seal-keys",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.seal_keys",
+        "status": "implemented"
       }
     ]
   },

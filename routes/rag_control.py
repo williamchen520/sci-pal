@@ -23,6 +23,7 @@ from services.rag_control.plans import (
 from services.rag_control.adjudication import AdjudicationError, add_adjudication, add_conflict, get_multi, list_multi
 from services.rag_control.agreement import agreement
 from services.rag_control.finalization import FinalizationError, finalize, get_finalization, verify_seal
+from services.rag_control.keys import list_keys
 from services.rag_control.assignments import AssignmentError, assign, complete_assignment, list_assignments
 from services.rag_control.audit import adjudications_csv, conflicts_csv, evidence_csv, list_adjudications, list_conflicts, ro_crate
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
@@ -495,5 +496,9 @@ def build_rag_control_blueprint() -> Blueprint:
             mimetype="text/csv; charset=utf-8",
             headers={"Content-Disposition": f'attachment; filename="{multi_run_id}-evidence.csv"'},
         )
+
+    @bp.get("/api/rag/seal-keys")
+    def seal_keys():
+        return jsonify({"keys": list_keys()})
 
     return bp
