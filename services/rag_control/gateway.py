@@ -126,12 +126,80 @@ def _query_literature(*, query_text: str, top_k: int, timeout: int) -> dict[str,
     }
 
 
+def _query_docs(*, query_text: str, top_k: int, timeout: int) -> dict[str, Any]:
+    provider = get_provider("docs")
+    if not provider:
+        raise GatewayError("docs provider not registered")
+    endpoint = str(provider.get("endpoint") or "").rstrip("/")
+    if not endpoint.startswith("http"):
+        raise GatewayError("docs provider endpoint is not HTTP")
+    body = json.dumps(
+        {"query": query_text, "top_k": max(1, min(int(top_k), 50)), "mode": "hybrid"}, ensure_ascii=False
+    ).encode("utf-8")
+    req = urllib.request.Request(
+        endpoint + "/search",
+        data=body,
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=max(30, timeout)) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise GatewayError(f"docs RAG rejected query: {detail}") from exc
+    except Exception as exc:  # noqa: BLE001
+        raise GatewayError(f"docs RAG unavailable: {exc}") from exc
+    hits = payload.get("hits") or []
+    model_version = str((provider.get("model_bindings") or {}).get("embedding") or "")
+    run_id = _run(
+        "docs",
+        "",
+        "",
+        model_version,
+        {"capability": "doc_search", "query": query_text, "hits": len(hits)},
+    )
+    results = []
+    for hit in hits:
+        text = str(hit.get("text") or "")
+        evidence = append_evidence(
+            run_id,
+            {
+                "rag_id": "docs",
+                "library_id": "",
+                "snapshot": "",
+                "source_path": str(hit.get("path") or ""),
+                "content_hash": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                "model_version": model_version,
+                "score": hit.get("score"),
+                "metadata": {
+                    "doc_id": hit.get("doc_id"),
+                    "title": hit.get("title"),
+                    "heading": hit.get("heading"),
+                    "category": hit.get("category"),
+                },
+            },
+        )
+        item = dict(hit)
+        item["evidence_id"] = evidence["evidence_id"]
+        results.append(item)
+    return {
+        "run_id": run_id,
+        "rag_id": "docs",
+        "library_id": "",
+        "query": query_text,
+        "results": results,
+    }
+
+
 def query(*, capability: str, library_id: str, query_text: str, top_k: int = 10, timeout: int = 30) -> dict[str, Any]:
     capability = (capability or "").strip()
     if not (query_text or "").strip():
         raise GatewayError("query is required")
     if capability == "evidence_search":
         return _query_literature(query_text=query_text, top_k=top_k, timeout=timeout)
+    if capability == "doc_search":
+        return _query_docs(query_text=query_text, top_k=top_k, timeout=timeout)
     if capability != "code_search":
         raise GatewayError(f"unsupported capability: {capability}")
     if not library_id:

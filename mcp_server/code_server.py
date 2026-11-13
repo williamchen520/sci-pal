@@ -224,7 +224,7 @@ def rag_job_status(job_id: str) -> str:
 
 @mcp.tool(
     description=(
-        "通过 RAG Gateway 做只读查询；支持 code_search / evidence_search。"
+        "通过 RAG Gateway 做只读查询；支持 code_search / evidence_search / doc_search。"
         "code_search 需要 library_id；evidence_search 不需要。返回 run_id 和带 evidence_id 的结果。"
     )
 )

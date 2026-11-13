@@ -24,6 +24,7 @@ EMBED_MODEL = os.environ.get("SCIPAL_RAG_EMBED_MODEL", "BAAI/bge-small-zh-v1.5")
 DIMENSION = int(os.environ.get("SCIPAL_RAG_EMBED_DIM", "512"))
 ARTIFACT_ROOT = Path(os.environ.get("SCIPAL_RAG_ARTIFACT_ROOT", r"G:/runs/rag_artifacts")).resolve()
 CODE_API_BASE = os.environ.get("SCIPAL_CODE_API_URL", "http://127.0.0.1:5010").rstrip("/")
+DOCS_API_BASE = os.environ.get("SCIPAL_DOCS_API_URL", "http://127.0.0.1:5011").rstrip("/")
 
 
 def _headers() -> dict[str, str]:
@@ -162,9 +163,64 @@ def _execute_literature_query(job: dict, worker_id: str) -> None:
     )
 
 
+def _execute_docs_query(job: dict, worker_id: str) -> None:
+    job_id = job["job_id"]
+    payload = job.get("payload") or {}
+    query_text = str(payload.get("query") or "")
+    if not query_text:
+        _post(f"/api/rag/jobs/{job_id}/fail", {"worker_id": worker_id, "error": "query required"})
+        return
+    started = time.time()
+    try:
+        response = requests.post(
+            DOCS_API_BASE + "/search",
+            json={"query": query_text, "top_k": max(1, min(int((payload.get("params") or {}).get("top_k") or 8), 50)), "mode": "hybrid"},
+            timeout=90,
+        )
+        response.raise_for_status()
+        hits = response.json().get("hits") or []
+    except Exception as exc:  # noqa: BLE001
+        _post(f"/api/rag/jobs/{job_id}/fail", {"worker_id": worker_id, "error": str(exc)[:2000]})
+        return
+    evidence = []
+    for hit in hits:
+        text = str(hit.get("text") or "")
+        evidence.append(
+            {
+                "rag_id": "docs",
+                "library_id": "",
+                "snapshot": "",
+                "source_path": str(hit.get("path") or ""),
+                "content_hash": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                "model_version": "BAAI/bge-small-zh-v1.5",
+                "score": hit.get("score"),
+                "metadata": {
+                    "doc_id": hit.get("doc_id"),
+                    "title": hit.get("title"),
+                    "heading": hit.get("heading"),
+                    "category": hit.get("category"),
+                },
+            }
+        )
+    _post(
+        f"/api/rag/jobs/{job_id}/complete",
+        {
+            "worker_id": worker_id,
+            "snapshot": "",
+            "model_version": "BAAI/bge-small-zh-v1.5",
+            "exit_code": 0,
+            "metrics": {"hits": len(hits), "seconds": round(time.time() - started, 2)},
+            "evidence": evidence,
+        },
+    )
+
+
 def _execute_query(job: dict, worker_id: str) -> None:
     if job.get("rag_id") == "literature":
         _execute_literature_query(job, worker_id)
+        return
+    if job.get("rag_id") == "docs":
+        _execute_docs_query(job, worker_id)
         return
     job_id = job["job_id"]
     payload = job.get("payload") or {}
