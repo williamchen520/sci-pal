@@ -199,6 +199,7 @@ def _execute_docs_query(job: dict, worker_id: str) -> None:
                     "title": hit.get("title"),
                     "heading": hit.get("heading"),
                     "category": hit.get("category"),
+                    "text": text,
                 },
             }
         )
@@ -262,6 +263,7 @@ def _execute_query(job: dict, worker_id: str) -> None:
                     "unit_id": hit.get("unit_id"),
                     "symbol_name": hit.get("symbol_name"),
                     "unit_type": hit.get("unit_type"),
+                    "snippet": snippet,
                 },
             }
         )

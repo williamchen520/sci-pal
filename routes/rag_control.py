@@ -20,6 +20,7 @@ from services.rag_control.plans import (
     heartbeat,
     lease_job,
 )
+from services.rag_control.adjudication import AdjudicationError, add_adjudication, get_multi, list_multi
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
 from services.rag_control.ledger import LedgerError, append_artifact, append_evidence, list_artifacts, list_evidence
 from services.rag_control.models import ModelError, get_model, list_bindings, list_models, register_binding
@@ -255,6 +256,7 @@ def build_rag_control_blueprint() -> Blueprint:
                     query_text=str(body.get("query") or ""),
                     top_k=int(body.get("top_k") or 10),
                     timeout=int(body.get("timeout") or 30),
+                    created_by=session.get("user_id") or "internal",
                 )
             else:
                 result = gateway_query(
@@ -278,5 +280,34 @@ def build_rag_control_blueprint() -> Blueprint:
                 )
             }
         )
+
+    @bp.get("/api/rag/multi")
+    def multi_list():
+        return jsonify({"multi_runs": list_multi()})
+
+    @bp.get("/api/rag/multi/<multi_run_id>")
+    def multi_get(multi_run_id: str):
+        value = get_multi(multi_run_id)
+        if not value:
+            return jsonify({"error": "multi run not found"}), 404
+        return jsonify(value)
+
+    @bp.post("/api/rag/multi/<multi_run_id>/adjudications")
+    def multi_adjudicate(multi_run_id: str):
+        user_id = _human()
+        if not user_id:
+            return jsonify({"error": "human adjudication required"}), 403
+        body = request.get_json(silent=True) or {}
+        try:
+            value = add_adjudication(
+                multi_run_id=multi_run_id,
+                rag_id=str(body.get("rag_id") or ""),
+                decision=str(body.get("decision") or ""),
+                note=str(body.get("note") or ""),
+                decided_by=user_id,
+            )
+        except AdjudicationError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(value), 201
 
     return bp
