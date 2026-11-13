@@ -71,6 +71,14 @@ trace normalize_total -> 4 nodes / 18 edges
 SCIPAL_CODE_READ_DSN=... python -m code_rag.api --port 5010
 ```
 
+## C3 context package
+
+```bash
+SCIPAL_CODE_READ_DSN=... python -m code_rag.context <unit_id> --library-id lib_xxx
+```
+
+Returns target unit + file imports + direct neighbors.
+
 ## Search
 
 ```bash

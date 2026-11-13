@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT))
 from mcp.server.mcpserver import MCPServer  # noqa: E402
 from mcp.server.mcpserver.exceptions import ToolError  # noqa: E402
 
+from code_rag.context import build_context as rag_context  # noqa: E402
 from code_rag.search import search as rag_search  # noqa: E402
 from code_rag.service import health as rag_health  # noqa: E402
 from code_rag.trace import trace as rag_trace  # noqa: E402
@@ -40,8 +41,8 @@ mcp = MCPServer(
     version="0.1.0",
     instructions=(
         "只读代码库工具，按 library_id 隔离。"
-        "code_search 返回符号/路径/行号/片段；code_trace 只做 1–3 跳图扩展；"
-        "code_status 返回索引状态。不要自动改代码。"
+        "code_search 返回符号/路径/行号/片段；code_context 返回 unit + import + 邻居；"
+        "code_trace 只做 1–3 跳图扩展；code_status 返回索引状态。不要自动改代码。"
     ),
 )
 
@@ -94,6 +95,23 @@ def code_status(library_id: str = "") -> str:
     except Exception as exc:  # noqa: BLE001
         raise ToolError(f"code_status failed: {exc}") from None
 
+
+@mcp.tool(
+    description=(
+        "构建 C3 证据包：目标 unit + 目标文件 import + 直接邻居。"
+        "用于符号定位后再 read 确认；不生成最终答案。"
+    )
+)
+def code_context(unit_id: str, library_id: str, max_neighbors: int = 10) -> str:
+    try:
+        result = rag_context(
+            unit_id=unit_id,
+            library_id=library_id,
+            max_neighbors=max(1, min(int(max_neighbors), 30)),
+        )
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as exc:  # noqa: BLE001
+        raise ToolError(f"code_context failed: {exc}") from None
 
 @mcp.tool(
     description=(
