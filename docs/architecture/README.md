@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 175 篇 · 分类索引，文件原路径不变
+> 共 176 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -169,6 +169,7 @@
 | PostgreSQL Write Path Productionization | --- | [设计-PostgreSQL写路径生产化.md](../设计-PostgreSQL写路径生产化.md) |
 | SciPal RAG 控制面设计 v1 | --- | [设计-RAG控制面-v1.md](../设计-RAG控制面-v1.md) |
 | SciPal RAG 控制面与科研追溯方案 v1 | --- | [设计-SciPal-RAG控制面与科研追溯-v1.md](../设计-SciPal-RAG控制面与科研追溯-v1.md) |
+| SciPal Paper 单篇论文分析插件设计 v1 | --- | [设计-scipal-paper-单篇论文分析插件-v1.md](../设计-scipal-paper-单篇论文分析插件-v1.md) |
 | Retrieval SLO and Redundancy Control Design | --- | [设计-检索SLO与冗余控制.md](../设计-检索SLO与冗余控制.md) |
 | 证据落地校验（Grounding） | services/qa/grounding.py： | [证据落地校验.md](../证据落地校验.md) |
 | 调查总结与明日代码审查重点 | --- | [调查总结与明日代码审查重点.md](../调查总结与明日代码审查重点.md) |
