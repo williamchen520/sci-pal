@@ -349,3 +349,62 @@ C1 的 30/30 不是纯 code_search
 修 wrapper/write/params 符号排序
 或正式定义 C3 = search + read/grep
 ```
+
+## 12. C3 定义与重分类
+
+正式定义：
+
+```text
+C1  code_search only
+C2  code_search + code_trace
+C3  code_search + trace + read/grep fallback
+```
+
+30 题原始结果被错误标成 C1；实际用了 read/grep，现重分类为：
+
+```text
+C3  30/30
+```
+
+纯检索 C1：
+
+```text
+file   29/30
+symbol 23/30
+```
+
+最终口径：
+
+| 臂 | File | Symbol |
+|---|---:|---:|
+| B1 | 29/30 | 29/30 |
+| C1 pure | 29/30 | 23/30 |
+| C3 | 30/30 | 30/30 |
+
+不能再说：
+
+```text
+C1 30/30
+code_search 30/30
+```
+
+能说：
+
+```text
+C3（带 read/grep）30/30
+C1 pure 文件 29/30、符号 23/30
+```
+
+## 13. 下一步
+
+```text
+修 C1 符号排序
+  wrapper / write / read_params / settings
+```
+
+如果修不动：
+
+```text
+C1 只用于文件定位
+符号定位交给 C3/read
+```
