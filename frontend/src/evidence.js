@@ -188,6 +188,7 @@ async function load() {
     api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/agreement`),
     api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/assignments`),
   ]);
+  const finalization = await api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/finalization`).catch(() => ({ finalization: null }));
   const workspace = run.workspace_id || "ws_default";
   const memberData = await api(`/api/workspaces/${encodeURIComponent(workspace)}/members`).catch(() => ({ members: [] }));
   const assignments = assignmentData.assignments || [];
@@ -212,6 +213,49 @@ async function load() {
       } · disagreements ${agreement.disagreements.length}`
     );
     header.appendChild(summary);
+  }
+  const fin = finalization.finalization;
+  if (fin) {
+    header.appendChild(
+      el(
+        "div",
+        "meta",
+        `FINALIZED ${fin.decision} · ${fin.finalized_by} · seal ${fin.content_hash.slice(0, 16)}…`
+      )
+    );
+  } else if (agreement.reviewer_count >= 2) {
+    const finalBox = el("div", "decision");
+    const finalSelect = document.createElement("select");
+    for (const [value, label] of [
+      ["accepted", "接受分包"],
+      ["rejected", "拒绝分包"],
+      ["needs_more_evidence", "需要更多证据"],
+    ]) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      finalSelect.appendChild(option);
+    }
+    const finalNote = document.createElement("textarea");
+    finalNote.placeholder = "最终确认理由（会写入封存）";
+    const finalButton = el("button", "", "最终确认并封存");
+    finalButton.addEventListener("click", async () => {
+      finalButton.disabled = true;
+      try {
+        await api(`/api/rag/multi/${encodeURIComponent(multiRunId)}/finalize`, {
+          method: "POST",
+          body: JSON.stringify({ decision: finalSelect.value, note: finalNote.value }),
+        });
+        await load();
+      } catch (error) {
+        errorBox.textContent = error.message;
+        finalButton.disabled = false;
+      }
+    });
+    finalBox.appendChild(finalSelect);
+    finalBox.appendChild(finalNote);
+    finalBox.appendChild(finalButton);
+    header.appendChild(finalBox);
   }
   content.appendChild(header);
   for (const raw of run.groups) content.appendChild(groupNode(attachAdjudications(run, raw), members, assignments));

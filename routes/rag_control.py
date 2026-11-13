@@ -22,6 +22,7 @@ from services.rag_control.plans import (
 )
 from services.rag_control.adjudication import AdjudicationError, add_adjudication, add_conflict, get_multi, list_multi
 from services.rag_control.agreement import agreement
+from services.rag_control.finalization import FinalizationError, finalize, get_finalization
 from services.rag_control.assignments import AssignmentError, assign, complete_assignment, list_assignments
 from services.rag_control.audit import list_adjudications, list_conflicts, ro_crate
 from services.rag_control.gateway import GatewayError, multi_query, query as gateway_query
@@ -423,6 +424,35 @@ def build_rag_control_blueprint() -> Blueprint:
                 assigned_by=user_id,
             )
         except AssignmentError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(value), 201
+
+    @bp.get("/api/rag/multi/<multi_run_id>/finalization")
+    def finalization_get(multi_run_id: str):
+        value = get_finalization(multi_run_id)
+        if not value:
+            return jsonify({"finalization": None})
+        return jsonify({"finalization": value})
+
+    @bp.post("/api/rag/multi/<multi_run_id>/finalize")
+    def multi_finalize(multi_run_id: str):
+        user_id = _human()
+        if not user_id:
+            return jsonify({"error": "human finalizer required"}), 403
+        multi = get_multi(multi_run_id)
+        if not multi:
+            return jsonify({"error": "multi run not found"}), 404
+        if not authorize(user_id, multi["workspace_id"], "finalize_review"):
+            return jsonify({"error": "finalizer permission required"}), 403
+        body = request.get_json(silent=True) or {}
+        try:
+            value = finalize(
+                multi_run_id=multi_run_id,
+                decision=str(body.get("decision") or ""),
+                note=str(body.get("note") or ""),
+                finalized_by=user_id,
+            )
+        except FinalizationError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(value), 201
 

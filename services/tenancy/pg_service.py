@@ -28,10 +28,11 @@ ACTIONS = (
     "manage_members",
     "manage_workspace",
     "review_evidence",
+    "finalize_review",
 )
 ROLE_PERMISSIONS = {
     "owner": set(ACTIONS),
-    "pi": {"read_workspace", "write_own", "read_all", "copy", "review_evidence"},
+    "pi": {"read_workspace", "write_own", "read_all", "copy", "review_evidence", "finalize_review"},
     "member": {"read_workspace", "write_own"},
     "reviewer": {"read_workspace", "review_evidence"},
     "viewer": {"read_workspace"},
