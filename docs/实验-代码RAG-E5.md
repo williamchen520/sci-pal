@@ -131,3 +131,45 @@ config override
 E5 pilot 完成
 E5 full 未完成
 ```
+
+## 7. 硬题 pilot（6 题）
+
+在易题 6/6 之后，加 6 道硬题：
+
+```text
+_numeric helper / view copy
+deprecated read wrapper
+config override
+STAR/Sentieon/Parabricks dispatch
+FastQC raw before trim
+```
+
+结果：
+
+| 臂 | File 正确 | Symbol 正确 |
+|---|---:|---:|
+| B1 | 5/6 | 5/6 |
+| C1 | 6/6 | 6/6 |
+
+唯一分差：
+
+```text
+h01 numeric helper
+  B1: axis_mul_or_truediv / _utils/__init__.py
+  C1: _normalize_total_helper / _normalization.py
+```
+
+解释：
+
+```text
+B1 找到更底层的数组运算
+C1 找到 normalize_total 的直接 helper
+```
+
+但这只是 1 道题：
+
+```text
+不能证明 code RAG 更好
+```
+
+仍需 30 题完整对照。
