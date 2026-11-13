@@ -844,7 +844,171 @@ exemplar 可定位
 
 ---
 
-## 24. 结论
+## 24. 租户私有库与主库联合使用
+
+### 24.1 目标
+
+```text
+用户 A 可以批量入库文章/代码
+  -> 只进入 A 的私有库
+  -> 不影响主库
+  -> 可以联合查询主库
+  -> 不能读取用户 B 的私有库
+```
+
+### 24.2 三种 scope
+
+```text
+scope=private
+  只查当前 workspace 的私有 library
+scope=main
+  只查公共主库
+scope=both
+  私有库 + 主库联合检索
+```
+
+所有入口都必须显式携带：
+
+```text
+workspace_id
+scope
+library_id（可选）
+```
+
+不能只在 UI 层过滤。
+
+### 24.3 结果分组
+
+```text
+private group
+main group
+```
+
+规则：
+
+```text
+不跨库合并分数
+不把私有 evidence 写回主库
+保留 library_id / snapshot / workspace 来源
+```
+
+### 24.4 现有基础与缺口
+
+已有：
+
+```text
+workspace / membership / role
+library.owner / workspace
+library.visibility
+code RAG 的 library_id + snapshot_id
+```
+
+缺口：
+
+```text
+literature RAG 仍是主库形态
+检索入口没有统一 scope
+缓存/任务/证据没有强制 workspace 过滤
+```
+
+### 24.5 文献私有库的两条路线
+
+```text
+A. scipal_rebuild 增加 library_id 分区
+   主库 default main
+   私有库 private:<workspace>
+   所有检索强制 scope
+
+B. 单独 private corpus
+   主库完全不动
+   私有库独立 schema/DB
+```
+
+先评估 A；迁移会影响现有索引，必须单独做，不得直接改生产索引。
+
+### 24.6 代码侧
+
+code RAG 已经是：
+
+```text
+library_id
+snapshot_id
+```
+
+每篇论文/项目一个逻辑 library：
+
+```text
+lib_private_<workspace>_<paper>
+lib_main_<project>
+```
+
+联合查询就是多 library 分组检索，不需要每篇一个数据库。
+
+### 24.7 主库写入与晋升
+
+普通用户：
+
+```text
+只能写自己的私有库
+只能读主库
+```
+
+主库入库：
+
+```text
+curator / admin
+license review
+provenance
+```
+
+私有库晋升：
+
+```text
+private library
+  -> 提名
+  -> 许可证/质量审查
+  -> 复制到 main
+  -> 保留原 library_id 来源
+```
+
+不是移动，是复制 + 溯源。
+
+### 24.8 配额
+
+私有批量入库必须计入：
+
+```text
+存储
+embedding GPU 时间
+检索 QPS
+夜间任务数
+```
+
+否则单个用户可打满平台。
+
+### 24.9 隔离检查清单
+
+```text
+查询是否带 workspace_id
+缓存 key 是否含 workspace/library/model
+向量索引是否强制 library filter
+evidence 是否能被其他租户反查
+后台任务是否会扫到其他租户
+删除私有库是否影响主库
+导出包是否带私有数据
+```
+
+### 24.10 实施顺序
+
+```text
+P1.5 文献私有库/scope 路由   4 人日
+P2.5 配额/审计                2 人日
+P3.5 私有 -> 主库晋升         2 人日
+```
+
+先做 P0 单篇 pipeline，再做私有库合并；不要同时改主库索引和生成链路。
+
+## 25. 结论
 
 ```text
 文献监控 -> 入库      可行
