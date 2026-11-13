@@ -280,7 +280,9 @@ def heartbeat(*, job_id: str, worker_id: str, lease_seconds: int = 60) -> bool:
         pg.close()
 
 
-def complete_job(*, job_id: str, worker_id: str, payload: dict[str, Any]) -> dict[str, Any] | None:
+def complete_job(
+    *, job_id: str, worker_id: str, payload: dict[str, Any], evidence: list[dict[str, Any]] | None = None
+) -> dict[str, Any] | None:
     pg = core_connection()
     try:
         job = pg.execute(
@@ -309,6 +311,33 @@ def complete_job(*, job_id: str, worker_id: str, payload: dict[str, Any]) -> dic
                 job["started_at"],
             ),
         )
+        for item in (evidence or [])[:100]:
+            if not isinstance(item, dict):
+                continue
+            pg.execute(
+                """
+                INSERT INTO rag_evidence
+                  (evidence_id,run_id,plan_id,step_id,rag_id,library_id,snapshot,
+                   source_path,start_line,end_line,content_hash,model_version,score,metadata)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb)
+                """,
+                (
+                    "ev_" + uuid.uuid4().hex[:12],
+                    run_id,
+                    job["plan_id"],
+                    job["step_id"],
+                    str(item.get("rag_id") or job["rag_id"]),
+                    str(item.get("library_id") or job["library_id"]),
+                    str(item.get("snapshot") or payload.get("snapshot") or ""),
+                    str(item.get("source_path") or ""),
+                    item.get("start_line"),
+                    item.get("end_line"),
+                    str(item.get("content_hash") or ""),
+                    str(item.get("model_version") or payload.get("model_version") or ""),
+                    item.get("score"),
+                    json.dumps(item.get("metadata") or {}, ensure_ascii=False),
+                ),
+            )
         pg.execute(
             "UPDATE rag_jobs SET status='succeeded',finished_at=now(),lease_expires_at=NULL WHERE job_id=%s",
             (job_id,),

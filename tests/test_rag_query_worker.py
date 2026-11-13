@@ -1,0 +1,44 @@
+"""R6.1 query worker tests (no network)."""
+
+from __future__ import annotations
+
+import unittest
+from unittest import mock
+
+import scripts.rag_worker as worker
+
+
+class QueryWorkerTests(unittest.TestCase):
+    def test_query_worker_sends_evidence(self) -> None:
+        job = {
+            "job_id": "job_1",
+            "rag_id": "code",
+            "library_id": "lib_1",
+            "job_type": "rag_query",
+            "payload": {"query": "normalize_total", "params": {"top_k": 2}},
+        }
+        response = mock.Mock()
+        response.json.return_value = {
+            "hits": [
+                {
+                    "symbol_name": "normalize_total",
+                    "path": "a.py",
+                    "start_line": 1,
+                    "end_line": 2,
+                    "snippet": "def normalize_total(): pass",
+                    "score": 0.9,
+                    "snapshot_id": "snap_1",
+                }
+            ]
+        }
+        response.raise_for_status.return_value = None
+        with mock.patch("scripts.rag_worker.requests.post", return_value=response), \
+             mock.patch("scripts.rag_worker._post") as post:
+            worker._execute_query(job, "w")
+        body = post.call_args_list[-1].args[1]
+        self.assertEqual(body["evidence"][0]["source_path"], "a.py")
+        self.assertEqual(body["evidence"][0]["metadata"]["symbol_name"], "normalize_total")
+
+
+if __name__ == "__main__":
+    unittest.main()
