@@ -7,6 +7,17 @@ from typing import Any
 from services.db.pg_pool import corpus_connection
 
 MAX_PARAGRAPHS = 200
+_GENERIC_SECTION = {"body", "article", "main", "text", ""}
+
+
+def _display_section(row: dict[str, Any]) -> str:
+    level1 = str(row.get("section_level1") or "").strip()
+    level2 = str(row.get("section_level2") or "").strip()
+    parts = []
+    for part in (level1, level2):
+        if part and part.lower() not in _GENERIC_SECTION and part not in parts:
+            parts.append(part)
+    return " > ".join(parts) or "(untitled)"
 
 
 def _outline_rows(paper_id: str) -> list[dict[str, Any]]:
@@ -35,16 +46,23 @@ def _outline_rows(paper_id: str) -> list[dict[str, Any]]:
 
 
 def paper_outline(paper_id: str) -> list[dict[str, Any]]:
-    return [
-        {
-            "section_path": row.get("section_path") or row.get("section_level1") or "(untitled)",
-            "section_level1": row.get("section_level1") or "",
-            "section_level2": row.get("section_level2") or "",
-            "paragraph_count": int(row.get("paragraph_count") or 0),
-            "first_para_id": row.get("first_para_id"),
-        }
-        for row in _outline_rows(paper_id)
-    ]
+    merged: dict[str, dict[str, Any]] = {}
+    for row in _outline_rows(paper_id):
+        path = _display_section(row)
+        first_sequence = int(row.get("first_sequence") or 0)
+        current = merged.get(path)
+        if current is None or first_sequence < current["first_sequence"]:
+            merged[path] = {
+                "section_path": path,
+                "section_level1": row.get("section_level1") or "",
+                "section_level2": row.get("section_level2") or "",
+                "paragraph_count": int(row.get("paragraph_count") or 0),
+                "first_para_id": row.get("first_para_id"),
+                "first_sequence": first_sequence,
+            }
+        else:
+            current["paragraph_count"] += int(row.get("paragraph_count") or 0)
+    return sorted(merged.values(), key=lambda row: row["first_sequence"])
 
 
 def _section_clause(section: str) -> tuple[str, tuple[Any, ...]]:
@@ -52,8 +70,8 @@ def _section_clause(section: str) -> tuple[str, tuple[Any, ...]]:
     if not section:
         return "", ()
     return (
-        " AND (section_level1 ILIKE %s OR section_path ILIKE %s)",
-        (f"%{section}%", f"%{section}%"),
+        " AND (section_level1 ILIKE %s OR section_level2 ILIKE %s OR section_path ILIKE %s)",
+        (f"%{section}%", f"%{section}%", f"%{section}%"),
     )
 
 

@@ -50,6 +50,22 @@ class PaperReaderTests(unittest.TestCase):
         self.assertEqual(rows[0]["first_para_id"], "p1")
         self.assertTrue(conn.closed)
 
+    def test_body_heading_normalized(self) -> None:
+        conn = _Conn(
+            [
+                {
+                    "section_path": None,
+                    "section_level1": "body",
+                    "section_level2": "Establish a single-cell atlas",
+                    "paragraph_count": 4,
+                    "first_para_id": "p2",
+                }
+            ]
+        )
+        with mock.patch.object(reader, "corpus_connection", return_value=conn):
+            rows = reader.paper_outline("paper_1")
+        self.assertEqual(rows[0]["section_path"], "Establish a single-cell atlas")
+
     def test_paragraphs_section_filter(self) -> None:
         conn = _Conn([])
         with mock.patch.object(reader, "corpus_connection", return_value=conn):
