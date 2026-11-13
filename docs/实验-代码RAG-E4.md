@@ -126,3 +126,19 @@ pytest
 L4 不做
 不把 Pass@1 当卖点
 ```
+
+## 7. 标准不降
+
+```text
+G4 compile PASS
+G5 test_pass@1 NOT RUN
+```
+
+不把 compile 当 Pass@1。
+
+L4 未完成前：
+
+```text
+不声称“代码能跑”
+不进入主路径
+```
