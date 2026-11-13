@@ -50,13 +50,15 @@ class RoCrateTests(unittest.TestCase):
         run = {
             "multi_run_id": "multi_1",
             "query": "q",
+            "rag_ids": [],
             "groups": [],
             "adjudications": [],
             "conflicts": [],
             "duplicate_count": 0,
             "finalization": {"content_hash": "h", "signature": "s", "key_id": "k"},
         }
-        with mock.patch("services.rag_control.audit.get_multi", return_value=run):
+        with mock.patch("services.rag_control.audit.get_multi", return_value=run), \
+             mock.patch("services.rag_control.audit.agreement", return_value={}):
             blob = audit.ro_crate("multi_1")
         with zipfile.ZipFile(io.BytesIO(blob)) as archive:
             data = json.loads(archive.read("data/finalization.json"))
@@ -66,6 +68,7 @@ class RoCrateTests(unittest.TestCase):
         run = {
             "multi_run_id": "multi_1",
             "query": "q",
+            "rag_ids": [],
             "groups": [
                 {
                     "rag_id": "code",
@@ -83,13 +86,15 @@ class RoCrateTests(unittest.TestCase):
             "duplicate_count": 0,
             "finalization": None,
         }
-        with mock.patch("services.rag_control.audit.get_multi", return_value=run):
+        with mock.patch("services.rag_control.audit.get_multi", return_value=run), \
+             mock.patch("services.rag_control.audit.agreement", return_value={}):
             blob = audit.ro_crate("multi_1")
         with zipfile.ZipFile(io.BytesIO(blob)) as archive:
             names = set(archive.namelist())
             metadata = json.loads(archive.read("ro-crate-metadata.json"))
         self.assertIn("data/evidence.json", names)
         self.assertIn("data/finalization.json", names)
+        self.assertIn("data/canonical.json", names)
         self.assertEqual(metadata["@context"], "https://w3id.org/ro/crate/1.1/context")
 
 
