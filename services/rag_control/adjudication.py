@@ -22,6 +22,9 @@ def _multi(row) -> dict[str, Any]:
         "rag_ids": row["rag_ids"] or [],
         "library_id": row["library_id"],
         "workspace_id": row["workspace_id"],
+        "status": row["status"],
+        "finalized_by": row["finalized_by"],
+        "finalized_at": row["finalized_at"].isoformat() if row["finalized_at"] else None,
         "created_by": row["created_by"],
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
     }
