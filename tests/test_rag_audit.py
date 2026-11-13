@@ -34,6 +34,22 @@ class AuditRouteTests(unittest.TestCase):
 
 
 class RoCrateTests(unittest.TestCase):
+    def test_zip_contains_signed_finalization(self) -> None:
+        run = {
+            "multi_run_id": "multi_1",
+            "query": "q",
+            "groups": [],
+            "adjudications": [],
+            "conflicts": [],
+            "duplicate_count": 0,
+            "finalization": {"content_hash": "h", "signature": "s", "key_id": "k"},
+        }
+        with mock.patch("services.rag_control.audit.get_multi", return_value=run):
+            blob = audit.ro_crate("multi_1")
+        with zipfile.ZipFile(io.BytesIO(blob)) as archive:
+            data = json.loads(archive.read("data/finalization.json"))
+        self.assertEqual(data["signature"], "s")
+
     def test_zip_contains_metadata(self) -> None:
         run = {
             "multi_run_id": "multi_1",
@@ -53,6 +69,7 @@ class RoCrateTests(unittest.TestCase):
             "adjudications": [],
             "conflicts": [],
             "duplicate_count": 0,
+            "finalization": None,
         }
         with mock.patch("services.rag_control.audit.get_multi", return_value=run):
             blob = audit.ro_crate("multi_1")
@@ -60,6 +77,7 @@ class RoCrateTests(unittest.TestCase):
             names = set(archive.namelist())
             metadata = json.loads(archive.read("ro-crate-metadata.json"))
         self.assertIn("data/evidence.json", names)
+        self.assertIn("data/finalization.json", names)
         self.assertEqual(metadata["@context"], "https://w3id.org/ro/crate/1.1/context")
 
 

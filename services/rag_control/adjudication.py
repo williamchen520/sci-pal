@@ -59,6 +59,10 @@ def get_multi(multi_run_id: str) -> dict[str, Any] | None:
         conflicts = pg.execute(
             "SELECT * FROM rag_conflict_flags WHERE multi_run_id=%s ORDER BY created_at", (multi_run_id,)
         ).fetchall()
+        finalization = pg.execute(
+            "SELECT * FROM rag_multi_finalizations WHERE multi_run_id=%s ORDER BY created_at DESC LIMIT 1",
+            (multi_run_id,),
+        ).fetchone()
     finally:
         pg.close()
     result = _multi(row)
@@ -94,6 +98,24 @@ def get_multi(multi_run_id: str) -> dict[str, Any] | None:
         }
         for item in conflicts
     ]
+    result["finalization"] = (
+        {
+            "finalization_id": finalization["finalization_id"],
+            "decision": finalization["decision"],
+            "note": finalization["note"],
+            "finalized_by": finalization["finalized_by"],
+            "content_hash": finalization["content_hash"],
+            "signature": finalization["signature"],
+            "public_key": finalization["public_key"],
+            "signature_algorithm": finalization["signature_algorithm"],
+            "key_id": finalization["key_id"],
+            "signed_at": finalization["signed_at"].isoformat() if finalization["signed_at"] else None,
+            "timestamp_source": "local_clock",
+            "created_at": finalization["created_at"].isoformat() if finalization["created_at"] else None,
+        }
+        if finalization
+        else None
+    )
     result["adjudications"] = [
         {
             "adjudication_id": item["adjudication_id"],
