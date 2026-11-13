@@ -2461,6 +2461,38 @@
         ],
         "endpoint": "rag_control.binding_register",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/runs/<run_id>/evidence",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.evidence_list",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/runs/<run_id>/evidence",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.evidence_append",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/runs/<run_id>/artifacts",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "rag_control.artifacts_list",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/rag/runs/<run_id>/artifacts",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "rag_control.artifact_append",
+        "status": "implemented"
       }
     ]
   },
