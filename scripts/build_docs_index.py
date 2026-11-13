@@ -166,6 +166,7 @@ def main() -> None:
 - [实验-RAG控制面-R3](实验-RAG控制面-R3.md)
 - [实验-RAG控制面-R4](实验-RAG控制面-R4.md)
 - [实验-RAG控制面-R5](实验-RAG控制面-R5.md)
+- [实验-RAG控制面-R6](实验-RAG控制面-R6.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
