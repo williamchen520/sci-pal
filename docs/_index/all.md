@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 464 篇 · 2026-11-12
+> 共 465 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -385,6 +385,7 @@
 | 架构规范 | 许可证说明（AGPL-3.0-only） | SPDX-License-Identifier: AGPL-3.0-only | [许可证说明.md](../许可证说明.md) |
 | 架构规范 | PostgreSQL Write Path Productionization | --- | [设计-PostgreSQL写路径生产化.md](../设计-PostgreSQL写路径生产化.md) |
 | 架构规范 | SciPal RAG 控制面设计 v1 | --- | [设计-RAG控制面-v1.md](../设计-RAG控制面-v1.md) |
+| 架构规范 | SciPal RAG 控制面与科研追溯方案 v1 | --- | [设计-SciPal-RAG控制面与科研追溯-v1.md](../设计-SciPal-RAG控制面与科研追溯-v1.md) |
 | 架构规范 | Retrieval SLO and Redundancy Control Design | --- | [设计-检索SLO与冗余控制.md](../设计-检索SLO与冗余控制.md) |
 | 测试报告 | 1. 三种单元 | - 按段落契约，top10 已经有 0.75 的句子覆盖（100 题），30 题为 0.8462； | [证据与评测契约.md](../证据与评测契约.md) |
 | 架构规范 | 证据落地校验（Grounding） | services/qa/grounding.py： | [证据落地校验.md](../证据落地校验.md) |
