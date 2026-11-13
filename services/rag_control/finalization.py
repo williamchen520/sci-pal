@@ -13,6 +13,7 @@ from services.rag_control.adjudication import get_multi
 from services.rag_control.agreement import agreement
 from services.rag_control.assignments import list_assignments
 from services.rag_control.signing import sign, verify
+from services.rag_control.keys import known, register
 
 VALID_DECISIONS = {"accepted", "rejected", "needs_more_evidence"}
 
@@ -56,6 +57,7 @@ def finalize(
         raise FinalizationError("assigned reviewers are not complete")
     content_hash = _hash(run, agreement_data)
     seal = sign(content_hash)
+    register(key_id=seal["key_id"], public_key=seal["public_key"], algorithm=seal["algorithm"])
     finalization_id = "fin_" + uuid.uuid4().hex[:12]
     pg = core_connection()
     try:
@@ -145,6 +147,7 @@ def verify_seal(multi_run_id: str) -> dict[str, Any] | None:
         "signature_valid": verify(
             final["content_hash"], final["signature"] or "", final["public_key"] or ""
         ),
+        "key_known": known(final["key_id"] or "", final["public_key"] or ""),
         "key_id": final["key_id"],
         "signed_at": final["signed_at"],
         "timestamp_source": "local_clock",
