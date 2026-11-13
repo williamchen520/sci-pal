@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 491 篇 · 2026-11-12
+> 共 492 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -409,6 +409,7 @@
 | 阶段计划 | 生信代码 RAG 计划书 | --- | [计划-生信代码RAG.md](../计划-生信代码RAG.md) |
 | 架构规范 | 领域覆盖、领域感知路由与主题级惩罚讨论书 | --- | [讨论-领域覆盖与领域感知路由.md](../讨论-领域覆盖与领域感知路由.md) |
 | 架构规范 | 许可证说明（AGPL-3.0-only） | SPDX-License-Identifier: AGPL-3.0-only | [许可证说明.md](../许可证说明.md) |
+| 架构规范 | SciPal Paper → Code → Replication 主动科研工作流 v1 | --- | [设计-Paper-to-Code与主动科研工作流-v1.md](../设计-Paper-to-Code与主动科研工作流-v1.md) |
 | 架构规范 | PostgreSQL Write Path Productionization | --- | [设计-PostgreSQL写路径生产化.md](../设计-PostgreSQL写路径生产化.md) |
 | 架构规范 | SciPal RAG 控制面设计 v1 | --- | [设计-RAG控制面-v1.md](../设计-RAG控制面-v1.md) |
 | 架构规范 | SciPal RAG 控制面与科研追溯方案 v1 | --- | [设计-SciPal-RAG控制面与科研追溯-v1.md](../设计-SciPal-RAG控制面与科研追溯-v1.md) |
