@@ -159,6 +159,7 @@ def main() -> None:
 - [计划-代码增强RAG-平台模块-v1](计划-代码增强RAG-平台模块-v1.md)
 - [计划-代码RAG评测栈-v1](计划-代码RAG评测栈-v1.md)
 - [设计-RAG控制面-v1](设计-RAG控制面-v1.md)
+- [设计-SciPal-RAG控制面与科研追溯-v1](设计-SciPal-RAG控制面与科研追溯-v1.md)
 - [Changelog](Changelog.md)
 
 ## 为什么不立即 git mv
