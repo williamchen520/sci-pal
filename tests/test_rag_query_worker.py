@@ -68,5 +68,36 @@ class QueryWorkerTests(unittest.TestCase):
         self.assertEqual(body["evidence"][0]["metadata"]["paper_id"], "paper_1")
 
 
+    def test_docs_worker_sends_evidence(self) -> None:
+        job = {
+            "job_id": "job_docs",
+            "rag_id": "docs",
+            "library_id": "",
+            "job_type": "rag_query",
+            "payload": {"query": "MCP", "params": {"top_k": 1}},
+        }
+        response = mock.Mock()
+        response.json.return_value = {
+            "hits": [
+                {
+                    "doc_id": "doc_1",
+                    "title": "Doc",
+                    "path": "docs/a.md",
+                    "heading": "H",
+                    "category": "guide",
+                    "text": "MCP content",
+                    "score": 0.5,
+                }
+            ]
+        }
+        response.raise_for_status.return_value = None
+        with mock.patch("scripts.rag_worker.requests.post", return_value=response), \
+             mock.patch("scripts.rag_worker._post") as post:
+            worker._execute_docs_query(job, "w")
+        body = post.call_args_list[-1].args[1]
+        self.assertEqual(body["evidence"][0]["rag_id"], "docs")
+        self.assertEqual(body["evidence"][0]["source_path"], "docs/a.md")
+
+
 if __name__ == "__main__":
     unittest.main()
