@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree as ET
@@ -11,6 +12,7 @@ from services.imports.paper_build import build_paper, paper_id_for
 from build_db.parse_service import parse_and_store
 from config.settings import DATABASE_PATH
 from services.papers.html_parser import parse_html
+from services.papers.sentences import build_for_paper
 
 
 class AdapterUnavailable(RuntimeError):
@@ -78,8 +80,19 @@ class PaperLaneAdapter:
             result = parse_and_store(
                 Path(DATABASE_PATH), path, path.name, grobid_mode="auto"
             )
+            dsn = (
+                os.environ.get("SCIPAL_PG_OWNER_DSN", "").strip()
+                or os.environ.get("SCIPAL_PG_CORPUS_DSN", "").strip()
+            )
+            sentences = (
+                build_for_paper(paper_id=result["paper_id"], dsn=dsn, replace=True)
+                if dsn
+                else {}
+            )
             session.set_item_parsed(
-                item["import_id"], item["item_id"], {"pdf": result}
+                item["import_id"],
+                item["item_id"],
+                {"pdf": result, "sentences": sentences},
             )
             return "built"
         else:
