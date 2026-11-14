@@ -115,9 +115,36 @@ def paper_paragraphs(
             """,
             (paper_id, *params, offset, limit),
         ).fetchall()
-        if not rows and section.strip().lower() == "results":
+        section_key = section.strip().lower()
+        if not rows and section_key in {"results", "methods"}:
+            if section_key == "results":
+                bound = (
+                    "p.sequence < COALESCE(("
+                    "SELECT min(sequence) FROM paragraphs WHERE paper_id = %s "
+                    "AND (strpos(lower(section_level2), 'discussion') > 0 "
+                    "OR lower(section_level1) = 'discussion')"
+                    "), 2147483647)"
+                )
+                bound_params = (paper_id,)
+            else:
+                bound = (
+                    "p.sequence > COALESCE(("
+                    "SELECT min(sequence) FROM paragraphs WHERE paper_id = %s "
+                    "AND (strpos(lower(section_level2), 'discussion') > 0 "
+                    "OR lower(section_level1) = 'discussion')"
+                    "), 0) "
+                    "AND p.sequence < COALESCE(("
+                    "SELECT min(sequence) FROM paragraphs WHERE paper_id = %s "
+                    "AND (lower(section_level2) IN ("
+                    "'data availability','code availability','references',"
+                    "'acknowledgements','author contributions','funding',"
+                    "'competing interests','additional information') "
+                    "OR lower(section_level1) = 'references')"
+                    "), 2147483647)"
+                )
+                bound_params = (paper_id, paper_id)
             rows = pg.execute(
-                """
+                f"""
                 SELECT p.para_id, p.paper_id, p.sequence, p.text, p.page, p.bbox,
                        p.section_id, p.section_level1, p.section_level2, p.section_path,
                        (SELECT count(*) FROM sentences s WHERE s.para_id = p.para_id) AS sentence_count
@@ -134,15 +161,11 @@ def paper_paragraphs(
                   )
                   AND p.text ~ '[A-Za-z]'
                   AND length(btrim(p.text)) >= 20
-                  AND p.sequence < COALESCE((
-                    SELECT min(sequence) FROM paragraphs
-                    WHERE paper_id = %s
-                      AND (lower(section_level2) LIKE '%%discussion%%' OR lower(section_level1) = 'discussion')
-                  ), 2147483647)
+                  AND {bound}
                 ORDER BY p.sequence
                 OFFSET %s LIMIT %s
                 """,
-                (paper_id, paper_id, offset, limit),
+                (paper_id, *bound_params, offset, limit),
             ).fetchall()
             for row in rows:
                 row["section_fallback"] = "body_headings"
