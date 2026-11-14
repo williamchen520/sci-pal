@@ -18,6 +18,8 @@ def detect_publisher(source_url: str, html: str = "") -> str:
     url = (source_url or "").lower()
     if "nature.com" in url or re.search(r"/articles/s415\d", url):
         return "nature"
+    if "cell.com" in url or "cell press" in url:
+        return "cell"
     if "ncbi.nlm.nih.gov/pmc" in url or "pmc.ncbi.nlm.nih.gov" in url:
         return "pmc"
     return "other"
@@ -26,7 +28,7 @@ def detect_publisher(source_url: str, html: str = "") -> str:
 def _direct_paragraphs(section) -> list[str]:
     paragraphs: list[str] = []
     for node in section.find_all("p"):
-        if node.find_parent("section") is not section and node.find_parent("div", class_="sec") is not section:
+        if node.find_parent(["section", "div"]) is not section:
             continue
         text = _text(node.get_text(" ", strip=True))
         if text:
@@ -57,6 +59,16 @@ def nature_sections(soup: BeautifulSoup) -> list[dict[str, Any]]:
     return sections
 
 
+def cell_sections(soup: BeautifulSoup) -> list[dict[str, Any]]:
+    sections = []
+    for section in soup.select("section[data-title], div.section, div.sec"):
+        title = _section_title(section)
+        paragraphs = _direct_paragraphs(section)
+        if paragraphs:
+            sections.append({"title": title or "(untitled)", "paragraphs": paragraphs})
+    return sections
+
+
 def pmc_sections(soup: BeautifulSoup) -> list[dict[str, Any]]:
     sections = []
     for section in soup.select("section, div.sec"):
@@ -76,6 +88,8 @@ def normalize_sections(
         sections = nature_sections(soup)
     elif publisher == "pmc":
         sections = pmc_sections(soup)
+    elif publisher == "cell":
+        sections = cell_sections(soup)
     else:
         sections = []
     return sections or fallback
