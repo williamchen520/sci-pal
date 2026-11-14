@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import psycopg
@@ -21,6 +22,34 @@ def _import_name(value: str) -> str:
         if value.startswith(prefix):
             return value[len(prefix):]
     return value
+
+
+_CAPABILITIES = (
+    ("infercnv", "CNV inference"),
+    ("cellcall", "cell-cell communication"),
+    ("cellchat", "cell-cell communication"),
+    ("scenic", "regulon / SCENIC"),
+    ("scopeloomr", "SCENIC loom"),
+    ("scmetabolism", "metabolism"),
+    ("monocle", "trajectory"),
+    ("singler", "cell annotation"),
+    ("celldex", "reference atlas"),
+    ("harmony", "batch integration"),
+    ("nmf", "NMF programs"),
+    ("aucell", "regulon scoring"),
+    ("gsva", "pathway scoring"),
+)
+
+
+def _purpose(path: str, imports: list[str]) -> str:
+    name = path.rsplit("/", 1)[-1]
+    match = re.search(r"figure[_ .-]?(\d+)", name, re.IGNORECASE)
+    parts = [f"Figure {match.group(1)} analysis"] if match else [name]
+    lowered = [item.lower() for item in imports]
+    for needle, label in _CAPABILITIES:
+        if any(needle in item for item in lowered) and label not in parts:
+            parts.append(label)
+    return "; ".join(parts)
 
 
 def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
@@ -70,6 +99,9 @@ def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
                     "unit_count": len(symbols),
                     "symbols": symbols,
                     "imports": imports,
+                    "purpose": _purpose(path, imports),
+                    "purpose_source": "inferred",
+                    "purpose_confidence": "low",
                     "edges": {str(k): int(v) for k, v in edges.items()},
                 }
             )

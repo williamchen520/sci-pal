@@ -21,6 +21,9 @@ language
 unit_count
 symbols
 imports[]
+purpose
+purpose_source=inferred
+purpose_confidence=low
 edges {imports, calls}
 ```
 
@@ -55,7 +58,24 @@ Figure.2.R
   data.table, dplyr, ...
 ```
 
-## 4. 解释
+## 4. Purpose（推断）
+
+只用文件名 + imports 推断，不调用 LLM：
+
+```text
+Figure.1.R
+  Figure 1 analysis; batch integration; NMF programs
+
+Figure.2.R
+  Figure 2 analysis; CNV inference; metabolism;
+  batch integration; NMF programs; regulon scoring
+
+Figure.6.R
+  Figure 6 analysis; cell-cell communication;
+  regulon / SCENIC; cell annotation; reference atlas
+```
+
+## 5. 解释
 
 这 7 个脚本主要是顶层分析脚本：
 
@@ -67,7 +87,7 @@ Figure.2 有两个函数单元，所以是 3 个 unit。
 
 `unit_count` 不等于“业务模块数”；它反映 parser 看到的单元。
 
-## 5. 不做什么
+## 6. 不做什么
 
 ```text
 不生成 LLM 模块说明
@@ -77,7 +97,7 @@ Figure.2 有两个函数单元，所以是 3 个 unit。
 
 `purpose` 留给 scipal-paper/LLM 基于代码与论文生成，并必须标 inferred。
 
-## 6. 测试
+## 7. 测试
 
 ```text
 unbound -> status unbound
@@ -88,7 +108,7 @@ bound -> modules 1, imports 12
 test_paper_modules 2 passed
 ```
 
-## 7. 路由
+## 8. 路由
 
 ```text
 json_routes=265
@@ -96,7 +116,7 @@ app_routes=265
 OK
 ```
 
-## 8. 下一步
+## 9. 下一步
 
 ```text
 1. purpose 生成（标 inferred）

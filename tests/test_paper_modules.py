@@ -56,6 +56,8 @@ class ModuleTests(unittest.TestCase):
         self.assertEqual(result["modules"][0]["path"], "Figure.1.R")
         self.assertEqual(result["modules"][0]["edges"]["imports"], 12)
         self.assertIn("Seurat", result["modules"][0]["imports"])
+        self.assertEqual(result["modules"][0]["purpose_source"], "inferred")
+        self.assertEqual(result["modules"][0]["purpose_confidence"], "low")
 
 
 if __name__ == "__main__":
