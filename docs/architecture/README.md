@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 193 篇 · 分类索引，文件原路径不变
+> 共 194 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -66,6 +66,7 @@
 | 实验记录：Paper Code Links | --- | [实验-Paper-Code-Links.md](../实验-Paper-Code-Links.md) |
 | 实验记录：Paper Data Flow | --- | [实验-Paper-Data-Flow.md](../实验-Paper-Data-Flow.md) |
 | 实验记录：Paper Module Map | --- | [实验-Paper-Module-Map.md](../实验-Paper-Module-Map.md) |
+| 实验记录：Paper Plugin Smoke | --- | [实验-Paper-Plugin-Smoke.md](../实验-Paper-Plugin-Smoke.md) |
 | 实验记录：Paper Reader API | --- | [实验-Paper-Reader-API.md](../实验-Paper-Reader-API.md) |
 | 实验记录：Paper Section API | --- | [实验-Paper-Section-API.md](../实验-Paper-Section-API.md) |
 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |
