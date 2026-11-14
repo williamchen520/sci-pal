@@ -2749,6 +2749,14 @@
         ],
         "endpoint": "papers_actions.bind_paper_code_link",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/modules",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_modules",
+        "status": "implemented"
       }
     ]
   },
