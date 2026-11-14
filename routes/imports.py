@@ -9,7 +9,7 @@ from services.imports.code_lane import CodeLaneAdapter
 from services.imports.orchestrator import process_import
 from services.imports.paper_lane import PaperLaneAdapter
 from services.imports.queue import QueueError, requeue
-from services.imports.upload import UploadError, save_uploaded_files
+from services.imports.upload import UploadError, save_local_paths, save_uploaded_files
 from services.tenancy.context import context_from_env
 from services.tenancy.web import auth_required
 
@@ -22,6 +22,23 @@ def build_imports_blueprint() -> Blueprint:
 
     def _allowed() -> bool:
         return bool(session.get("user_id")) or not auth_required()
+
+    @bp.post("/api/imports/local")
+    def import_local_paths():
+        if not _allowed():
+            return jsonify({"error": "login required"}), 401
+        payload = request.get_json(silent=True) or {}
+        try:
+            result = save_local_paths(
+                [str(path) for path in (payload.get("paths") or [])],
+                tenant_id=_tenant(),
+                library_id=str(payload.get("library_id") or ""),
+                origin=str(payload.get("origin") or "dsh"),
+                created_by=str(session.get("user_id") or ""),
+            )
+        except UploadError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(result), 201
 
     @bp.post("/api/imports/upload")
     def upload_import():
