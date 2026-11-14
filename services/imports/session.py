@@ -50,6 +50,7 @@ def create_import(
                 "source_kind": detection.source_kind,
                 "source_uri": uri,
                 "staged_path": str(item.get("staged_path") or ""),
+                "fallback_path": str(item.get("fallback_path") or ""),
                 "content_hash": str(item.get("content_hash") or ""),
                 "status": status,
                 "error": "" if status == "detected" else "format not recognized",
@@ -66,8 +67,8 @@ def create_import(
         for row in prepared:
             pg.execute(
                 "INSERT INTO import_items "
-                "(import_id,item_id,kind,source_kind,source_uri,staged_path,content_hash,status,error) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                "(import_id,item_id,kind,source_kind,source_uri,staged_path,fallback_path,content_hash,status,error) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                 (
                     import_id,
                     row["item_id"],
@@ -75,6 +76,7 @@ def create_import(
                     row["source_kind"],
                     row["source_uri"],
                     row["staged_path"],
+                    row["fallback_path"],
                     row["content_hash"],
                     row["status"],
                     row["error"],

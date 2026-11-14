@@ -69,11 +69,17 @@ def _prepare_items(manifest: dict[str, Any], limit: int = 0) -> list[dict[str, A
             raise BatchError(f"staged file not found: {path}")
         if path.suffix.lower() not in {".html", ".htm"}:
             raise BatchError(f"not an HTML file: {path}")
+        fallback = str(raw.get("pdf_staged_path") or "").strip()
+        if fallback:
+            candidate = Path(fallback)
+            candidate = candidate if candidate.is_absolute() else base / candidate
+            fallback = str(candidate.resolve()) if candidate.is_file() else ""
         item = {
             "uri": str(raw.get("source_url") or path),
             "staged_path": str(path),
             "source_url": str(raw.get("source_url") or ""),
             "doi": str(raw.get("doi") or ""),
+            "fallback_path": fallback,
             "content_hash": sha256_file(path),
         }
         prepared.append(item)

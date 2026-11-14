@@ -495,6 +495,7 @@ app 重启后需再验证 outline 归一化
 | [H0 HTML Batch CLI](docs/plans/single-tenant/H0-html-batch.md) | 批量 CLI 计划 |
 | [H1 Nature/PMC Adapter](docs/plans/single-tenant/H1-nature-pmc-adapter.md) | HTML 适配器 |
 | [H2 HTML 质量门禁](docs/plans/single-tenant/H2-html-quality-gate.md) | 质量门禁 |
+| [H3 PDF fallback](docs/plans/single-tenant/H3-pdf-fallback.md) | PDF 回退 |
 | [实验-Paper-Section-API](docs/实验-Paper-Section-API.md) | 按类型取整节 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |

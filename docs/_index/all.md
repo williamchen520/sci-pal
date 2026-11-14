@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 540 篇 · 2026-11-12
+> 共 541 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -208,6 +208,7 @@
 | 阶段计划 | H0 计划表：HTML Batch CLI | --- | [H0-html-batch.md](../plans/single-tenant/H0-html-batch.md) |
 | 阶段计划 | H1 计划表：Nature / PMC HTML Adapter | --- | [H1-nature-pmc-adapter.md](../plans/single-tenant/H1-nature-pmc-adapter.md) |
 | 阶段计划 | H2 计划表：HTML 质量门禁 | --- | [H2-html-quality-gate.md](../plans/single-tenant/H2-html-quality-gate.md) |
+| 阶段计划 | H3 计划表：HTML 失败后 PDF Fallback | --- | [H3-pdf-fallback.md](../plans/single-tenant/H3-pdf-fallback.md) |
 | 阶段计划 | N0 计划表：单租户导入管线 | --- | [N0-import-pipeline.md](../plans/single-tenant/N0-import-pipeline.md) |
 | 阶段计划 | 租户联邦执行计划总表 | --- | [00-execution-plan.md](../plans/tenant-federation/00-execution-plan.md) |
 | 阶段计划 | 决策记录：Tenant-ready 单租户优先 | --- | [DECISION-single-tenant-first.md](../plans/tenant-federation/DECISION-single-tenant-first.md) |
