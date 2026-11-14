@@ -1,7 +1,7 @@
 # 实验记录：Sentence Evidence 与 Caption 过滤
 
 > 日期：2026-11-14  
-> 状态：句级证据 API 可用；先做句级 FTS，段落向量召回下一步接  
+> 状态：段落向量召回 + 句级 FTS 已接；句向量未做  
 > 目标：补上 `paper → paragraph → sentence → evidence`
 
 ---
@@ -72,13 +72,21 @@ score
 实现：
 
 ```text
-sentences.search_vector
-  @@ websearch_to_tsquery('english', query)
-ts_rank_cd
-paper_id scoped
+paragraph_embeddings
+  -> 段落向量召回候选段
+  -> sentences.search_vector
+       @@ websearch_to_tsquery('english', query)
+  -> ts_rank_cd
+  -> paper_id scoped
 ```
 
-当前是纯句级 FTS，不是段落向量链。
+返回字段增加：
+
+```text
+match_type
+  paragraph_vector+sentence_fts
+  sentence_fts（模型不可用 fallback）
+```
 
 ---
 
@@ -86,8 +94,14 @@ paper_id scoped
 
 ```text
 paper_nature_hcc_lipid_macrophage_b3cb651d2d57
+
 query: lycopene chiglitazar
 hits: 3
+match_type: paragraph_vector+sentence_fts
+
+query: immunosuppressive lipid macrophages
+hits: 2
+match_type: paragraph_vector+sentence_fts
 ```
 
 命中：
@@ -118,17 +132,16 @@ test_paper_evidence 2 passed
 ## 5. 边界
 
 ```text
-没有段落向量召回
+已有段落向量召回
 没有 sentence embedding
 没有跨 RAG 合并
 HTTP 路由尚未在新 app 进程验证
 ```
 
-句子 FTS 只能解决“精确词命中”；
+段落向量负责语义召回，句级 FTS 负责精确证据。
 
 ```text
-“免疫抑制微环境”这类语义查询
-仍需要 paragraph vector recall
+figure_caption / table_caption 已排除
 ```
 
 ---
@@ -136,7 +149,7 @@ HTTP 路由尚未在新 app 进程验证
 ## 6. 下一步
 
 ```text
-1. paragraph vector recall -> sentence FTS
-2. app 重启后验证 evidence HTTP
+1. app 重启后验证 evidence HTTP
+2. sentence embedding（可选）
 3. scipal-paper 接入
 ```
