@@ -2,7 +2,7 @@
   "plan_id": "N0",
   "title": "Single-Tenant Import Pipeline",
   "version": 1,
-  "status": "in_progress",
+  "status": "done",
   "depends_on": [
     "S0"
   ],
@@ -59,7 +59,7 @@
       "id": "N0.7",
       "title": "Code lane adapter",
       "file": "services/imports/code_lane.py",
-      "status": "in_progress"
+      "status": "done"
     },
     {
       "id": "N0.8",
@@ -71,7 +71,7 @@
       "id": "N0.9",
       "title": "Pipeline tests",
       "file": "tests/test_import_pipeline.py",
-      "status": "in_progress"
+      "status": "done"
     },
     {
       "id": "N0.10",
@@ -172,8 +172,9 @@
         "sentences": 623
       }
     },
-    "code_index": "snap_32d96fda1f73cf79 units=1 dim=512",
+    "code_index": "imp_2782e7b80c7f4bb0 snap_6c388bfee72d374e 1 unit dim 512",
     "routes": 278,
-    "journal_optimizer": "wired; filename detection + title fallback"
+    "journal_optimizer": "wired; filename detection + title fallback",
+    "mixed_e2e": "imp_f4da07a5e66d43f1 html/jats/python all built"
   }
 }

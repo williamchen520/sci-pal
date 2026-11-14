@@ -501,6 +501,7 @@ app 重启后需再验证 outline 归一化
 | [U1 Import Queue](docs/plans/single-tenant/U1-import-queue.md) | DB 队列 + worker |
 | [U2 DSH 本地路径](docs/plans/single-tenant/U2-dsh-local-import.md) | DSH 路径导入 |
 | [实验-HTML批量验收](docs/实验-HTML批量验收.md) | 综合验收 |
+| [实验-N0-端到端](docs/实验-N0-端到端.md) | N0 端到端 |
 | [实验-Paper-Section-API](docs/实验-Paper-Section-API.md) | 按类型取整节 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
