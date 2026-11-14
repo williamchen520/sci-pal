@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 155 篇 · 分类索引，文件原路径不变
+> 共 156 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -92,6 +92,7 @@
 | Phase 2：Watch Runs / Items / Seen 写路径 | createrun | [架构-Phase2-WatchData写路径.md](../架构-Phase2-WatchData写路径.md) |
 | Phase 2：Watch Profile Journals 写路径 | setjournals delete + insert | [架构-Phase2-WatchJournals写路径.md](../架构-Phase2-WatchJournals写路径.md) |
 | Phase 2：Watch Profile 写路径（第一片） | createprofile | [架构-Phase2-WatchProfile写路径.md](../架构-Phase2-WatchProfile写路径.md) |
+| 架构状态：tenant-ready 单租户架构与 Phase 2 Roadmap | --- | [架构-租户状态与Phase2Roadmap.md](../架构-租户状态与Phase2Roadmap.md) |
 | 架构变更授权：P0 数据层契约 | --- | [架构变更-P0-数据层契约.md](../架构变更-P0-数据层契约.md) |
 | 架构变更授权：P1 主库回填 | --- | [架构变更-P1-主库回填.md](../架构变更-P1-主库回填.md) |
 | 架构变更授权：P2 兼容视图与双写 | --- | [架构变更-P2-兼容视图与双写.md](../架构变更-P2-兼容视图与双写.md) |

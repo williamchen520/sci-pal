@@ -221,6 +221,7 @@ def main() -> None:
 - [讨论-06-租户工作区隔离与星形联邦](讨论-06-租户工作区隔离与星形联邦.md)
 - [租户联邦执行计划总表](plans/tenant-federation/00-execution-plan.md)
 - [决策-单租户优先](plans/tenant-federation/DECISION-single-tenant-first.md)
+- [架构-租户状态与Phase2Roadmap](架构-租户状态与Phase2Roadmap.md)
 - [S0 TenantContext](plans/tenant-federation/S0-tenant-context.md)
 - [实验-Paper-Section-API](实验-Paper-Section-API.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)

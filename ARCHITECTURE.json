@@ -5,7 +5,7 @@
   "project": {
     "name": "SciPal",
     "description": "Local-first retrieval-augmented research workbench for literature search, structured evidence, systematic review and traceable writing.",
-    "status": "active development / PG-only",
+    "status": "tenant-ready single-tenant / PG-only",
     "version": "dev @ 2026-11-08",
     "license": "See LICENSE",
     "repository": "https://github.com/williamchen520/sci-pal"
@@ -2859,7 +2859,8 @@
     "GraphRAG / RAPTOR are plugin experiments, not main architecture.",
     "Client ingest tracking plugin is not wired to real import UI.",
     "Base image still contains chromadb package although runtime does not use it.",
-    "Some cold POST endpoints are not covered by automated smoke tests."
+    "Some cold POST endpoints are not covered by automated smoke tests.",
+    "Multi-tenant full control plane is frozen as Phase 2; current mode is tenant-ready single-tenant."
   ],
   "docs": {
     "final_report": "docs/PG-only迁移总报告-2026-11-08.md",
@@ -2891,5 +2892,70 @@
     "default": "PostgreSQL",
     "sqlite": "small single-process checks only with explicit opt-in",
     "fail_fast": true
+  },
+  "project_status": {
+    "mode": "tenant-ready-single-tenant",
+    "label": "tenant-ready 单租户架构",
+    "phase2_control_plane": "frozen",
+    "decision": "TENANT-DELIVERY-001",
+    "updated_at": "2026-11-14",
+    "active_phases": [
+      "E0",
+      "E1",
+      "E2",
+      "S0"
+    ],
+    "frozen_phases": [
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7",
+      "E8"
+    ],
+    "architecture_doc": "docs/架构-租户状态与Phase2Roadmap.md"
+  },
+  "phase2_roadmap": {
+    "status": "frozen",
+    "scope": "tenant connector, gateway scope, peer deny, support access, ImportSession, lifecycle",
+    "resume_when": [
+      "more than 3 real tenants",
+      "self-service onboarding required",
+      "external customer isolation required",
+      "compliance requires dedicated DB/backup",
+      "tenant quota/billing required"
+    ],
+    "phases": [
+      {
+        "id": "E3",
+        "title": "Tenant Connector",
+        "status": "frozen"
+      },
+      {
+        "id": "E4",
+        "title": "Gateway Scope",
+        "status": "frozen"
+      },
+      {
+        "id": "E5",
+        "title": "Peer Tenant Deny Tests",
+        "status": "frozen"
+      },
+      {
+        "id": "E6",
+        "title": "Support Access and Audit",
+        "status": "frozen"
+      },
+      {
+        "id": "E7",
+        "title": "ImportSession for Tenants",
+        "status": "frozen"
+      },
+      {
+        "id": "E8",
+        "title": "Quota, Deletion, Migration",
+        "status": "frozen"
+      }
+    ]
   }
 }

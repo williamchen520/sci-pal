@@ -4,7 +4,8 @@
 > 版本：v1  
 > 状态：执行中  
 > 当前阶段：单租户交付  
-> 交付模式：tenant-ready 单租户优先  
+> 交付模式：tenant-ready 单租户  
+> Phase 2：frozen  
 > 机器可读：`00-execution-plan.json`
 
 ---
@@ -62,12 +63,12 @@ tenant -> tenant
 | E1 | federation_catalog + 星形约束 | E0 | done | `E1-federation-catalog.md/.json` | catalog 只登记 main；拒绝 peer |
 | E2 | tenant provisioning | E1 | done | `E2-tenant-provisioning.md/.json` | DB/storage/index namespace |
 | S0 | TenantContext 单租户优先 | E0/E1 | done | `S0-tenant-context.md/.json` | 单租户 + main |
-| E3 | tenant connector | E2 | deferred | `E3-tenant-connector.md/.json` | 只允许 main；短时 token |
-| E4 | gateway scope | E3 | deferred | `E4-gateway-scope.md/.json` | own/main/both |
-| E5 | tenant→tenant 拒绝测试 | E4 | deferred | `E5-peer-deny-tests.md/.json` | 结构性拒绝 |
-| E6 | support access + audit | E5 | deferred | `E6-support-access-audit.md/.json` | break-glass + 双人审批 |
-| E7 | ImportSession 接租户 | E6 | deferred | `E7-import-session.md/.json` | XML/PDF/HTML/code 分流 |
-| E8 | 配额、删除、迁移 | E7 | deferred | `E8-quota-delete-migration.md/.json` | 生命周期闭环 |
+| E3 | tenant connector | E2 | frozen | `E3-tenant-connector.md/.json` | 只允许 main；短时 token |
+| E4 | gateway scope | E3 | frozen | `E4-gateway-scope.md/.json` | own/main/both |
+| E5 | tenant→tenant 拒绝测试 | E4 | frozen | `E5-peer-deny-tests.md/.json` | 结构性拒绝 |
+| E6 | support access + audit | E5 | frozen | `E6-support-access-audit.md/.json` | break-glass + 双人审批 |
+| E7 | ImportSession 接租户 | E6 | frozen | `E7-import-session.md/.json` | XML/PDF/HTML/code 分流 |
+| E8 | 配额、删除、迁移 | E7 | frozen | `E8-quota-delete-migration.md/.json` | 生命周期闭环 |
 
 ---
 
@@ -236,7 +237,7 @@ E0  done
 E1  done
 E2  done
 S0  done
-E3-E8  deferred；恢复条件见决策记录
+E3-E8  frozen（Phase 2 Roadmap）；恢复条件见决策记录
 ```
 
 ---

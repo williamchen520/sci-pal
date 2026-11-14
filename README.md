@@ -1,7 +1,7 @@
 # SciPal
 
 > 本地可部署的科研 RAG 工作台：文献、代码、证据链、综述与控制面。  
-> 状态：active development / PG-only。  
+> 项目状态：**【 tenant-ready 单租户架构】**；Phase 2 多租户控制面冻结。  
 > 不用于临床或受监管决策。
 
 ---
@@ -487,6 +487,7 @@ app 重启后需再验证 outline 归一化
 | [讨论-06-租户工作区隔离与星形联邦](docs/讨论-06-租户工作区隔离与星形联邦.md) | 租户隔离与联邦拓扑 |
 | [租户联邦执行计划总表](docs/plans/tenant-federation/00-execution-plan.md) | E0–E8 执行状态 |
 | [决策-单租户优先](docs/plans/tenant-federation/DECISION-single-tenant-first.md) | 暂停 E3–E8 |
+| [架构-租户状态与Phase2Roadmap](docs/架构-租户状态与Phase2Roadmap.md) | 当前架构状态 |
 | [实验-Paper-Section-API](docs/实验-Paper-Section-API.md) | 按类型取整节 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
