@@ -2861,6 +2861,14 @@
         ],
         "endpoint": "imports.process_import_route",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/imports/upload",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "imports.upload_import",
+        "status": "implemented"
       }
     ]
   },

@@ -8,6 +8,7 @@ from services.imports import session as import_session
 from services.imports.code_lane import CodeLaneAdapter
 from services.imports.orchestrator import process_import
 from services.imports.paper_lane import PaperLaneAdapter
+from services.imports.upload import UploadError, save_uploaded_files
 from services.tenancy.context import context_from_env
 from services.tenancy.web import auth_required
 
@@ -20,6 +21,23 @@ def build_imports_blueprint() -> Blueprint:
 
     def _allowed() -> bool:
         return bool(session.get("user_id")) or not auth_required()
+
+    @bp.post("/api/imports/upload")
+    def upload_import():
+        if not _allowed():
+            return jsonify({"error": "login required"}), 401
+        files = request.files.getlist("files")
+        try:
+            result = save_uploaded_files(
+                files,
+                tenant_id=_tenant(),
+                library_id=str(request.form.get("library_id") or ""),
+                origin=str(request.form.get("origin") or "dsh"),
+                created_by=str(session.get("user_id") or ""),
+            )
+        except UploadError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify(result), 201
 
     @bp.post("/api/imports")
     def create_import():

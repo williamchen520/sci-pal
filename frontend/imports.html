@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>批量导入 · SciPal</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; background: #f5f6f8; color: #202124; }
+    header { padding: 18px 24px; background: #fff; border-bottom: 1px solid #e3e5e8; display: flex; gap: 18px; align-items: center; }
+    header a { color: #1a5fb4; text-decoration: none; }
+    main { max-width: 920px; margin: 28px auto; padding: 0 18px; }
+    .card { background: #fff; border: 1px solid #e3e5e8; border-radius: 12px; padding: 20px; margin-bottom: 18px; }
+    label { display: block; font-weight: 600; margin: 10px 0 6px; }
+    input[type=text] { width: 360px; padding: 9px 10px; border: 1px solid #cfd3d8; border-radius: 7px; }
+    input[type=file] { margin: 6px 0; }
+    button { padding: 9px 16px; border: 0; border-radius: 7px; background: #1a5fb4; color: #fff; cursor: pointer; margin-right: 8px; }
+    button.secondary { background: #e9edf3; color: #1a5fb4; }
+    button:disabled { opacity: .45; cursor: default; }
+    pre { background: #0f1720; color: #d7e2ee; padding: 14px; border-radius: 8px; overflow: auto; max-height: 420px; }
+    .muted { color: #6b7280; font-size: 13px; }
+    .error { color: #b42318; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="/index.html">← SciPal</a>
+  <strong>批量导入</strong>
+</header>
+<main>
+  <section class="card">
+    <p class="muted">支持 HTML / PDF / XML。上传只落 staging 并创建 ImportSession，不自动建库。</p>
+    <label for="library">library_id</label>
+    <input id="library" type="text" value="lib_default">
+    <label for="files">选择文件（可多选）</label>
+    <input id="files" type="file" multiple accept=".html,.htm,.pdf,.xml">
+    <div style="margin-top:14px">
+      <button id="upload">上传并创建会话</button>
+      <button id="process" class="secondary" disabled>开始处理</button>
+    </div>
+    <p id="error" class="error"></p>
+  </section>
+
+  <section class="card">
+    <h3>会话</h3>
+    <p id="session" class="muted">尚未上传。</p>
+    <pre id="output">{}</pre>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let importId = null;
+
+async function request(url, options = {}) {
+  const response = await fetch(url, options);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+  return body;
+}
+
+$('upload').addEventListener('click', async () => {
+  $('error').textContent = '';
+  const files = $('files').files;
+  if (!files.length) { $('error').textContent = '请选择文件'; return; }
+  const form = new FormData();
+  form.append('library_id', $('library').value.trim() || 'lib_default');
+  for (const file of files) form.append('files', file);
+  $('upload').disabled = true;
+  try {
+    const body = await request('/api/imports/upload', { method: 'POST', body: form });
+    importId = body.import_id;
+    $('session').textContent = `import_id=${importId} status=${body.status} items=${body.total_items}`;
+    $('output').textContent = JSON.stringify(body, null, 2);
+    $('process').disabled = false;
+  } catch (err) {
+    $('error').textContent = err.message;
+  } finally {
+    $('upload').disabled = false;
+  }
+});
+
+$('process').addEventListener('click', async () => {
+  if (!importId) return;
+  $('error').textContent = '';
+  $('process').disabled = true;
+  try {
+    const body = await request(`/api/imports/${importId}/process`, { method: 'POST' });
+    $('output').textContent = JSON.stringify(body, null, 2);
+    $('session').textContent = `import_id=${importId} status=${body.status}`;
+  } catch (err) {
+    $('error').textContent = err.message;
+  } finally {
+    $('process').disabled = false;
+  }
+});
+</script>
+</body>
+</html>

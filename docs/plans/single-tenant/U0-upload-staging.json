@@ -1,0 +1,87 @@
+{
+  "plan_id": "U0",
+  "title": "Frontend Batch Upload Staging",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "H0",
+    "H1",
+    "H2",
+    "H3",
+    "H4"
+  ],
+  "objective": "Upload HTML/PDF/XML to a safe staging directory and create an ImportSession without processing.",
+  "decisions": [
+    "U0-1 accepted extensions: html/htm/pdf/xml",
+    "U0-2 max file size 50 MB",
+    "U0-3 max batch size 50 files",
+    "U0-4 sanitize to basename plus whitelist",
+    "U0-5 storage root data/imports/staging/<uuid>/",
+    "U0-6 create a queued ImportSession",
+    "U0-7 do not auto-process",
+    "U0-8 use existing auth/session guard"
+  ],
+  "tasks": [
+    {
+      "id": "U0.1",
+      "title": "Staging helper",
+      "file": "services/imports/upload.py",
+      "status": "done"
+    },
+    {
+      "id": "U0.2",
+      "title": "Multipart upload route",
+      "file": "routes/imports.py",
+      "status": "done"
+    },
+    {
+      "id": "U0.3",
+      "title": "Frontend upload page",
+      "file": "frontend/imports.html",
+      "status": "done"
+    },
+    {
+      "id": "U0.4",
+      "title": "Upload tests",
+      "file": "tests/test_import_upload.py",
+      "status": "done"
+    },
+    {
+      "id": "U0.5",
+      "title": "Align Markdown and JSON plans",
+      "file": "docs/plans/single-tenant/U0-upload-staging.md",
+      "status": "done"
+    }
+  ],
+  "api": {
+    "method": "POST",
+    "path": "/api/imports/upload",
+    "content_type": "multipart/form-data",
+    "fields": [
+      "library_id",
+      "origin",
+      "files[]"
+    ]
+  },
+  "acceptance": [
+    "multiple files upload",
+    "non-whitelisted extension rejected",
+    "oversized file rejected",
+    "path traversal rejected",
+    "ImportSession created",
+    "no automatic build"
+  ],
+  "out_of_scope": [
+    "async worker (U1)",
+    "DSH MCP tool (U2)",
+    "auto process",
+    "resume",
+    "object storage"
+  ],
+  "verification": {
+    "tests": "4 passed",
+    "upload_status": 201,
+    "import_id": "imp_51cdffab9f124b5e",
+    "route": "/api/imports/upload"
+  }
+}
