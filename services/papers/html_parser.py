@@ -12,6 +12,8 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
+from services.papers.html_adapters import detect_publisher, normalize_sections
+
 
 def _text(value: str | None) -> str:
     return re.sub(r"\s+", " ", value or "").strip()
@@ -98,13 +100,18 @@ def parse_html(html: str | bytes, *, source_url: str = "") -> dict[str, Any]:
         paragraphs = [_text(p.get_text(" ", strip=True)) for p in soup.find_all("p")]
         sections = [{"title": "Body", "paragraphs": [p for p in paragraphs if p]}]
 
+    publisher = detect_publisher(source_url, text)
+    sections = normalize_sections(soup, publisher, sections)
+
     abstract = ""
     for section in sections:
         if section["title"].lower() == "abstract":
             abstract = " ".join(section["paragraphs"])
             break
     if not abstract:
-        abstract_node = soup.select_one("#Abs1-content, section[data-title='Abstract']")
+        abstract_node = soup.select_one(
+            "#Abs1-content, section[data-title='Abstract'], section.abstract, div.abstract"
+        )
         if abstract_node:
             abstract = _text(abstract_node.get_text(" ", strip=True))
 
@@ -132,6 +139,7 @@ def parse_html(html: str | bytes, *, source_url: str = "") -> dict[str, Any]:
     return {
         "source_url": source_url,
         "source_kind": "html",
+        "publisher": publisher,
         "content_hash": hashlib.sha256(raw).hexdigest(),
         "title": title,
         "doi": doi,

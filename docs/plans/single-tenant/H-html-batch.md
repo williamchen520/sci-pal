@@ -2,7 +2,7 @@
 
 > 日期：2026-11-14  
 > 状态：执行中  
-> 当前阶段：H1  
+> 当前阶段：H2  
 > 决策：OA 文献优先 JATS/HTML，PDF 兜底
 
 ---
@@ -46,7 +46,7 @@ HTML 质量通过时，不跑 PDF。
 | 阶段 | 目标 | 状态 | 计划表 | 验收 |
 |---|---|---|---|---|
 | H0 | HTML batch CLI + manifest | done | `H0-html-batch.md/.json` | manifest/CLI/hash/report |
-| H1 | Nature / PMC adapter 固化 | planned | `H1-nature-pmc-adapter.md/.json` | fixture 解析 |
+| H1 | Nature / PMC adapter 固化 | done | `H1-nature-pmc-adapter.md/.json` | fixture 解析 |
 | H2 | HTML 质量门禁 | planned | `H2-html-quality-gate.md/.json` | title/sections/paragraphs |
 | H3 | 失败 fallback PDF | planned | `H3-pdf-fallback.md/.json` | HTML 失败才 PDF |
 | H4 | Cell / JS 站点适配 | planned | `H4-cell-js-adapter.md/.json` | 403/JS 处理 |

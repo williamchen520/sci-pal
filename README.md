@@ -493,6 +493,7 @@ app 重启后需再验证 outline 归一化
 | [N0 单租户导入管线](docs/plans/single-tenant/N0-import-pipeline.md) | 导入管线计划 |
 | [方案-HTML-first 批量入库](docs/plans/single-tenant/H-html-batch.md) | H0–H4 方案 |
 | [H0 HTML Batch CLI](docs/plans/single-tenant/H0-html-batch.md) | 批量 CLI 计划 |
+| [H1 Nature/PMC Adapter](docs/plans/single-tenant/H1-nature-pmc-adapter.md) | HTML 适配器 |
 | [实验-Paper-Section-API](docs/实验-Paper-Section-API.md) | 按类型取整节 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |

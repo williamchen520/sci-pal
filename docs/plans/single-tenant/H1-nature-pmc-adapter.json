@@ -1,0 +1,99 @@
+{
+  "plan_id": "H1",
+  "title": "Nature and PMC HTML Adapters",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "H0"
+  ],
+  "objective": "Stabilize Nature and PMC section extraction with publisher-specific selectors and fixtures.",
+  "selectors": {
+    "nature": {
+      "title": [
+        "h1.c-article-title",
+        "meta[name=citation_title]"
+      ],
+      "abstract": [
+        "div#Abs1-content",
+        "section[data-title=Abstract]"
+      ],
+      "sections": [
+        "section[data-title]"
+      ],
+      "paragraphs": "direct p"
+    },
+    "pmc": {
+      "title": [
+        "h1.content-title",
+        "meta[name=citation_title]"
+      ],
+      "abstract": [
+        "section.abstract",
+        "div.abstract"
+      ],
+      "sections": [
+        "section",
+        "div.sec"
+      ],
+      "paragraphs": "direct p"
+    }
+  },
+  "tasks": [
+    {
+      "id": "H1.1",
+      "title": "Publisher detection",
+      "file": "services/papers/html_adapters.py",
+      "status": "done"
+    },
+    {
+      "id": "H1.2",
+      "title": "Nature section normalization",
+      "file": "services/papers/html_adapters.py",
+      "status": "done"
+    },
+    {
+      "id": "H1.3",
+      "title": "PMC section normalization",
+      "file": "services/papers/html_adapters.py",
+      "status": "done"
+    },
+    {
+      "id": "H1.4",
+      "title": "Wire into html_parser",
+      "file": "services/papers/html_parser.py",
+      "status": "done"
+    },
+    {
+      "id": "H1.5",
+      "title": "Nature/PMC fixtures",
+      "file": "tests/fixtures/html/",
+      "status": "done"
+    },
+    {
+      "id": "H1.6",
+      "title": "Adapter tests",
+      "file": "tests/test_html_adapters.py",
+      "status": "done"
+    }
+  ],
+  "acceptance": [
+    "nature.com detected as nature",
+    "ncbi/pmc detected as pmc",
+    "Nature uses data-title sections",
+    "PMC uses section/div.sec",
+    "generic behavior preserved",
+    "fixtures pass"
+  ],
+  "out_of_scope": [
+    "quality gate (H2)",
+    "PDF fallback (H3)",
+    "Cell/JS (H4)",
+    "auto fetching"
+  ],
+  "verification": {
+    "tests": "3 passed",
+    "nature_sections": 15,
+    "nature_abstract_chars": 1386,
+    "pmc_fixture": "passed"
+  }
+}
