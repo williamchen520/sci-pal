@@ -21,6 +21,15 @@ class FlowTests(unittest.TestCase):
         relations = {edge["relation"] for edge in edges}
         self.assertEqual(relations, {"reads", "writes"})
 
+    def test_file_path_literal(self) -> None:
+        nodes, edges = flow._extract(
+            "figure4.R",
+            "r",
+            'write_xlsx(df, path = file.path(dir, "out.xlsx"))',
+        )
+        self.assertTrue(any(edge["target"] == "artifact:out.xlsx" for edge in edges))
+        self.assertTrue(any(node["id"] == "artifact:out.xlsx" for node in nodes))
+
     def test_unbound(self) -> None:
         with mock.patch.object(flow, "list_bindings", return_value=[]):
             result = flow.paper_data_flow("p1")

@@ -44,6 +44,42 @@ def _files(library_id: str, snapshot_id: str) -> list[tuple[str, str, str]]:
         ]
 
 
+FILEPATH_CALL = re.compile(
+    r"\b(read_excel|read_xlsx|write_xlsx|write_excel|readRDS|saveRDS|read\.csv|write\.csv)\s*\(([\s\S]*?)\)",
+    re.IGNORECASE,
+)
+
+
+def _filepath_call_edges(path: str, text: str) -> list[dict[str, Any]]:
+    edges: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for match in FILEPATH_CALL.finditer(text):
+        name, args = match.group(1).lower(), match.group(2)
+        if "file.path" not in args.lower():
+            continue
+        literals = re.findall(r"['\"]([^'\"]+)['\"]", args)
+        if not literals:
+            continue
+        artifact = literals[-1].strip()
+        if not artifact:
+            continue
+        relation = "reads" if name.startswith("read") else "writes"
+        key = (relation, artifact)
+        if key in seen:
+            continue
+        seen.add(key)
+        edges.append(
+            {
+                "source": f"file:{path}",
+                "target": f"artifact:{artifact}",
+                "relation": relation,
+                "confidence": "explicit",
+                "method": "file.path",
+            }
+        )
+    return edges
+
+
 def _extract(path: str, language: str, text: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     nodes: list[dict[str, Any]] = [
         {"id": f"file:{path}", "kind": "file", "label": path, "language": language}
@@ -73,6 +109,18 @@ def _extract(path: str, language: str, text: str) -> tuple[list[dict[str, Any]],
                         "method": "regex",
                     }
                 )
+    filepath_edges = _filepath_call_edges(path, text)
+    for edge in filepath_edges:
+        artifact_id = edge["target"]
+        if not any(node["id"] == artifact_id for node in nodes):
+            nodes.append(
+                {
+                    "id": artifact_id,
+                    "kind": "artifact",
+                    "label": artifact_id.removeprefix("artifact:"),
+                }
+            )
+    edges.extend(filepath_edges)
     return nodes, edges
 
 
