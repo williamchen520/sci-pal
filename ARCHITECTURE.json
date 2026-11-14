@@ -2701,6 +2701,30 @@
         ],
         "endpoint": "papers_actions.get_paper_analysis",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/code-links",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_code_links",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/code-links",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.add_paper_code_link",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/code-links/extract",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.extract_paper_code_links",
+        "status": "implemented"
       }
     ]
   },

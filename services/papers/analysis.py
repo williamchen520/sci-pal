@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from services.db.pg_pool import corpus_connection
+from services.papers.code_links import list_links
 from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline
 
@@ -28,6 +29,7 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
     outline = paper_outline(paper_id)
     first = paper_first_paragraph(paper_id)
     evidence = paper_evidence(paper_id, query, top_k=top_k) if query.strip() else []
+    links = list_links(paper_id)
     return {
         "paper": {
             "paper_id": paper_id,
@@ -40,7 +42,11 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
         "first_paragraph": first,
         "evidence": evidence,
         "query": query,
-        "code": {"status": "not_indexed", "reason": "code link/module map not wired in this step"},
+        "code": {
+            "status": "candidate" if links else "not_indexed",
+            "links": links,
+            "reason": "" if links else "no validated code link",
+        },
         "status": "ok" if outline else "partial",
         "gaps": [
             gap

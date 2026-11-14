@@ -18,7 +18,7 @@ class AnalysisTests(unittest.TestCase):
             analysis, "paper_first_paragraph", return_value={"para_id": "p1"}
         ), mock.patch.object(
             analysis, "paper_evidence", return_value=[{"sentence_id": "s1"}]
-        ):
+        ), mock.patch.object(analysis, "list_links", return_value=[]):
             result = analysis.analyze_paper("p1", query="lipid")
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["paper"]["title"], "T")
