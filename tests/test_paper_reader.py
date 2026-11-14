@@ -6,6 +6,7 @@ import unittest
 from unittest import mock
 
 from services.papers import reader
+from services.papers.reader import _section_type
 
 
 class _Cursor:
@@ -93,6 +94,13 @@ class PaperReaderTests(unittest.TestCase):
         self.assertIn("p.text ~ '[A-Za-z]'", sql)
         self.assertEqual(params[1], "%Methods%")
         self.assertEqual(params[-2:], (10, 5))
+
+    def test_reporting_summary_is_back_matter(self) -> None:
+        label = _section_type(
+            {"section_level1": "abstract", "section_level2": "Reporting summary", "first_sequence": 94},
+            {},
+        )
+        self.assertEqual(label, "back_matter")
 
     def test_results_body_fallback(self) -> None:
         row = {

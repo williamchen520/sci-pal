@@ -51,12 +51,12 @@ back_seq       availability/references 起点
 sections 43
 
 front_matter   2
-abstract       1
+abstract       0
 results        8
 captions       2
 discussion     1
 methods       21
-back_matter    7
+back_matter   17
 references     1
 ```
 
@@ -85,6 +85,8 @@ python scripts/backfill_section_types.py --paper-id ...
 ```text
 HCC LAM     43 sections，section_type_source=stored
 HCC Genomic 42 sections，section_type_source=stored
+
+Reporting summary 归为 back_matter，不再误判 abstract。
 ```
 
 ## 5. 边界说明
