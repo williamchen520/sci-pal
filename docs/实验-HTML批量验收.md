@@ -84,7 +84,37 @@ headless browser
 前端批量上传
 ```
 
-## 7. 结论
+## 7. 真实 OA 批量
+
+Nature：
+
+```text
+2 items
+2 built
+0 failed
+
+paper_import_9da1e0ffb60a
+  Single cell proteomic analysis...   272 paras / 820 sentences
+paper_import_106459887625
+  Molecularly defined cellular atlas... 294 paras / 1049 sentences
+```
+
+PMC：
+
+```text
+PMC12816625
+paper_import_15c6a0f864b0
+  Single cell proteomic analysis...     27 paras / 133 sentences
+```
+
+PMC 页面段落更粗（PMC 原生段落），但内容完整；H1 PMC adapter 已修：
+
+```text
+只取 main article > section.body 的直接子 section
+忽略外层 Abstract 干扰
+```
+
+## 8. 结论
 
 ```text
 H0  batch CLI              done

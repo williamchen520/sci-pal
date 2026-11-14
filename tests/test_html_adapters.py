@@ -26,6 +26,19 @@ class HtmlAdapterTests(unittest.TestCase):
         self.assertEqual([s["title"] for s in data["sections"]], ["Abstract", "Introduction", "Results"])
         self.assertIn("Nature abstract", data["abstract"])
 
+    def test_pmc_body_wrapper(self) -> None:
+        html = (
+            "<html><head><meta name='citation_title' content='PMC body title'>"
+            "<meta name='citation_doi' content='10.1/x'></head><body><main><article>"
+            "<section><h2>Abstract</h2><p>outer abstract</p></section>"
+            "<section class='body'><section class='abstract'><h2>Abstract</h2>"
+            "<p>body abstract</p></section><section><h2>Results</h2><p>body result</p></section></section>"
+            "</article></main></body></html>"
+        )
+        data = parse_html(html.encode(), source_url="https://pmc.ncbi.nlm.nih.gov/articles/PMC1/")
+        self.assertEqual([s["title"] for s in data["sections"]], ["Abstract", "Results"])
+        self.assertIn("body abstract", data["abstract"])
+
     def test_pmc_sections(self) -> None:
         data = parse_html(
             (FIXTURES / "pmc.html").read_bytes(),
