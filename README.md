@@ -443,7 +443,7 @@ OK
 
 ```text
 R 深度 AST 未实现（v1 是保守扫描）
-Rmd/Quarto chunk 级 v1；嵌套函数未拆
+Rmd/Quarto chunk + 内部函数 v1
 混合仓库 auto detect v1；跨语言低置信
 HTML 尚未接入 corpus ingest
 scipal-paper 插件未实现
