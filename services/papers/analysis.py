@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from typing import Any
 
 from services.db.pg_pool import corpus_connection
@@ -24,7 +25,9 @@ def _paper_meta(paper_id: str) -> dict[str, Any]:
         pg.close()
 
 
-def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str, Any] | None:
+def analyze_paper(
+    paper_id: str, *, query: str = "", top_k: int = 8, compact: bool = False
+) -> dict[str, Any] | None:
     meta = _paper_meta(paper_id)
     if not meta:
         return None
@@ -34,7 +37,15 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
     links = list_links(paper_id)
     bindings = list_bindings(paper_id)
     data_flow = paper_data_flow(paper_id) if bindings else {"status": "unbound", "nodes": [], "edges": []}
-    return {
+    if compact:
+        type_counts = Counter(row.get("section_type") or "unknown" for row in outline)
+        data_flow = {
+            "status": data_flow.get("status", "unknown"),
+            "nodes_count": len(data_flow.get("nodes", [])),
+            "edges_count": len(data_flow.get("edges", [])),
+            "method": data_flow.get("method", ""),
+        }
+    result = {
         "paper": {
             "paper_id": paper_id,
             "title": meta.get("title") or "",
@@ -42,7 +53,21 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
             "journal": meta.get("journal") or "",
             "year": meta.get("year"),
         },
-        "outline": outline,
+        "outline": [] if compact else outline,
+        "outline_summary": {
+            "section_count": len(outline),
+            "by_type": dict(type_counts) if compact else {},
+            "sections": [
+                {
+                    "section_path": row.get("section_path"),
+                    "section_type": row.get("section_type"),
+                    "paragraph_count": row.get("paragraph_count"),
+                }
+                for row in outline
+            ]
+            if compact
+            else [],
+        },
         "first_paragraph": first,
         "evidence": evidence,
         "data_flow": data_flow,
@@ -53,6 +78,7 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
             "bindings": bindings,
             "reason": "" if bindings else ("no valid code library binding" if links else "no code link"),
         },
+        "compact": compact,
         "status": "ok" if outline else "partial",
         "gaps": [
             gap
@@ -64,3 +90,4 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
             if gap
         ],
     }
+    return result
