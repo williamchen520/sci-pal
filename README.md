@@ -480,6 +480,7 @@ app 重启后需再验证 outline 归一化
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
 | [实验-Paper-Data-Flow](docs/实验-Paper-Data-Flow.md) | 数据流 |
 | [实验-第二篇论文-端到端](docs/实验-第二篇论文-端到端.md) | 第二篇论文验证 |
+| [实验-Paper-Plugin-Smoke](docs/实验-Paper-Plugin-Smoke.md) | 插件 smoke |
 | [实验-Rmd-Mixed](docs/实验-Rmd-Mixed.md) | Rmd/混合仓库 |
 | [实验-Cross-Language-Edges](docs/实验-Cross-Language-Edges.md) | 跨语言低置信边 |
 | [Architecture JSON](ARCHITECTURE.json) | 机器可读路由契约 |
