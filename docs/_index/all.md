@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 542 篇 · 2026-11-12
+> 共 543 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -255,6 +255,7 @@
 | 安全复盘 | 实验记录：Embedding 输入审计与修复 | --- | [实验-Embedding输入审计.md](../实验-Embedding输入审计.md) |
 | 架构规范 | 实验记录：Federation 论文级视图 | --- | [实验-Federation.md](../实验-Federation.md) |
 | 架构规范 | 实验记录：HTML Native 来源层 | --- | [实验-HTML-Native.md](../实验-HTML-Native.md) |
+| 测试报告 | 实验记录：HTML-first 批量入库验收 | --- | [实验-HTML批量验收.md](../实验-HTML批量验收.md) |
 | 架构规范 | 实验记录：HTML 论文解析器 | --- | [实验-HTML解析器.md](../实验-HTML解析器.md) |
 | 架构规范 | 实验记录：JATS Native 原生层 | --- | [实验-JATS-Native.md](../实验-JATS-Native.md) |
 | 架构规范 | 实验记录：PDF Native 来源层 | --- | [实验-PDF-Native.md](../实验-PDF-Native.md) |
