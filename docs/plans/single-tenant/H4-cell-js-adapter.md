@@ -18,6 +18,7 @@
 | H4-5 | 默认 headless | 不启用 |
 | H4-6 | fallback | 有 PDF 走 H3 |
 | H4-7 | 可用 HTML | Cell DOM adapter |
+| H4-8 | 真人验证 | 不自动绕过；人工下载/PMC |
 
 ---
 
@@ -53,7 +54,25 @@ sections   section / div.section
 
 ---
 
-## 4. 行为
+## 4. Cell 真人验证
+
+```text
+Cell 页面可能要求 CAPTCHA / 真人验证
+  -> 自动抓取不纳入
+  -> 由人工在浏览器完成验证并下载
+  -> 作为 staged HTML/PDF 进入批量管线
+  -> 或改用 PMC/Europe PMC
+```
+
+不实现：
+
+```text
+stealth headless
+CAPTCHA solver
+cookie 绕过
+```
+
+## 5. 行为
 
 ```text
 fetch
@@ -65,7 +84,7 @@ fetch
 
 ---
 
-## 5. 验收结果
+## 6. 验收结果
 
 ```text
 Cell fixture: sections + abstract
