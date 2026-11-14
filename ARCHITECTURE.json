@@ -2773,6 +2773,14 @@
         ],
         "endpoint": "papers_actions.build_replication_plan",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/sections/<section_type>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_section",
+        "status": "implemented"
       }
     ]
   },
