@@ -35,6 +35,7 @@ HTML 是主力，因为：
 2. PMC HTML
 3. 出版社 OA HTML
 4. 出版社 PDF
+5. Cell 真人验证 -> 人工下载 / PMC
 ```
 
 HTML 质量通过时，不跑 PDF。

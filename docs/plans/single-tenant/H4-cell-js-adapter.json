@@ -15,7 +15,8 @@
     "H4-4 no paywall bypass",
     "H4-5 headless browser is not enabled by default",
     "H4-6 PDF fallback delegates to H3 when provided",
-    "H4-7 usable Cell HTML uses a Cell DOM adapter"
+    "H4-7 usable Cell HTML uses a Cell DOM adapter",
+    "H4-8 Cell human verification is not bypassed; manual download or PMC only"
   ],
   "access_states": [
     "ok",
@@ -85,5 +86,7 @@
       "js_required",
       "paywalled"
     ]
-  }
+  },
+  "human_verification_required": true,
+  "automated_fetch": false
 }
