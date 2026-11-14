@@ -24,6 +24,7 @@ from services.papers.flow import paper_data_flow
 from services.papers.modules import paper_modules
 from services.papers.replication import replication_plan
 from services.papers.sections import paper_section
+from services.papers.sources import list_sources
 from services.papers.code_links import extract_and_store, list_links, manual_link, validate_link
 from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline, paper_paragraphs, paragraph_sentences
@@ -289,6 +290,10 @@ def build_papers_actions_blueprint(
             return jsonify({"error": str(exc)}), 400
         status = 404 if result.get("status") == "not_found" else 200
         return jsonify(result), status
+
+    @bp.route("/api/papers/<paper_id>/sources", methods=["GET"])
+    def get_paper_sources(paper_id):
+        return jsonify({"paper_id": paper_id, "sources": list_sources(paper_id)})
 
     @bp.route("/api/papers/<paper_id>/analysis", methods=["GET"])
     def get_paper_analysis(paper_id):

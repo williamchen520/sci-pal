@@ -2781,6 +2781,14 @@
         ],
         "endpoint": "papers_actions.get_paper_section",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/sources",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_sources",
+        "status": "implemented"
       }
     ]
   },

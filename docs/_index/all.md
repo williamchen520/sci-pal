@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 518 篇 · 2026-11-12
+> 共 519 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -248,6 +248,7 @@
 | 架构规范 | 实验记录：Paper Plugin Smoke | --- | [实验-Paper-Plugin-Smoke.md](../实验-Paper-Plugin-Smoke.md) |
 | 架构规范 | 实验记录：Paper Reader API | --- | [实验-Paper-Reader-API.md](../实验-Paper-Reader-API.md) |
 | 架构规范 | 实验记录：Paper Section API | --- | [实验-Paper-Section-API.md](../实验-Paper-Section-API.md) |
+| 架构规范 | 实验记录：Paper Sources 来源层 | --- | [实验-Paper-Sources.md](../实验-Paper-Sources.md) |
 | 架构规范 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |
 | 架构规范 | 案例：HCC 多组学分子分型论文（HTML + Zenodo） | --- | [实验-Paper-to-Code-HCC-基因组案例.md](../实验-Paper-to-Code-HCC-基因组案例.md) |
 | 测试报告 | PaperQA2 适配烟测 | --- | [实验-PaperQA2-适配烟测.md](../实验-PaperQA2-适配烟测.md) |
