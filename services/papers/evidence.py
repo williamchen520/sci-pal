@@ -44,7 +44,8 @@ def _sentence_fts(
 ) -> list[dict[str, Any]]:
     where = (
         "s.paper_id = %s AND s.search_vector @@ q.query "
-        "AND p.section_level1 NOT IN ('figure_caption','table_caption')"
+        "AND p.section_level1 NOT IN ('figure_caption','table_caption') "
+        "AND p.text !~* '^(Fig\\.?|Figure|Table)\\s+[0-9]+\\s*\\|'"
     )
     params: list[Any] = [query, paper_id]
     if para_ids:

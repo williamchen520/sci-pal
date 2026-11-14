@@ -18,6 +18,7 @@ from flask import Blueprint, Response, jsonify, request, send_from_directory
 from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 from services.papers.pg_writes import enabled as paper_pg_enabled, update_workspace as pg_update_workspace
 from services.papers.paper_store import PaperStore
+from services.papers.analysis import analyze_paper
 from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline, paper_paragraphs, paragraph_sentences
 
@@ -176,6 +177,18 @@ def build_papers_actions_blueprint(
         if not rows:
             return jsonify({"error": "Sentence tree not found", "para_id": para_id}), 404
         return jsonify({"paper_id": paper_id, "para_id": para_id, "sentences": rows})
+
+    @bp.route("/api/papers/<paper_id>/analysis", methods=["GET"])
+    def get_paper_analysis(paper_id):
+        query = request.args.get("q", "").strip()
+        try:
+            top_k = int(request.args.get("top_k", 8))
+        except ValueError:
+            return jsonify({"error": "top_k must be an integer"}), 400
+        result = analyze_paper(paper_id, query=query, top_k=top_k)
+        if not result:
+            return jsonify({"error": "Paper not found"}), 404
+        return jsonify(result)
 
     @bp.route("/api/papers/<paper_id>/evidence", methods=["POST"])
     def get_paper_evidence(paper_id):
