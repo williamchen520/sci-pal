@@ -30,6 +30,18 @@ class _Conn:
         self.closed = True
 
 
+class _SeqConn:
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.closed = False
+
+    def execute(self, sql, params=()):
+        return _Cursor(self.responses.pop(0) if self.responses else [])
+
+    def close(self):
+        self.closed = True
+
+
 class PaperReaderTests(unittest.TestCase):
     def test_outline_normalizes_sections(self) -> None:
         conn = _Conn(
@@ -77,6 +89,20 @@ class PaperReaderTests(unittest.TestCase):
         self.assertIn("p.text ~ '[A-Za-z]'", sql)
         self.assertEqual(params[1], "%Methods%")
         self.assertEqual(params[-2:], (10, 5))
+
+    def test_results_body_fallback(self) -> None:
+        row = {
+            "para_id": "p13",
+            "section_level1": "body",
+            "section_level2": "Establish a single-cell atlas",
+            "text": "text",
+            "sequence": 13,
+        }
+        conn = _SeqConn([[], [row]])
+        with mock.patch.object(reader, "corpus_connection", return_value=conn):
+            rows = reader.paper_paragraphs("paper_1", section="Results", limit=10)
+        self.assertEqual(rows[0]["para_id"], "p13")
+        self.assertEqual(rows[0]["section_fallback"], "body_headings")
 
     def test_first_paragraph_empty(self) -> None:
         conn = _Conn([])
