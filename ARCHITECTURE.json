@@ -2765,6 +2765,14 @@
         ],
         "endpoint": "papers_actions.get_paper_data_flow",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/replication-plan",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.build_replication_plan",
+        "status": "implemented"
       }
     ]
   },
