@@ -66,7 +66,7 @@ Figure.2.R
 ```text
 Figure.1.R
   Figure 1 analysis; cell-cell communication;
-  batch integration; clustering; NMF programs
+  batch integration; clustering
 
 Figure.2.R
   Figure 2 analysis; CNV inference; regulon scoring;
