@@ -14,7 +14,7 @@ from pathlib import Path
 
 import psycopg
 
-from code_rag.parsers import parse_nextflow, parse_python, parse_r
+from code_rag.parsers import parse_nextflow, parse_python, parse_r, parse_rmd
 
 
 def stable(prefix: str, *parts: str) -> str:
@@ -30,13 +30,28 @@ def scoped_unit_id(library_id: str, snapshot_id: str, parsed_unit_id: str) -> st
     return stable("unit", library_id, snapshot_id, parsed_unit_id)
 
 
+def file_language(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix == ".py":
+        return "python"
+    if suffix in {".r", ".rmd", ".qmd"}:
+        return "rmd" if suffix in {".rmd", ".qmd"} else "r"
+    if suffix == ".nf" or path.name == "nextflow.config":
+        return "nextflow"
+    return "unknown"
+
+
 def files_for(repo: Path, language: str, limit: int) -> list[Path]:
-    if language == "python":
+    if language == "auto":
+        patterns = ["**/*.py", "**/*.R", "**/*.r", "**/*.Rmd", "**/*.qmd", "**/*.nf", "**/nextflow.config"]
+    elif language == "python":
         patterns = ["**/*.py"]
     elif language == "nextflow":
         patterns = ["**/*.nf", "**/nextflow.config", "**/*.config"]
     elif language == "r":
         patterns = ["**/*.R", "**/*.r"]
+    elif language == "rmd":
+        patterns = ["**/*.Rmd", "**/*.qmd"]
     else:
         raise SystemExit(f"unsupported language: {language}")
     found = []
@@ -58,7 +73,7 @@ def main() -> int:
     parser.add_argument("--library-id", required=True)
     parser.add_argument("--repo-url", required=True)
     parser.add_argument("--ref", default="")
-    parser.add_argument("--language", choices=["python", "nextflow", "r"], required=True)
+    parser.add_argument("--language", choices=["python", "nextflow", "r", "rmd", "auto"], required=True)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--dsn", default=os.environ.get("SCIPAL_CODE_DSN", ""))
     args = parser.parse_args()
@@ -105,12 +120,17 @@ def main() -> int:
         for path in files:
             rel = path.relative_to(repo).as_posix()
             text = path.read_text(encoding="utf-8", errors="ignore")
-            if args.language == "python":
+            language = file_language(path) if args.language == "auto" else args.language
+            if language == "python":
                 units, edges = parse_python(text, rel)
-            elif args.language == "r":
+            elif language == "r":
                 units, edges = parse_r(text, rel)
-            else:
+            elif language == "rmd":
+                units, edges = parse_rmd(text, rel)
+            elif language == "nextflow":
                 units, edges = parse_nextflow(text, rel)
+            else:
+                units, edges = parse_rmd(text, rel)
             file_id = stable("file", snapshot_id, rel)
             conn.execute(
                 """
@@ -124,7 +144,7 @@ def main() -> int:
                     snapshot_id,
                     args.library_id,
                     rel,
-                    args.language,
+                    language,
                     hashlib.sha256(text.encode()).hexdigest(),
                 ),
             )
