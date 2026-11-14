@@ -7,6 +7,7 @@ from typing import Any
 from xml.etree import ElementTree as ET
 
 from services.imports import session
+from services.imports.paper_build import build_paper, paper_id_for
 from services.papers.html_parser import parse_html
 
 
@@ -55,6 +56,9 @@ def parse_jats(path: Path) -> dict[str, Any]:
 
 
 class PaperLaneAdapter:
+    def __init__(self, *, build: bool = False) -> None:
+        self.build = build
+
     def process(self, item: dict[str, Any]) -> str:
         path = Path(item.get("staged_path") or item.get("source_uri") or "")
         if not path.is_file():
@@ -71,4 +75,12 @@ class PaperLaneAdapter:
         else:
             raise AdapterUnavailable(f"unsupported paper kind: {kind}")
         session.set_item_parsed(item["import_id"], item["item_id"], payload)
+        if self.build:
+            build_paper(
+                paper_id_for(item),
+                payload,
+                source_kind=kind,
+                source_uri=item.get("source_uri") or "",
+            )
+            return "built"
         return "parsed"
