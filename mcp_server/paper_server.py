@@ -153,6 +153,11 @@ def paper_sources(paper_id: str) -> str:
     return _call("GET", f"/api/papers/{_paper(paper_id)}/sources")
 
 
+@mcp.tool(description="论文 JATS 原生字段（GET /api/papers/<id>/jats）：article-type/sec-type。")
+def paper_jats(paper_id: str) -> str:
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/jats")
+
+
 @mcp.tool(description="论文模块表（GET /api/papers/<id>/modules）：文件/单元/imports。")
 def paper_modules(paper_id: str) -> str:
     return _call("GET", f"/api/papers/{_paper(paper_id)}/modules")
