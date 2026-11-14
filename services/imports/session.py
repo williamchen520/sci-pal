@@ -149,3 +149,16 @@ def set_item_status(import_id: str, item_id: str, status: str, error: str = "") 
             "WHERE import_id=%s AND item_id=%s",
             (status, error or None, import_id, item_id),
         )
+
+
+def finalize_session(
+    import_id: str, *, processed: int, failed: int, status: str
+) -> None:
+    if status not in {"queued", "running", "review", "completed", "partial", "failed"}:
+        raise ImportSessionError(f"invalid session status: {status}")
+    with core_connection() as pg:
+        pg.execute(
+            "UPDATE import_sessions SET status=%s,processed_items=%s,failed_items=%s,"
+            "updated_at=now() WHERE import_id=%s",
+            (status, processed, failed, import_id),
+        )
