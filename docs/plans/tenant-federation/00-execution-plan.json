@@ -4,7 +4,7 @@
   "version": 1,
   "updated_at": "2026-11-14",
   "status": "in_progress",
-  "current_phase": "E1",
+  "current_phase": "E2",
   "principles": [
     "permission model before data plane before federation",
     "every phase has Markdown and JSON plan files",
@@ -15,9 +15,17 @@
   ],
   "topology": {
     "hub": "main",
-    "allowed_edges": ["tenant->main"],
-    "forbidden_edges": ["tenant->tenant"],
-    "scopes": ["own", "main", "both"]
+    "allowed_edges": [
+      "tenant->main"
+    ],
+    "forbidden_edges": [
+      "tenant->tenant"
+    ],
+    "scopes": [
+      "own",
+      "main",
+      "both"
+    ]
   },
   "phases": [
     {
@@ -44,25 +52,35 @@
     {
       "id": "E1",
       "title": "Federation Catalog and Star Constraint",
-      "status": "planned",
-      "depends_on": ["E0"],
+      "status": "done",
+      "depends_on": [
+        "E0"
+      ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E1-federation-catalog.md",
         "json": "docs/plans/tenant-federation/E1-federation-catalog.json",
-        "exists": false
+        "exists": true
       },
       "acceptance": [
         "catalog stores metadata only",
         "catalog registers main federation",
         "catalog refuses tenant-to-tenant edges",
         "scope only own/main/both"
-      ]
+      ],
+      "verification": {
+        "tests": "tests/test_federation_catalog.py",
+        "passed": 9,
+        "failed": 0
+      },
+      "pr": 818
     },
     {
       "id": "E2",
       "title": "Tenant Provisioning",
       "status": "planned",
-      "depends_on": ["E1"],
+      "depends_on": [
+        "E1"
+      ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E2-tenant-provisioning.md",
         "json": "docs/plans/tenant-federation/E2-tenant-provisioning.json",
@@ -79,7 +97,9 @@
       "id": "E3",
       "title": "Tenant Connector",
       "status": "planned",
-      "depends_on": ["E2"],
+      "depends_on": [
+        "E2"
+      ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E3-tenant-connector.md",
         "json": "docs/plans/tenant-federation/E3-tenant-connector.json",
@@ -96,7 +116,9 @@
       "id": "E4",
       "title": "Gateway Scope Resolution",
       "status": "planned",
-      "depends_on": ["E3"],
+      "depends_on": [
+        "E3"
+      ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E4-gateway-scope.md",
         "json": "docs/plans/tenant-federation/E4-gateway-scope.json",
@@ -113,7 +135,9 @@
       "id": "E5",
       "title": "Peer Tenant Deny Tests",
       "status": "planned",
-      "depends_on": ["E4"],
+      "depends_on": [
+        "E4"
+      ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E5-peer-deny-tests.md",
         "json": "docs/plans/tenant-federation/E5-peer-deny-tests.json",
@@ -129,7 +153,9 @@
       "id": "E6",
       "title": "Support Access and Audit",
       "status": "planned",
-      "depends_on": ["E5"],
+      "depends_on": [
+        "E5"
+      ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E6-support-access-audit.md",
         "json": "docs/plans/tenant-federation/E6-support-access-audit.json",
@@ -146,7 +172,9 @@
       "id": "E7",
       "title": "ImportSession for Tenants",
       "status": "planned",
-      "depends_on": ["E6"],
+      "depends_on": [
+        "E6"
+      ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E7-import-session.md",
         "json": "docs/plans/tenant-federation/E7-import-session.json",
@@ -163,7 +191,9 @@
       "id": "E8",
       "title": "Quota, Deletion, Migration",
       "status": "planned",
-      "depends_on": ["E7"],
+      "depends_on": [
+        "E7"
+      ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E8-quota-delete-migration.md",
         "json": "docs/plans/tenant-federation/E8-quota-delete-migration.json",
@@ -179,14 +209,38 @@
     }
   ],
   "decision_log": [
-    {"id": "D1", "decision": "v1 uses one tenant DB plus source schemas"},
-    {"id": "D2", "decision": "federation catalog lives in control-plane core DB, metadata only"},
-    {"id": "D3", "decision": "main federation is read-only in v1"},
-    {"id": "D4", "decision": "tenant connector uses short-lived tokens, never shared DSNs"},
-    {"id": "D5", "decision": "support access uses break-glass, dual approval, time limit"},
-    {"id": "D6", "decision": "cross-tenant collaboration only via main-mediated/export flows"},
-    {"id": "D7", "decision": "tenant deletion revokes federation, stops connector, removes indexes, keeps audit"},
-    {"id": "D8", "decision": "platform approves plugin versions; tenant enables a subset"}
+    {
+      "id": "D1",
+      "decision": "v1 uses one tenant DB plus source schemas"
+    },
+    {
+      "id": "D2",
+      "decision": "federation catalog lives in control-plane core DB, metadata only"
+    },
+    {
+      "id": "D3",
+      "decision": "main federation is read-only in v1"
+    },
+    {
+      "id": "D4",
+      "decision": "tenant connector uses short-lived tokens, never shared DSNs"
+    },
+    {
+      "id": "D5",
+      "decision": "support access uses break-glass, dual approval, time limit"
+    },
+    {
+      "id": "D6",
+      "decision": "cross-tenant collaboration only via main-mediated/export flows"
+    },
+    {
+      "id": "D7",
+      "decision": "tenant deletion revokes federation, stops connector, removes indexes, keeps audit"
+    },
+    {
+      "id": "D8",
+      "decision": "platform approves plugin versions; tenant enables a subset"
+    }
   ],
   "next_action": "write E1 Markdown and JSON plans, then implement federation_catalog"
 }

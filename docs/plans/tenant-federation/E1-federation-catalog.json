@@ -1,0 +1,100 @@
+{
+  "plan_id": "E1",
+  "title": "Federation Catalog and Star Constraint",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "E0"
+  ],
+  "objective": "Register only tenant-to-main federation edges, with structural rejection of tenant-to-tenant edges.",
+  "decisions": [
+    "D1-1 catalog metadata lives in control-plane core DB",
+    "D1-2 target_kind is restricted to main",
+    "D1-3 target_tenant_id must be NULL",
+    "D1-4 allowed_scopes is a subset of own/main/both",
+    "D1-5 registration requires platform.federation.manage",
+    "D1-6 listing requires tenant.read on the caller's tenant",
+    "D1-7 no catalog link means own-only"
+  ],
+  "tasks": [
+    {
+      "id": "E1.1",
+      "title": "Create catalog migration",
+      "file": "deploy/sql/044_federation_catalog.sql",
+      "status": "done"
+    },
+    {
+      "id": "E1.2",
+      "title": "Enforce main-only target and NULL peer tenant",
+      "file": "deploy/sql/044_federation_catalog.sql",
+      "status": "done"
+    },
+    {
+      "id": "E1.3",
+      "title": "Implement catalog service",
+      "file": "services/federation/catalog.py",
+      "status": "done"
+    },
+    {
+      "id": "E1.4",
+      "title": "Enforce platform registration capability",
+      "file": "services/federation/catalog.py",
+      "status": "done"
+    },
+    {
+      "id": "E1.5",
+      "title": "Enforce tenant-local listing",
+      "file": "services/federation/catalog.py",
+      "status": "done"
+    },
+    {
+      "id": "E1.6",
+      "title": "Add allow/deny tests",
+      "file": "tests/test_federation_catalog.py",
+      "status": "done"
+    },
+    {
+      "id": "E1.7",
+      "title": "Align Markdown and JSON plans",
+      "file": "docs/plans/tenant-federation/E1-federation-catalog.md",
+      "status": "done"
+    }
+  ],
+  "table": {
+    "name": "federation_catalog",
+    "constraints": [
+      "target_kind = 'main'",
+      "target_tenant_id IS NULL",
+      "allowed_scopes <@ ARRAY['own','main','both']",
+      "UNIQUE (tenant_id, library_id)"
+    ]
+  },
+  "acceptance": [
+    "target_kind other than main rejected",
+    "target_tenant_id non-null rejected",
+    "non-platform principal cannot register",
+    "tenant can list only own links",
+    "main/both denied without link",
+    "tenant:other rejected",
+    "unit tests pass"
+  ],
+  "out_of_scope": [
+    "tenant provisioning",
+    "connector",
+    "gateway",
+    "real cross-database query",
+    "platform support access"
+  ],
+  "risks": [
+    "catalog in core but queries run in corpus",
+    "tenant credentials could be too broad",
+    "gateway may bypass catalog",
+    "scope resolution may diverge from E0"
+  ],
+  "verification": {
+    "tests": "tests/test_federation_catalog.py",
+    "passed": 9,
+    "failed": 0,
+    "db_constraint": "tenant target rejected"
+  }
+}

@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 529 篇 · 2026-11-12
+> 共 530 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -205,6 +205,7 @@
 | 架构规范 | 架构守卫使用说明 | ARCHITECTURE.json 描述：路由表 / 蓝图 / 数据层 | [guards.md](../guards.md) |
 | 阶段计划 | 租户联邦执行计划总表 | --- | [00-execution-plan.md](../plans/tenant-federation/00-execution-plan.md) |
 | 阶段计划 | E0 计划表：Capability 与 Resource Scope 模型 | --- | [E0-capability-scope.md](../plans/tenant-federation/E0-capability-scope.md) |
+| 阶段计划 | E1 计划表：Federation Catalog 与星形约束 | --- | [E1-federation-catalog.md](../plans/tenant-federation/E1-federation-catalog.md) |
 | 废弃历史 | 小红书图文：AI 在替你写代码，谁在替你负责？ | --- | [README.md](../publish/xhs-cards/README.md) |
 | 废弃历史 | 发布清单：知乎 / 微信 / 小红书 | --- | [发布清单.md](../publish/发布清单.md) |
 | 废弃历史 | 小红书版：AI 在替你写代码，谁在替你负责？ | --- | [小红书版.md](../publish/小红书版.md) |
