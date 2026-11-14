@@ -17,13 +17,25 @@ GET /api/papers/<paper_id>/analysis?q=...&top_k=8
 
 ```text
 paper
-outline
+outline / outline_summary
 first_paragraph
 evidence
-code.status=not_indexed
+data_flow
+code
 status
 gaps
 ```
+
+compact 模式：
+
+```text
+outline=[]
+outline_summary.by_type
+data_flow.nodes_count
+data_flow.edges_count
+```
+
+MCP 默认 `compact=true`。
 
 ## 2. 用途
 
@@ -49,8 +61,14 @@ evidence 为空时 status=partial
 ## 4. 验证
 
 ```text
-json_routes=258
-app_routes=258
+compact=True
+  outline=[]
+  section_count=43
+  by_type={results:8, methods:21, ...}
+  flow nodes=16 / edges=16
+
+json_routes=268
+app_routes=268
 OK
 ```
 

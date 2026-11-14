@@ -80,8 +80,10 @@ def paper_first_paragraph(paper_id: str, section: str = "", include_captions: bo
 
 
 @mcp.tool(description="单篇论文聚合分析（GET /api/papers/<id>/analysis）。q 为空则不查 evidence。")
-def paper_analysis(paper_id: str, q: str = "", top_k: int = 8) -> str:
-    query = urlencode({"q": q, "top_k": top_k})
+def paper_analysis(
+    paper_id: str, q: str = "", top_k: int = 8, compact: bool = True
+) -> str:
+    query = urlencode({"q": q, "top_k": top_k, "compact": "1" if compact else "0"})
     return _call("GET", f"/api/papers/{_paper(paper_id)}/analysis?{query}")
 
 
