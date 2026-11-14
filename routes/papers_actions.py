@@ -24,6 +24,7 @@ from services.papers.flow import paper_data_flow
 from services.papers.modules import paper_modules
 from services.papers.replication import replication_plan
 from services.papers.sections import paper_section
+from services.papers.federation import federated_paper
 from services.papers.html_native import html_native
 from services.papers.jats import jats_native
 from services.papers.pdf_native import pdf_native
@@ -293,6 +294,15 @@ def build_papers_actions_blueprint(
             return jsonify({"error": str(exc)}), 400
         status = 404 if result.get("status") == "not_found" else 200
         return jsonify(result), status
+
+    @bp.route("/api/papers/<paper_id>/federated", methods=["GET"])
+    def get_paper_federated(paper_id):
+        raw = request.args.get("source_kind", "")
+        kinds = [part.strip() for part in raw.split(",") if part.strip()]
+        result = federated_paper(paper_id, source_kinds=kinds)
+        if not result:
+            return jsonify({"paper_id": paper_id, "status": "not_indexed"}), 404
+        return jsonify(result)
 
     @bp.route("/api/papers/<paper_id>/html", methods=["GET"])
     def get_paper_html(paper_id):

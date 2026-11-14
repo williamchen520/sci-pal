@@ -2813,6 +2813,14 @@
         ],
         "endpoint": "papers_actions.get_paper_pdf_native",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/federated",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_federated",
+        "status": "implemented"
       }
     ]
   },
