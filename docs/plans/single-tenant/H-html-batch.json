@@ -1,0 +1,115 @@
+{
+  "plan_id": "HTML-BATCH",
+  "title": "HTML-first Batch Ingest",
+  "version": 1,
+  "status": "in_progress",
+  "current_phase": "H1",
+  "source_priority": [
+    "pmc_jats",
+    "pmc_html",
+    "publisher_html",
+    "publisher_pdf"
+  ],
+  "principles": [
+    "HTML first for open access",
+    "quality gate before build",
+    "PDF only as fallback",
+    "publisher adapters, not one generic scraper",
+    "no paywall bypass",
+    "dedupe by content hash and DOI"
+  ],
+  "phases": [
+    {
+      "id": "H0",
+      "title": "HTML Batch CLI and Manifest",
+      "status": "done",
+      "plan_files": {
+        "md": "docs/plans/single-tenant/H0-html-batch.md",
+        "json": "docs/plans/single-tenant/H0-html-batch.json",
+        "exists": true
+      },
+      "acceptance": [
+        "manifest validation",
+        "sha256 hashing",
+        "duplicate hashes skipped",
+        "ImportSession created",
+        "JSON report written"
+      ]
+    },
+    {
+      "id": "H1",
+      "title": "Nature and PMC Adapter Fixtures",
+      "status": "planned",
+      "depends_on": [
+        "H0"
+      ],
+      "plan_files": {
+        "md": "docs/plans/single-tenant/H1-nature-pmc-adapter.md",
+        "json": "docs/plans/single-tenant/H1-nature-pmc-adapter.json",
+        "exists": false
+      },
+      "acceptance": [
+        "Nature HTML fixture",
+        "PMC HTML fixture",
+        "sections/paragraphs stable"
+      ]
+    },
+    {
+      "id": "H2",
+      "title": "HTML Quality Gate",
+      "status": "planned",
+      "depends_on": [
+        "H1"
+      ],
+      "plan_files": {
+        "md": "docs/plans/single-tenant/H2-html-quality-gate.md",
+        "json": "docs/plans/single-tenant/H2-html-quality-gate.json",
+        "exists": false
+      },
+      "acceptance": [
+        "title/doi",
+        "abstract present",
+        "min sections",
+        "min paragraphs",
+        "quarantine low quality"
+      ]
+    },
+    {
+      "id": "H3",
+      "title": "PDF Fallback",
+      "status": "planned",
+      "depends_on": [
+        "H2"
+      ],
+      "plan_files": {
+        "md": "docs/plans/single-tenant/H3-pdf-fallback.md",
+        "json": "docs/plans/single-tenant/H3-pdf-fallback.json",
+        "exists": false
+      },
+      "acceptance": [
+        "HTML failure falls back to PDF",
+        "no duplicate build",
+        "status records source"
+      ]
+    },
+    {
+      "id": "H4",
+      "title": "Cell and JS Site Adapter",
+      "status": "planned",
+      "depends_on": [
+        "H2"
+      ],
+      "plan_files": {
+        "md": "docs/plans/single-tenant/H4-cell-js-adapter.md",
+        "json": "docs/plans/single-tenant/H4-cell-js-adapter.json",
+        "exists": false
+      },
+      "acceptance": [
+        "403 handling",
+        "JS-rendered page decision",
+        "no paywall bypass"
+      ]
+    }
+  ],
+  "next_action": "execute H0 manifest + CLI + report"
+}

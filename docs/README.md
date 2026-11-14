@@ -1,6 +1,6 @@
 # SciPal 文档索引
 
-> 更新：2026-11-12 · 共 536 篇 Markdown  
+> 更新：2026-11-12 · 共 538 篇 Markdown  
 > 分类是索引视图，不移动原文件；原路径与既有链接保持不变。
 
 ## 五大分类
@@ -8,7 +8,7 @@
 | 分类 | 数量 | 索引 |
 |---|---:|---|
 | 架构规范 | 203 | [architecture/README.md](architecture/README.md) |
-| 阶段计划 | 158 | [plans/README.md](plans/README.md) |
+| 阶段计划 | 160 | [plans/README.md](plans/README.md) |
 | 安全复盘 | 37 | [security/README.md](security/README.md) |
 | 测试报告 | 56 | [testing/README.md](testing/README.md) |
 | 废弃历史 | 82 | [legacy/README.md](legacy/README.md) |
@@ -113,6 +113,8 @@
 - [架构-租户状态与Phase2Roadmap](架构-租户状态与Phase2Roadmap.md)
 - [单租户交付执行计划总表](plans/single-tenant/00-execution-plan.md)
 - [N0 单租户导入管线](plans/single-tenant/N0-import-pipeline.md)
+- [方案-HTML-first 批量入库](plans/single-tenant/H-html-batch.md)
+- [H0 HTML Batch CLI](plans/single-tenant/H0-html-batch.md)
 - [S0 TenantContext](plans/tenant-federation/S0-tenant-context.md)
 - [实验-Paper-Section-API](实验-Paper-Section-API.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)

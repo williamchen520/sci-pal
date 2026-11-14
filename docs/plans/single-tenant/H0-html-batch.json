@@ -1,0 +1,90 @@
+{
+  "plan_id": "H0",
+  "title": "HTML Batch CLI and Manifest",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "N0"
+  ],
+  "objective": "Batch HTML files from a JSON manifest through ImportSession with sha256 dedupe and JSON reporting.",
+  "decisions": [
+    "H0-1 JSON manifest input",
+    "H0-2 local staged_path only",
+    "H0-3 sha256 content hash",
+    "H0-4 duplicate content_hash skipped",
+    "H0-5 sequential processing",
+    "H0-6 JSON report output",
+    "H0-7 no fetching, headless browser, or PDF fallback"
+  ],
+  "tasks": [
+    {
+      "id": "H0.1",
+      "title": "Manifest loader/validator",
+      "file": "services/imports/html_batch.py",
+      "status": "pending"
+    },
+    {
+      "id": "H0.2",
+      "title": "sha256 and duplicate lookup",
+      "file": "services/imports/html_batch.py",
+      "status": "pending"
+    },
+    {
+      "id": "H0.3",
+      "title": "Sequential batch runner",
+      "file": "services/imports/html_batch.py",
+      "status": "pending"
+    },
+    {
+      "id": "H0.4",
+      "title": "CLI",
+      "file": "scripts/import_html_batch.py",
+      "status": "pending"
+    },
+    {
+      "id": "H0.5",
+      "title": "Tests",
+      "file": "tests/test_html_batch.py",
+      "status": "pending"
+    }
+  ],
+  "manifest": {
+    "fields": [
+      "tenant_id",
+      "library_id",
+      "items"
+    ],
+    "item_fields": [
+      "source_url",
+      "staged_path",
+      "doi",
+      "content_hash"
+    ]
+  },
+  "acceptance": [
+    "missing manifest fields rejected",
+    "missing file rejected",
+    "sha256 stable",
+    "duplicate hash skipped",
+    "single failure does not block batch",
+    "report includes status/paper_id/error",
+    "dry-run writes nothing"
+  ],
+  "out_of_scope": [
+    "OA discovery",
+    "Nature/Cell adapter",
+    "quality gate",
+    "PDF fallback",
+    "upload UI"
+  ],
+  "verification": {
+    "tests": "4 passed",
+    "total": 2,
+    "duplicate": 1,
+    "built": 1,
+    "paper_id": "paper_import_ae63f39672ad",
+    "paragraphs": 178,
+    "sentences": 692,
+    "import_id": "imp_c0b64b3a79714b41"
+  }
+}

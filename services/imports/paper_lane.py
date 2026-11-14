@@ -99,11 +99,14 @@ class PaperLaneAdapter:
             raise AdapterUnavailable(f"unsupported paper kind: {kind}")
         session.set_item_parsed(item["import_id"], item["item_id"], payload)
         if self.build:
+            paper_id = paper_id_for(item)
             build_paper(
-                paper_id_for(item),
+                paper_id,
                 payload,
                 source_kind=kind,
                 source_uri=item.get("source_uri") or "",
             )
+            payload["paper_id"] = paper_id
+            session.set_item_parsed(item["import_id"], item["item_id"], payload)
             return "built"
         return "parsed"
