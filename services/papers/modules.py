@@ -40,15 +40,23 @@ _CAPABILITIES = (
 )
 
 
-def _purpose(path: str, code_text: str) -> str:
+def _strip_comments(code_text: str) -> str:
+    # R/Python line comments; conservative, enough for purpose inference.
+    return re.sub(r"(?m)#.*$", "", code_text or "")
+
+
+def _purpose(path: str, code_text: str) -> tuple[str, list[dict[str, str]]]:
     name = path.rsplit("/", 1)[-1]
     match = re.search(r"figure[_ .-]?(\d+)", name, re.IGNORECASE)
     parts = [f"Figure {match.group(1)} analysis"] if match else [name]
-    lowered = (code_text or "").lower()
+    lowered = _strip_comments(code_text).lower()
+    evidence: list[dict[str, str]] = []
     for pattern, label in _CAPABILITIES:
-        if re.search(pattern, lowered) and label not in parts:
+        hit = re.search(pattern, lowered)
+        if hit and label not in parts:
             parts.append(label)
-    return "; ".join(parts)
+            evidence.append({"label": label, "match": hit.group(0)})
+    return "; ".join(parts), evidence
 
 
 def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
@@ -97,6 +105,7 @@ def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
                 (file_id,),
             ).fetchone()
             code_text = code_text_row[0] if code_text_row else ""
+            purpose, purpose_evidence = _purpose(path, code_text)
             modules.append(
                 {
                     "path": path,
@@ -104,7 +113,8 @@ def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
                     "unit_count": len(symbols),
                     "symbols": symbols,
                     "imports": imports,
-                    "purpose": _purpose(path, code_text),
+                    "purpose": purpose,
+                    "purpose_evidence": purpose_evidence,
                     "purpose_source": "inferred",
                     "purpose_confidence": "low",
                     "edges": {str(k): int(v) for k, v in edges.items()},

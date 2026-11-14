@@ -22,6 +22,7 @@ unit_count
 symbols
 imports[]
 purpose
+purpose_evidence[]
 purpose_source=inferred
 purpose_confidence=low
 edges {imports, calls}
@@ -73,13 +74,15 @@ Figure.2.R
   NMF programs; pathway scoring
 
 Figure.3.R
-  Figure 3 analysis; trajectory; batch integration;
+  Figure 3 analysis; batch integration;
   clustering; NMF programs
+  evidence: runharmony, findneighbors, nmf
 
 Figure.6.R
   Figure 6 analysis; cell-cell communication;
   regulon / SCENIC; regulon scoring; cell annotation;
   batch integration; clustering
+  evidence: callcall/scenic/aucell/singler/runharmony/findneighbors
 ```
 
 ## 5. 解释
