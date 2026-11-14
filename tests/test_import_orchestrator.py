@@ -6,6 +6,7 @@ import unittest
 from unittest import mock
 
 from services.imports import orchestrator
+from services.imports.html_quality import QualityRejected
 
 
 class _Paper:
@@ -21,6 +22,11 @@ class _Code:
 class _Fail:
     def process(self, item):
         raise RuntimeError("parse failed")
+
+
+class _QualityFail:
+    def process(self, item):
+        raise QualityRejected("abstract too short")
 
 
 class OrchestratorTests(unittest.TestCase):
@@ -56,6 +62,13 @@ class OrchestratorTests(unittest.TestCase):
         failed = [call for call in set_status.call_args_list if call.args[2] == "failed"]
         self.assertEqual(len(failed), 1)
         self.assertEqual(finalize.call_args.kwargs["failed"], 1)
+
+    def test_quality_reject_is_quarantined(self) -> None:
+        with mock.patch.object(orchestrator.session, "get_import", return_value=self._payload()), mock.patch.object(
+            orchestrator.session, "set_item_status"
+        ) as set_status, mock.patch.object(orchestrator.session, "finalize_session"):
+            orchestrator.process_import("imp_1", paper_adapter=_QualityFail())
+        self.assertTrue(any(call.args[2] == "quarantined" for call in set_status.call_args_list))
 
     def test_no_adapter_stays_routed(self) -> None:
         with mock.patch.object(orchestrator.session, "get_import", return_value=self._payload()), mock.patch.object(

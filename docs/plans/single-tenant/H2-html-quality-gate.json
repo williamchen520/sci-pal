@@ -1,0 +1,83 @@
+{
+  "plan_id": "H2",
+  "title": "HTML Quality Gate",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "H1"
+  ],
+  "objective": "Reject low-quality HTML before canonical build and mark the item quarantined.",
+  "checks": {
+    "title": {
+      "rule": "non-empty, not filename, >=10 chars",
+      "level": "critical"
+    },
+    "abstract": {
+      "rule": ">=100 chars",
+      "level": "critical"
+    },
+    "sections": {
+      "rule": ">=3",
+      "level": "critical"
+    },
+    "paragraphs": {
+      "rule": ">=5",
+      "level": "critical"
+    },
+    "total_chars": {
+      "rule": ">=1000",
+      "level": "critical"
+    },
+    "doi": {
+      "rule": "missing is warning",
+      "level": "warning"
+    },
+    "duplicate_titles": {
+      "rule": "warning",
+      "level": "warning"
+    }
+  },
+  "tasks": [
+    {
+      "id": "H2.1",
+      "title": "Quality evaluator",
+      "file": "services/imports/html_quality.py",
+      "status": "done"
+    },
+    {
+      "id": "H2.2",
+      "title": "Adapter quarantine hook",
+      "file": "services/imports/paper_lane.py",
+      "status": "done"
+    },
+    {
+      "id": "H2.3",
+      "title": "Tests",
+      "file": "tests/test_html_quality.py",
+      "status": "done"
+    }
+  ],
+  "acceptance": [
+    "good Nature fixture passes",
+    "missing title rejected",
+    "short abstract rejected",
+    "too few sections rejected",
+    "too few paragraphs rejected",
+    "low quality does not build",
+    "issues and metrics returned"
+  ],
+  "out_of_scope": [
+    "PDF fallback (H3)",
+    "Cell/JS (H4)",
+    "auto fetching",
+    "review UI"
+  ],
+  "verification": {
+    "tests": "6 passed",
+    "nature_ok": true,
+    "score": 100,
+    "sections": 15,
+    "paragraphs": 175,
+    "total_chars": 65873
+  }
+}
