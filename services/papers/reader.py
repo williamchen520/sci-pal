@@ -88,7 +88,10 @@ def paper_paragraphs(
     clause, params = _section_clause(section)
     clause = clause.replace('section_', 'p.section_')
     if not include_captions:
-        clause += " AND p.section_level1 NOT IN ('figure_caption','table_caption')"
+        clause += (
+            " AND p.section_level1 NOT IN ('figure_caption','table_caption')"
+            " AND p.text !~* '^(Fig\\.?|Figure|Table)\\s+[0-9]+\\s*\\|'"
+        )
     pg = corpus_connection()
     try:
         rows = pg.execute(
