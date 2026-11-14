@@ -15,6 +15,8 @@ READ_PATTERNS = [
     re.compile(r"\bfread\s*\(\s*['\"]([^'\"]+)['\"]"),
     re.compile(r"\bread_csv\s*\(\s*['\"]([^'\"]+)['\"]"),
     re.compile(r"\bread_parquet\s*\(\s*['\"]([^'\"]+)['\"]"),
+    re.compile(r"\bread_excel\s*\(\s*['\"]([^'\"]+)['\"]"),
+    re.compile(r"\bread_xlsx\s*\(\s*['\"]([^'\"]+)['\"]"),
 ]
 WRITE_PATTERNS = [
     re.compile(r"\bsaveRDS\s*\([^,]+,\s*(?:file\s*=\s*)?['\"]([^'\"]+)['\"]"),
@@ -22,6 +24,8 @@ WRITE_PATTERNS = [
     re.compile(r"\bwrite\.table\s*\([^,]+,\s*(?:file\s*=\s*)?['\"]([^'\"]+)['\"]"),
     re.compile(r"\bto_csv\s*\(\s*['\"]([^'\"]+)['\"]"),
     re.compile(r"\bto_parquet\s*\(\s*['\"]([^'\"]+)['\"]"),
+    re.compile(r"\bwrite_xlsx\s*\([^,]+,\s*['\"]([^'\"]+)['\"]"),
+    re.compile(r"\bwrite_excel\s*\([^,]+,\s*['\"]([^'\"]+)['\"]"),
 ]
 
 
