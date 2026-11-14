@@ -8,6 +8,7 @@ from typing import Any
 from xml.etree import ElementTree as ET
 
 from services.imports import session
+from services.imports.html_quality import QualityRejected, evaluate_html
 from services.imports.paper_build import build_paper, paper_id_for
 from build_db.parse_service import parse_and_store
 from config.settings import DATABASE_PATH
@@ -68,12 +69,15 @@ class PaperLaneAdapter:
         if not path.is_file():
             raise AdapterUnavailable("staged paper file not found")
         kind = item.get("source_kind")
+        quality = None
         if kind == "jats":
             payload = parse_jats(path)
         elif kind == "html":
             payload = parse_html(
                 path.read_bytes(), source_url=item.get("source_uri") or ""
             )
+            quality = evaluate_html(payload)
+            payload["quality"] = quality.as_dict()
         elif kind == "pdf":
             if not self.build:
                 raise AdapterUnavailable("pdf adapter requires build=True")
@@ -98,6 +102,8 @@ class PaperLaneAdapter:
         else:
             raise AdapterUnavailable(f"unsupported paper kind: {kind}")
         session.set_item_parsed(item["import_id"], item["item_id"], payload)
+        if quality is not None and not quality.ok:
+            raise QualityRejected("; ".join(quality.issues))
         if self.build:
             paper_id = paper_id_for(item)
             build_paper(

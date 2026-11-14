@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from services.imports import session
+from services.imports.html_quality import QualityRejected
 from services.imports.router import route
 
 
@@ -43,6 +44,8 @@ def process_import(
             result = adapter.process(item)
             session.set_item_status(import_id, item["item_id"], result)
             processed += 1
+        except QualityRejected as exc:
+            session.set_item_status(import_id, item["item_id"], "quarantined", str(exc)[:500])
         except Exception as exc:  # noqa: BLE001
             failed += 1
             session.set_item_status(import_id, item["item_id"], "failed", str(exc)[:500])

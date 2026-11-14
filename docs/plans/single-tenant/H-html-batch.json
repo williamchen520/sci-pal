@@ -3,7 +3,7 @@
   "title": "HTML-first Batch Ingest",
   "version": 1,
   "status": "in_progress",
-  "current_phase": "H2",
+  "current_phase": "H3",
   "source_priority": [
     "pmc_jats",
     "pmc_html",
@@ -57,7 +57,7 @@
     {
       "id": "H2",
       "title": "HTML Quality Gate",
-      "status": "planned",
+      "status": "done",
       "depends_on": [
         "H1"
       ],
