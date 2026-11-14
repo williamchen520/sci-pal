@@ -271,8 +271,20 @@ def build_papers_actions_blueprint(
 
     @bp.route("/api/papers/<paper_id>/sections/<section_type>", methods=["GET"])
     def get_paper_section(paper_id, section_type):
+        include_paragraphs = request.args.get("include_paragraphs", "0").lower() in {"1", "true", "yes"}
         try:
-            result = paper_section(paper_id, section_type)
+            limit = int(request.args.get("limit", 50))
+            offset = int(request.args.get("offset", 0))
+        except ValueError:
+            return jsonify({"error": "limit/offset must be integers"}), 400
+        try:
+            result = paper_section(
+                paper_id,
+                section_type,
+                include_paragraphs=include_paragraphs,
+                limit=limit,
+                offset=offset,
+            )
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         status = 404 if result.get("status") == "not_found" else 200

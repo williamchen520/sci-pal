@@ -19,17 +19,32 @@ front_matter / abstract / results / methods
 discussion / back_matter / references / caption
 ```
 
-返回：
+默认 summary：
 
 ```text
 paper_id
 section_type
 status
 section_type_source=heuristic
+include_paragraphs=false
 sections[]
   section_path
   first_para_id
-  paragraphs[]
+  paragraph_count
+```
+
+需要正文：
+
+```text
+?include_paragraphs=1&limit=50&offset=0
+```
+
+返回：
+
+```text
+paragraphs[]
+returned
+truncated
 ```
 
 ## 2. MCP
@@ -37,8 +52,16 @@ sections[]
 `scipal-paper` 第 11 个工具：
 
 ```text
-paper_section(paper_id, section_type)
+paper_section(
+  paper_id,
+  section_type,
+  include_paragraphs=False,
+  limit=50,
+  offset=0
+)
 ```
+
+默认 summary，避免 MCP spill。
 
 ## 3. 实现
 
@@ -59,7 +82,7 @@ section -> paragraphs
 ```
 
 ```text
-test_paper_sections 3 passed
+test_paper_sections 4 passed
 ```
 
 ## 5. 路由
@@ -77,7 +100,16 @@ section_type 是启发式
 app 尚未重启加载新路由
 ```
 
-## 7. 下一步
+## 7. 分页
+
+```text
+include_paragraphs=false  默认
+limit                     默认 50，最大 200
+offset                    默认 0
+truncated                 标记未返回完
+```
+
+## 8. 下一步
 
 ```text
 1. 重启 app/DSH
