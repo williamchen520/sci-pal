@@ -49,6 +49,7 @@ def create_import(
                 "kind": detection.kind,
                 "source_kind": detection.source_kind,
                 "source_uri": uri,
+                "staged_path": str(item.get("staged_path") or ""),
                 "content_hash": str(item.get("content_hash") or ""),
                 "status": status,
                 "error": "" if status == "detected" else "format not recognized",
@@ -65,14 +66,15 @@ def create_import(
         for row in prepared:
             pg.execute(
                 "INSERT INTO import_items "
-                "(import_id,item_id,kind,source_kind,source_uri,content_hash,status,error) "
-                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                "(import_id,item_id,kind,source_kind,source_uri,staged_path,content_hash,status,error) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                 (
                     import_id,
                     row["item_id"],
                     row["kind"],
                     row["source_kind"],
                     row["source_uri"],
+                    row["staged_path"],
                     row["content_hash"],
                     row["status"],
                     row["error"],
@@ -161,4 +163,15 @@ def finalize_session(
             "UPDATE import_sessions SET status=%s,processed_items=%s,failed_items=%s,"
             "updated_at=now() WHERE import_id=%s",
             (status, processed, failed, import_id),
+        )
+
+
+def set_item_parsed(import_id: str, item_id: str, payload: dict[str, Any]) -> None:
+    import json
+
+    with core_connection() as pg:
+        pg.execute(
+            "UPDATE import_items SET parsed_json=%s::jsonb,status='parsed',updated_at=now() "
+            "WHERE import_id=%s AND item_id=%s",
+            (json.dumps(payload, ensure_ascii=False), import_id, item_id),
         )

@@ -53,13 +53,13 @@
       "id": "N0.6",
       "title": "Paper lane adapters",
       "file": "services/imports/paper_lane.py",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "N0.7",
       "title": "Code lane adapter",
       "file": "services/imports/code_lane.py",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "N0.8",
@@ -157,10 +157,10 @@
     "storage/model cost"
   ],
   "verification": {
-    "tests": "detector+session+orchestrator",
-    "passed": 16,
+    "tests": "detector+session+orchestrator+lanes",
+    "passed": 20,
     "failed": 0,
-    "smoke_import": "imp_c76aee2ac74e451b",
-    "routes": 277
+    "smoke_import": "imp_881700340bb44c33",
+    "routes": 278
   }
 }
