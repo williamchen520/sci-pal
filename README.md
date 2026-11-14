@@ -15,7 +15,7 @@ HTML/JATS 优先的获取设计
 sentence FTS
 embedding 输入审计
 paper reader API
-scipal-paper 插件设计
+scipal-paper MCP server（9 tools）
 ```
 
 当前真实数据：
@@ -188,7 +188,7 @@ GET /api/papers/<paper_id>/paragraphs/<para_id>/sentences
 reader service       PASS
 HTTP routes          PASS（266 route-method）
 outline 归一化       PASS（服务层）
-scipal-paper 插件    设计完成，未实现
+scipal-paper MCP    9 tools（待 DSH 重启）
 ```
 
 ---
@@ -447,7 +447,7 @@ R 深度 AST 未实现（v1 是保守扫描）
 Rmd/Quarto chunk + 内部函数 v1
 混合仓库 auto detect v1；跨语言低置信
 HTML 尚未接入 corpus ingest
-scipal-paper 插件未实现
+DSH 尚未重启加载 scipal-paper
 sentence evidence 链未接
 figure_caption 仍可能被当作正文
 app 重启后需再验证 outline 归一化
@@ -469,6 +469,7 @@ app 重启后需再验证 outline 归一化
 | [实验-Paper-Analysis](docs/实验-Paper-Analysis.md) | 单篇聚合入口 |
 | [实验-Paper-Code-Links](docs/实验-Paper-Code-Links.md) | 论文代码链接 |
 | [实验-Paper-Code-Bindings](docs/实验-Paper-Code-Bindings.md) | paper ↔ code library |
+| [实验-Scipal-Paper-MCP](docs/实验-Scipal-Paper-MCP.md) | MCP 插件 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
 | [实验-Paper-Data-Flow](docs/实验-Paper-Data-Flow.md) | 数据流 |
