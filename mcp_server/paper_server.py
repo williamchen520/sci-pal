@@ -119,5 +119,19 @@ def paper_data_flow(paper_id: str) -> str:
     return _call("GET", f"/api/papers/{_paper(paper_id)}/data-flow")
 
 
+@mcp.tool(
+    description=(
+        "生成复刻计划（POST /api/papers/<id>/replication-plan）："
+        "target 为文件名；只生成计划，不执行。"
+    )
+)
+def paper_replication_plan(paper_id: str, target: str) -> str:
+    return _call(
+        "POST",
+        f"/api/papers/{_paper(paper_id)}/replication-plan",
+        {"target": target},
+    )
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

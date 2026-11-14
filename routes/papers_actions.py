@@ -22,6 +22,7 @@ from services.papers.analysis import analyze_paper
 from services.papers.bindings import bind_link, list_bindings
 from services.papers.flow import paper_data_flow
 from services.papers.modules import paper_modules
+from services.papers.replication import replication_plan
 from services.papers.code_links import extract_and_store, list_links, manual_link, validate_link
 from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline, paper_paragraphs, paragraph_sentences
@@ -253,6 +254,19 @@ def build_papers_actions_blueprint(
     @bp.route("/api/papers/<paper_id>/modules", methods=["GET"])
     def get_paper_modules(paper_id):
         return jsonify(paper_modules(paper_id))
+
+    @bp.route("/api/papers/<paper_id>/replication-plan", methods=["POST"])
+    def build_replication_plan(paper_id):
+        payload = request.get_json(silent=True) or {}
+        target = str(payload.get("target") or "").strip()
+        if not target:
+            return jsonify({"error": "target is required"}), 400
+        try:
+            result = replication_plan(paper_id, target)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        status = 409 if result.get("status") == "blocked" else 200
+        return jsonify(result), status
 
     @bp.route("/api/papers/<paper_id>/analysis", methods=["GET"])
     def get_paper_analysis(paper_id):
