@@ -2757,6 +2757,14 @@
         ],
         "endpoint": "papers_actions.get_paper_modules",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/data-flow",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_data_flow",
+        "status": "implemented"
       }
     ]
   },

@@ -8,6 +8,7 @@ from services.db.pg_pool import corpus_connection
 from services.papers.bindings import list_bindings
 from services.papers.code_links import list_links
 from services.papers.evidence import paper_evidence
+from services.papers.flow import paper_data_flow
 from services.papers.reader import paper_first_paragraph, paper_outline
 
 
@@ -32,6 +33,7 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
     evidence = paper_evidence(paper_id, query, top_k=top_k) if query.strip() else []
     links = list_links(paper_id)
     bindings = list_bindings(paper_id)
+    data_flow = paper_data_flow(paper_id) if bindings else {"status": "unbound", "nodes": [], "edges": []}
     return {
         "paper": {
             "paper_id": paper_id,
@@ -43,6 +45,7 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
         "outline": outline,
         "first_paragraph": first,
         "evidence": evidence,
+        "data_flow": data_flow,
         "query": query,
         "code": {
             "status": "bound" if bindings else ("candidate" if links else "not_indexed"),
