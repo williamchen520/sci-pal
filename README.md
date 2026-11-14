@@ -485,6 +485,7 @@ app 重启后需再验证 outline 归一化
 | [讨论-04-CodeRAG是否按语言建库](docs/讨论-04-CodeRAG是否按语言建库.md) | CodeRAG 分库边界 |
 | [讨论-05-文献监控与自动入库](docs/讨论-05-文献监控与自动入库.md) | 监控触发入库 |
 | [讨论-06-租户工作区隔离与星形联邦](docs/讨论-06-租户工作区隔离与星形联邦.md) | 租户隔离与联邦拓扑 |
+| [租户联邦执行计划总表](docs/plans/tenant-federation/00-execution-plan.md) | E0–E8 执行状态 |
 | [实验-Paper-Section-API](docs/实验-Paper-Section-API.md) | 按类型取整节 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
