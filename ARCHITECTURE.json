@@ -2693,6 +2693,14 @@
         ],
         "endpoint": "papers_actions.get_paper_evidence",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/analysis",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_analysis",
+        "status": "implemented"
       }
     ]
   },
