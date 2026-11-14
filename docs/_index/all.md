@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 543 篇 · 2026-11-12
+> 共 544 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -211,6 +211,7 @@
 | 阶段计划 | H3 计划表：HTML 失败后 PDF Fallback | --- | [H3-pdf-fallback.md](../plans/single-tenant/H3-pdf-fallback.md) |
 | 阶段计划 | H4 计划表：Cell / JS 页面适配 | --- | [H4-cell-js-adapter.md](../plans/single-tenant/H4-cell-js-adapter.md) |
 | 阶段计划 | N0 计划表：单租户导入管线 | --- | [N0-import-pipeline.md](../plans/single-tenant/N0-import-pipeline.md) |
+| 阶段计划 | U0 计划表：前端批量上传 staging | --- | [U0-upload-staging.md](../plans/single-tenant/U0-upload-staging.md) |
 | 阶段计划 | 租户联邦执行计划总表 | --- | [00-execution-plan.md](../plans/tenant-federation/00-execution-plan.md) |
 | 阶段计划 | 决策记录：Tenant-ready 单租户优先 | --- | [DECISION-single-tenant-first.md](../plans/tenant-federation/DECISION-single-tenant-first.md) |
 | 阶段计划 | E0 计划表：Capability 与 Resource Scope 模型 | --- | [E0-capability-scope.md](../plans/tenant-federation/E0-capability-scope.md) |

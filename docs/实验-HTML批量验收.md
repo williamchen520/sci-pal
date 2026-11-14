@@ -114,7 +114,23 @@ PMC 页面段落更粗（PMC 原生段落），但内容完整；H1 PMC adapter 
 忽略外层 Abstract 干扰
 ```
 
-## 8. 结论
+## 8. 前端上传
+
+```text
+POST /api/imports/upload
+  -> 201
+  -> staging file
+  -> ImportSession queued
+  -> 不自动 build
+```
+
+页面：
+
+```text
+frontend/imports.html
+```
+
+## 9. 结论
 
 ```text
 H0  batch CLI              done
