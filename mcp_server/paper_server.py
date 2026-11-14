@@ -56,6 +56,19 @@ def _paper(paper_id: str) -> str:
     return _path_segment(paper_id)
 
 
+@mcp.tool(
+    description=(
+        "本地路径批量导入（POST /api/imports/local）：只创建 queued ImportSession。"
+    )
+)
+def paper_import_local(paths: list[str], library_id: str = "lib_default") -> str:
+    return _call(
+        "POST",
+        "/api/imports/local",
+        {"library_id": library_id, "paths": paths, "origin": "dsh"},
+    )
+
+
 @mcp.tool(description="单篇论文健康检查（GET /api/health）。")
 def paper_health() -> str:
     return _call("GET", "/api/health")
