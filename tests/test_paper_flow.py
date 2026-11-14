@@ -30,6 +30,15 @@ class FlowTests(unittest.TestCase):
         self.assertTrue(any(edge["target"] == "artifact:out.xlsx" for edge in edges))
         self.assertTrue(any(node["id"] == "artifact:out.xlsx" for node in nodes))
 
+    def test_variable_path_literal(self) -> None:
+        nodes, edges = flow._extract(
+            "Figure1.R",
+            "r",
+            'infile <- "data.csv"\nd <- read.csv(infile)',
+        )
+        self.assertTrue(any(edge["target"] == "artifact:data.csv" for edge in edges))
+        self.assertTrue(any(node["id"] == "artifact:data.csv" for node in nodes))
+
     def test_unbound(self) -> None:
         with mock.patch.object(flow, "list_bindings", return_value=[]):
             result = flow.paper_data_flow("p1")
