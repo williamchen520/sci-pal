@@ -40,7 +40,7 @@ def create_import(
     prepared = []
     for index, item in enumerate(rows, start=1):
         uri = str(item.get("uri") or "").strip()
-        detection = detect(uri)
+        detection = detect(str(item.get("staged_path") or uri).strip())
         routed = route(detection.source_kind)
         status = "quarantined" if routed.lane == "quarantine" else "detected"
         prepared.append(

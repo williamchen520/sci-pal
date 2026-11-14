@@ -19,7 +19,7 @@ class Detection:
 
 
 def _suffix(uri: str) -> str:
-    path = uri.split("?", 1)[0].split("#", 1)[0]
+    path = uri.split("?", 1)[0].split("#", 1)[0].replace("\\", "/")
     return PurePosixPath(path).suffix.lower()
 
 

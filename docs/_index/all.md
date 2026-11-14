@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 536 篇 · 2026-11-12
+> 共 538 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -204,6 +204,8 @@
 | 架构规范 | Work Plan: Project Tracking and Experiment Records (ELN) | To be explicit: | [Project-Tracking-and-ELN.md](../en/plans/Project-Tracking-and-ELN.md) |
 | 架构规范 | 架构守卫使用说明 | ARCHITECTURE.json 描述：路由表 / 蓝图 / 数据层 | [guards.md](../guards.md) |
 | 阶段计划 | 单租户交付执行计划总表 | --- | [00-execution-plan.md](../plans/single-tenant/00-execution-plan.md) |
+| 阶段计划 | 方案表：HTML-first 批量入库 | --- | [H-html-batch.md](../plans/single-tenant/H-html-batch.md) |
+| 阶段计划 | H0 计划表：HTML Batch CLI | --- | [H0-html-batch.md](../plans/single-tenant/H0-html-batch.md) |
 | 阶段计划 | N0 计划表：单租户导入管线 | --- | [N0-import-pipeline.md](../plans/single-tenant/N0-import-pipeline.md) |
 | 阶段计划 | 租户联邦执行计划总表 | --- | [00-execution-plan.md](../plans/tenant-federation/00-execution-plan.md) |
 | 阶段计划 | 决策记录：Tenant-ready 单租户优先 | --- | [DECISION-single-tenant-first.md](../plans/tenant-federation/DECISION-single-tenant-first.md) |
