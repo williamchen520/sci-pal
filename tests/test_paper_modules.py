@@ -63,6 +63,7 @@ class ModuleTests(unittest.TestCase):
         self.assertIn("Seurat", result["modules"][0]["imports"])
         self.assertEqual(result["modules"][0]["purpose_source"], "inferred")
         self.assertIn("batch integration", result["modules"][0]["purpose"])
+        self.assertEqual(result["modules"][0]["purpose_evidence"][0]["label"], "batch integration")
         self.assertEqual(result["modules"][0]["purpose_confidence"], "low")
 
 
