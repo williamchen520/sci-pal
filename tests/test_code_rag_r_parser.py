@@ -53,6 +53,7 @@ title: test
 ---
 ```{r setup, include=FALSE}
 library(Seurat)
+norm <- function(x) { x / sum(x) }
 ```
 ```{python label=plot}
 print("hi")
@@ -67,6 +68,9 @@ class RmdParserTests(unittest.TestCase):
         self.assertEqual(len(chunks), 2)
         self.assertEqual(chunks[0].symbol_name, "setup")
         self.assertIn("library(Seurat)", chunks[0].text)
+        child = next(unit for unit in units if unit.symbol_name == "norm")
+        self.assertEqual(child.unit_type, "function")
+        self.assertEqual(child.parent_unit_id, chunks[0].unit_id)
         self.assertEqual(chunks[1].symbol_name, "plot")
         self.assertIn("print", chunks[1].text)
         self.assertEqual(edges, [])

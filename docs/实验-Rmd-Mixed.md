@@ -25,6 +25,8 @@ file unit
 chunk unit
   symbol_name = label
   text = chunk body
+  inner function unit
+    parent_unit_id = chunk unit
 ```
 
 支持 label：
@@ -68,15 +70,32 @@ file_language mapping
 test_code_rag_r_parser 5 passed
 ```
 
-## 4. 边界
+## 4. chunk 内函数
 
-```text
-chunk 内函数不二次拆分
-R/Python 跨语言调用不解析
-动态 Rmd parameter 不解析
+R chunk：
+
+```r
+norm <- function(x) { x / sum(x) }
 ```
 
-## 5. 下一步
+现在会生成：
+
+```text
+chunk setup
+  -> function norm
+```
+
+Python chunk 同理。
+
+## 5. 边界
+
+```text
+跨语言调用不解析
+动态 Rmd parameter 不解析
+chunk 内 class 只做 parser 支持范围
+```
+
+## 6. 下一步
 
 ```text
 1. chunk 内 function unit

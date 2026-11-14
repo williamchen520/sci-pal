@@ -380,6 +380,7 @@ def parse_rmd(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdge]]
         body_end = close.start() if close else len(text)
         body = text[body_start:body_end]
         uid = _stable_id("unit", path, "chunk", label, str(match.start()))
+        chunk_start = text[:match.start()].count("\n") + 1
         units.append(
             ParsedUnit(
                 unit_id=uid,
@@ -387,9 +388,33 @@ def parse_rmd(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdge]]
                 symbol_name=label,
                 unit_type="chunk",
                 text=body,
-                start_line=text[:match.start()].count("\n") + 1,
+                start_line=chunk_start,
                 end_line=text[:body_end].count("\n") + 1,
                 parent_unit_id=file_id,
             )
         )
+        inner_units = []
+        if language == "r":
+            inner_units, _ = parse_r(body, f"{path}#{label}")
+        elif language == "python":
+            inner_units, _ = parse_python(body, f"{path}#{label}")
+        for inner in inner_units:
+            if inner.unit_type == "file":
+                continue
+            inner_id = _stable_id(
+                "unit", path, "chunk", label, "inner", inner.unit_type,
+                inner.symbol_name, str(inner.start_line), str(inner.end_line),
+            )
+            units.append(
+                ParsedUnit(
+                    unit_id=inner_id,
+                    file_path=path,
+                    symbol_name=inner.symbol_name,
+                    unit_type=inner.unit_type,
+                    text=inner.text,
+                    start_line=chunk_start + inner.start_line - 1,
+                    end_line=chunk_start + inner.end_line - 1,
+                    parent_unit_id=uid,
+                )
+            )
     return units, edges
