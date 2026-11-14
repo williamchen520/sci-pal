@@ -48,7 +48,7 @@ def build_imports_blueprint() -> Blueprint:
                 return jsonify({"error": "import not found"}), 404
             result = process_import(
                 import_id,
-                paper_adapter=PaperLaneAdapter(),
+                paper_adapter=PaperLaneAdapter(build=True),
                 code_adapter=CodeLaneAdapter(),
             )
         except import_session.ImportSessionError:
