@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 149 篇 · 分类索引，文件原路径不变
+> 共 151 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -52,6 +52,8 @@
 | P4 元数据双写 | --- | [PostgreSQL迁移-P4-双写.md](../PostgreSQL迁移-P4-双写.md) |
 | P5 读路径 Canary | --- | [PostgreSQL迁移-P5-读路径Canary.md](../PostgreSQL迁移-P5-读路径Canary.md) |
 | PostgreSQL 迁移基线（P0） | --- | [PostgreSQL迁移-基线.md](../PostgreSQL迁移-基线.md) |
+| 租户联邦执行计划总表 | --- | [00-execution-plan.md](tenant-federation/00-execution-plan.md) |
+| E0 计划表：Capability 与 Resource Scope 模型 | --- | [E0-capability-scope.md](tenant-federation/E0-capability-scope.md) |
 | scipal-guard P1：实体词表校验 | --- | [scipal-guard-P1.md](../scipal-guard-P1.md) |
 | 代码审查修复计划 | --- | [修复计划-代码审查P0.md](../修复计划-代码审查P0.md) |
 | 备选计划表 | --- | [备选计划表.md](../备选计划表.md) |

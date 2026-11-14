@@ -219,6 +219,7 @@ def main() -> None:
 - [讨论-04-CodeRAG是否按语言建库](讨论-04-CodeRAG是否按语言建库.md)
 - [讨论-05-文献监控与自动入库](讨论-05-文献监控与自动入库.md)
 - [讨论-06-租户工作区隔离与星形联邦](讨论-06-租户工作区隔离与星形联邦.md)
+- [租户联邦执行计划总表](plans/tenant-federation/00-execution-plan.md)
 - [实验-Paper-Section-API](实验-Paper-Section-API.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
