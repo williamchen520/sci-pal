@@ -3,7 +3,7 @@
   "title": "Tenant Federation Execution Plan",
   "version": 1,
   "updated_at": "2026-11-14",
-  "status": "in_progress",
+  "status": "frozen_phase2",
   "current_phase": "DELIVERY",
   "principles": [
     "permission model before data plane before federation",
@@ -129,7 +129,7 @@
     {
       "id": "E3",
       "title": "Tenant Connector",
-      "status": "deferred",
+      "status": "frozen",
       "depends_on": [
         "E2"
       ],
@@ -144,12 +144,12 @@
         "no shared DSN",
         "no shared database account"
       ],
-      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
+      "deferred_reason": "Phase 2 Roadmap frozen; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E4",
       "title": "Gateway Scope Resolution",
-      "status": "deferred",
+      "status": "frozen",
       "depends_on": [
         "E3"
       ],
@@ -164,12 +164,12 @@
         "scope=both works only when subscribed",
         "tenant:<other> is rejected"
       ],
-      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
+      "deferred_reason": "Phase 2 Roadmap frozen; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E5",
       "title": "Peer Tenant Deny Tests",
-      "status": "deferred",
+      "status": "frozen",
       "depends_on": [
         "E4"
       ],
@@ -183,12 +183,12 @@
         "tenant B cannot query tenant C",
         "denial is structural, not UI-only"
       ],
-      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
+      "deferred_reason": "Phase 2 Roadmap frozen; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E6",
       "title": "Support Access and Audit",
-      "status": "deferred",
+      "status": "frozen",
       "depends_on": [
         "E5"
       ],
@@ -203,12 +203,12 @@
         "time limited",
         "audit trail"
       ],
-      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
+      "deferred_reason": "Phase 2 Roadmap frozen; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E7",
       "title": "ImportSession for Tenants",
-      "status": "deferred",
+      "status": "frozen",
       "depends_on": [
         "E6"
       ],
@@ -223,12 +223,12 @@
         "review and publish gates",
         "per-tenant indexes"
       ],
-      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
+      "deferred_reason": "Phase 2 Roadmap frozen; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E8",
       "title": "Quota, Deletion, Migration",
-      "status": "deferred",
+      "status": "frozen",
       "depends_on": [
         "E7"
       ],
@@ -244,7 +244,7 @@
         "audit retained",
         "migration/backup runbook exists"
       ],
-      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
+      "deferred_reason": "Phase 2 Roadmap frozen; resume when >3 tenants or self-service is required"
     }
   ],
   "decision_log": [
@@ -281,8 +281,8 @@
       "decision": "platform approves plugin versions; tenant enables a subset"
     }
   ],
-  "next_action": "single-tenant feature delivery; E3-E8 deferred",
-  "delivery_mode": "tenant-ready single-tenant first",
+  "next_action": "single-tenant feature delivery; E3-E8 frozen",
+  "delivery_mode": "tenant-ready single-tenant",
   "deferred_scope": [
     "E3",
     "E4",
@@ -290,5 +290,6 @@
     "E6",
     "E7",
     "E8"
-  ]
+  ],
+  "phase2_status": "frozen"
 }

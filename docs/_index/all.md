@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 533 篇 · 2026-11-12
+> 共 534 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -393,6 +393,7 @@
 | 阶段计划 | Phase 2：Watch Profile Journals 写路径 | setjournals delete + insert | [架构-Phase2-WatchJournals写路径.md](../架构-Phase2-WatchJournals写路径.md) |
 | 阶段计划 | Phase 2：Watch Profile 写路径（第一片） | createprofile | [架构-Phase2-WatchProfile写路径.md](../架构-Phase2-WatchProfile写路径.md) |
 | 废弃历史 | 架构：SQLite 退役条件与当前数据权威源 | 过去几轮完成了： | [架构-SQLite退役条件.md](../架构-SQLite退役条件.md) |
+| 阶段计划 | 架构状态：tenant-ready 单租户架构与 Phase 2 Roadmap | --- | [架构-租户状态与Phase2Roadmap.md](../架构-租户状态与Phase2Roadmap.md) |
 | 架构规范 | 架构文档 | - 目标系统：Windows 10/11，Python 3.12（venv: venvsciPalpy312） | [架构.md](../架构.md) |
 | 架构规范 | SciPal 架构与路由全景图 | 配套： | [架构与路由全景图.md](../架构与路由全景图.md) |
 | 架构规范 | SciPal 架构与路由图 | --- | [架构与路由图.md](../架构与路由图.md) |
