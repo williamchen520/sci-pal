@@ -2,9 +2,14 @@
   "plan_id": "S0",
   "title": "TenantContext Single-Tenant First",
   "version": 1,
-  "status": "planned",
-  "depends_on": ["E0", "E1"],
-  "optional_dependencies": ["E2"],
+  "status": "done",
+  "depends_on": [
+    "E0",
+    "E1"
+  ],
+  "optional_dependencies": [
+    "E2"
+  ],
   "objective": "Use a TenantContext everywhere new code resolves database, storage, and index resources, while delivering only one tenant plus main.",
   "decisions": [
     "D0-1 deliver one tenant plus main",
@@ -16,12 +21,42 @@
     "D0-7 E3-E8 remain deferred"
   ],
   "tasks": [
-    {"id": "S0.1", "title": "TenantContext dataclass", "file": "services/tenancy/context.py", "status": "pending"},
-    {"id": "S0.2", "title": "Resolve default tenant and main flag", "file": "services/tenancy/context.py", "status": "pending"},
-    {"id": "S0.3", "title": "Resolve DSN reference, storage, index prefix", "file": "services/tenancy/context.py", "status": "pending"},
-    {"id": "S0.4", "title": "Static audit for bypasses", "file": "scripts/audit_tenant_context.py", "status": "pending"},
-    {"id": "S0.5", "title": "Single-tenant smoke tests", "file": "tests/test_tenant_context.py", "status": "pending"},
-    {"id": "S0.6", "title": "Align Markdown and JSON plans", "file": "docs/plans/tenant-federation/S0-tenant-context.md", "status": "pending"}
+    {
+      "id": "S0.1",
+      "title": "TenantContext dataclass",
+      "file": "services/tenancy/context.py",
+      "status": "done"
+    },
+    {
+      "id": "S0.2",
+      "title": "Resolve default tenant and main flag",
+      "file": "services/tenancy/context.py",
+      "status": "done"
+    },
+    {
+      "id": "S0.3",
+      "title": "Resolve DSN reference, storage, index prefix",
+      "file": "services/tenancy/context.py",
+      "status": "done"
+    },
+    {
+      "id": "S0.4",
+      "title": "Static audit for bypasses",
+      "file": "scripts/audit_tenant_context.py",
+      "status": "done"
+    },
+    {
+      "id": "S0.5",
+      "title": "Single-tenant smoke tests",
+      "file": "tests/test_tenant_context.py",
+      "status": "done"
+    },
+    {
+      "id": "S0.6",
+      "title": "Align Markdown and JSON plans",
+      "file": "docs/plans/tenant-federation/S0-tenant-context.md",
+      "status": "done"
+    }
   ],
   "context_fields": [
     "tenant_id",
@@ -53,5 +88,12 @@
     "external customer isolation required",
     "compliance requires dedicated DB/backup",
     "quota/billing required"
-  ]
+  ],
+  "verification": {
+    "tests": "tests/test_tenant_context.py",
+    "passed": 9,
+    "failed": 0,
+    "strict_audit_violations": 0,
+    "global_connection_debt": 33
+  }
 }

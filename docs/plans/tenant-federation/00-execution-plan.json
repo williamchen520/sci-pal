@@ -4,7 +4,7 @@
   "version": 1,
   "updated_at": "2026-11-14",
   "status": "in_progress",
-  "current_phase": "S0",
+  "current_phase": "DELIVERY",
   "principles": [
     "permission model before data plane before federation",
     "every phase has Markdown and JSON plan files",
@@ -103,7 +103,7 @@
     {
       "id": "S0",
       "title": "TenantContext Single-Tenant First",
-      "status": "planned",
+      "status": "done",
       "depends_on": [
         "E0",
         "E1"
@@ -118,7 +118,13 @@
         "main federation flag resolves",
         "new code uses context",
         "single-tenant smoke passes"
-      ]
+      ],
+      "verification": {
+        "tests": "tests/test_tenant_context.py",
+        "passed": 9,
+        "failed": 0
+      },
+      "pr": 821
     },
     {
       "id": "E3",
@@ -275,7 +281,7 @@
       "decision": "platform approves plugin versions; tenant enables a subset"
     }
   ],
-  "next_action": "write and implement S0 TenantContext",
+  "next_action": "single-tenant feature delivery; E3-E8 deferred",
   "delivery_mode": "tenant-ready single-tenant first",
   "deferred_scope": [
     "E3",
