@@ -47,7 +47,7 @@
       "id": "N0.5",
       "title": "Orchestrator",
       "file": "services/imports/orchestrator.py",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "N0.6",
@@ -157,8 +157,8 @@
     "storage/model cost"
   ],
   "verification": {
-    "tests": "tests/test_import_detector.py + tests/test_import_session.py",
-    "passed": 13,
+    "tests": "detector+session+orchestrator",
+    "passed": 16,
     "failed": 0,
     "smoke_import": "imp_c76aee2ac74e451b",
     "routes": 277

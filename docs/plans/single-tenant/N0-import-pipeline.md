@@ -235,8 +235,8 @@ N0.2  session         done
 N0.3  detector        done
 N0.4  router          done
 N0.8  API             done
-N0.9  tests           13 passed（部分）
-N0.5  orchestrator    pending
+N0.9  tests           16 passed（部分）
+N0.5  orchestrator    done
 N0.6  paper adapters  pending
 N0.7  code adapter    pending
 ```
