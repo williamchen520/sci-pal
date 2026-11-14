@@ -238,7 +238,7 @@ N0.8  API             done
 N0.9  tests           20 passed（部分）
 N0.5  orchestrator    done
 N0.6  paper adapters  parse+build JATS/HTML done；PDF pending
-N0.7  code adapter    parse done；build/index pending
+N0.7  code adapter    parse+build done；embedding/index pending
 ```
 
 ## 13. 验收

@@ -8,6 +8,7 @@ from typing import Any
 
 from code_rag.parsers import parse_python, parse_r, parse_rmd
 from services.imports import session
+from services.imports.code_build import build_code
 
 
 class AdapterUnavailable(RuntimeError):
@@ -38,6 +39,9 @@ def _parse_file(path: Path) -> dict[str, Any]:
 
 
 class CodeLaneAdapter:
+    def __init__(self, *, build: bool = False) -> None:
+        self.build = build
+
     def process(self, item: dict[str, Any]) -> str:
         path = Path(item.get("staged_path") or item.get("source_uri") or "")
         if not path.exists():
@@ -65,4 +69,7 @@ class CodeLaneAdapter:
             "unit_count": sum(len(file["units"]) for file in files),
         }
         session.set_item_parsed(item["import_id"], item["item_id"], payload)
+        if self.build:
+            build_code(item, payload)
+            return "built"
         return "parsed"
