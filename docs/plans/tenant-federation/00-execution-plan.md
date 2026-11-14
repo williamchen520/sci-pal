@@ -3,7 +3,7 @@
 > 日期：2026-11-14  
 > 版本：v1  
 > 状态：执行中  
-> 当前阶段：S0  
+> 当前阶段：单租户交付  
 > 交付模式：tenant-ready 单租户优先  
 > 机器可读：`00-execution-plan.json`
 
@@ -61,7 +61,7 @@ tenant -> tenant
 | E0 | capability + resource scope | — | done | `E0-capability-scope.md/.json` | 11 tests |
 | E1 | federation_catalog + 星形约束 | E0 | done | `E1-federation-catalog.md/.json` | catalog 只登记 main；拒绝 peer |
 | E2 | tenant provisioning | E1 | done | `E2-tenant-provisioning.md/.json` | DB/storage/index namespace |
-| S0 | TenantContext 单租户优先 | E0/E1 | planned | `S0-tenant-context.md/.json` | 单租户 + main |
+| S0 | TenantContext 单租户优先 | E0/E1 | done | `S0-tenant-context.md/.json` | 单租户 + main |
 | E3 | tenant connector | E2 | deferred | `E3-tenant-connector.md/.json` | 只允许 main；短时 token |
 | E4 | gateway scope | E3 | deferred | `E4-gateway-scope.md/.json` | own/main/both |
 | E5 | tenant→tenant 拒绝测试 | E4 | deferred | `E5-peer-deny-tests.md/.json` | 结构性拒绝 |
@@ -235,7 +235,7 @@ JSON 至少包含：
 E0  done
 E1  done
 E2  done
-S0  planned：TenantContext 单租户
+S0  done
 E3-E8  deferred；恢复条件见决策记录
 ```
 
@@ -244,9 +244,8 @@ E3-E8  deferred；恢复条件见决策记录
 ## 8. 当前下一步
 
 ```text
-S0 TenantContext 单租户
-  -> 先写 S0 .md/.json
-  -> TenantContext 解析
-  -> 单租户 + main smoke
-  -> 不再推进 E3-E8
+单租户交付
+  -> 业务功能接入 TenantContext
+  -> E3-E8 保持 deferred
+  -> 满足恢复条件再启动
 ```

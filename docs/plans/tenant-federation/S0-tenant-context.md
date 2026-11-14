@@ -1,7 +1,7 @@
 # S0 计划表：TenantContext 单租户优先
 
 > 阶段：S0  
-> 状态：planned  
+> 状态：已完成  
 > 依赖：E0/E1；E2 可选  
 > 目标：代码使用 TenantContext，但产品只交付一个 tenant + main。
 
@@ -76,7 +76,15 @@ E8 配额/删除/迁移
 
 ---
 
-## 6. 验收
+## 6. 验收结果
+
+```text
+9 tests passed
+strict audit violations 0
+legacy global connection debt 33
+```
+
+## 7. 验收
 
 ```text
 1. 默认 tenant 可解析
@@ -88,7 +96,7 @@ E8 配额/删除/迁移
 
 ---
 
-## 7. 恢复 E3–E8 条件
+## 8. 恢复 E3–E8 条件
 
 ```text
 租户数 > 3
