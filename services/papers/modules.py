@@ -25,29 +25,28 @@ def _import_name(value: str) -> str:
 
 
 _CAPABILITIES = (
-    ("infercnv", "CNV inference"),
-    ("cellcall", "cell-cell communication"),
-    ("cellchat", "cell-cell communication"),
-    ("scenic", "regulon / SCENIC"),
-    ("scopeloomr", "SCENIC loom"),
+    ("infercnv::run|createinfercnvobject", "CNV inference"),
+    ("createcellchat|cellchat", "cell-cell communication"),
+    ("cellcall|transcommuprofile", "cell-cell communication"),
+    ("scenic|pyscenic", "regulon / SCENIC"),
+    ("aucell", "regulon scoring"),
     ("scmetabolism", "metabolism"),
     ("monocle", "trajectory"),
     ("singler", "cell annotation"),
-    ("celldex", "reference atlas"),
-    ("harmony", "batch integration"),
-    ("nmf", "NMF programs"),
-    ("aucell", "regulon scoring"),
+    ("runharmony", "batch integration"),
+    ("findclusters|findneighbors", "clustering"),
+    ("nmf|cnmf", "NMF programs"),
     ("gsva", "pathway scoring"),
 )
 
 
-def _purpose(path: str, imports: list[str]) -> str:
+def _purpose(path: str, code_text: str) -> str:
     name = path.rsplit("/", 1)[-1]
     match = re.search(r"figure[_ .-]?(\d+)", name, re.IGNORECASE)
     parts = [f"Figure {match.group(1)} analysis"] if match else [name]
-    lowered = [item.lower() for item in imports]
-    for needle, label in _CAPABILITIES:
-        if any(needle in item for item in lowered) and label not in parts:
+    lowered = (code_text or "").lower()
+    for pattern, label in _CAPABILITIES:
+        if re.search(pattern, lowered) and label not in parts:
             parts.append(label)
     return "; ".join(parts)
 
@@ -92,6 +91,12 @@ def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
                     (library_id, file_id),
                 ).fetchall()
             ]
+            code_text_row = conn.execute(
+                "SELECT text FROM code_rag.code_units "
+                "WHERE file_id=%s AND unit_type='file' LIMIT 1",
+                (file_id,),
+            ).fetchone()
+            code_text = code_text_row[0] if code_text_row else ""
             modules.append(
                 {
                     "path": path,
@@ -99,7 +104,7 @@ def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
                     "unit_count": len(symbols),
                     "symbols": symbols,
                     "imports": imports,
-                    "purpose": _purpose(path, imports),
+                    "purpose": _purpose(path, code_text),
                     "purpose_source": "inferred",
                     "purpose_confidence": "low",
                     "edges": {str(k): int(v) for k, v in edges.items()},
