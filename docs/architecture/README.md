@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 183 篇 · 分类索引，文件原路径不变
+> 共 184 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -63,6 +63,7 @@
 | 实验记录：Paper Analysis 聚合入口 | --- | [实验-Paper-Analysis.md](../实验-Paper-Analysis.md) |
 | 实验记录：Paper ↔ Code Library 绑定 | --- | [实验-Paper-Code-Bindings.md](../实验-Paper-Code-Bindings.md) |
 | 实验记录：Paper Code Links | --- | [实验-Paper-Code-Links.md](../实验-Paper-Code-Links.md) |
+| 实验记录：Paper Module Map | --- | [实验-Paper-Module-Map.md](../实验-Paper-Module-Map.md) |
 | 实验记录：Paper Reader API | --- | [实验-Paper-Reader-API.md](../实验-Paper-Reader-API.md) |
 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |
 | 案例：HCC 多组学分子分型论文（HTML + Zenodo） | --- | [实验-Paper-to-Code-HCC-基因组案例.md](../实验-Paper-to-Code-HCC-基因组案例.md) |

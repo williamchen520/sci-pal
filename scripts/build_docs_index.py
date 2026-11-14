@@ -198,6 +198,7 @@ def main() -> None:
 - [实验-Paper-Code-Links](实验-Paper-Code-Links.md)
 - [实验-Paper-Code-Bindings](实验-Paper-Code-Bindings.md)
 - [实验-R-Parser-v1](实验-R-Parser-v1.md)
+- [实验-Paper-Module-Map](实验-Paper-Module-Map.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)
 
