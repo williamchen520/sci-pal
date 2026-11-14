@@ -2725,6 +2725,14 @@
         ],
         "endpoint": "papers_actions.extract_paper_code_links",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/code-links/<link_id>/validate",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.validate_paper_code_link",
+        "status": "implemented"
       }
     ]
   },

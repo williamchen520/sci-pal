@@ -1,7 +1,7 @@
 # 实验记录：Paper Code Links
 
 > 日期：2026-11-14  
-> 状态：代码链接抽取/人工补录/只读 API 可用；尚未自动校验 license/commit  
+> 状态：抽取/补录/校验 API 可用；GitHub commit 已回填  
 > 目标：给 `scipal-paper` 提供论文 → 代码入口
 
 ---
@@ -114,7 +114,46 @@ app_routes=261
 OK
 ```
 
-## 8. 下一步
+## 8. 校验
+
+```text
+POST /api/papers/<paper_id>/code-links/<link_id>/validate
+```
+
+GitHub：
+
+```text
+repo metadata
+  -> license.spdx_id
+  -> default_branch
+  -> commits/{branch}.sha
+```
+
+Zenodo：
+
+```text
+record metadata
+  -> license.id
+```
+
+实测：
+
+```text
+good repo
+  status validated
+  commit 6de260e6
+  license ""（仓库无 LICENSE）
+
+bad PDF URL
+  status candidate
+  error HTTP 404
+
+Zenodo 20664347
+  status candidate
+  error HTTP 404
+```
+
+## 9. 下一步
 
 ```text
 1. 人工标记坏链接 rejected

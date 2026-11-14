@@ -45,6 +45,25 @@ class CodeLinkTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             code_links.manual_link("paper", "https://example.com/repo")
 
+    def test_resolve_github_metadata(self) -> None:
+        payloads = [
+            {"license": {"spdx_id": "MIT"}, "default_branch": "main"},
+            {"sha": "abc123"},
+        ]
+        with mock.patch.object(code_links, "_fetch_json", side_effect=payloads):
+            meta = code_links.resolve_metadata("https://github.com/a/b")
+        self.assertEqual(meta["license"], "MIT")
+        self.assertEqual(meta["commit_sha"], "abc123")
+        self.assertEqual(meta["status"], "validated")
+
+    def test_resolve_zenodo_metadata(self) -> None:
+        with mock.patch.object(
+            code_links, "_fetch_json", return_value={"metadata": {"license": {"id": "GPL-3.0"}}}
+        ):
+            meta = code_links.resolve_metadata("https://doi.org/10.5281/zenodo.123")
+        self.assertEqual(meta["repo_type"], "zenodo")
+        self.assertEqual(meta["license"], "GPL-3.0")
+
     def test_manual_link(self) -> None:
         with mock.patch.object(code_links, "_upsert", return_value=1):
             link = code_links.manual_link(

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
+import urllib.error
+import urllib.request
 from typing import Any
 from urllib.parse import urlparse
 
@@ -144,6 +147,81 @@ def manual_link(
     }
     _upsert([link])
     return link
+
+
+def _fetch_json(url: str) -> dict[str, Any]:
+    request = urllib.request.Request(
+        url,
+        headers={"Accept": "application/json", "User-Agent": "SciPal-code-links"},
+    )
+    with urllib.request.urlopen(request, timeout=15) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def resolve_metadata(url: str) -> dict[str, Any]:
+    """Resolve a repo/Zenodo URL to license + commit without downloading code."""
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+    if "github" in host:
+        parts = [part for part in parsed.path.split("/") if part]
+        if len(parts) < 2:
+            raise ValueError("GitHub URL must contain owner/repo")
+        owner, repo = parts[0], parts[1]
+        meta = _fetch_json(f"https://api.github.com/repos/{owner}/{repo}")
+        branch = meta.get("default_branch") or "main"
+        commit = _fetch_json(f"https://api.github.com/repos/{owner}/{repo}/commits/{branch}")
+        return {
+            "repo_type": "github",
+            "license": (meta.get("license") or {}).get("spdx_id") or "",
+            "commit_sha": commit.get("sha") or "",
+            "default_branch": branch,
+            "status": "validated",
+        }
+    if "zenodo" in host or "doi.org" in host:
+        record = parsed.path.rstrip("/").split("/")[-1]
+        if not record:
+            raise ValueError("Zenodo URL must contain a record id")
+        meta = _fetch_json(f"https://zenodo.org/api/records/{record}")
+        metadata = meta.get("metadata") or {}
+        license_value = metadata.get("license") or {}
+        if isinstance(license_value, dict):
+            license_value = license_value.get("id") or ""
+        return {
+            "repo_type": "zenodo",
+            "license": license_value or "",
+            "commit_sha": "",
+            "default_branch": "",
+            "status": "validated",
+        }
+    raise ValueError("unsupported host")
+
+
+def validate_link(paper_id: str, link_id_value: str) -> dict[str, Any]:
+    pg = corpus_connection()
+    try:
+        row = pg.execute(
+            "SELECT link_id,paper_id,url FROM paper_code_links WHERE paper_id=%s AND link_id=%s",
+            (paper_id, link_id_value),
+        ).fetchone()
+    finally:
+        pg.close()
+    if not row:
+        raise KeyError("link not found")
+    try:
+        meta = resolve_metadata(row["url"])
+    except (ValueError, urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as exc:
+        return {"link_id": link_id_value, "status": "candidate", "error": str(exc)}
+    pg = owner_connection()
+    try:
+        pg.execute(
+            "UPDATE paper_code_links SET repo_type=%s, license=%s, commit_sha=%s, "
+            "confidence=1.0, status=%s, updated_at=now() WHERE link_id=%s",
+            (meta["repo_type"], meta["license"], meta["commit_sha"], meta["status"], link_id_value),
+        )
+        pg.commit()
+    finally:
+        pg.close()
+    return {"link_id": link_id_value, **meta}
 
 
 def list_links(paper_id: str) -> list[dict[str, Any]]:
