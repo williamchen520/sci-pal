@@ -24,7 +24,7 @@ paper_first_paragraph(section="Results")
 
 ## 2. Fallback
 
-仅当 `section=Results` 且正常查询为空时：
+当 `section=Results` 或 `Methods` 且正常查询为空时：
 
 ```text
 body
@@ -38,6 +38,15 @@ body
 
 ```text
 section_fallback = body_headings
+```
+
+Methods：
+
+```text
+section=Methods
+-> para_0054
+-> Study design and sample selection
+-> body_headings
 ```
 
 ## 3. HCC 实测
@@ -54,8 +63,8 @@ range  para_0013 .. para_0048
 ```text
 这是启发式
 不是 parser 的正式 section 标签
-没有 Discussion 时可能包含 Methods
-只对 Results 启用
+Results：Discussion 之前
+Methods：Discussion 之后、availability/references 之前
 ```
 
 ## 5. 测试

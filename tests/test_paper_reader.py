@@ -104,6 +104,20 @@ class PaperReaderTests(unittest.TestCase):
         self.assertEqual(rows[0]["para_id"], "p13")
         self.assertEqual(rows[0]["section_fallback"], "body_headings")
 
+    def test_methods_body_fallback(self) -> None:
+        row = {
+            "para_id": "p54",
+            "section_level1": "body",
+            "section_level2": "Study design",
+            "text": "text",
+            "sequence": 54,
+        }
+        conn = _SeqConn([[], [row]])
+        with mock.patch.object(reader, "corpus_connection", return_value=conn):
+            rows = reader.paper_paragraphs("paper_1", section="Methods", limit=10)
+        self.assertEqual(rows[0]["para_id"], "p54")
+        self.assertEqual(rows[0]["section_fallback"], "body_headings")
+
     def test_first_paragraph_empty(self) -> None:
         conn = _Conn([])
         with mock.patch.object(reader, "corpus_connection", return_value=conn):

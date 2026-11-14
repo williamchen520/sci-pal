@@ -449,7 +449,7 @@ Rmd/Quarto chunk + 内部函数 v1
 HTML 尚未接入 corpus ingest
 DSH 尚未重启加载 scipal-paper
 sentence evidence 链未接
-Results section 有启发式 fallback（body_headings）
+Results/Methods 有启发式 fallback（body_headings）
 app 重启后需再验证 outline 归一化
 全库低质量 embedding 只修了 HCC 一篇
 ```
