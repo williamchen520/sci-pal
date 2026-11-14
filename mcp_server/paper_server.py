@@ -1,0 +1,123 @@
+"""scipal-paper MCP server — thin read-only forwarding to SciPal API.
+
+serverName: scipal-paper
+transport: stdio
+
+Hard rules:
+  · no SciPal internal imports, no model loading
+  · only existing HTTP routes
+  · stdout is JSON-RPC; never print to stdout
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+from urllib.parse import urlencode
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from mcp.server.mcpserver import MCPServer  # noqa: E402
+
+from _forward import _call, _path_segment  # noqa: E402
+
+
+def _load_env_file() -> None:
+    for name in ("SCIPAL_API_ENV_FILE", "SCIPAL_CODE_ENV_FILE"):
+        path = os.environ.get(name, "")
+        if not path or not Path(path).exists():
+            continue
+        for line in Path(path).read_text(encoding="utf-8-sig").splitlines():
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_env_file()
+
+SERVER_NAME = "scipal-paper"
+SERVER_VERSION = "0.1.0"
+
+mcp = MCPServer(
+    SERVER_NAME,
+    version=SERVER_VERSION,
+    instructions=(
+        "SciPal 单篇论文分析工具（薄转发本地 Flask API）。"
+        "所有工具只读；outline → paragraph → sentence → evidence，"
+        "code links / module map / data flow 来自已绑定 code library。"
+        "不自动下载、不执行代码、不伪造模块说明。"
+    ),
+)
+
+
+def _paper(paper_id: str) -> str:
+    return _path_segment(paper_id)
+
+
+@mcp.tool(description="单篇论文健康检查（GET /api/health）。")
+def paper_health() -> str:
+    return _call("GET", "/api/health")
+
+
+@mcp.tool(description="论文章节目录（GET /api/papers/<id>/outline）。")
+def paper_outline(paper_id: str) -> str:
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/outline")
+
+
+@mcp.tool(
+    description=(
+        "按 section 取第一段（GET /api/papers/<id>/paragraphs/first）。"
+        "section 为空表示解析顺序第一段；figure/table caption 默认排除。"
+    )
+)
+def paper_first_paragraph(paper_id: str, section: str = "", include_captions: bool = False) -> str:
+    query = urlencode(
+        {"section": section, "include_captions": "1" if include_captions else "0"}
+    )
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/paragraphs/first?{query}")
+
+
+@mcp.tool(description="单篇论文聚合分析（GET /api/papers/<id>/analysis）。q 为空则不查 evidence。")
+def paper_analysis(paper_id: str, q: str = "", top_k: int = 8) -> str:
+    query = urlencode({"q": q, "top_k": top_k})
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/analysis?{query}")
+
+
+@mcp.tool(
+    description=(
+        "句级证据（POST /api/papers/<id>/evidence）："
+        "paragraph vector recall + sentence FTS，返回 sentence_id/para_id/section。"
+    )
+)
+def paper_evidence(paper_id: str, query: str, top_k: int = 8) -> str:
+    return _call(
+        "POST",
+        f"/api/papers/{_paper(paper_id)}/evidence",
+        {"query": query, "top_k": top_k},
+    )
+
+
+@mcp.tool(description="论文代码链接（GET /api/papers/<id>/code-links）。")
+def paper_code_links(paper_id: str) -> str:
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/code-links")
+
+
+@mcp.tool(description="论文已绑定 code library（GET /api/papers/<id>/code-libraries）。")
+def paper_code_libraries(paper_id: str) -> str:
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/code-libraries")
+
+
+@mcp.tool(description="论文模块表（GET /api/papers/<id>/modules）：文件/单元/imports。")
+def paper_modules(paper_id: str) -> str:
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/modules")
+
+
+@mcp.tool(description="论文数据流（GET /api/papers/<id>/data-flow）：reads/writes artifact。")
+def paper_data_flow(paper_id: str) -> str:
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/data-flow")
+
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")

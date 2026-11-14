@@ -130,7 +130,26 @@
         toolCallTimeoutMs: 60000
         failOnStartupError: false
 
-# ── 工具出现形式（重启 DSH 后应有 40 个 mcp__ 工具 = 1 + 10 + 9 + 3 + 12）──────────
+    # ── 单篇论文（scipal-paper：只读，薄转发）──────────────────────────────
+    - id: mcp-scipal-paper
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: scipal-paper
+        transport: stdio
+        command: 'D:/sciPal/venv_sciPal_py312/Scripts/python.exe'
+        args: ['D:/sciPal/mcp_server/paper_server.py']
+        cwd: 'D:/sciPal'
+        env:
+          PYTHONUTF8: '1'
+          no_proxy: '127.0.0.1,localhost'
+          NO_PROXY: '127.0.0.1,localhost'
+          SCIPAL_API_ENV_FILE: 'G:/sciPal_deploy/deploy/.env'
+          SCIPAL_CODE_ENV_FILE: 'G:/runs/code_rag.env'
+          SCIPAL_BASE_URL: 'http://127.0.0.1:5001'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: false
+
+# ── 工具出现形式（重启 DSH 后应有 49 个 mcp__ 工具 = 1 + 10 + 9 + 3 + 4 + 9）──────────
 # 哨兵：
 #   mcp__scipalhello__ping
 # scipal-search（10）：
