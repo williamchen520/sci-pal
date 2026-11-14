@@ -15,6 +15,9 @@ class _Cursor:
     def fetchall(self):
         return self.rows
 
+    def fetchone(self):
+        return self.rows[0] if self.rows else None
+
 
 class _Conn:
     def __init__(self):
@@ -26,6 +29,8 @@ class _Conn:
             return _Cursor([("f1", "Figure.1.R", "r")])
         if "symbol_name" in sql:
             return _Cursor([("Figure.1.R",)])
+        if "SELECT text FROM code_rag.code_units" in sql:
+            return _Cursor([("RunHarmony(x, group.by.vars='orig.ident')",)])
         if "SELECT DISTINCT dst_unit_id" in sql:
             return _Cursor([("unresolved:library:Seurat",), ("unresolved:library:harmony",)])
         if "SELECT relation" in sql:
@@ -57,6 +62,7 @@ class ModuleTests(unittest.TestCase):
         self.assertEqual(result["modules"][0]["edges"]["imports"], 12)
         self.assertIn("Seurat", result["modules"][0]["imports"])
         self.assertEqual(result["modules"][0]["purpose_source"], "inferred")
+        self.assertIn("batch integration", result["modules"][0]["purpose"])
         self.assertEqual(result["modules"][0]["purpose_confidence"], "low")
 
 

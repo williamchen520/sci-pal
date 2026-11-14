@@ -60,19 +60,26 @@ Figure.2.R
 
 ## 4. Purpose（推断）
 
-只用文件名 + imports 推断，不调用 LLM：
+改用代码里的真实调用推断，不调用 LLM：
 
 ```text
 Figure.1.R
-  Figure 1 analysis; batch integration; NMF programs
+  Figure 1 analysis; cell-cell communication;
+  batch integration; clustering; NMF programs
 
 Figure.2.R
-  Figure 2 analysis; CNV inference; metabolism;
-  batch integration; NMF programs; regulon scoring
+  Figure 2 analysis; CNV inference; regulon scoring;
+  metabolism; batch integration; clustering;
+  NMF programs; pathway scoring
+
+Figure.3.R
+  Figure 3 analysis; trajectory; batch integration;
+  clustering; NMF programs
 
 Figure.6.R
   Figure 6 analysis; cell-cell communication;
-  regulon / SCENIC; cell annotation; reference atlas
+  regulon / SCENIC; regulon scoring; cell annotation;
+  batch integration; clustering
 ```
 
 ## 5. 解释
