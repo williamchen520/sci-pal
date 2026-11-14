@@ -24,6 +24,7 @@ from services.papers.flow import paper_data_flow
 from services.papers.modules import paper_modules
 from services.papers.replication import replication_plan
 from services.papers.sections import paper_section
+from services.papers.html_native import html_native
 from services.papers.jats import jats_native
 from services.papers.sources import list_sources
 from services.papers.code_links import extract_and_store, list_links, manual_link, validate_link
@@ -291,6 +292,14 @@ def build_papers_actions_blueprint(
             return jsonify({"error": str(exc)}), 400
         status = 404 if result.get("status") == "not_found" else 200
         return jsonify(result), status
+
+    @bp.route("/api/papers/<paper_id>/html", methods=["GET"])
+    def get_paper_html(paper_id):
+        include = request.args.get("include_paragraphs", "0").lower() in {"1", "true", "yes"}
+        native = html_native(paper_id, include_paragraphs=include)
+        if not native:
+            return jsonify({"paper_id": paper_id, "status": "not_indexed"}), 404
+        return jsonify(native)
 
     @bp.route("/api/papers/<paper_id>/jats", methods=["GET"])
     def get_paper_jats(paper_id):

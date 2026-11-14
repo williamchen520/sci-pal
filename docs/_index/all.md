@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 520 篇 · 2026-11-12
+> 共 521 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -239,6 +239,7 @@
 | 架构规范 | 实验记录：BioViz Recipe RAG Phase 0/1 | --- | [实验-BioViz-Recipe-RAG.md](../实验-BioViz-Recipe-RAG.md) |
 | 架构规范 | 实验记录：跨语言低置信边 | --- | [实验-Cross-Language-Edges.md](../实验-Cross-Language-Edges.md) |
 | 安全复盘 | 实验记录：Embedding 输入审计与修复 | --- | [实验-Embedding输入审计.md](../实验-Embedding输入审计.md) |
+| 架构规范 | 实验记录：HTML Native 来源层 | --- | [实验-HTML-Native.md](../实验-HTML-Native.md) |
 | 架构规范 | 实验记录：HTML 论文解析器 | --- | [实验-HTML解析器.md](../实验-HTML解析器.md) |
 | 架构规范 | 实验记录：JATS Native 原生层 | --- | [实验-JATS-Native.md](../实验-JATS-Native.md) |
 | 架构规范 | 实验记录：Paper Analysis 聚合入口 | --- | [实验-Paper-Analysis.md](../实验-Paper-Analysis.md) |
