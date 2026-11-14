@@ -16,6 +16,13 @@ def _code_connection():
     return psycopg.connect(dsn, connect_timeout=10)
 
 
+def _import_name(value: str) -> str:
+    for prefix in ("unresolved:library:", "unresolved:", "source:", "include:"):
+        if value.startswith(prefix):
+            return value[len(prefix):]
+    return value
+
+
 def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
     with _code_connection() as conn:
         files = conn.execute(
@@ -46,12 +53,23 @@ def _library_modules(library_id: str, snapshot_id: str) -> list[dict[str, Any]]:
                     (library_id, file_id),
                 ).fetchall()
             )
+            imports = [
+                _import_name(row[0])
+                for row in conn.execute(
+                    "SELECT DISTINCT dst_unit_id FROM code_rag.code_edges "
+                    "WHERE library_id=%s AND relation='imports' AND src_unit_id IN "
+                    "(SELECT unit_id FROM code_rag.code_units WHERE file_id=%s) "
+                    "ORDER BY dst_unit_id",
+                    (library_id, file_id),
+                ).fetchall()
+            ]
             modules.append(
                 {
                     "path": path,
                     "language": language,
                     "unit_count": len(symbols),
                     "symbols": symbols,
+                    "imports": imports,
                     "edges": {str(k): int(v) for k, v in edges.items()},
                 }
             )

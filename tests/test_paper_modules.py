@@ -26,6 +26,8 @@ class _Conn:
             return _Cursor([("f1", "Figure.1.R", "r")])
         if "symbol_name" in sql:
             return _Cursor([("Figure.1.R",)])
+        if "SELECT DISTINCT dst_unit_id" in sql:
+            return _Cursor([("unresolved:library:Seurat",), ("unresolved:library:harmony",)])
         if "SELECT relation" in sql:
             return _Cursor([("imports", 12)])
         return _Cursor([])
@@ -53,6 +55,7 @@ class ModuleTests(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["modules"][0]["path"], "Figure.1.R")
         self.assertEqual(result["modules"][0]["edges"]["imports"], 12)
+        self.assertIn("Seurat", result["modules"][0]["imports"])
 
 
 if __name__ == "__main__":

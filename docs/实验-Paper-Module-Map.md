@@ -20,8 +20,11 @@ path
 language
 unit_count
 symbols
+imports[]
 edges {imports, calls}
 ```
+
+`imports` 已去掉 `unresolved:library:` 前缀，直接是包名。
 
 ## 2. HCC 实测
 
@@ -40,7 +43,19 @@ modules  7
 | Figure.6.R | 1 | Figure.6.R | 17 |
 | Figure.7.R | 1 | Figure.7.R | 17 |
 
-## 3. 解释
+## 3. 实际 imports
+
+```text
+Figure.1.R
+  clusterProfiler, data.table, dplyr, ggalluvial,
+  ggplot2, ggsci, harmony, NMF ...
+
+Figure.2.R
+  AUCell, clusterProfiler, ComplexHeatmap,
+  data.table, dplyr, ...
+```
+
+## 4. 解释
 
 这 7 个脚本主要是顶层分析脚本：
 
@@ -52,7 +67,7 @@ Figure.2 有两个函数单元，所以是 3 个 unit。
 
 `unit_count` 不等于“业务模块数”；它反映 parser 看到的单元。
 
-## 4. 不做什么
+## 5. 不做什么
 
 ```text
 不生成 LLM 模块说明
@@ -62,7 +77,7 @@ Figure.2 有两个函数单元，所以是 3 个 unit。
 
 `purpose` 留给 scipal-paper/LLM 基于代码与论文生成，并必须标 inferred。
 
-## 5. 测试
+## 6. 测试
 
 ```text
 unbound -> status unbound
@@ -73,7 +88,7 @@ bound -> modules 1, imports 12
 test_paper_modules 2 passed
 ```
 
-## 6. 路由
+## 7. 路由
 
 ```text
 json_routes=265
@@ -81,7 +96,7 @@ app_routes=265
 OK
 ```
 
-## 7. 下一步
+## 8. 下一步
 
 ```text
 1. purpose 生成（标 inferred）
