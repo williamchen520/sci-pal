@@ -50,7 +50,7 @@
 
 | 阶段 | 目标 | 依赖 | 状态 | 计划表 | 主要验收 |
 |---|---|---|---|---|---|
-| N0 | 单租户导入管线 | S0 | planned | `N0-import-pipeline.md/.json` | XML/PDF/HTML/code 分流 |
+| N0 | 单租户导入管线 | S0 | in_progress | `N0-import-pipeline.md/.json` | XML/PDF/HTML/code 分流 |
 | N1 | 审查与发布门禁 | N0 | planned | `N1-review-publish.md/.json` | 质量门禁 + 人工批准 |
 | N2 | 文献监控自动入库 | N1 | planned | `N2-watch-auto-ingest.md/.json` | watch -> ImportSession |
 | N3 | 薄插件层 | N0 | planned | `N3-parser-adapters.md/.json` | Parser/Review/Sink 接口 |
@@ -171,7 +171,7 @@ tenant stack 注册/管理员 DDL
 
 ```text
 S0  done
-N0  需要先写/执行计划表
+N0  in_progress（N0.1–N0.4，N0.8）
 N1  依赖 N0 合并
 N2  依赖 N1 合并
 N3  依赖 N0 合并

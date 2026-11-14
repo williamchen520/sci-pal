@@ -2821,6 +2821,38 @@
         ],
         "endpoint": "papers_actions.get_paper_federated",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/imports",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "imports.create_import",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/imports/<import_id>",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "imports.get_import",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/imports/<import_id>/items",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "imports.get_items",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/imports/<import_id>/retry",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "imports.retry_import",
+        "status": "implemented"
       }
     ]
   },

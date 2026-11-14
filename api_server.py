@@ -39,6 +39,7 @@ from routes.evidence import build_evidence_blueprint
 from routes.guard import build_guard_blueprint
 from routes.ingest import build_ingest_blueprint
 from routes.papers import build_papers_blueprint
+from routes.imports import build_imports_blueprint
 from routes.papers_actions import build_papers_actions_blueprint
 from routes.protocols import build_protocols_blueprint
 from routes.qa import build_qa_blueprint
@@ -335,6 +336,8 @@ app.register_blueprint(
         db_path=DB_PATH,
     )
 )
+
+app.register_blueprint(build_imports_blueprint())
 
 # B5: papers 本地/解析/PDF/附件/导入/标注 已移入 routes/papers_actions.py
 app.register_blueprint(

@@ -2,8 +2,10 @@
   "plan_id": "N0",
   "title": "Single-Tenant Import Pipeline",
   "version": 1,
-  "status": "planned",
-  "depends_on": ["S0"],
+  "status": "in_progress",
+  "depends_on": [
+    "S0"
+  ],
   "objective": "Manually import XML/HTML/PDF/code into one tenant, detect formats, route to paper/code lanes, build libraries and indexes as draft/indexed.",
   "decisions": [
     "N0-1 single tenant plus main only",
@@ -17,18 +19,71 @@
     "N0-9 call services, never subprocess scripts"
   ],
   "tasks": [
-    {"id": "N0.1", "title": "Import session tables", "file": "deploy/sql/046_import_sessions.sql", "status": "pending"},
-    {"id": "N0.2", "title": "ImportSession service", "file": "services/imports/session.py", "status": "pending"},
-    {"id": "N0.3", "title": "Format detector", "file": "services/imports/detector.py", "status": "pending"},
-    {"id": "N0.4", "title": "Paper/code router", "file": "services/imports/router.py", "status": "pending"},
-    {"id": "N0.5", "title": "Orchestrator", "file": "services/imports/orchestrator.py", "status": "pending"},
-    {"id": "N0.6", "title": "Paper lane adapters", "file": "services/imports/paper_lane.py", "status": "pending"},
-    {"id": "N0.7", "title": "Code lane adapter", "file": "services/imports/code_lane.py", "status": "pending"},
-    {"id": "N0.8", "title": "Import API", "file": "routes/imports.py", "status": "pending"},
-    {"id": "N0.9", "title": "Pipeline tests", "file": "tests/test_import_pipeline.py", "status": "pending"},
-    {"id": "N0.10", "title": "Align Markdown and JSON plans", "file": "docs/plans/single-tenant/N0-import-pipeline.md", "status": "pending"}
+    {
+      "id": "N0.1",
+      "title": "Import session tables",
+      "file": "deploy/sql/046_import_sessions.sql",
+      "status": "done"
+    },
+    {
+      "id": "N0.2",
+      "title": "ImportSession service",
+      "file": "services/imports/session.py",
+      "status": "done"
+    },
+    {
+      "id": "N0.3",
+      "title": "Format detector",
+      "file": "services/imports/detector.py",
+      "status": "done"
+    },
+    {
+      "id": "N0.4",
+      "title": "Paper/code router",
+      "file": "services/imports/router.py",
+      "status": "done"
+    },
+    {
+      "id": "N0.5",
+      "title": "Orchestrator",
+      "file": "services/imports/orchestrator.py",
+      "status": "pending"
+    },
+    {
+      "id": "N0.6",
+      "title": "Paper lane adapters",
+      "file": "services/imports/paper_lane.py",
+      "status": "pending"
+    },
+    {
+      "id": "N0.7",
+      "title": "Code lane adapter",
+      "file": "services/imports/code_lane.py",
+      "status": "pending"
+    },
+    {
+      "id": "N0.8",
+      "title": "Import API",
+      "file": "routes/imports.py",
+      "status": "done"
+    },
+    {
+      "id": "N0.9",
+      "title": "Pipeline tests",
+      "file": "tests/test_import_pipeline.py",
+      "status": "in_progress"
+    },
+    {
+      "id": "N0.10",
+      "title": "Align Markdown and JSON plans",
+      "file": "docs/plans/single-tenant/N0-import-pipeline.md",
+      "status": "done"
+    }
   ],
-  "tables": ["import_sessions", "import_items"],
+  "tables": [
+    "import_sessions",
+    "import_items"
+  ],
   "detector": {
     "pdf": "%PDF- / application/pdf",
     "jats": "article root plus front/body/back",
@@ -41,11 +96,33 @@
     "unknown": "quarantine"
   },
   "lanes": {
-    "paper": ["jats", "html", "pdf"],
-    "code": ["repo", "zip", "python", "r", "rmd"],
-    "quarantine": ["unknown"]
+    "paper": [
+      "jats",
+      "html",
+      "pdf"
+    ],
+    "code": [
+      "repo",
+      "zip",
+      "python",
+      "r",
+      "rmd"
+    ],
+    "quarantine": [
+      "unknown"
+    ]
   },
-  "statuses": ["received", "detected", "routed", "parsed", "built", "indexed", "draft", "failed", "quarantined"],
+  "statuses": [
+    "received",
+    "detected",
+    "routed",
+    "parsed",
+    "built",
+    "indexed",
+    "draft",
+    "failed",
+    "quarantined"
+  ],
   "api": [
     "POST /api/imports",
     "GET /api/imports/<import_id>",
@@ -78,5 +155,12 @@
     "unknown license",
     "duplicate imports",
     "storage/model cost"
-  ]
+  ],
+  "verification": {
+    "tests": "tests/test_import_detector.py + tests/test_import_session.py",
+    "passed": 13,
+    "failed": 0,
+    "smoke_import": "imp_c76aee2ac74e451b",
+    "routes": 277
+  }
 }
