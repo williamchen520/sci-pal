@@ -115,10 +115,23 @@ def paper_code_libraries(paper_id: str) -> str:
         "results / methods / discussion / abstract 等。"
     )
 )
-def paper_section(paper_id: str, section_type: str) -> str:
+def paper_section(
+    paper_id: str,
+    section_type: str,
+    include_paragraphs: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+) -> str:
+    query = urlencode(
+        {
+            "include_paragraphs": "1" if include_paragraphs else "0",
+            "limit": limit,
+            "offset": offset,
+        }
+    )
     return _call(
         "GET",
-        f"/api/papers/{_paper(paper_id)}/sections/{_path_segment(section_type)}",
+        f"/api/papers/{_paper(paper_id)}/sections/{_path_segment(section_type)}?{query}",
     )
 
 
