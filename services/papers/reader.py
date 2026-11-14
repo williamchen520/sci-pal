@@ -31,12 +31,13 @@ def _outline_rows(paper_id: str) -> list[dict[str, Any]]:
                        NULLIF(concat_ws(' > ', section_level1, section_level2), '')) AS section_path,
               section_level1,
               section_level2,
+              section_type,
               count(*) AS paragraph_count,
               min(sequence) AS first_sequence,
               (array_agg(para_id ORDER BY sequence))[1] AS first_para_id
             FROM paragraphs
             WHERE paper_id = %s
-            GROUP BY section_path, section_level1, section_level2
+            GROUP BY section_path, section_level1, section_level2, section_type
             ORDER BY first_sequence
             """,
             (paper_id,),
@@ -112,6 +113,7 @@ def paper_outline(paper_id: str) -> list[dict[str, Any]]:
     for row in _outline_rows(paper_id):
         path = _display_section(row)
         first_sequence = int(row.get("first_sequence") or 0)
+        stored_type = row.get("section_type") or ""
         current = merged.get(path)
         if current is None or first_sequence < current["first_sequence"]:
             merged[path] = {
@@ -121,8 +123,8 @@ def paper_outline(paper_id: str) -> list[dict[str, Any]]:
                 "paragraph_count": int(row.get("paragraph_count") or 0),
                 "first_para_id": row.get("first_para_id"),
                 "first_sequence": first_sequence,
-                "section_type": _section_type(row, bounds),
-                "section_type_source": "heuristic",
+                "section_type": stored_type or _section_type(row, bounds),
+                "section_type_source": "stored" if stored_type else "heuristic",
             }
         else:
             current["paragraph_count"] += int(row.get("paragraph_count") or 0)
