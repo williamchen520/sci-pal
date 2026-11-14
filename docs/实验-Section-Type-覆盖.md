@@ -21,9 +21,9 @@ python scripts/audit_section_type_coverage.py --json
 ## 2. 当前覆盖
 
 ```text
-papers        12 / 13,203
-paragraphs   623 / 410,505
-pending      13,191 papers
+papers        47 / 13,203
+paragraphs  2,079 / 410,505
+pending      13,156 papers
 ```
 
 ## 3. 类型分布
@@ -48,7 +48,25 @@ abstract 正文被归到 front_matter
 
 这是已知问题，不是统计错误。
 
-## 5. 为什么不一次全回填
+## 5. 全 front 回滚
+
+抽样 50 篇后发现有论文整篇被标成 `front_matter`：
+
+```text
+15 papers
+724 paragraphs
+```
+
+说明没有识别到 Discussion/Abstract 边界。
+
+已回滚为 `section_type = NULL`，不计入覆盖：
+
+```text
+47 papers
+2,079 paragraphs
+```
+
+## 6. 为什么不一次全回填
 
 ```text
 section_type 仍是启发式
@@ -57,7 +75,7 @@ section_type 仍是启发式
 再决定是否扩大
 ```
 
-## 6. 下一步
+## 7. 下一步
 
 ```text
 1. 回填 50 篇抽样
