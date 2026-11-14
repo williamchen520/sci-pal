@@ -482,6 +482,7 @@ app 重启后需再验证 outline 归一化
 | [实验-PDF-Native](docs/实验-PDF-Native.md) | PDF 原生层 |
 | [实验-Federation](docs/实验-Federation.md) | 论文联邦视图 |
 | [讨论-租户独立建库与插件化导入管线](docs/讨论-租户独立建库与插件化导入管线.md) | 租户建库讨论 |
+| [讨论-04-CodeRAG是否按语言建库](docs/讨论-04-CodeRAG是否按语言建库.md) | CodeRAG 分库边界 |
 | [实验-Paper-Section-API](docs/实验-Paper-Section-API.md) | 按类型取整节 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
