@@ -1,0 +1,72 @@
+{
+  "plan_id": "U1",
+  "title": "Import Queue and Worker",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "U0"
+  ],
+  "objective": "Process queued uploads asynchronously with a single durable DB worker, without blocking HTTP.",
+  "decisions": [
+    "U1-1 queued sessions are the queue",
+    "U1-2 claim with FOR UPDATE SKIP LOCKED",
+    "U1-3 single sequential worker",
+    "U1-4 PDF remains serialized by Docling lock",
+    "U1-5 failures are recorded and retryable",
+    "U1-6 enqueue endpoint is optional",
+    "U1-7 no Celery/Redis/multi-worker"
+  ],
+  "tasks": [
+    {
+      "id": "U1.1",
+      "title": "Queue claim service",
+      "file": "services/imports/queue.py",
+      "status": "done"
+    },
+    {
+      "id": "U1.2",
+      "title": "Worker CLI",
+      "file": "scripts/import_worker.py",
+      "status": "done"
+    },
+    {
+      "id": "U1.3",
+      "title": "Enqueue endpoint",
+      "file": "routes/imports.py",
+      "status": "done"
+    },
+    {
+      "id": "U1.4",
+      "title": "Queue tests",
+      "file": "tests/test_import_queue.py",
+      "status": "done"
+    }
+  ],
+  "flow": [
+    "upload -> queued",
+    "worker claim -> running",
+    "process -> completed/partial/failed"
+  ],
+  "acceptance": [
+    "queued session claimed",
+    "running session not reclaimed",
+    "worker once processes HTML",
+    "failed session can be requeued",
+    "HTTP stays non-blocking"
+  ],
+  "out_of_scope": [
+    "Celery",
+    "Redis",
+    "parallel PDF workers",
+    "priority queues",
+    "distributed locks"
+  ],
+  "verification": {
+    "tests": "3 passed",
+    "import_id": "imp_6fc0e181d39b4528",
+    "status": "completed",
+    "paper_id": "paper_import_00f827436925",
+    "paragraphs": 178,
+    "sentences": 692
+  }
+}

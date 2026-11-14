@@ -2869,6 +2869,14 @@
         ],
         "endpoint": "imports.upload_import",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/imports/<import_id>/enqueue",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "imports.enqueue_import",
+        "status": "implemented"
       }
     ]
   },

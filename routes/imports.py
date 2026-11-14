@@ -8,6 +8,7 @@ from services.imports import session as import_session
 from services.imports.code_lane import CodeLaneAdapter
 from services.imports.orchestrator import process_import
 from services.imports.paper_lane import PaperLaneAdapter
+from services.imports.queue import QueueError, requeue
 from services.imports.upload import UploadError, save_uploaded_files
 from services.tenancy.context import context_from_env
 from services.tenancy.web import auth_required
@@ -55,6 +56,21 @@ def build_imports_blueprint() -> Blueprint:
         except import_session.ImportSessionError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(result), 201
+
+    @bp.post("/api/imports/<import_id>/enqueue")
+    def enqueue_import(import_id: str):
+        if not _allowed():
+            return jsonify({"error": "login required"}), 401
+        try:
+            current = import_session.get_import(import_id)
+            if current.get("tenant_id") != _tenant():
+                return jsonify({"error": "import not found"}), 404
+            result = requeue(import_id)
+        except QueueError:
+            return jsonify({"error": "import is not requeueable"}), 409
+        except import_session.ImportSessionError:
+            return jsonify({"error": "import not found"}), 404
+        return jsonify(result)
 
     @bp.post("/api/imports/<import_id>/process")
     def process_import_route(import_id: str):
