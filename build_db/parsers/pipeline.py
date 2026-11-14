@@ -15,10 +15,13 @@ from __future__ import annotations
 
 import hashlib
 import os
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
 from .docling_parser import DoclingParser
+from .journal_optimizer import optimize_for_journal
+from .pdf_metadata import extract_pdf_title
 
 try:  # GROBID is optional
     from .grobid_parser import GrobidParser
@@ -285,6 +288,15 @@ class PdfParsePipeline:
         # citations may have been replaced by GROBID; refresh the metrics
         provenance.metrics = body_metrics(result, pages)
 
+        metadata = result.setdefault("metadata", {})
+        metadata["source_filename"] = os.path.basename(pdf_path)
+        current_title = str(metadata.get("title") or "").strip()
+        file_names = {os.path.basename(pdf_path), Path(pdf_path).stem}
+        if not current_title or current_title in file_names:
+            title = extract_pdf_title(pdf_path)
+            if title:
+                metadata["title"] = title
+        result = optimize_for_journal(result)
         metadata = result.setdefault("metadata", {})
         engines = {provenance.text_engine, provenance.meta_engine, provenance.refs_engine}
         metadata["parse_engine"] = "+".join(sorted(e for e in engines if e))

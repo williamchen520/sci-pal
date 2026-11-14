@@ -130,6 +130,14 @@ def detect_journal_family(metadata: Dict[str, Any]) -> Tuple[str, str]:
     Returns (family, detection_method)
     family: 'nature' | 'science' | 'cell' | 'other'
     """
+    # 0. Try the source filename (Docling often has no DOI/journal).
+    filename = (metadata.get('source_filename') or '').strip().lower()
+    if filename:
+        if re.search(r's415(86|98|67|91|87|90|93|94|56|64|65|66|67|68|69|70|71|72|73|74|75|76|77|78|79|80|81|82|83|84|85)', filename):
+            return 'nature', f'filename:{filename}'
+        if filename.startswith('piis0092') or filename.startswith('piis2211'):
+            return 'cell', f'filename:{filename}'
+
     # 1. Try DOI prefix
     doi = (metadata.get('doi') or '').strip().lower()
     if doi:
@@ -555,7 +563,7 @@ def optimize_for_journal(parsed_result: Dict[str, Any]) -> Dict[str, Any]:
     metadata['journal_detect_method'] = detect_method
 
     if family != 'other':
-        print(f"   🎯 Journal detected: {family.upper()} (via {detect_method})")
+        print(f"   Journal detected: {family.upper()} (via {detect_method})")
 
         # Step 2: Re-classify sections using journal-specific headings
         reclassified = 0
@@ -573,11 +581,26 @@ def optimize_for_journal(parsed_result: Dict[str, Any]) -> Dict[str, Any]:
         # separate from the main text"
         if family == 'nature' and paragraphs:
             first_para = paragraphs[0]
-            if not first_para.get('section_title') and first_para.get('section_type') != 'abstract':
+            first_text = str(
+                first_para.get('text_content') or first_para.get('text') or ''
+            ).strip()
+            looks_metadata = (
+                len(first_text) < 80
+                or '@' in first_text
+                or any(
+                    key in first_text.lower()
+                    for key in ('university', 'department', 'institute', 'doi:')
+                )
+            )
+            if (
+                not looks_metadata
+                and not first_para.get('section_title')
+                and first_para.get('section_type') != 'abstract'
+            ):
                 first_para['section_type'] = 'abstract'
                 first_para['section_title'] = '(bold summary paragraph)'
                 reclassified += 1
-                print(f"   📌 Nature: first paragraph (untitled bold) -> abstract")
+                print(f"   Nature: first paragraph (untitled bold) -> abstract")
 
         # Step 2c: Record citation style for downstream use
         # Nature: superscript; Science: [1] bracket; Cell: numbered/superscript
@@ -591,14 +614,14 @@ def optimize_for_journal(parsed_result: Dict[str, Any]) -> Dict[str, Any]:
         # Step 2d: Science note — Methods usually in supplementary materials
         if family == 'science':
             metadata['methods_location'] = 'supplementary_materials'
-            print(f"   ℹ️  Science: Methods typically in supplementary materials (not main text)")
+            print(f"   Science: Methods typically in supplementary materials (not main text)")
         elif family == 'nature':
             metadata['methods_location'] = 'after_figure_legends'
         elif family == 'cell':
             metadata['methods_location'] = 'after_figure_legends'
 
         if reclassified > 0:
-            print(f"   📑 Sections re-classified: {reclassified} paragraphs")
+            print(f"   Sections re-classified: {reclassified} paragraphs")
 
         # Step 3: Extract volume/issue/pages
         vol_issue_pages = extract_volume_issue_pages(metadata, family)
@@ -606,7 +629,7 @@ def optimize_for_journal(parsed_result: Dict[str, Any]) -> Dict[str, Any]:
             if val and not metadata.get(key):
                 metadata[key] = val
         if any(vol_issue_pages.values()):
-            print(f"   📚 Volume/Issue/Pages: {vol_issue_pages}")
+            print(f"   Volume/Issue/Pages: {vol_issue_pages}")
 
         # Step 4 (V25.18): Extract abstract, affiliations, funding
         meta_fields = extract_metadata_fields(parsed_result, family)
@@ -615,7 +638,7 @@ def optimize_for_journal(parsed_result: Dict[str, Any]) -> Dict[str, Any]:
                 metadata[key] = val
         extracted_fields = [k for k, v in meta_fields.items() if v]
         if extracted_fields:
-            print(f"   📝 Metadata extracted: {', '.join(extracted_fields)}")
+            print(f"   Metadata extracted: {', '.join(extracted_fields)}")
 
     else:
         # Even for "other" journals, try to extract metadata fields
@@ -625,8 +648,8 @@ def optimize_for_journal(parsed_result: Dict[str, Any]) -> Dict[str, Any]:
                 metadata[key] = val
         extracted_fields = [k for k, v in meta_fields.items() if v]
         if extracted_fields:
-            print(f"   📝 Metadata extracted (generic): {', '.join(extracted_fields)}")
-        print(f"   ℹ️  Journal family not specifically detected; using generic optimization")
+            print(f"   Metadata extracted (generic): {', '.join(extracted_fields)}")
+        print(f"   Journal family not specifically detected; using generic optimization")
 
     parsed_result['metadata'] = metadata
     return parsed_result
@@ -638,7 +661,7 @@ def optimize_for_journal(parsed_result: Dict[str, Any]) -> Dict[str, Any]:
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("🔧 Journal Optimizer Test")
+    print("Journal Optimizer Test")
     print("=" * 60)
 
     # Test 1: Nature detection via DOI
@@ -728,4 +751,4 @@ if __name__ == "__main__":
     assert optimized['metadata']['methods_location'] == 'supplementary_materials'
     assert optimized['metadata']['citation_style'] == 'bracket'
 
-    print("\n✅ All tests passed!")
+    print("\nAll tests passed!")

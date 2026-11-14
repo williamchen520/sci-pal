@@ -53,7 +53,7 @@
       "id": "N0.6",
       "title": "Paper lane adapters",
       "file": "services/imports/paper_lane.py",
-      "status": "in_progress"
+      "status": "done"
     },
     {
       "id": "N0.7",
@@ -157,11 +157,23 @@
     "storage/model cost"
   ],
   "verification": {
-    "tests": "detector+session+orchestrator+lanes",
-    "passed": 20,
+    "tests": "24",
     "failed": 0,
     "paper_build": "paper_import_55b82b868333",
-    "code_build": "imp_74727a28fa184e2a",
-    "routes": 278
+    "pdf_builds": {
+      "cell": {
+        "paper_id": "paper_PIIS0092867426012869_7004f975f82a",
+        "paragraphs": 161,
+        "sentences": 1229
+      },
+      "nature": {
+        "paper_id": "paper_s41598_026_72616_6_c776b8398659",
+        "paragraphs": 73,
+        "sentences": 623
+      }
+    },
+    "code_index": "snap_32d96fda1f73cf79 units=1 dim=512",
+    "routes": 278,
+    "journal_optimizer": "wired; filename detection + title fallback"
   }
 }
