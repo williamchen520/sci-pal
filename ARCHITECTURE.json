@@ -2685,6 +2685,14 @@
         ],
         "endpoint": "papers_actions.get_paragraph_sentences",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/evidence",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.get_paper_evidence",
+        "status": "implemented"
       }
     ]
   },
