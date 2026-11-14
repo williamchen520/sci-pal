@@ -89,6 +89,8 @@ def _section_type(row: dict[str, Any], bounds: dict[str, Any]) -> str:
         return "caption"
     if re.match(r"^(fig\.?|figure|table)\s+\d+", level2):
         return "caption"
+    if "reporting summary" in level2:
+        return "back_matter"
     if level1 == "abstract" or "abstract" in level2:
         return "abstract"
     if level1 == "discussion" or "discussion" in level2:
