@@ -41,6 +41,7 @@ class AnalysisTests(unittest.TestCase):
             result = analysis.analyze_paper("p1", compact=True)
         self.assertEqual(result["outline"], [])
         self.assertEqual(result["outline_summary"]["section_count"], 1)
+        self.assertEqual(result["outline_summary"]["sections"], [])
         self.assertEqual(result["data_flow"]["edges_count"], 1)
 
     def test_missing_paper(self) -> None:

@@ -298,8 +298,13 @@ def build_papers_actions_blueprint(
         except ValueError:
             return jsonify({"error": "top_k must be an integer"}), 400
         compact = request.args.get("compact", "0").lower() in {"1", "true", "yes"}
+        include_sections = request.args.get("include_sections", "0").lower() in {"1", "true", "yes"}
         result = analyze_paper(
-            paper_id, query=query, top_k=top_k, compact=compact
+            paper_id,
+            query=query,
+            top_k=top_k,
+            compact=compact,
+            include_sections=include_sections,
         )
         if not result:
             return jsonify({"error": "Paper not found"}), 404
