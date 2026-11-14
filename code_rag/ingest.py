@@ -14,7 +14,7 @@ from pathlib import Path
 
 import psycopg
 
-from code_rag.parsers import parse_nextflow, parse_python
+from code_rag.parsers import parse_nextflow, parse_python, parse_r
 
 
 def stable(prefix: str, *parts: str) -> str:
@@ -35,6 +35,8 @@ def files_for(repo: Path, language: str, limit: int) -> list[Path]:
         patterns = ["**/*.py"]
     elif language == "nextflow":
         patterns = ["**/*.nf", "**/nextflow.config", "**/*.config"]
+    elif language == "r":
+        patterns = ["**/*.R", "**/*.r"]
     else:
         raise SystemExit(f"unsupported language: {language}")
     found = []
@@ -56,7 +58,7 @@ def main() -> int:
     parser.add_argument("--library-id", required=True)
     parser.add_argument("--repo-url", required=True)
     parser.add_argument("--ref", default="")
-    parser.add_argument("--language", choices=["python", "nextflow"], required=True)
+    parser.add_argument("--language", choices=["python", "nextflow", "r"], required=True)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--dsn", default=os.environ.get("SCIPAL_CODE_DSN", ""))
     args = parser.parse_args()
@@ -105,6 +107,8 @@ def main() -> int:
             text = path.read_text(encoding="utf-8", errors="ignore")
             if args.language == "python":
                 units, edges = parse_python(text, rel)
+            elif args.language == "r":
+                units, edges = parse_r(text, rel)
             else:
                 units, edges = parse_nextflow(text, rel)
             file_id = stable("file", snapshot_id, rel)

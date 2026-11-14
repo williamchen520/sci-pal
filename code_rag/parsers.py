@@ -208,3 +208,136 @@ def parse_nextflow(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedE
             ParsedEdge(file_id, f"include:{target}", "imports", "nextflow", "high")
         )
     return units, edges
+
+
+R_FUNCTION = re.compile(
+    r"(?m)^\s*([A-Za-z_.][A-Za-z0-9_.]*)\s*(?:<-|=)\s*function\s*\("
+)
+R_R6 = re.compile(
+    r"(?m)^\s*([A-Za-z_.][A-Za-z0-9_.]*)\s*(?:<-|=)\s*R6Class\s*\(\s*['\"]([^'\"]+)"
+)
+R_S4 = re.compile(r"\b(setClass|setGeneric|setMethod)\s*\(\s*['\"]([^'\"]+)")
+R_LIBRARY = re.compile(r"\b(?:library|require)\s*\(\s*['\"]?([A-Za-z0-9_.]+)")
+R_SOURCE = re.compile(r"\bsource\s*\(\s*['\"]([^'\"]+)['\"]")
+
+
+def _match_r_brace(text: str, start: int) -> int:
+    """Match an R brace block while skipping strings and # comments."""
+    depth = 0
+    quote: str | None = None
+    i = start
+    while i < len(text):
+        ch = text[i]
+        if quote:
+            if ch == "\\":
+                i += 2
+                continue
+            if ch == quote:
+                quote = None
+            i += 1
+            continue
+        if ch == "#":
+            newline = text.find("\n", i)
+            if newline == -1:
+                return -1
+            i = newline
+            continue
+        if ch in {"'", '"'}:
+            quote = ch
+            i += 1
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return -1
+
+
+def parse_r(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdge]]:
+    file_id = _stable_id("unit", path, "file")
+    units = [
+        ParsedUnit(
+            unit_id=file_id,
+            file_path=path,
+            symbol_name=path,
+            unit_type="file",
+            text=text,
+            start_line=1,
+            end_line=text.count("\n") + 1,
+        )
+    ]
+    edges: list[ParsedEdge] = []
+    seen: set[tuple[str, str]] = set()
+
+    for match in R_FUNCTION.finditer(text):
+        name = match.group(1)
+        open_at = text.find("{", match.end())
+        if open_at == -1:
+            continue
+        close_at = _match_r_brace(text, open_at)
+        if close_at == -1:
+            continue
+        key = (name, str(match.start()))
+        if key in seen:
+            continue
+        seen.add(key)
+        uid = _stable_id("unit", path, "function", name, str(match.start()), str(close_at))
+        units.append(
+            ParsedUnit(
+                unit_id=uid,
+                file_path=path,
+                symbol_name=name,
+                unit_type="function",
+                text=text[match.start() : close_at + 1],
+                start_line=text[: match.start()].count("\n") + 1,
+                end_line=text[: close_at + 1].count("\n") + 1,
+                parent_unit_id=file_id,
+            )
+        )
+
+    for match in R_R6.finditer(text):
+        name, class_name = match.group(1), match.group(2)
+        uid = _stable_id("unit", path, "class", class_name, str(match.start()))
+        units.append(
+            ParsedUnit(
+                unit_id=uid,
+                file_path=path,
+                symbol_name=class_name,
+                unit_type="class",
+                text=text[match.start() :],
+                start_line=text[: match.start()].count("\n") + 1,
+                end_line=text.count("\n") + 1,
+                parent_unit_id=file_id,
+            )
+        )
+
+    for match in R_S4.finditer(text):
+        kind, name = match.group(1), match.group(2)
+        uid = _stable_id("unit", path, kind, name, str(match.start()))
+        units.append(
+            ParsedUnit(
+                unit_id=uid,
+                file_path=path,
+                symbol_name=name,
+                unit_type=kind,
+                text=text[match.start() :],
+                start_line=text[: match.start()].count("\n") + 1,
+                end_line=text.count("\n") + 1,
+                parent_unit_id=file_id,
+            )
+        )
+
+    for match in R_LIBRARY.finditer(text):
+        package = match.group(1)
+        edges.append(
+            ParsedEdge(file_id, f"unresolved:library:{package}", "imports", "r", "high")
+        )
+    for match in R_SOURCE.finditer(text):
+        target = match.group(1)
+        edges.append(
+            ParsedEdge(file_id, f"source:{target}", "imports", "r", "high")
+        )
+    return units, edges

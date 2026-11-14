@@ -231,6 +231,8 @@ def build_papers_actions_blueprint(
                 link_id,
                 library_id=library_id,
                 snapshot_id=str(payload.get("snapshot_id") or ""),
+                parser_supported=bool(payload.get("parser_supported")),
+                reason=str(payload.get("reason") or ""),
             )
         except KeyError:
             return jsonify({"error": "Link not found"}), 404

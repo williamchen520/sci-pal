@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 503 篇 · 2026-11-12
+> 共 504 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -249,6 +249,7 @@
 | 阶段计划 | Phase C 可复现 Manifest | --- | [实验-PhaseC-Manifest.md](../实验-PhaseC-Manifest.md) |
 | 阶段计划 | 实验 Phase C：SciFact F0 / B / C / S / C2 | --- | [实验-PhaseC-SciFact-300.md](../实验-PhaseC-SciFact-300.md) |
 | 阶段计划 | Phase C 收口记录 | --- | [实验-PhaseC-收口.md](../实验-PhaseC-收口.md) |
+| 架构规范 | 实验记录：R Parser v1 | --- | [实验-R-Parser-v1.md](../实验-R-Parser-v1.md) |
 | 架构规范 | 实验记录：RAG 控制面 R0 Provider Registry | --- | [实验-RAG控制面-R0.md](../实验-RAG控制面-R0.md) |
 | 架构规范 | 实验记录：RAG 控制面 R1 Plans / Jobs / Lease | --- | [实验-RAG控制面-R1.md](../实验-RAG控制面-R1.md) |
 | 架构规范 | 实验记录：R10 Reviewer 权限 | --- | [实验-RAG控制面-R10-reviewer.md](../实验-RAG控制面-R10-reviewer.md) |
