@@ -8,6 +8,8 @@ from xml.etree import ElementTree as ET
 
 from services.imports import session
 from services.imports.paper_build import build_paper, paper_id_for
+from build_db.parse_service import parse_and_store
+from config.settings import DATABASE_PATH
 from services.papers.html_parser import parse_html
 
 
@@ -71,7 +73,15 @@ class PaperLaneAdapter:
                 path.read_bytes(), source_url=item.get("source_uri") or ""
             )
         elif kind == "pdf":
-            raise AdapterUnavailable("pdf adapter pending")
+            if not self.build:
+                raise AdapterUnavailable("pdf adapter requires build=True")
+            result = parse_and_store(
+                Path(DATABASE_PATH), path, path.name, grobid_mode="auto"
+            )
+            session.set_item_parsed(
+                item["import_id"], item["item_id"], {"pdf": result}
+            )
+            return "built"
         else:
             raise AdapterUnavailable(f"unsupported paper kind: {kind}")
         session.set_item_parsed(item["import_id"], item["item_id"], payload)
