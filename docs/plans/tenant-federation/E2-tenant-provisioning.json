@@ -1,0 +1,114 @@
+{
+  "plan_id": "E2",
+  "title": "Tenant Provisioning",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "E1"
+  ],
+  "objective": "Plan and register a tenant stack with isolated database, source schemas, code schema, storage prefix, and index prefix.",
+  "decisions": [
+    "D2-1 one tenant database in v1",
+    "D2-2 source schemas xml/html/pdf inside the tenant database",
+    "D2-3 code schema inside the tenant database",
+    "D2-4 database name scipal_tenant_<slug>",
+    "D2-5 storage prefix data/tenants/<slug>/",
+    "D2-6 index prefix tenant:<slug>:",
+    "D2-7 application process does not hold superuser DDL credentials",
+    "D2-8 DDL is executed by an admin CLI or DDL worker"
+  ],
+  "tasks": [
+    {
+      "id": "E2.1",
+      "title": "Create tenant_stacks migration",
+      "file": "deploy/sql/045_tenant_stacks.sql",
+      "status": "done"
+    },
+    {
+      "id": "E2.2",
+      "title": "Deterministic tenant naming",
+      "file": "services/tenancy/provisioning.py",
+      "status": "done"
+    },
+    {
+      "id": "E2.3",
+      "title": "Create storage prefix",
+      "file": "services/tenancy/provisioning.py",
+      "status": "done"
+    },
+    {
+      "id": "E2.4",
+      "title": "Require platform.tenant.manage",
+      "file": "services/tenancy/provisioning.py",
+      "status": "done"
+    },
+    {
+      "id": "E2.5",
+      "title": "Admin DDL CLI",
+      "file": "scripts/provision_tenant.py",
+      "status": "done"
+    },
+    {
+      "id": "E2.6",
+      "title": "Add provisioning tests",
+      "file": "tests/test_tenant_provisioning.py",
+      "status": "done"
+    },
+    {
+      "id": "E2.7",
+      "title": "Align Markdown and JSON plans",
+      "file": "docs/plans/tenant-federation/E2-tenant-provisioning.md",
+      "status": "done"
+    }
+  ],
+  "stack_fields": [
+    "tenant_id",
+    "slug",
+    "database_name",
+    "storage_prefix",
+    "index_prefix",
+    "code_schema",
+    "status"
+  ],
+  "statuses": [
+    "planned",
+    "provisioned",
+    "failed",
+    "disabled"
+  ],
+  "acceptance": [
+    "tenant_id validated",
+    "database name deterministic",
+    "storage prefix created",
+    "non-platform caller denied",
+    "repeated provision is idempotent",
+    "status is planned before admin DDL",
+    "unit tests pass"
+  ],
+  "out_of_scope": [
+    "connector",
+    "gateway",
+    "ImportSession",
+    "tenant data migration",
+    "quota"
+  ],
+  "risks": [
+    "application process could hold superuser credentials",
+    "database name injection",
+    "migrating N tenant databases",
+    "storage and database state divergence"
+  ],
+  "verification": {
+    "tests": "tests/test_tenant_provisioning.py",
+    "passed": 6,
+    "failed": 0,
+    "demo_tenant": "tenant-e2-demo",
+    "database": "scipal_tenant_tenant-e2-demo",
+    "schemas": [
+      "xml",
+      "html",
+      "pdf",
+      "code"
+    ]
+  }
+}
