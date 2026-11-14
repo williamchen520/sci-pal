@@ -80,6 +80,42 @@ def _filepath_call_edges(path: str, text: str) -> list[dict[str, Any]]:
     return edges
 
 
+PATH_ASSIGN = re.compile(
+    r"(?m)^\s*([A-Za-z_.][A-Za-z0-9_.]*)\s*(?:<-|=)\s*['\"]([^'\"]+)['\"]\s*$"
+)
+VAR_CALL = re.compile(
+    r"\b(read_excel|read_xlsx|write_xlsx|write_excel|readRDS|saveRDS|read\.csv|write\.csv)"
+    r"\s*\(\s*([A-Za-z_.][A-Za-z0-9_.]*)\s*[,)]",
+    re.IGNORECASE,
+)
+
+
+def _variable_path_edges(path: str, text: str) -> list[dict[str, Any]]:
+    variables = {match.group(1): match.group(2) for match in PATH_ASSIGN.finditer(text)}
+    edges: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for match in VAR_CALL.finditer(text):
+        name, variable = match.group(1).lower(), match.group(2)
+        artifact = variables.get(variable)
+        if not artifact:
+            continue
+        relation = "reads" if name.startswith("read") else "writes"
+        key = (relation, artifact)
+        if key in seen:
+            continue
+        seen.add(key)
+        edges.append(
+            {
+                "source": f"file:{path}",
+                "target": f"artifact:{artifact}",
+                "relation": relation,
+                "confidence": "explicit",
+                "method": "variable",
+            }
+        )
+    return edges
+
+
 def _extract(path: str, language: str, text: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     nodes: list[dict[str, Any]] = [
         {"id": f"file:{path}", "kind": "file", "label": path, "language": language}
@@ -109,7 +145,7 @@ def _extract(path: str, language: str, text: str) -> tuple[list[dict[str, Any]],
                         "method": "regex",
                     }
                 )
-    filepath_edges = _filepath_call_edges(path, text)
+    filepath_edges = _filepath_call_edges(path, text) + _variable_path_edges(path, text)
     for edge in filepath_edges:
         artifact_id = edge["target"]
         if not any(node["id"] == artifact_id for node in nodes):
