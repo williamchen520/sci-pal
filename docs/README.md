@@ -1,6 +1,6 @@
 # SciPal 文档索引
 
-> 更新：2026-11-12 · 共 526 篇 Markdown  
+> 更新：2026-11-12 · 共 527 篇 Markdown  
 > 分类是索引视图，不移动原文件；原路径与既有链接保持不变。
 
 ## 五大分类
@@ -9,7 +9,7 @@
 |---|---:|---|
 | 架构规范 | 203 | [architecture/README.md](architecture/README.md) |
 | 阶段计划 | 149 | [plans/README.md](plans/README.md) |
-| 安全复盘 | 36 | [security/README.md](security/README.md) |
+| 安全复盘 | 37 | [security/README.md](security/README.md) |
 | 测试报告 | 56 | [testing/README.md](testing/README.md) |
 | 废弃历史 | 82 | [legacy/README.md](legacy/README.md) |
 
@@ -107,6 +107,7 @@
 - [讨论-租户独立建库与插件化导入管线](讨论-租户独立建库与插件化导入管线.md)
 - [讨论-04-CodeRAG是否按语言建库](讨论-04-CodeRAG是否按语言建库.md)
 - [讨论-05-文献监控与自动入库](讨论-05-文献监控与自动入库.md)
+- [讨论-06-租户工作区隔离与星形联邦](讨论-06-租户工作区隔离与星形联邦.md)
 - [实验-Paper-Section-API](实验-Paper-Section-API.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
