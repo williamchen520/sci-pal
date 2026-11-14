@@ -213,6 +213,7 @@ def main() -> None:
 - [实验-Paper-Sources](实验-Paper-Sources.md)
 - [实验-JATS-Native](实验-JATS-Native.md)
 - [实验-HTML-Native](实验-HTML-Native.md)
+- [实验-PDF-Native](实验-PDF-Native.md)
 - [实验-Paper-Section-API](实验-Paper-Section-API.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)

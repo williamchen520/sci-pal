@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 521 篇 · 2026-11-12
+> 共 522 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -242,6 +242,7 @@
 | 架构规范 | 实验记录：HTML Native 来源层 | --- | [实验-HTML-Native.md](../实验-HTML-Native.md) |
 | 架构规范 | 实验记录：HTML 论文解析器 | --- | [实验-HTML解析器.md](../实验-HTML解析器.md) |
 | 架构规范 | 实验记录：JATS Native 原生层 | --- | [实验-JATS-Native.md](../实验-JATS-Native.md) |
+| 架构规范 | 实验记录：PDF Native 来源层 | --- | [实验-PDF-Native.md](../实验-PDF-Native.md) |
 | 架构规范 | 实验记录：Paper Analysis 聚合入口 | --- | [实验-Paper-Analysis.md](../实验-Paper-Analysis.md) |
 | 架构规范 | 实验记录：Paper ↔ Code Library 绑定 | --- | [实验-Paper-Code-Bindings.md](../实验-Paper-Code-Bindings.md) |
 | 架构规范 | 实验记录：Paper Code Links | --- | [实验-Paper-Code-Links.md](../实验-Paper-Code-Links.md) |

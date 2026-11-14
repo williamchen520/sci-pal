@@ -26,6 +26,7 @@ from services.papers.replication import replication_plan
 from services.papers.sections import paper_section
 from services.papers.html_native import html_native
 from services.papers.jats import jats_native
+from services.papers.pdf_native import pdf_native
 from services.papers.sources import list_sources
 from services.papers.code_links import extract_and_store, list_links, manual_link, validate_link
 from services.papers.evidence import paper_evidence
@@ -297,6 +298,14 @@ def build_papers_actions_blueprint(
     def get_paper_html(paper_id):
         include = request.args.get("include_paragraphs", "0").lower() in {"1", "true", "yes"}
         native = html_native(paper_id, include_paragraphs=include)
+        if not native:
+            return jsonify({"paper_id": paper_id, "status": "not_indexed"}), 404
+        return jsonify(native)
+
+    @bp.route("/api/papers/<paper_id>/pdf-native", methods=["GET"])
+    def get_paper_pdf_native(paper_id):
+        include = request.args.get("include_paragraphs", "0").lower() in {"1", "true", "yes"}
+        native = pdf_native(paper_id, include_paragraphs=include)
         if not native:
             return jsonify({"paper_id": paper_id, "status": "not_indexed"}), 404
         return jsonify(native)

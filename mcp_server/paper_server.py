@@ -158,6 +158,12 @@ def paper_jats(paper_id: str) -> str:
     return _call("GET", f"/api/papers/{_paper(paper_id)}/jats")
 
 
+@mcp.tool(description="论文 PDF 原生字段（GET /api/papers/<id>/pdf）：page/bbox。")
+def paper_pdf(paper_id: str, include_paragraphs: bool = False) -> str:
+    query = urlencode({"include_paragraphs": "1" if include_paragraphs else "0"})
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/pdf-native?{query}")
+
+
 @mcp.tool(description="论文 HTML 原生字段（GET /api/papers/<id>/html）：sections/paragraphs。")
 def paper_html(paper_id: str, include_paragraphs: bool = False) -> str:
     query = urlencode({"include_paragraphs": "1" if include_paragraphs else "0"})

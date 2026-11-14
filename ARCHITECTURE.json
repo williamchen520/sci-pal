@@ -2805,6 +2805,14 @@
         ],
         "endpoint": "papers_actions.get_paper_html",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/pdf-native",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_pdf_native",
+        "status": "implemented"
       }
     ]
   },
