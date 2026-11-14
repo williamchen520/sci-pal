@@ -201,6 +201,7 @@ def main() -> None:
 - [实验-Paper-Module-Map](实验-Paper-Module-Map.md)
 - [实验-Paper-Data-Flow](实验-Paper-Data-Flow.md)
 - [实验-Rmd-Mixed](实验-Rmd-Mixed.md)
+- [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)
 

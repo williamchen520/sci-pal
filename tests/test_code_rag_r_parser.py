@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from code_rag.parsers import parse_r, parse_rmd
+from code_rag.parsers import parse_python, parse_r, parse_rmd
 from code_rag.ingest import file_language
 
 R = """
@@ -39,6 +39,20 @@ class RParserTests(unittest.TestCase):
         self.assertIn("unresolved:library:Seurat", targets)
         self.assertIn("unresolved:library:harmony", targets)
         self.assertIn("source:utils.R", targets)
+
+    def test_cross_language_edges(self) -> None:
+        text = 'reticulate::source_python("tools.py")\nsystem("python run.py")'
+        _, edges = parse_r(text, "Figure.6.R")
+        cross = [edge for edge in edges if edge.relation == "cross_language"]
+        self.assertEqual(len(cross), 2)
+        self.assertTrue(all(edge.confidence == "low" for edge in cross))
+
+    def test_python_to_r_edge(self) -> None:
+        text = 'import subprocess\nsubprocess.run(["Rscript", "plot.R"])'
+        _, edges = parse_python(text, "run.py")
+        cross = [edge for edge in edges if edge.relation == "cross_language"]
+        self.assertTrue(cross)
+        self.assertIn("cross_language:plot.R", {edge.dst_unit_id for edge in cross})
 
     def test_comment_braces(self) -> None:
         units, _ = parse_r(R, "Figure.1.R")

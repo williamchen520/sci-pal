@@ -222,6 +222,7 @@ Nextflow    支持
 R v1        支持（file/function/library/source）
 Rmd/Quarto v1 chunk
 混合仓库    v1 auto detect
+跨语言调用  v1 低置信边
 ```
 
 所以：
@@ -472,6 +473,7 @@ app 重启后需再验证 outline 归一化
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
 | [实验-Paper-Data-Flow](docs/实验-Paper-Data-Flow.md) | 数据流 |
 | [实验-Rmd-Mixed](docs/实验-Rmd-Mixed.md) | Rmd/混合仓库 |
+| [实验-Cross-Language-Edges](docs/实验-Cross-Language-Edges.md) | 跨语言低置信边 |
 | [Architecture JSON](ARCHITECTURE.json) | 机器可读路由契约 |
 | [Documentation index](docs/README.md) | 全部文档 |
 
