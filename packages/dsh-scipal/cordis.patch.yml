@@ -149,7 +149,7 @@
         toolCallTimeoutMs: 60000
         failOnStartupError: false
 
-# ── 工具出现形式（重启 DSH 后应有 55 个 mcp__ 工具 = 1 + 10 + 9 + 3 + 4 + 15）──────────
+# ── 工具出现形式（重启 DSH 后应有 56 个 mcp__ 工具 = 1 + 10 + 9 + 3 + 4 + 16）──────────
 # 哨兵：
 #   mcp__scipalhello__ping
 # scipal-search（10）：

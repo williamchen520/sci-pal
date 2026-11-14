@@ -158,6 +158,13 @@ def paper_jats(paper_id: str) -> str:
     return _call("GET", f"/api/papers/{_paper(paper_id)}/jats")
 
 
+@mcp.tool(description="论文联邦视图（GET /api/papers/<id>/federated）：按来源分组，不合并分数。")
+def paper_federated(paper_id: str, source_kind: str = "") -> str:
+    query = urlencode({"source_kind": source_kind}) if source_kind else ""
+    suffix = f"?{query}" if query else ""
+    return _call("GET", f"/api/papers/{_paper(paper_id)}/federated{suffix}")
+
+
 @mcp.tool(description="论文 PDF 原生字段（GET /api/papers/<id>/pdf）：page/bbox。")
 def paper_pdf(paper_id: str, include_paragraphs: bool = False) -> str:
     query = urlencode({"include_paragraphs": "1" if include_paragraphs else "0"})
