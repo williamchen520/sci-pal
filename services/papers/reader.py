@@ -82,6 +82,7 @@ def paper_paragraphs(
     offset: int = 0,
     limit: int = 50,
     include_captions: bool = False,
+    skip_boilerplate: bool = True,
 ) -> list[dict[str, Any]]:
     limit = max(1, min(int(limit), MAX_PARAGRAPHS))
     offset = max(0, int(offset))
@@ -91,6 +92,14 @@ def paper_paragraphs(
         clause += (
             " AND p.section_level1 NOT IN ('figure_caption','table_caption')"
             " AND p.text !~* '^(Fig\\.?|Figure|Table)\\s+[0-9]+\\s*\\|'"
+            " AND COALESCE(p.section_level2,'') !~* '^(Fig\\.?|Figure|Table)\\s+[0-9]+'"
+            " AND COALESCE(p.section_path,'') !~* '(^|>\\s*)(Fig\\.?|Figure|Table)\\s+[0-9]+'"
+        )
+    if skip_boilerplate:
+        clause += (
+            " AND p.text ~ '[A-Za-z]' AND length(btrim(p.text)) >= 20"
+            " AND p.text !~* '^\\s*(https?://|doi:|www\\.)'"
+            " AND p.text !~* '^\\s*(received|accepted|published|check for updates|article|open access|a list of authors|correspondence|these authors contributed)'"
         )
     pg = corpus_connection()
     try:
@@ -112,10 +121,19 @@ def paper_paragraphs(
 
 
 def paper_first_paragraph(
-    paper_id: str, *, section: str = "", include_captions: bool = False
+    paper_id: str,
+    *,
+    section: str = "",
+    include_captions: bool = False,
+    skip_boilerplate: bool = True,
 ) -> dict[str, Any] | None:
     rows = paper_paragraphs(
-        paper_id, section=section, offset=0, limit=1, include_captions=include_captions
+        paper_id,
+        section=section,
+        offset=0,
+        limit=1,
+        include_captions=include_captions,
+        skip_boilerplate=skip_boilerplate,
     )
     return rows[0] if rows else None
 

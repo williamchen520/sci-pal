@@ -46,7 +46,7 @@ class PaperEvidenceTests(unittest.TestCase):
         sql, params = conn.calls[0]
         self.assertIn("s.paper_id = %s", sql)
         self.assertIn("websearch_to_tsquery", sql)
-        self.assertEqual(params, ["lycopene", "p1", 20])
+        self.assertEqual(params, ("lycopene", "p1", 20))
         self.assertEqual(rows[0]["match_type"], "sentence_fts")
         self.assertTrue(conn.closed)
 

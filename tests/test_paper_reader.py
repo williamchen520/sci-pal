@@ -73,6 +73,8 @@ class PaperReaderTests(unittest.TestCase):
         sql, params = conn.calls[0]
         self.assertIn("p.section_level1 ILIKE", sql)
         self.assertIn("p.section_level1 NOT IN ('figure_caption','table_caption')", sql)
+        self.assertIn("COALESCE(p.section_level2,'') !~*", sql)
+        self.assertIn("p.text ~ '[A-Za-z]'", sql)
         self.assertEqual(params[1], "%Methods%")
         self.assertEqual(params[-2:], (10, 5))
 

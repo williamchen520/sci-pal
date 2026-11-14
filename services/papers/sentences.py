@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
+import re
+
 import pysbd
 
 SEGMENTER = pysbd.Segmenter(language="en", clean=False)
+INLINE_CAPTION = re.compile(r"\s+(?:Fig\.?|Figure|Table)\s+\d+[A-Za-z]?\s*\|")
+CAPTION_START = re.compile(r"^(?:Fig\.?|Figure|Table)\s+\d+[A-Za-z]?\s*\|")
 
 
 def split_sentences(text: str) -> list[dict[str, Any]]:
@@ -27,6 +31,13 @@ def split_sentences(text: str) -> list[dict[str, Any]]:
             start = source.find(segment)
         if start < 0:
             continue
+        if CAPTION_START.match(segment):
+            continue
+        inline = INLINE_CAPTION.search(segment)
+        if inline:
+            segment = segment[: inline.start()].rstrip()
+            if not segment:
+                continue
         end = start + len(segment)
         rows.append({"text": segment, "char_start": start, "char_end": end})
         cursor = end

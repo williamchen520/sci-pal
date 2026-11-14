@@ -47,31 +47,35 @@ def _sentence_fts(
         "AND p.section_level1 NOT IN ('figure_caption','table_caption') "
         "AND p.text !~* '^(Fig\\.?|Figure|Table)\\s+[0-9]+\\s*\\|'"
     )
-    params: list[Any] = [query, paper_id]
+    base_params: list[Any] = [paper_id]
     if para_ids:
         where += " AND s.para_id = ANY(%s)"
-        params.append(para_ids)
-    params.append(top_k)
-    sql_params: list[Any] = [query, *params[1:]]
+        base_params.append(para_ids)
     pg = corpus_connection()
     try:
-        rows = pg.execute(
-            f"""
-            WITH q AS (SELECT websearch_to_tsquery('english', %s) AS query)
-            SELECT s.sentence_id, s.para_id, s.paper_id, s.text, s.sequence,
-                   s.page, s.bbox, s.char_start, s.char_end,
-                   p.section_level1, p.section_level2, p.section_path,
-                   ts_rank_cd(s.search_vector, q.query) AS score
-            FROM sentences s
-            JOIN paragraphs p ON p.para_id = s.para_id
-            CROSS JOIN q
-            WHERE {where}
-            ORDER BY score DESC, s.sentence_id
-            LIMIT %s
-            """,
-            sql_params,
-        ).fetchall()
-        return [dict(row) for row in rows]
+        def run(ts_query: str) -> list[dict[str, Any]]:
+            rows = pg.execute(
+                f"""
+                WITH q AS (SELECT websearch_to_tsquery('english', %s) AS query)
+                SELECT s.sentence_id, s.para_id, s.paper_id, s.text, s.sequence,
+                       s.page, s.bbox, s.char_start, s.char_end,
+                       p.section_level1, p.section_level2, p.section_path,
+                       ts_rank_cd(s.search_vector, q.query) AS score
+                FROM sentences s
+                JOIN paragraphs p ON p.para_id = s.para_id
+                CROSS JOIN q
+                WHERE {where}
+                ORDER BY score DESC, s.sentence_id
+                LIMIT %s
+                """,
+                (ts_query, *base_params, top_k),
+            ).fetchall()
+            return [dict(row) for row in rows]
+
+        rows = run(query)
+        if not rows and " " in query:
+            rows = run(" or ".join(part for part in query.split() if part))
+        return rows
     finally:
         pg.close()
 
