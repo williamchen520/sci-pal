@@ -50,6 +50,36 @@ FILEPATH_CALL = re.compile(
 )
 
 
+def _paste0_call_edges(path: str, text: str) -> list[dict[str, Any]]:
+    edges: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for match in FILEPATH_CALL.finditer(text):
+        name, args = match.group(1).lower(), match.group(2)
+        if "paste0" not in args.lower():
+            continue
+        literals = re.findall(r"['\"]([^'\"]+)['\"]", args)
+        if not literals:
+            continue
+        artifact = literals[-1].strip()
+        if not artifact:
+            continue
+        relation = "reads" if name.startswith("read") else "writes"
+        key = (relation, artifact)
+        if key in seen:
+            continue
+        seen.add(key)
+        edges.append(
+            {
+                "source": f"file:{path}",
+                "target": f"artifact:{artifact}",
+                "relation": relation,
+                "confidence": "explicit",
+                "method": "paste0",
+            }
+        )
+    return edges
+
+
 def _filepath_call_edges(path: str, text: str) -> list[dict[str, Any]]:
     edges: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
@@ -145,7 +175,20 @@ def _extract(path: str, language: str, text: str) -> tuple[list[dict[str, Any]],
                         "method": "regex",
                     }
                 )
-    filepath_edges = _filepath_call_edges(path, text) + _variable_path_edges(path, text)
+    filepath_edges = (
+        _filepath_call_edges(path, text)
+        + _paste0_call_edges(path, text)
+        + _variable_path_edges(path, text)
+    )
+    deduped = []
+    seen_edges: set[tuple[str, str, str]] = set()
+    for edge in filepath_edges:
+        key = (edge["source"], edge["target"], edge["relation"])
+        if key in seen_edges:
+            continue
+        seen_edges.add(key)
+        deduped.append(edge)
+    filepath_edges = deduped
     for edge in filepath_edges:
         artifact_id = edge["target"]
         if not any(node["id"] == artifact_id for node in nodes):
