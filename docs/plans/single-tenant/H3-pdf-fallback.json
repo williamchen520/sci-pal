@@ -1,0 +1,71 @@
+{
+  "plan_id": "H3",
+  "title": "HTML Failure PDF Fallback",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "H2"
+  ],
+  "objective": "Fallback to a staged PDF only when HTML parsing or quality gating fails.",
+  "decisions": [
+    "H3-1 fallback on HTML parse or quality failure",
+    "H3-2 fallback requires explicit pdf_staged_path",
+    "H3-3 no PDF means quarantine",
+    "H3-4 parsed_json records fallback_from=html",
+    "H3-5 successful PDF means no HTML build",
+    "H3-6 no automatic PDF fetching"
+  ],
+  "schema": {
+    "column": "import_items.fallback_path"
+  },
+  "tasks": [
+    {
+      "id": "H3.1",
+      "title": "Add fallback_path migration",
+      "file": "deploy/sql/048_import_fallback.sql",
+      "status": "done"
+    },
+    {
+      "id": "H3.2",
+      "title": "Persist fallback path",
+      "file": "services/imports/session.py",
+      "status": "done"
+    },
+    {
+      "id": "H3.3",
+      "title": "HTML adapter fallback",
+      "file": "services/imports/paper_lane.py",
+      "status": "done"
+    },
+    {
+      "id": "H3.4",
+      "title": "Manifest support",
+      "file": "services/imports/html_batch.py",
+      "status": "done"
+    },
+    {
+      "id": "H3.5",
+      "title": "Tests",
+      "file": "tests/test_import_fallback.py",
+      "status": "done"
+    }
+  ],
+  "acceptance": [
+    "bad HTML plus PDF builds",
+    "bad HTML without PDF quarantines",
+    "fallback_from recorded",
+    "no duplicate HTML build",
+    "good HTML does not trigger PDF"
+  ],
+  "out_of_scope": [
+    "automatic PDF discovery",
+    "headless browser",
+    "Cell/JS (H4)"
+  ],
+  "verification": {
+    "tests": "3 passed",
+    "smoke_import": "imp_eb7296fbb13a4d91",
+    "status": "built",
+    "fallback_from": "html"
+  }
+}

@@ -3,7 +3,7 @@
   "title": "HTML-first Batch Ingest",
   "version": 1,
   "status": "in_progress",
-  "current_phase": "H3",
+  "current_phase": "H4",
   "source_priority": [
     "pmc_jats",
     "pmc_html",
@@ -77,7 +77,7 @@
     {
       "id": "H3",
       "title": "PDF Fallback",
-      "status": "planned",
+      "status": "done",
       "depends_on": [
         "H2"
       ],

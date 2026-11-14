@@ -64,6 +64,33 @@ class PaperLaneAdapter:
     def __init__(self, *, build: bool = False) -> None:
         self.build = build
 
+    def _build_pdf(
+        self, item: dict[str, Any], path: Path, *, fallback_from: str = ""
+    ) -> str:
+        if not self.build:
+            raise AdapterUnavailable("pdf adapter requires build=True")
+        result = parse_and_store(
+            Path(DATABASE_PATH), path, path.name, grobid_mode="auto"
+        )
+        dsn = (
+            os.environ.get("SCIPAL_PG_OWNER_DSN", "").strip()
+            or os.environ.get("SCIPAL_PG_CORPUS_DSN", "").strip()
+        )
+        sentences = (
+            build_for_paper(paper_id=result["paper_id"], dsn=dsn, replace=True)
+            if dsn
+            else {}
+        )
+        payload: dict[str, Any] = {
+            "paper_id": result["paper_id"],
+            "pdf": result,
+            "sentences": sentences,
+        }
+        if fallback_from:
+            payload["fallback_from"] = fallback_from
+        session.set_item_parsed(item["import_id"], item["item_id"], payload)
+        return "built"
+
     def process(self, item: dict[str, Any]) -> str:
         path = Path(item.get("staged_path") or item.get("source_uri") or "")
         if not path.is_file():
@@ -73,32 +100,22 @@ class PaperLaneAdapter:
         if kind == "jats":
             payload = parse_jats(path)
         elif kind == "html":
-            payload = parse_html(
-                path.read_bytes(), source_url=item.get("source_uri") or ""
-            )
-            quality = evaluate_html(payload)
-            payload["quality"] = quality.as_dict()
+            try:
+                payload = parse_html(
+                    path.read_bytes(), source_url=item.get("source_uri") or ""
+                )
+                quality = evaluate_html(payload)
+                payload["quality"] = quality.as_dict()
+                session.set_item_parsed(item["import_id"], item["item_id"], payload)
+                if not quality.ok:
+                    raise QualityRejected("; ".join(quality.issues))
+            except Exception as exc:
+                fallback = str(item.get("fallback_path") or "").strip()
+                if self.build and fallback and Path(fallback).is_file():
+                    return self._build_pdf(item, Path(fallback), fallback_from="html")
+                raise exc
         elif kind == "pdf":
-            if not self.build:
-                raise AdapterUnavailable("pdf adapter requires build=True")
-            result = parse_and_store(
-                Path(DATABASE_PATH), path, path.name, grobid_mode="auto"
-            )
-            dsn = (
-                os.environ.get("SCIPAL_PG_OWNER_DSN", "").strip()
-                or os.environ.get("SCIPAL_PG_CORPUS_DSN", "").strip()
-            )
-            sentences = (
-                build_for_paper(paper_id=result["paper_id"], dsn=dsn, replace=True)
-                if dsn
-                else {}
-            )
-            session.set_item_parsed(
-                item["import_id"],
-                item["item_id"],
-                {"pdf": result, "sentences": sentences},
-            )
-            return "built"
+            return self._build_pdf(item, path)
         else:
             raise AdapterUnavailable(f"unsupported paper kind: {kind}")
         session.set_item_parsed(item["import_id"], item["item_id"], payload)
