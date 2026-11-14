@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 513 篇 · 2026-11-12
+> 共 514 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -283,6 +283,7 @@
 | 架构规范 | 实验记录：Results Section Fallback | --- | [实验-Results-Fallback.md](../实验-Results-Fallback.md) |
 | 架构规范 | 实验记录：Rmd/Quarto 与 mixed repo | --- | [实验-Rmd-Mixed.md](../实验-Rmd-Mixed.md) |
 | 架构规范 | 实验记录：scipal-paper MCP 插件 | --- | [实验-Scipal-Paper-MCP.md](../实验-Scipal-Paper-MCP.md) |
+| 架构规范 | 实验记录：Outline Section Types | --- | [实验-Section-Types.md](../实验-Section-Types.md) |
 | 架构规范 | 实验记录：Sentence Evidence 与 Caption 过滤 | --- | [实验-Sentence-Evidence.md](../实验-Sentence-Evidence.md) |
 | 架构规范 | 实验记录：Sentence Tree 入库 | --- | [实验-Sentence-Tree.md](../实验-Sentence-Tree.md) |
 | 架构规范 | 实验记录：代码库 UI 验收（A） | --- | [实验-代码RAG-A-UI.md](../实验-代码RAG-A-UI.md) |

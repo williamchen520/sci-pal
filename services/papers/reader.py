@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from services.db.pg_pool import corpus_connection
@@ -45,7 +46,68 @@ def _outline_rows(paper_id: str) -> list[dict[str, Any]]:
         pg.close()
 
 
+def _section_bounds(paper_id: str) -> dict[str, Any]:
+    pg = corpus_connection()
+    try:
+        row = pg.execute(
+            """
+            SELECT
+              max(p.sequence) FILTER (WHERE
+                btrim(COALESCE(p.section_level2,'')) = COALESCE(pa.title,'')
+              ) AS abstract_end,
+              min(p.sequence) FILTER (WHERE
+                lower(p.section_level1) = 'discussion'
+                OR strpos(lower(COALESCE(p.section_level2,'')), 'discussion') > 0
+              ) AS discussion_seq,
+              min(p.sequence) FILTER (WHERE
+                lower(COALESCE(p.section_level2,'')) IN (
+                  'data availability','code availability','references',
+                  'acknowledgements','author contributions','funding',
+                  'competing interests','additional information'
+                )
+                OR lower(p.section_level1) = 'references'
+              ) AS back_seq
+            FROM paragraphs p
+            JOIN papers pa ON pa.paper_id = p.paper_id
+            WHERE p.paper_id = %s
+            """,
+            (paper_id,),
+        ).fetchone()
+        return dict(row) if row else {}
+    finally:
+        pg.close()
+
+
+def _section_type(row: dict[str, Any], bounds: dict[str, Any]) -> str:
+    level1 = str(row.get("section_level1") or "").lower()
+    level2 = str(row.get("section_level2") or "").lower()
+    seq = int(row.get("first_sequence") or 0)
+    if level1 in {"references", "reference"} or "references" in level2:
+        return "references"
+    if level1 in {"figure_caption", "table_caption"}:
+        return "caption"
+    if re.match(r"^(fig\.?|figure|table)\s+\d+", level2):
+        return "caption"
+    if level1 == "abstract" or "abstract" in level2:
+        return "abstract"
+    if level1 == "discussion" or "discussion" in level2:
+        return "discussion"
+    discussion = bounds.get("discussion_seq")
+    back = bounds.get("back_seq")
+    abstract_end = bounds.get("abstract_end")
+    if discussion is not None and seq > int(discussion):
+        if back is not None and seq >= int(back):
+            return "back_matter"
+        return "methods"
+    if discussion is not None and seq < int(discussion):
+        if abstract_end is not None and seq <= int(abstract_end):
+            return "front_matter"
+        return "results"
+    return "front_matter"
+
+
 def paper_outline(paper_id: str) -> list[dict[str, Any]]:
+    bounds = _section_bounds(paper_id)
     merged: dict[str, dict[str, Any]] = {}
     for row in _outline_rows(paper_id):
         path = _display_section(row)
@@ -59,6 +121,8 @@ def paper_outline(paper_id: str) -> list[dict[str, Any]]:
                 "paragraph_count": int(row.get("paragraph_count") or 0),
                 "first_para_id": row.get("first_para_id"),
                 "first_sequence": first_sequence,
+                "section_type": _section_type(row, bounds),
+                "section_type_source": "heuristic",
             }
         else:
             current["paragraph_count"] += int(row.get("paragraph_count") or 0)
