@@ -118,6 +118,11 @@ def parse_python(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdg
             visit(child, parent_id)
 
     visit(tree.root_node, file_id)
+    for match in PY_CROSS_R.finditer(text):
+        target = match.group(1)
+        edges.append(
+            ParsedEdge(file_id, f"cross_language:{target}", "cross_language", "python", "low")
+        )
     return units, edges
 
 
@@ -219,6 +224,9 @@ R_R6 = re.compile(
 R_S4 = re.compile(r"\b(setClass|setGeneric|setMethod)\s*\(\s*['\"]([^'\"]+)")
 R_LIBRARY = re.compile(r"\b(?:library|require)\s*\(\s*['\"]?([A-Za-z0-9_.]+)")
 R_SOURCE = re.compile(r"\bsource\s*\(\s*['\"]([^'\"]+)['\"]")
+R_CROSS_PY = re.compile(r"\b(?:source_python|py_run_file|import)\s*\(\s*['\"]([^'\"]+\.py)")
+R_CROSS_SYSTEM = re.compile(r"\bsystem\s*\(\s*['\"][^'\"]*?(?:python3?\s+)([^'\"\s]+\.py)")
+PY_CROSS_R = re.compile(r"\bRscript\b[^\n]*?([A-Za-z0-9_./-]+\.R)")
 
 
 def _match_r_brace(text: str, start: int) -> int:
@@ -340,6 +348,12 @@ def parse_r(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdge]]:
         edges.append(
             ParsedEdge(file_id, f"source:{target}", "imports", "r", "high")
         )
+    for pattern in (R_CROSS_PY, R_CROSS_SYSTEM):
+        for match in pattern.finditer(text):
+            target = match.group(1)
+            edges.append(
+                ParsedEdge(file_id, f"cross_language:{target}", "cross_language", "r", "low")
+            )
     return units, edges
 
 
