@@ -130,7 +130,22 @@ POST /api/imports/upload
 frontend/imports.html
 ```
 
-## 9. 结论
+## 9. DSH 本地路径
+
+```text
+POST /api/imports/local
+  -> 201
+  -> staged copy
+  -> ImportSession queued
+```
+
+MCP：
+
+```text
+paper_import_local(paths, library_id)
+```
+
+## 10. 结论
 
 ```text
 H0  batch CLI              done

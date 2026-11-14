@@ -2877,6 +2877,14 @@
         ],
         "endpoint": "imports.enqueue_import",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/imports/local",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "imports.import_local_paths",
+        "status": "implemented"
       }
     ]
   },

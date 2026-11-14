@@ -90,3 +90,59 @@ def save_uploaded_files(
     except Exception:
         shutil.rmtree(batch_dir, ignore_errors=True)
         raise
+
+
+def save_local_paths(
+    paths: list[str],
+    *,
+    tenant_id: str,
+    library_id: str,
+    origin: str = "dsh",
+    created_by: str = "",
+) -> dict[str, Any]:
+    if not library_id:
+        raise UploadError("library_id is required")
+    if not paths:
+        raise UploadError("no paths")
+    if len(paths) > MAX_FILES:
+        raise UploadError(f"too many files (max {MAX_FILES})")
+
+    batch_dir = staging_root() / uuid.uuid4().hex[:16]
+    batch_dir.mkdir(parents=True, exist_ok=False)
+    items: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    try:
+        for raw in paths:
+            source = Path(str(raw)).expanduser().resolve()
+            if not source.is_file():
+                raise UploadError(f"file not found: {source}")
+            name = _safe_name(source.name)
+            if name in seen:
+                stem, suffix = source.stem, source.suffix
+                index = 2
+                while f"{stem}_{index}{suffix}" in seen:
+                    index += 1
+                name = f"{stem}_{index}{suffix}"
+            seen.add(name)
+            data = source.read_bytes()
+            if len(data) > MAX_FILE_BYTES:
+                raise UploadError(f"file too large: {name}")
+            target = batch_dir / name
+            target.write_bytes(data)
+            items.append(
+                {
+                    "uri": name,
+                    "staged_path": str(target),
+                    "content_hash": hashlib.sha256(data).hexdigest(),
+                }
+            )
+        return session.create_import(
+            tenant_id=tenant_id,
+            library_id=library_id,
+            origin="dsh" if origin not in {"manual", "api"} else origin,
+            items=items,
+            created_by=created_by,
+        )
+    except Exception:
+        shutil.rmtree(batch_dir, ignore_errors=True)
+        raise

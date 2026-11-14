@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 166 篇 · 分类索引，文件原路径不变
+> 共 167 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -62,6 +62,7 @@
 | N0 计划表：单租户导入管线 | --- | [N0-import-pipeline.md](single-tenant/N0-import-pipeline.md) |
 | U0 计划表：前端批量上传 staging | --- | [U0-upload-staging.md](single-tenant/U0-upload-staging.md) |
 | U1 计划表：Import Queue + Worker | --- | [U1-import-queue.md](single-tenant/U1-import-queue.md) |
+| U2 计划表：DSH 本地路径导入 | --- | [U2-dsh-local-import.md](single-tenant/U2-dsh-local-import.md) |
 | 租户联邦执行计划总表 | --- | [00-execution-plan.md](tenant-federation/00-execution-plan.md) |
 | 决策记录：Tenant-ready 单租户优先 | --- | [DECISION-single-tenant-first.md](tenant-federation/DECISION-single-tenant-first.md) |
 | E0 计划表：Capability 与 Resource Scope 模型 | --- | [E0-capability-scope.md](tenant-federation/E0-capability-scope.md) |

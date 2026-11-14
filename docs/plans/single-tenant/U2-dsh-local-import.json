@@ -1,0 +1,73 @@
+{
+  "plan_id": "U2",
+  "title": "DSH Local Path Import",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "U1"
+  ],
+  "objective": "Allow DSH/MCP to submit local file paths, copy them into staging, and create a queued ImportSession.",
+  "decisions": [
+    "U2-1 JSON paths input",
+    "U2-2 accepted extensions html/htm/pdf/xml",
+    "U2-3 existing files only, 50 MB max",
+    "U2-4 copy into staging",
+    "U2-5 create queued session, no auto process",
+    "U2-6 expose paper_import_local MCP tool",
+    "U2-7 local/internal-token only"
+  ],
+  "api": {
+    "method": "POST",
+    "path": "/api/imports/local",
+    "payload": {
+      "library_id": "lib_default",
+      "paths": [
+        "D:/papers/a.html"
+      ]
+    }
+  },
+  "tasks": [
+    {
+      "id": "U2.1",
+      "title": "Local path staging helper",
+      "file": "services/imports/upload.py",
+      "status": "done"
+    },
+    {
+      "id": "U2.2",
+      "title": "Local route",
+      "file": "routes/imports.py",
+      "status": "done"
+    },
+    {
+      "id": "U2.3",
+      "title": "MCP tool",
+      "file": "mcp_server/paper_server.py",
+      "status": "done"
+    },
+    {
+      "id": "U2.4",
+      "title": "Tests",
+      "file": "tests/test_import_local.py",
+      "status": "done"
+    }
+  ],
+  "acceptance": [
+    "local HTML staged",
+    "local PDF staged",
+    "missing path rejected",
+    "non-whitelisted extension rejected",
+    "queued ImportSession",
+    "MCP returns import_id"
+  ],
+  "out_of_scope": [
+    "remote paths",
+    "DSH binary upload",
+    "auto process"
+  ],
+  "verification": {
+    "tests": "3 passed",
+    "api_status": 201,
+    "import_id": "imp_5e0cd4a61a3c47ef"
+  }
+}
