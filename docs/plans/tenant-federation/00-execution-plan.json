@@ -4,7 +4,7 @@
   "version": 1,
   "updated_at": "2026-11-14",
   "status": "in_progress",
-  "current_phase": "E2",
+  "current_phase": "E3",
   "principles": [
     "permission model before data plane before federation",
     "every phase has Markdown and JSON plan files",
@@ -77,21 +77,28 @@
     {
       "id": "E2",
       "title": "Tenant Provisioning",
-      "status": "planned",
+      "status": "done",
       "depends_on": [
         "E1"
       ],
       "plan_files": {
         "md": "docs/plans/tenant-federation/E2-tenant-provisioning.md",
         "json": "docs/plans/tenant-federation/E2-tenant-provisioning.json",
-        "exists": false
+        "exists": true
       },
       "acceptance": [
         "tenant DB or schema created",
         "storage prefix created",
         "index namespace created",
         "code DB namespace created"
-      ]
+      ],
+      "verification": {
+        "tests": "tests/test_tenant_provisioning.py",
+        "passed": 6,
+        "failed": 0,
+        "demo_tenant": "tenant-e2-demo"
+      },
+      "pr": 819
     },
     {
       "id": "E3",
