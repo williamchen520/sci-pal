@@ -3,7 +3,7 @@
 > 日期：2026-11-14  
 > 版本：v1  
 > 状态：执行中  
-> 当前阶段：E1  
+> 当前阶段：E2  
 > 机器可读：`00-execution-plan.json`
 
 ---
@@ -58,7 +58,7 @@ tenant -> tenant
 | 阶段 | 目标 | 依赖 | 状态 | 计划表 | 主要验收 |
 |---|---|---|---|---|---|
 | E0 | capability + resource scope | — | done | `E0-capability-scope.md/.json` | 11 tests |
-| E1 | federation_catalog + 星形约束 | E0 | planned | `E1-federation-catalog.md/.json` | catalog 只登记 main；拒绝 peer |
+| E1 | federation_catalog + 星形约束 | E0 | done | `E1-federation-catalog.md/.json` | catalog 只登记 main；拒绝 peer |
 | E2 | tenant provisioning | E1 | planned | `E2-tenant-provisioning.md/.json` | DB/storage/index namespace |
 | E3 | tenant connector | E2 | planned | `E3-tenant-connector.md/.json` | 只允许 main；短时 token |
 | E4 | gateway scope | E3 | planned | `E4-gateway-scope.md/.json` | own/main/both |
@@ -231,8 +231,8 @@ JSON 至少包含：
 
 ```text
 E0  done
-E1  需要先写计划表
-E2  依赖 E1 合并
+E1  done
+E2  需要先写计划表
 E3  依赖 E2 合并
 E4  依赖 E3 合并
 E5  依赖 E4 合并
