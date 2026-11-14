@@ -76,7 +76,7 @@ SciPal 不是“一个聊天框 + 一个向量库”。
 
 ```mermaid
 flowchart TB
-    U["Browser / DSH / MCP"] --> API["Flask API<br/>262 route-method"]
+    U["Browser / DSH / MCP"] --> API["Flask API<br/>264 route-method"]
     API --> AUTH["Auth / Workspace / Role"]
     API --> CORE[("scipal_core<br/>users · projects · reviews · audit")]
     API --> CORPUS[("scipal_rebuild<br/>papers · sections · paragraphs · sentences")]
@@ -186,7 +186,7 @@ GET /api/papers/<paper_id>/paragraphs/<para_id>/sentences
 
 ```text
 reader service       PASS
-HTTP routes          PASS（262 route-method）
+HTTP routes          PASS（264 route-method）
 outline 归一化       PASS（服务层）
 scipal-paper 插件    设计完成，未实现
 ```
@@ -247,8 +247,8 @@ Language Provider
 `ARCHITECTURE.json` 是机器可读契约。当前校验：
 
 ```text
-json_routes=262
-app_routes=262
+json_routes=264
+app_routes=264
 OK
 ```
 
@@ -258,7 +258,7 @@ OK
 |---|---:|---|
 | `rag_control` | 41 | RAG 控制面、plan、job、evidence、finalization、seal |
 | `review_projects` | 26 | 系统综述、筛选、PRISMA、证据 |
-| `papers_actions` | 24 | 本地 PDF、解析、附件、reader |
+| `papers_actions` | 26 | 本地 PDF、解析、附件、reader |
 | `protocols` | 14 | 实验协议 |
 | `watch` | 14 | 文献监控 |
 | `data` | 12 | 数据沙箱 / profile |
@@ -432,8 +432,8 @@ test_paper_reader       4 passed
 架构：
 
 ```text
-json_routes=262
-app_routes=262
+json_routes=264
+app_routes=264
 OK
 ```
 
@@ -467,6 +467,7 @@ app 重启后需再验证 outline 归一化
 | [实验-HTML解析器](docs/实验-HTML解析器.md) | HTML 解析 |
 | [实验-Paper-Analysis](docs/实验-Paper-Analysis.md) | 单篇聚合入口 |
 | [实验-Paper-Code-Links](docs/实验-Paper-Code-Links.md) | 论文代码链接 |
+| [实验-Paper-Code-Bindings](docs/实验-Paper-Code-Bindings.md) | paper ↔ code library |
 | [Architecture JSON](ARCHITECTURE.json) | 机器可读路由契约 |
 | [Documentation index](docs/README.md) | 全部文档 |
 

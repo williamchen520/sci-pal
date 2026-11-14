@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 502 篇 · 2026-11-12
+> 共 503 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -240,6 +240,7 @@
 | 安全复盘 | 实验记录：Embedding 输入审计与修复 | --- | [实验-Embedding输入审计.md](../实验-Embedding输入审计.md) |
 | 架构规范 | 实验记录：HTML 论文解析器 | --- | [实验-HTML解析器.md](../实验-HTML解析器.md) |
 | 架构规范 | 实验记录：Paper Analysis 聚合入口 | --- | [实验-Paper-Analysis.md](../实验-Paper-Analysis.md) |
+| 架构规范 | 实验记录：Paper ↔ Code Library 绑定 | --- | [实验-Paper-Code-Bindings.md](../实验-Paper-Code-Bindings.md) |
 | 架构规范 | 实验记录：Paper Code Links | --- | [实验-Paper-Code-Links.md](../实验-Paper-Code-Links.md) |
 | 架构规范 | 实验记录：Paper Reader API | --- | [实验-Paper-Reader-API.md](../实验-Paper-Reader-API.md) |
 | 架构规范 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |

@@ -19,6 +19,7 @@ from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 from services.papers.pg_writes import enabled as paper_pg_enabled, update_workspace as pg_update_workspace
 from services.papers.paper_store import PaperStore
 from services.papers.analysis import analyze_paper
+from services.papers.bindings import bind_link, list_bindings
 from services.papers.code_links import extract_and_store, list_links, manual_link, validate_link
 from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline, paper_paragraphs, paragraph_sentences
@@ -213,6 +214,33 @@ def build_papers_actions_blueprint(
             return jsonify({"error": "Link not found"}), 404
         status = 200 if result.get("status") == "validated" else 422
         return jsonify(result), status
+
+    @bp.route("/api/papers/<paper_id>/code-libraries", methods=["GET"])
+    def get_paper_code_libraries(paper_id):
+        return jsonify({"paper_id": paper_id, "bindings": list_bindings(paper_id)})
+
+    @bp.route("/api/papers/<paper_id>/code-links/<link_id>/bind", methods=["POST"])
+    def bind_paper_code_link(paper_id, link_id):
+        payload = request.get_json(silent=True) or {}
+        library_id = str(payload.get("library_id") or "").strip()
+        if not library_id:
+            return jsonify({"error": "library_id is required"}), 400
+        try:
+            binding = bind_link(
+                paper_id,
+                link_id,
+                library_id=library_id,
+                snapshot_id=str(payload.get("snapshot_id") or ""),
+            )
+        except KeyError:
+            return jsonify({"error": "Link not found"}), 404
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        except LookupError as exc:
+            return jsonify({"error": str(exc)}), 409
+        except RuntimeError as exc:
+            return jsonify({"error": str(exc)}), 503
+        return jsonify({"paper_id": paper_id, "binding": binding}), 201
 
     @bp.route("/api/papers/<paper_id>/analysis", methods=["GET"])
     def get_paper_analysis(paper_id):

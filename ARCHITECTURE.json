@@ -2733,6 +2733,22 @@
         ],
         "endpoint": "papers_actions.validate_paper_code_link",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/code-libraries",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_code_libraries",
+        "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/code-links/<link_id>/bind",
+        "methods": [
+          "POST"
+        ],
+        "endpoint": "papers_actions.bind_paper_code_link",
+        "status": "implemented"
       }
     ]
   },
