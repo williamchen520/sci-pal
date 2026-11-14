@@ -1,0 +1,82 @@
+{
+  "plan_id": "N0",
+  "title": "Single-Tenant Import Pipeline",
+  "version": 1,
+  "status": "planned",
+  "depends_on": ["S0"],
+  "objective": "Manually import XML/HTML/PDF/code into one tenant, detect formats, route to paper/code lanes, build libraries and indexes as draft/indexed.",
+  "decisions": [
+    "N0-1 single tenant plus main only",
+    "N0-2 manual API/DSH/frontend trigger",
+    "N0-3 staging before canonical",
+    "N0-4 magic + MIME + content + parser probe",
+    "N0-5 separate paper and code lanes",
+    "N0-6 stop at draft/indexed, never auto publish",
+    "N0-7 idempotency via content_hash + library + parser_version",
+    "N0-8 quarantine low-confidence items",
+    "N0-9 call services, never subprocess scripts"
+  ],
+  "tasks": [
+    {"id": "N0.1", "title": "Import session tables", "file": "deploy/sql/046_import_sessions.sql", "status": "pending"},
+    {"id": "N0.2", "title": "ImportSession service", "file": "services/imports/session.py", "status": "pending"},
+    {"id": "N0.3", "title": "Format detector", "file": "services/imports/detector.py", "status": "pending"},
+    {"id": "N0.4", "title": "Paper/code router", "file": "services/imports/router.py", "status": "pending"},
+    {"id": "N0.5", "title": "Orchestrator", "file": "services/imports/orchestrator.py", "status": "pending"},
+    {"id": "N0.6", "title": "Paper lane adapters", "file": "services/imports/paper_lane.py", "status": "pending"},
+    {"id": "N0.7", "title": "Code lane adapter", "file": "services/imports/code_lane.py", "status": "pending"},
+    {"id": "N0.8", "title": "Import API", "file": "routes/imports.py", "status": "pending"},
+    {"id": "N0.9", "title": "Pipeline tests", "file": "tests/test_import_pipeline.py", "status": "pending"},
+    {"id": "N0.10", "title": "Align Markdown and JSON plans", "file": "docs/plans/single-tenant/N0-import-pipeline.md", "status": "pending"}
+  ],
+  "tables": ["import_sessions", "import_items"],
+  "detector": {
+    "pdf": "%PDF- / application/pdf",
+    "jats": "article root plus front/body/back",
+    "html": "doctype/html plus citation meta",
+    "python": ".py plus AST",
+    "r": ".R plus assignment/library",
+    "rmd": ".Rmd/.qmd plus YAML header",
+    "repo": "git URL or .git",
+    "zip": "PK magic",
+    "unknown": "quarantine"
+  },
+  "lanes": {
+    "paper": ["jats", "html", "pdf"],
+    "code": ["repo", "zip", "python", "r", "rmd"],
+    "quarantine": ["unknown"]
+  },
+  "statuses": ["received", "detected", "routed", "parsed", "built", "indexed", "draft", "failed", "quarantined"],
+  "api": [
+    "POST /api/imports",
+    "GET /api/imports/<import_id>",
+    "GET /api/imports/<import_id>/items",
+    "POST /api/imports/<import_id>/retry"
+  ],
+  "acceptance": [
+    "XML/HTML/PDF enter paper lane",
+    "repo/zip/Python/R enter code lane",
+    "unknown enters quarantine",
+    "mixed batch routes correctly",
+    "repeat import does not duplicate build",
+    "single item failure does not block batch",
+    "status is queryable",
+    "no auto published",
+    "unit tests pass"
+  ],
+  "out_of_scope": [
+    "review/publish (N1)",
+    "watch discovery (N2)",
+    "plugin registry (N3)",
+    "multi-tenant self-service provisioning",
+    "E3-E8"
+  ],
+  "risks": [
+    "format misdetection",
+    "large files or repositories",
+    "PDF parse failure",
+    "repository unreachable",
+    "unknown license",
+    "duplicate imports",
+    "storage/model cost"
+  ]
+}

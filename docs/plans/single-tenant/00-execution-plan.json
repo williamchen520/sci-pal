@@ -1,0 +1,103 @@
+{
+  "plan_id": "SINGLE-TENANT",
+  "title": "Single-Tenant Delivery Plan",
+  "version": 1,
+  "updated_at": "2026-11-14",
+  "status": "in_progress",
+  "current_phase": "N0",
+  "project_status": "tenant-ready-single-tenant",
+  "phase2_status": "frozen",
+  "principles": [
+    "single tenant plus main only",
+    "all new entry points use TenantContext",
+    "source libraries stay separate",
+    "annotations never write canonical",
+    "auto import defaults to no auto publish",
+    "each phase has Markdown and JSON plans",
+    "one PR per phase",
+    "E3-E8 remain frozen"
+  ],
+  "phases": [
+    {
+      "id": "N0",
+      "title": "Single-Tenant Import Pipeline",
+      "status": "planned",
+      "depends_on": ["S0"],
+      "plan_files": {
+        "md": "docs/plans/single-tenant/N0-import-pipeline.md",
+        "json": "docs/plans/single-tenant/N0-import-pipeline.json",
+        "exists": true
+      },
+      "acceptance": [
+        "XML/HTML/PDF route to paper lanes",
+        "repo/zip route to code lane",
+        "manual import API",
+        "draft/indexed status",
+        "no auto publish"
+      ]
+    },
+    {
+      "id": "N1",
+      "title": "Review and Publish Gate",
+      "status": "planned",
+      "depends_on": ["N0"],
+      "plan_files": {
+        "md": "docs/plans/single-tenant/N1-review-publish.md",
+        "json": "docs/plans/single-tenant/N1-review-publish.json",
+        "exists": false
+      },
+      "acceptance": [
+        "quality checks",
+        "human approval",
+        "code binding",
+        "draft to published"
+      ]
+    },
+    {
+      "id": "N2",
+      "title": "Watch-Driven Auto Ingest",
+      "status": "planned",
+      "depends_on": ["N1"],
+      "plan_files": {
+        "md": "docs/plans/single-tenant/N2-watch-auto-ingest.md",
+        "json": "docs/plans/single-tenant/N2-watch-auto-ingest.json",
+        "exists": false
+      },
+      "acceptance": [
+        "watch creates ImportSession",
+        "auto_stage true",
+        "auto_publish false",
+        "paper and code lanes remain independent"
+      ]
+    },
+    {
+      "id": "N3",
+      "title": "Thin Parser Adapter Layer",
+      "status": "planned",
+      "depends_on": ["N0"],
+      "plan_files": {
+        "md": "docs/plans/single-tenant/N3-parser-adapters.md",
+        "json": "docs/plans/single-tenant/N3-parser-adapters.json",
+        "exists": false
+      },
+      "acceptance": [
+        "ParserAdapter interface",
+        "ReviewGate interface",
+        "Sink interface",
+        "no third-party marketplace"
+      ]
+    }
+  ],
+  "frozen_phase2": {
+    "status": "frozen",
+    "phases": ["E3", "E4", "E5", "E6", "E7", "E8"],
+    "resume_when": [
+      "more than 3 real tenants",
+      "self-service onboarding required",
+      "external customer isolation required",
+      "compliance requires dedicated DB/backup",
+      "tenant quota/billing required"
+    ]
+  },
+  "next_action": "write and execute N0 import pipeline plan"
+}

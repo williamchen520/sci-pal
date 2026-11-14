@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 156 篇 · 分类索引，文件原路径不变
+> 共 158 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -52,6 +52,8 @@
 | P4 元数据双写 | --- | [PostgreSQL迁移-P4-双写.md](../PostgreSQL迁移-P4-双写.md) |
 | P5 读路径 Canary | --- | [PostgreSQL迁移-P5-读路径Canary.md](../PostgreSQL迁移-P5-读路径Canary.md) |
 | PostgreSQL 迁移基线（P0） | --- | [PostgreSQL迁移-基线.md](../PostgreSQL迁移-基线.md) |
+| 单租户交付执行计划总表 | --- | [00-execution-plan.md](single-tenant/00-execution-plan.md) |
+| N0 计划表：单租户导入管线 | --- | [N0-import-pipeline.md](single-tenant/N0-import-pipeline.md) |
 | 租户联邦执行计划总表 | --- | [00-execution-plan.md](tenant-federation/00-execution-plan.md) |
 | 决策记录：Tenant-ready 单租户优先 | --- | [DECISION-single-tenant-first.md](tenant-federation/DECISION-single-tenant-first.md) |
 | E0 计划表：Capability 与 Resource Scope 模型 | --- | [E0-capability-scope.md](tenant-federation/E0-capability-scope.md) |
