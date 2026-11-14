@@ -1,7 +1,7 @@
 # N0 计划表：单租户导入管线
 
 > 阶段：N0  
-> 状态：planned  
+> 状态：进行中（N0.1–N0.4，N0.8）  
 > 依赖：S0 TenantContext  
 > 目标：单租户手工导入 XML/HTML/PDF/code，自动识别、分流、建库、建索引到 draft/indexed。
 
@@ -227,7 +227,21 @@ E3–E8
 
 ---
 
-## 12. 验收
+## 12. 当前进度
+
+```text
+N0.1  tables          done
+N0.2  session         done
+N0.3  detector        done
+N0.4  router          done
+N0.8  API             done
+N0.9  tests           13 passed（部分）
+N0.5  orchestrator    pending
+N0.6  paper adapters  pending
+N0.7  code adapter    pending
+```
+
+## 13. 验收
 
 ```text
 1. XML/HTML/PDF 进入 paper lane
@@ -243,7 +257,7 @@ E3–E8
 
 ---
 
-## 13. 风险
+## 14. 风险
 
 ```text
 格式误判
