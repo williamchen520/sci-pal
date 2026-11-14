@@ -19,6 +19,7 @@ from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 from services.papers.pg_writes import enabled as paper_pg_enabled, update_workspace as pg_update_workspace
 from services.papers.paper_store import PaperStore
 from services.papers.analysis import analyze_paper
+from services.papers.code_links import extract_and_store, list_links, manual_link
 from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline, paper_paragraphs, paragraph_sentences
 
@@ -177,6 +178,32 @@ def build_papers_actions_blueprint(
         if not rows:
             return jsonify({"error": "Sentence tree not found", "para_id": para_id}), 404
         return jsonify({"paper_id": paper_id, "para_id": para_id, "sentences": rows})
+
+    @bp.route("/api/papers/<paper_id>/code-links", methods=["GET"])
+    def get_paper_code_links(paper_id):
+        return jsonify({"paper_id": paper_id, "links": list_links(paper_id)})
+
+    @bp.route("/api/papers/<paper_id>/code-links/extract", methods=["POST"])
+    def extract_paper_code_links(paper_id):
+        return jsonify(extract_and_store(paper_id))
+
+    @bp.route("/api/papers/<paper_id>/code-links", methods=["POST"])
+    def add_paper_code_link(paper_id):
+        payload = request.get_json(silent=True) or {}
+        url = str(payload.get("url") or "").strip()
+        if not url:
+            return jsonify({"error": "url is required"}), 400
+        try:
+            link = manual_link(
+                paper_id,
+                url,
+                license_value=str(payload.get("license") or ""),
+                commit_sha=str(payload.get("commit") or ""),
+                status=str(payload.get("status") or "candidate"),
+            )
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify({"paper_id": paper_id, "link": link}), 201
 
     @bp.route("/api/papers/<paper_id>/analysis", methods=["GET"])
     def get_paper_analysis(paper_id):
