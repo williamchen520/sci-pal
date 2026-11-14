@@ -2789,6 +2789,14 @@
         ],
         "endpoint": "papers_actions.get_paper_sources",
         "status": "implemented"
+      },
+      {
+        "rule": "/api/papers/<paper_id>/jats",
+        "methods": [
+          "GET"
+        ],
+        "endpoint": "papers_actions.get_paper_jats",
+        "status": "implemented"
       }
     ]
   },
