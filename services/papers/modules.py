@@ -35,7 +35,7 @@ _CAPABILITIES = (
     ("singler", "cell annotation"),
     ("runharmony", "batch integration"),
     ("findclusters|findneighbors", "clustering"),
-    ("nmf|cnmf", "NMF programs"),
+    ("nmf::|\\bnmf\\s*\\(|cnmf", "NMF programs"),
     ("gsva", "pathway scoring"),
 )
 
