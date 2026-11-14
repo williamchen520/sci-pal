@@ -220,8 +220,8 @@ evidence / artifact
 Python      支持
 Nextflow    支持
 R v1        支持（file/function/library/source）
-Rmd/Quarto  未实现
-混合仓库    未实现
+Rmd/Quarto v1 chunk
+混合仓库    v1 auto detect
 ```
 
 所以：
@@ -443,8 +443,8 @@ OK
 
 ```text
 R 深度 AST 未实现（v1 是保守扫描）
-Rmd/Quarto 未实现
-混合仓库未实现
+Rmd/Quarto chunk 级 v1；嵌套函数未拆
+混合仓库 auto detect v1；跨语言低置信
 HTML 尚未接入 corpus ingest
 scipal-paper 插件未实现
 sentence evidence 链未接
@@ -471,6 +471,7 @@ app 重启后需再验证 outline 归一化
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
 | [实验-Paper-Data-Flow](docs/实验-Paper-Data-Flow.md) | 数据流 |
+| [实验-Rmd-Mixed](docs/实验-Rmd-Mixed.md) | Rmd/混合仓库 |
 | [Architecture JSON](ARCHITECTURE.json) | 机器可读路由契约 |
 | [Documentation index](docs/README.md) | 全部文档 |
 

@@ -341,3 +341,55 @@ def parse_r(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdge]]:
             ParsedEdge(file_id, f"source:{target}", "imports", "r", "high")
         )
     return units, edges
+
+
+RMD_FENCE = re.compile(r"(?m)^[ \t]*```+[ \t]*\{([A-Za-z0-9_+-]+)([^}]*)\}[ \t]*$")
+RMD_CLOSE = re.compile(r"(?m)^[ \t]*```+[ \t]*$")
+RMD_LABEL = re.compile(r"(?:label\s*=\s*|#\s*)([A-Za-z0-9_.-]+)")
+
+
+def parse_rmd(text: str, path: str) -> tuple[list[ParsedUnit], list[ParsedEdge]]:
+    """Parse R Markdown / Quarto fenced chunks as units."""
+    file_id = _stable_id("unit", path, "file")
+    units = [
+        ParsedUnit(
+            unit_id=file_id,
+            file_path=path,
+            symbol_name=path,
+            unit_type="file",
+            text=text,
+            start_line=1,
+            end_line=text.count("\n") + 1,
+        )
+    ]
+    edges: list[ParsedEdge] = []
+    for index, match in enumerate(RMD_FENCE.finditer(text), 1):
+        language = match.group(1).lower()
+        info = match.group(2) or ""
+        label_match = RMD_LABEL.search(info)
+        if label_match:
+            label = label_match.group(1)
+        else:
+            first = info.strip().split(",", 1)[0].strip()
+            label = first if re.fullmatch(r"[A-Za-z0-9_.-]+", first) else f"{language}_chunk_{index}"
+        body_start = text.find("\n", match.end())
+        if body_start == -1:
+            continue
+        body_start += 1
+        close = RMD_CLOSE.search(text, body_start)
+        body_end = close.start() if close else len(text)
+        body = text[body_start:body_end]
+        uid = _stable_id("unit", path, "chunk", label, str(match.start()))
+        units.append(
+            ParsedUnit(
+                unit_id=uid,
+                file_path=path,
+                symbol_name=label,
+                unit_type="chunk",
+                text=body,
+                start_line=text[:match.start()].count("\n") + 1,
+                end_line=text[:body_end].count("\n") + 1,
+                parent_unit_id=file_id,
+            )
+        )
+    return units, edges
