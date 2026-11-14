@@ -219,7 +219,7 @@ evidence / artifact
 ```text
 Python      支持
 Nextflow    支持
-R           未实现
+R v1        支持（file/function/library/source）
 Rmd/Quarto  未实现
 混合仓库    未实现
 ```
@@ -442,7 +442,7 @@ OK
 ## 12. 当前缺口
 
 ```text
-R parser 未实现
+R 深度 AST 未实现（v1 是保守扫描）
 Rmd/Quarto 未实现
 混合仓库未实现
 HTML 尚未接入 corpus ingest
@@ -468,6 +468,7 @@ app 重启后需再验证 outline 归一化
 | [实验-Paper-Analysis](docs/实验-Paper-Analysis.md) | 单篇聚合入口 |
 | [实验-Paper-Code-Links](docs/实验-Paper-Code-Links.md) | 论文代码链接 |
 | [实验-Paper-Code-Bindings](docs/实验-Paper-Code-Bindings.md) | paper ↔ code library |
+| [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [Architecture JSON](ARCHITECTURE.json) | 机器可读路由契约 |
 | [Documentation index](docs/README.md) | 全部文档 |
 

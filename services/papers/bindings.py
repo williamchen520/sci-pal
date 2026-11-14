@@ -39,6 +39,8 @@ def bind_link(
     *,
     library_id: str,
     snapshot_id: str = "",
+    parser_supported: bool = False,
+    reason: str = "",
 ) -> dict[str, Any]:
     library_id = (library_id or "").strip()
     if not library_id.startswith("lib_"):
@@ -63,8 +65,8 @@ def bind_link(
         "library_id": library_id,
         "snapshot_id": resolved_snapshot,
         "status": "bound",
-        "parser_supported": False,
-        "reason": "language/parser support not recorded at bind time",
+        "parser_supported": bool(parser_supported),
+        "reason": reason or "language/parser support not recorded at bind time",
     }
     pg = owner_connection()
     try:
