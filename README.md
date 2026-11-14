@@ -474,6 +474,7 @@ app 重启后需再验证 outline 归一化
 | [实验-证据质量修复](docs/实验-证据质量修复.md) | caption/首段/句内图注 |
 | [实验-全库Caption审计](docs/实验-全库Caption审计.md) | 全库 caption 审计 |
 | [实验-Results-Fallback](docs/实验-Results-Fallback.md) | Results 标题回退 |
+| [实验-Section-Types](docs/实验-Section-Types.md) | outline section_type |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
 | [实验-Paper-Data-Flow](docs/实验-Paper-Data-Flow.md) | 数据流 |

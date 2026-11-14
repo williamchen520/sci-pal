@@ -206,6 +206,7 @@ def main() -> None:
 - [实验-证据质量修复](实验-证据质量修复.md)
 - [实验-全库Caption审计](实验-全库Caption审计.md)
 - [实验-Results-Fallback](实验-Results-Fallback.md)
+- [实验-Section-Types](实验-Section-Types.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)

@@ -15,6 +15,9 @@ class _Cursor:
     def fetchall(self):
         return self.rows
 
+    def fetchone(self):
+        return self.rows[0] if self.rows else None
+
 
 class _Conn:
     def __init__(self, rows):
@@ -60,6 +63,7 @@ class PaperReaderTests(unittest.TestCase):
         self.assertEqual(rows[0]["section_path"], "Results")
         self.assertEqual(rows[0]["paragraph_count"], 3)
         self.assertEqual(rows[0]["first_para_id"], "p1")
+        self.assertIn("section_type", rows[0])
         self.assertTrue(conn.closed)
 
     def test_body_heading_normalized(self) -> None:
