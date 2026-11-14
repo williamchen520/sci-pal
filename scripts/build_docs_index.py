@@ -204,6 +204,7 @@ def main() -> None:
 - [实验-Scipal-Paper-MCP](实验-Scipal-Paper-MCP.md)
 - [实验-Replication-Plan](实验-Replication-Plan.md)
 - [实验-证据质量修复](实验-证据质量修复.md)
+- [实验-全库Caption审计](实验-全库Caption审计.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
 - [Changelog](Changelog.md)
