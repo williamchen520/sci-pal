@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 189 篇 · 分类索引，文件原路径不变
+> 共 190 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -96,6 +96,7 @@
 | 实验记录：R8 去重、冲突标记、审计导出 | --- | [实验-RAG控制面-R8-去重冲突导出.md](../实验-RAG控制面-R8-去重冲突导出.md) |
 | 实验记录：SciPal 服务持久化 | --- | [实验-RAG控制面-服务持久化.md](../实验-RAG控制面-服务持久化.md) |
 | 实验记录：Replication Plan | --- | [实验-Replication-Plan.md](../实验-Replication-Plan.md) |
+| 实验记录：Results Section Fallback | --- | [实验-Results-Fallback.md](../实验-Results-Fallback.md) |
 | 实验记录：Rmd/Quarto 与 mixed repo | --- | [实验-Rmd-Mixed.md](../实验-Rmd-Mixed.md) |
 | 实验记录：scipal-paper MCP 插件 | --- | [实验-Scipal-Paper-MCP.md](../实验-Scipal-Paper-MCP.md) |
 | 实验记录：Sentence Evidence 与 Caption 过滤 | --- | [实验-Sentence-Evidence.md](../实验-Sentence-Evidence.md) |

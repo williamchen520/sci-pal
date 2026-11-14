@@ -115,6 +115,37 @@ def paper_paragraphs(
             """,
             (paper_id, *params, offset, limit),
         ).fetchall()
+        if not rows and section.strip().lower() == "results":
+            rows = pg.execute(
+                """
+                SELECT p.para_id, p.paper_id, p.sequence, p.text, p.page, p.bbox,
+                       p.section_id, p.section_level1, p.section_level2, p.section_path,
+                       (SELECT count(*) FROM sentences s WHERE s.para_id = p.para_id) AS sentence_count
+                FROM paragraphs p
+                JOIN papers pa ON pa.paper_id = p.paper_id
+                WHERE p.paper_id = %s
+                  AND p.section_level1 = 'body'
+                  AND p.section_level2 IS NOT NULL
+                  AND btrim(p.section_level2) <> COALESCE(pa.title, '')
+                  AND lower(btrim(p.section_level2)) NOT IN (
+                    'article','abstract','code availability','data availability',
+                    'references','acknowledgements','author contributions','funding',
+                    'competing interests','additional information','reporting summary'
+                  )
+                  AND p.text ~ '[A-Za-z]'
+                  AND length(btrim(p.text)) >= 20
+                  AND p.sequence < COALESCE((
+                    SELECT min(sequence) FROM paragraphs
+                    WHERE paper_id = %s
+                      AND (lower(section_level2) LIKE '%%discussion%%' OR lower(section_level1) = 'discussion')
+                  ), 2147483647)
+                ORDER BY p.sequence
+                OFFSET %s LIMIT %s
+                """,
+                (paper_id, paper_id, offset, limit),
+            ).fetchall()
+            for row in rows:
+                row["section_fallback"] = "body_headings"
         return [dict(row) for row in rows]
     finally:
         pg.close()
