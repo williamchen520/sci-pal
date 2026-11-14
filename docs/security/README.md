@@ -1,6 +1,6 @@
 # 安全复盘
 
-> 共 36 篇 · 分类索引，文件原路径不变
+> 共 37 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -37,6 +37,7 @@
 | Soft Cap and MMR Audit | Raw: | [检索-SoftCap-MMR审计.md](../检索-SoftCap-MMR审计.md) |
 | Retrieval Bias Audit | cases 20 | [检索-文档级偏置审计.md](../检索-文档级偏置审计.md) |
 | 系统潜在风险审计与防御计划 | --- | [系统潜在风险审计与防御计划.md](../系统潜在风险审计与防御计划.md) |
+| 讨论记录：租户工作区隔离与星形联邦 | --- | [讨论-06-租户工作区隔离与星形联邦.md](../讨论-06-租户工作区隔离与星形联邦.md) |
 | 零技术债 Phase 4b：tenancy permissions PG-only | --- | [零技术债-Phase4b-tenancy_permissions.md](../零技术债-Phase4b-tenancy_permissions.md) |
 | 零技术债 Phase 4c：tenancy scoping PG-only | --- | [零技术债-Phase4c-tenancy_scoping.md](../零技术债-Phase4c-tenancy_scoping.md) |
 | 零技术债 Phase 6b：tenancy PG-only | --- | [零技术债-Phase6b-tenancy.md](../零技术债-Phase6b-tenancy.md) |

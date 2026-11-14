@@ -1,0 +1,148 @@
+{
+  "plan_id": "E0",
+  "title": "Capability and Resource Scope Model",
+  "version": 1,
+  "status": "done",
+  "depends_on": [],
+  "objective": "Establish capability + resource scope authorization without changing database, routes, or federation.",
+  "decisions": [
+    "D0-1 capability checks, not role-name checks",
+    "D0-2 scopes: platform, tenant:<id>, library:<id>",
+    "D0-3 platform_owner has platform capabilities only, no default tenant content access",
+    "D0-4 tenant_owner/admin has full tenant capabilities, never cross-tenant",
+    "D0-5 federation scopes only own/main/both; tenant-to-tenant is forbidden",
+    "D0-6 keep legacy authorize() untouched; new model integrates separately"
+  ],
+  "tasks": [
+    {
+      "id": "E0.1",
+      "title": "Define capability constants",
+      "file": "services/tenancy/capabilities.py",
+      "status": "done"
+    },
+    {
+      "id": "E0.2",
+      "title": "Define Principal and resource scope parsing",
+      "file": "services/tenancy/capabilities.py",
+      "status": "done"
+    },
+    {
+      "id": "E0.3",
+      "title": "Implement can() for platform/tenant/library",
+      "file": "services/tenancy/capabilities.py",
+      "status": "done"
+    },
+    {
+      "id": "E0.4",
+      "title": "Implement star-federation scope resolution",
+      "file": "services/tenancy/capabilities.py",
+      "status": "done"
+    },
+    {
+      "id": "E0.5",
+      "title": "Add allow/deny tests",
+      "file": "tests/test_tenancy_capabilities.py",
+      "status": "done"
+    },
+    {
+      "id": "E0.6",
+      "title": "Align Markdown plan and JSON plan",
+      "file": "docs/plans/tenant-federation/E0-capability-scope.md",
+      "status": "done"
+    }
+  ],
+  "capabilities": [
+    "platform.tenant.manage",
+    "platform.plugin.manage",
+    "platform.federation.manage",
+    "tenant.read",
+    "tenant.import",
+    "tenant.review",
+    "tenant.publish",
+    "tenant.members.manage",
+    "tenant.plugin.enable",
+    "library.read",
+    "library.write",
+    "library.index"
+  ],
+  "roles": {
+    "platform_owner": [
+      "platform.tenant.manage",
+      "platform.plugin.manage",
+      "platform.federation.manage"
+    ],
+    "tenant_owner": [
+      "tenant.read",
+      "tenant.import",
+      "tenant.review",
+      "tenant.publish",
+      "tenant.members.manage",
+      "tenant.plugin.enable",
+      "library.read",
+      "library.write",
+      "library.index"
+    ],
+    "tenant_admin": [
+      "tenant.read",
+      "tenant.import",
+      "tenant.review",
+      "tenant.publish",
+      "tenant.members.manage",
+      "tenant.plugin.enable",
+      "library.read",
+      "library.write",
+      "library.index"
+    ],
+    "tenant_reviewer": [
+      "tenant.read",
+      "tenant.review",
+      "library.read"
+    ],
+    "tenant_member": [
+      "tenant.read",
+      "tenant.import",
+      "library.read",
+      "library.write"
+    ],
+    "tenant_viewer": [
+      "tenant.read",
+      "library.read"
+    ]
+  },
+  "acceptance": [
+    "platform_owner denied tenant.read",
+    "tenant_owner allowed tenant.import on own tenant",
+    "tenant_owner denied tenant.import on other tenant",
+    "tenant_owner denied platform.plugin.manage",
+    "library scope requires library-to-tenant mapping",
+    "tenant_viewer denied tenant.import",
+    "allowed_federation_scopes returns only a subset of own/main/both",
+    "unit tests pass"
+  ],
+  "files": [
+    "services/tenancy/capabilities.py",
+    "tests/test_tenancy_capabilities.py",
+    "docs/plans/tenant-federation/E0-capability-scope.md",
+    "docs/plans/tenant-federation/E0-capability-scope.json"
+  ],
+  "out_of_scope": [
+    "database changes",
+    "route changes",
+    "MCP changes",
+    "federation_catalog",
+    "tenant provisioning",
+    "ImportSession"
+  ],
+  "risks": [
+    "legacy authorize() may bypass new capability checks",
+    "missing library-to-tenant mapping",
+    "platform support access may be confused with default access",
+    "future routes may omit capability checks"
+  ],
+  "verification": {
+    "tests": "tests/test_tenancy_capabilities.py",
+    "passed": 11,
+    "failed": 0,
+    "command": "python -m unittest tests.test_tenancy_capabilities"
+  }
+}
