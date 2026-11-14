@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 191 篇 · 分类索引，文件原路径不变
+> 共 192 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -67,6 +67,7 @@
 | 实验记录：Paper Data Flow | --- | [实验-Paper-Data-Flow.md](../实验-Paper-Data-Flow.md) |
 | 实验记录：Paper Module Map | --- | [实验-Paper-Module-Map.md](../实验-Paper-Module-Map.md) |
 | 实验记录：Paper Reader API | --- | [实验-Paper-Reader-API.md](../实验-Paper-Reader-API.md) |
+| 实验记录：Paper Section API | --- | [实验-Paper-Section-API.md](../实验-Paper-Section-API.md) |
 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |
 | 案例：HCC 多组学分子分型论文（HTML + Zenodo） | --- | [实验-Paper-to-Code-HCC-基因组案例.md](../实验-Paper-to-Code-HCC-基因组案例.md) |
 | 实验记录：R Parser v1 | --- | [实验-R-Parser-v1.md](../实验-R-Parser-v1.md) |

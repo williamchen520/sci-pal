@@ -109,6 +109,19 @@ def paper_code_libraries(paper_id: str) -> str:
     return _call("GET", f"/api/papers/{_paper(paper_id)}/code-libraries")
 
 
+@mcp.tool(
+    description=(
+        "按 section_type 取整节（GET /api/papers/<id>/sections/<type>）："
+        "results / methods / discussion / abstract 等。"
+    )
+)
+def paper_section(paper_id: str, section_type: str) -> str:
+    return _call(
+        "GET",
+        f"/api/papers/{_paper(paper_id)}/sections/{_path_segment(section_type)}",
+    )
+
+
 @mcp.tool(description="论文模块表（GET /api/papers/<id>/modules）：文件/单元/imports。")
 def paper_modules(paper_id: str) -> str:
     return _call("GET", f"/api/papers/{_paper(paper_id)}/modules")
