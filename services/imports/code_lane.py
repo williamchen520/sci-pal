@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -68,8 +69,28 @@ class CodeLaneAdapter:
             "file_count": len(files),
             "unit_count": sum(len(file["units"]) for file in files),
         }
-        session.set_item_parsed(item["import_id"], item["item_id"], payload)
         if self.build:
-            build_code(item, payload)
-            return "built"
-        return "parsed"
+            build = build_code(item, payload)
+            payload["build"] = build
+            payload["index"] = _index_code(item, build)
+        session.set_item_parsed(item["import_id"], item["item_id"], payload)
+        return "built" if self.build else "parsed"
+
+
+def _index_code(item: dict[str, Any], build: dict[str, Any]) -> dict[str, Any]:
+    dsn = os.environ.get("SCIPAL_CODE_DSN", "").strip()
+    if not dsn or os.environ.get("SCIPAL_CODE_INDEX", "1") == "0":
+        return {"status": "skipped", "reason": "no dsn or disabled"}
+    try:
+        from code_rag.index import index_library
+
+        result = index_library(
+            dsn,
+            str(item.get("library_id") or "lib_default"),
+            str(build.get("snapshot_id") or ""),
+            model_name=os.environ.get("SCIPAL_CODE_EMBED_MODEL", ""),
+            device=os.environ.get("SCIPAL_CODE_DEVICE", ""),
+        )
+        return {"status": "indexed", **result}
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "error", "error": str(exc)[:300]}

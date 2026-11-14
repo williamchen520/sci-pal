@@ -1,7 +1,7 @@
 # N0 计划表：单租户导入管线
 
 > 阶段：N0  
-> 状态：进行中（N0.1–N0.4，N0.8）  
+> 状态：已完成（N0.1–N0.9）  
 > 依赖：S0 TenantContext  
 > 目标：单租户手工导入 XML/HTML/PDF/code，自动识别、分流、建库、建索引到 draft/indexed。
 
@@ -235,10 +235,10 @@ N0.2  session         done
 N0.3  detector        done
 N0.4  router          done
 N0.8  API             done
-N0.9  tests           20 passed（部分）
+N0.9  tests           41+ passed
 N0.5  orchestrator    done
 N0.6  paper adapters  parse+build JATS/HTML done；PDF pending
-N0.7  code adapter    parse+build done；embedding/index pending
+N0.7  code adapter    parse+build+auto index done
 ```
 
 ## 13. 验收
