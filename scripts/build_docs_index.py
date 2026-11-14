@@ -216,6 +216,7 @@ def main() -> None:
 - [实验-PDF-Native](实验-PDF-Native.md)
 - [实验-Federation](实验-Federation.md)
 - [讨论-租户独立建库与插件化导入管线](讨论-租户独立建库与插件化导入管线.md)
+- [讨论-04-CodeRAG是否按语言建库](讨论-04-CodeRAG是否按语言建库.md)
 - [实验-Paper-Section-API](实验-Paper-Section-API.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)
 - [实验-RAG控制面-服务持久化](实验-RAG控制面-服务持久化.md)
