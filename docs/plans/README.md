@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 153 篇 · 分类索引，文件原路径不变
+> 共 155 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -53,9 +53,11 @@
 | P5 读路径 Canary | --- | [PostgreSQL迁移-P5-读路径Canary.md](../PostgreSQL迁移-P5-读路径Canary.md) |
 | PostgreSQL 迁移基线（P0） | --- | [PostgreSQL迁移-基线.md](../PostgreSQL迁移-基线.md) |
 | 租户联邦执行计划总表 | --- | [00-execution-plan.md](tenant-federation/00-execution-plan.md) |
+| 决策记录：Tenant-ready 单租户优先 | --- | [DECISION-single-tenant-first.md](tenant-federation/DECISION-single-tenant-first.md) |
 | E0 计划表：Capability 与 Resource Scope 模型 | --- | [E0-capability-scope.md](tenant-federation/E0-capability-scope.md) |
 | E1 计划表：Federation Catalog 与星形约束 | --- | [E1-federation-catalog.md](tenant-federation/E1-federation-catalog.md) |
 | E2 计划表：Tenant Provisioning | --- | [E2-tenant-provisioning.md](tenant-federation/E2-tenant-provisioning.md) |
+| S0 计划表：TenantContext 单租户优先 | --- | [S0-tenant-context.md](tenant-federation/S0-tenant-context.md) |
 | scipal-guard P1：实体词表校验 | --- | [scipal-guard-P1.md](../scipal-guard-P1.md) |
 | 代码审查修复计划 | --- | [修复计划-代码审查P0.md](../修复计划-代码审查P0.md) |
 | 备选计划表 | --- | [备选计划表.md](../备选计划表.md) |

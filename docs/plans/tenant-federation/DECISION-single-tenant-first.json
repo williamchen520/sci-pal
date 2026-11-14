@@ -1,0 +1,34 @@
+{
+  "decision_id": "TENANT-DELIVERY-001",
+  "title": "Tenant-ready single-tenant first",
+  "date": "2026-11-14",
+  "status": "accepted",
+  "kept": [
+    "E0 capability and resource scope",
+    "E1 federation catalog and star constraint",
+    "E2 tenant stack registration and admin DDL (optional)"
+  ],
+  "deferred": [
+    "E3 tenant connector",
+    "E4 gateway scope",
+    "E5 peer deny tests",
+    "E6 support access and audit",
+    "E7 ImportSession for all tenants",
+    "E8 quota, deletion, migration"
+  ],
+  "delivery_mode": "one tenant plus main, tenant-ready but not self-service",
+  "resume_when": [
+    "more than 3 real tenants",
+    "self-service onboarding required",
+    "external customer isolation required",
+    "compliance requires dedicated DB/backup",
+    "tenant quota/billing required"
+  ],
+  "risks": [
+    "global DSN hardcoded",
+    "tenant_id leaks into business logic",
+    "multi-tenant rework later",
+    "E2 demo tenant mistaken for production"
+  ],
+  "next_phase": "S0"
+}
