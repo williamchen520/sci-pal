@@ -31,13 +31,18 @@ def _outline_rows(paper_id: str) -> list[dict[str, Any]]:
                        NULLIF(concat_ws(' > ', section_level1, section_level2), '')) AS section_path,
               section_level1,
               section_level2,
-              section_type,
+              r.role AS section_type,
               count(*) AS paragraph_count,
               min(sequence) AS first_sequence,
               (array_agg(para_id ORDER BY sequence))[1] AS first_para_id
-            FROM paragraphs
-            WHERE paper_id = %s
-            GROUP BY section_path, section_level1, section_level2, section_type
+            FROM paragraphs p
+            LEFT JOIN LATERAL (
+              SELECT role FROM paragraph_section_roles
+              WHERE para_id = p.para_id
+              ORDER BY updated_at DESC LIMIT 1
+            ) r ON TRUE
+            WHERE p.paper_id = %s
+            GROUP BY p.section_path, p.section_level1, p.section_level2, r.role
             ORDER BY first_sequence
             """,
             (paper_id,),
@@ -126,7 +131,7 @@ def paper_outline(paper_id: str) -> list[dict[str, Any]]:
                 "first_para_id": row.get("first_para_id"),
                 "first_sequence": first_sequence,
                 "section_type": stored_type or _section_type(row, bounds),
-                "section_type_source": "stored" if stored_type else "heuristic",
+                "section_type_source": "annotation" if stored_type else "heuristic",
             }
         else:
             current["paragraph_count"] += int(row.get("paragraph_count") or 0)

@@ -55,8 +55,17 @@ def main() -> int:
                 )
                 counts[label] = counts.get(label, 0) + 1
                 conn.execute(
-                    "UPDATE paragraphs SET section_type=%s WHERE para_id=%s",
-                    (label, para_id),
+                    """
+                    INSERT INTO paragraph_section_roles
+                      (para_id, role, source, confidence, version)
+                    VALUES (%s,%s,'heuristic_v1',0.5,'2026-11-14')
+                    ON CONFLICT (para_id, source) DO UPDATE SET
+                      role=EXCLUDED.role,
+                      confidence=EXCLUDED.confidence,
+                      version=EXCLUDED.version,
+                      updated_at=now()
+                    """,
+                    (para_id, label),
                 )
             conn.commit()
             print(f"SECTION_TYPES_OK paper={paper_id} paragraphs={len(rows)} counts={counts}")

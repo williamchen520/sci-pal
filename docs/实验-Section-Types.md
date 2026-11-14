@@ -12,7 +12,7 @@
 
 ```text
 section_type
-section_type_source = stored | heuristic
+section_type_source = annotation | heuristic
 ```
 
 类型：
