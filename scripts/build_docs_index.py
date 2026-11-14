@@ -222,6 +222,8 @@ def main() -> None:
 - [租户联邦执行计划总表](plans/tenant-federation/00-execution-plan.md)
 - [决策-单租户优先](plans/tenant-federation/DECISION-single-tenant-first.md)
 - [架构-租户状态与Phase2Roadmap](架构-租户状态与Phase2Roadmap.md)
+- [单租户交付执行计划总表](plans/single-tenant/00-execution-plan.md)
+- [N0 单租户导入管线](plans/single-tenant/N0-import-pipeline.md)
 - [S0 TenantContext](plans/tenant-federation/S0-tenant-context.md)
 - [实验-Paper-Section-API](实验-Paper-Section-API.md)
 - [实验-Cross-Language-Edges](实验-Cross-Language-Edges.md)
