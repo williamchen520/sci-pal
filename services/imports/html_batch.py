@@ -103,6 +103,7 @@ def run_batch(
         "duplicate": 0,
         "created": 0,
         "built": 0,
+        "quarantined": 0,
         "failed": 0,
         "items": [],
     }
@@ -163,6 +164,8 @@ def run_batch(
             report["created"] += 1
             if status == "built":
                 report["built"] += 1
+            elif status == "quarantined":
+                report["quarantined"] += 1
             elif status == "failed":
                 report["failed"] += 1
             parsed = row.get("parsed_json") or {}

@@ -497,6 +497,7 @@ app 重启后需再验证 outline 归一化
 | [H2 HTML 质量门禁](docs/plans/single-tenant/H2-html-quality-gate.md) | 质量门禁 |
 | [H3 PDF fallback](docs/plans/single-tenant/H3-pdf-fallback.md) | PDF 回退 |
 | [H4 Cell/JS adapter](docs/plans/single-tenant/H4-cell-js-adapter.md) | Cell 访问层 |
+| [实验-HTML批量验收](docs/实验-HTML批量验收.md) | 综合验收 |
 | [实验-Paper-Section-API](docs/实验-Paper-Section-API.md) | 按类型取整节 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
