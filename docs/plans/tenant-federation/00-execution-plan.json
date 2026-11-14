@@ -4,7 +4,7 @@
   "version": 1,
   "updated_at": "2026-11-14",
   "status": "in_progress",
-  "current_phase": "E3",
+  "current_phase": "S0",
   "principles": [
     "permission model before data plane before federation",
     "every phase has Markdown and JSON plan files",
@@ -101,9 +101,29 @@
       "pr": 819
     },
     {
+      "id": "S0",
+      "title": "TenantContext Single-Tenant First",
+      "status": "planned",
+      "depends_on": [
+        "E0",
+        "E1"
+      ],
+      "plan_files": {
+        "md": "docs/plans/tenant-federation/S0-tenant-context.md",
+        "json": "docs/plans/tenant-federation/S0-tenant-context.json",
+        "exists": true
+      },
+      "acceptance": [
+        "default tenant resolves",
+        "main federation flag resolves",
+        "new code uses context",
+        "single-tenant smoke passes"
+      ]
+    },
+    {
       "id": "E3",
       "title": "Tenant Connector",
-      "status": "planned",
+      "status": "deferred",
       "depends_on": [
         "E2"
       ],
@@ -117,12 +137,13 @@
         "short-lived token",
         "no shared DSN",
         "no shared database account"
-      ]
+      ],
+      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E4",
       "title": "Gateway Scope Resolution",
-      "status": "planned",
+      "status": "deferred",
       "depends_on": [
         "E3"
       ],
@@ -136,12 +157,13 @@
         "scope=main works only when subscribed",
         "scope=both works only when subscribed",
         "tenant:<other> is rejected"
-      ]
+      ],
+      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E5",
       "title": "Peer Tenant Deny Tests",
-      "status": "planned",
+      "status": "deferred",
       "depends_on": [
         "E4"
       ],
@@ -154,12 +176,13 @@
         "tenant A cannot query tenant B",
         "tenant B cannot query tenant C",
         "denial is structural, not UI-only"
-      ]
+      ],
+      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E6",
       "title": "Support Access and Audit",
-      "status": "planned",
+      "status": "deferred",
       "depends_on": [
         "E5"
       ],
@@ -173,12 +196,13 @@
         "dual approval",
         "time limited",
         "audit trail"
-      ]
+      ],
+      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E7",
       "title": "ImportSession for Tenants",
-      "status": "planned",
+      "status": "deferred",
       "depends_on": [
         "E6"
       ],
@@ -192,12 +216,13 @@
         "repo/zip route to code lane",
         "review and publish gates",
         "per-tenant indexes"
-      ]
+      ],
+      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
     },
     {
       "id": "E8",
       "title": "Quota, Deletion, Migration",
-      "status": "planned",
+      "status": "deferred",
       "depends_on": [
         "E7"
       ],
@@ -212,7 +237,8 @@
         "tenant indexes removed",
         "audit retained",
         "migration/backup runbook exists"
-      ]
+      ],
+      "deferred_reason": "tenant-ready single-tenant delivery; resume when >3 tenants or self-service is required"
     }
   ],
   "decision_log": [
@@ -249,5 +275,14 @@
       "decision": "platform approves plugin versions; tenant enables a subset"
     }
   ],
-  "next_action": "write E1 Markdown and JSON plans, then implement federation_catalog"
+  "next_action": "write and implement S0 TenantContext",
+  "delivery_mode": "tenant-ready single-tenant first",
+  "deferred_scope": [
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8"
+  ]
 }

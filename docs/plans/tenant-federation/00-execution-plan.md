@@ -3,7 +3,8 @@
 > 日期：2026-11-14  
 > 版本：v1  
 > 状态：执行中  
-> 当前阶段：E3  
+> 当前阶段：S0  
+> 交付模式：tenant-ready 单租户优先  
 > 机器可读：`00-execution-plan.json`
 
 ---
@@ -60,12 +61,13 @@ tenant -> tenant
 | E0 | capability + resource scope | — | done | `E0-capability-scope.md/.json` | 11 tests |
 | E1 | federation_catalog + 星形约束 | E0 | done | `E1-federation-catalog.md/.json` | catalog 只登记 main；拒绝 peer |
 | E2 | tenant provisioning | E1 | done | `E2-tenant-provisioning.md/.json` | DB/storage/index namespace |
-| E3 | tenant connector | E2 | planned | `E3-tenant-connector.md/.json` | 只允许 main；短时 token |
-| E4 | gateway scope | E3 | planned | `E4-gateway-scope.md/.json` | own/main/both |
-| E5 | tenant→tenant 拒绝测试 | E4 | planned | `E5-peer-deny-tests.md/.json` | 结构性拒绝 |
-| E6 | support access + audit | E5 | planned | `E6-support-access-audit.md/.json` | break-glass + 双人审批 |
-| E7 | ImportSession 接租户 | E6 | planned | `E7-import-session.md/.json` | XML/PDF/HTML/code 分流 |
-| E8 | 配额、删除、迁移 | E7 | planned | `E8-quota-delete-migration.md/.json` | 生命周期闭环 |
+| S0 | TenantContext 单租户优先 | E0/E1 | planned | `S0-tenant-context.md/.json` | 单租户 + main |
+| E3 | tenant connector | E2 | deferred | `E3-tenant-connector.md/.json` | 只允许 main；短时 token |
+| E4 | gateway scope | E3 | deferred | `E4-gateway-scope.md/.json` | own/main/both |
+| E5 | tenant→tenant 拒绝测试 | E4 | deferred | `E5-peer-deny-tests.md/.json` | 结构性拒绝 |
+| E6 | support access + audit | E5 | deferred | `E6-support-access-audit.md/.json` | break-glass + 双人审批 |
+| E7 | ImportSession 接租户 | E6 | deferred | `E7-import-session.md/.json` | XML/PDF/HTML/code 分流 |
+| E8 | 配额、删除、迁移 | E7 | deferred | `E8-quota-delete-migration.md/.json` | 生命周期闭环 |
 
 ---
 
@@ -233,12 +235,8 @@ JSON 至少包含：
 E0  done
 E1  done
 E2  done
-E3  需要先写计划表
-E4  依赖 E3 合并
-E5  依赖 E4 合并
-E6  依赖 E5 合并
-E7  依赖 E6 合并
-E8  依赖 E7 合并
+S0  planned：TenantContext 单租户
+E3-E8  deferred；恢复条件见决策记录
 ```
 
 ---
@@ -246,10 +244,9 @@ E8  依赖 E7 合并
 ## 8. 当前下一步
 
 ```text
-E1 federation_catalog
-  -> 先写 E1 .md/.json
-  -> 建 catalog 表
-  -> 只允许 main
-  -> 拒绝 tenant->tenant
-  -> 测试
+S0 TenantContext 单租户
+  -> 先写 S0 .md/.json
+  -> TenantContext 解析
+  -> 单租户 + main smoke
+  -> 不再推进 E3-E8
 ```
