@@ -19,7 +19,7 @@ from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 from services.papers.pg_writes import enabled as paper_pg_enabled, update_workspace as pg_update_workspace
 from services.papers.paper_store import PaperStore
 from services.papers.analysis import analyze_paper
-from services.papers.code_links import extract_and_store, list_links, manual_link
+from services.papers.code_links import extract_and_store, list_links, manual_link, validate_link
 from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline, paper_paragraphs, paragraph_sentences
 
@@ -204,6 +204,15 @@ def build_papers_actions_blueprint(
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify({"paper_id": paper_id, "link": link}), 201
+
+    @bp.route("/api/papers/<paper_id>/code-links/<link_id>/validate", methods=["POST"])
+    def validate_paper_code_link(paper_id, link_id):
+        try:
+            result = validate_link(paper_id, link_id)
+        except KeyError:
+            return jsonify({"error": "Link not found"}), 404
+        status = 200 if result.get("status") == "validated" else 422
+        return jsonify(result), status
 
     @bp.route("/api/papers/<paper_id>/analysis", methods=["GET"])
     def get_paper_analysis(paper_id):
