@@ -18,6 +18,7 @@ from flask import Blueprint, Response, jsonify, request, send_from_directory
 from services.tenancy.web import ensure_workspace_scoping, resolve_workspace
 from services.papers.pg_writes import enabled as paper_pg_enabled, update_workspace as pg_update_workspace
 from services.papers.paper_store import PaperStore
+from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline, paper_paragraphs, paragraph_sentences
 
 from build_db.parse_service import (
@@ -150,13 +151,21 @@ def build_papers_actions_blueprint(
         except ValueError:
             return jsonify({"error": "offset/limit must be integers"}), 400
         section = request.args.get("section", "")
-        rows = paper_paragraphs(paper_id, section=section, offset=offset, limit=limit)
+        include_captions = request.args.get("include_captions", "0").lower() in {"1", "true", "yes"}
+        rows = paper_paragraphs(
+            paper_id,
+            section=section,
+            offset=offset,
+            limit=limit,
+            include_captions=include_captions,
+        )
         return jsonify({"paper_id": paper_id, "section": section, "paragraphs": rows})
 
     @bp.route("/api/papers/<paper_id>/paragraphs/first", methods=["GET"])
     def get_paper_first_paragraph(paper_id):
         section = request.args.get("section", "")
-        row = paper_first_paragraph(paper_id, section=section)
+        include_captions = request.args.get("include_captions", "0").lower() in {"1", "true", "yes"}
+        row = paper_first_paragraph(paper_id, section=section, include_captions=include_captions)
         if not row:
             return jsonify({"error": "Paragraph not found", "section": section}), 404
         return jsonify({"paper_id": paper_id, "section": section, "paragraph": row})
@@ -167,6 +176,19 @@ def build_papers_actions_blueprint(
         if not rows:
             return jsonify({"error": "Sentence tree not found", "para_id": para_id}), 404
         return jsonify({"paper_id": paper_id, "para_id": para_id, "sentences": rows})
+
+    @bp.route("/api/papers/<paper_id>/evidence", methods=["POST"])
+    def get_paper_evidence(paper_id):
+        payload = request.get_json(silent=True) or {}
+        query = str(payload.get("query") or "").strip()
+        if not query:
+            return jsonify({"error": "query is required"}), 400
+        try:
+            top_k = int(payload.get("top_k", 8))
+        except (TypeError, ValueError):
+            return jsonify({"error": "top_k must be an integer"}), 400
+        rows = paper_evidence(paper_id, query, top_k=top_k)
+        return jsonify({"paper_id": paper_id, "query": query, "evidence": rows})
 
     @bp.route("/api/papers/parse", methods=["POST"])
     def parse_local_paper():

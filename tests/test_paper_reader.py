@@ -72,6 +72,7 @@ class PaperReaderTests(unittest.TestCase):
             reader.paper_paragraphs("paper_1", section="Methods", offset=10, limit=5)
         sql, params = conn.calls[0]
         self.assertIn("p.section_level1 ILIKE", sql)
+        self.assertIn("p.section_level1 NOT IN ('figure_caption','table_caption')", sql)
         self.assertEqual(params[1], "%Methods%")
         self.assertEqual(params[-2:], (10, 5))
 

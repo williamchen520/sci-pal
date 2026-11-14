@@ -76,11 +76,19 @@ def _section_clause(section: str) -> tuple[str, tuple[Any, ...]]:
 
 
 def paper_paragraphs(
-    paper_id: str, *, section: str = "", offset: int = 0, limit: int = 50
+    paper_id: str,
+    *,
+    section: str = "",
+    offset: int = 0,
+    limit: int = 50,
+    include_captions: bool = False,
 ) -> list[dict[str, Any]]:
     limit = max(1, min(int(limit), MAX_PARAGRAPHS))
     offset = max(0, int(offset))
     clause, params = _section_clause(section)
+    clause = clause.replace('section_', 'p.section_')
+    if not include_captions:
+        clause += " AND p.section_level1 NOT IN ('figure_caption','table_caption')"
     pg = corpus_connection()
     try:
         rows = pg.execute(
@@ -89,7 +97,7 @@ def paper_paragraphs(
                    p.section_id, p.section_level1, p.section_level2, p.section_path,
                    (SELECT count(*) FROM sentences s WHERE s.para_id = p.para_id) AS sentence_count
             FROM paragraphs p
-            WHERE p.paper_id = %s{clause.replace('section_', 'p.section_')}
+            WHERE p.paper_id = %s{clause}
             ORDER BY p.sequence
             OFFSET %s LIMIT %s
             """,
@@ -100,8 +108,12 @@ def paper_paragraphs(
         pg.close()
 
 
-def paper_first_paragraph(paper_id: str, *, section: str = "") -> dict[str, Any] | None:
-    rows = paper_paragraphs(paper_id, section=section, offset=0, limit=1)
+def paper_first_paragraph(
+    paper_id: str, *, section: str = "", include_captions: bool = False
+) -> dict[str, Any] | None:
+    rows = paper_paragraphs(
+        paper_id, section=section, offset=0, limit=1, include_captions=include_captions
+    )
     return rows[0] if rows else None
 
 

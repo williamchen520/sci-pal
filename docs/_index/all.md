@@ -1,6 +1,6 @@
 # 全部文档
 
-> 共 499 篇 · 2026-11-12
+> 共 500 篇 · 2026-11-12
 
 | 分类 | 标题 | 摘要 | 文档 |
 |---|---|---|---|
@@ -272,6 +272,7 @@
 | 架构规范 | 实验记录：R8 去重、冲突标记、审计导出 | --- | [实验-RAG控制面-R8-去重冲突导出.md](../实验-RAG控制面-R8-去重冲突导出.md) |
 | 安全复盘 | 实验记录：R9 审计列表与 RO-Crate 导出 | --- | [实验-RAG控制面-R9-审计与RO-Crate.md](../实验-RAG控制面-R9-审计与RO-Crate.md) |
 | 架构规范 | 实验记录：SciPal 服务持久化 | --- | [实验-RAG控制面-服务持久化.md](../实验-RAG控制面-服务持久化.md) |
+| 架构规范 | 实验记录：Sentence Evidence 与 Caption 过滤 | --- | [实验-Sentence-Evidence.md](../实验-Sentence-Evidence.md) |
 | 架构规范 | 实验记录：Sentence Tree 入库 | --- | [实验-Sentence-Tree.md](../实验-Sentence-Tree.md) |
 | 架构规范 | 实验记录：代码库 UI 验收（A） | --- | [实验-代码RAG-A-UI.md](../实验-代码RAG-A-UI.md) |
 | 架构规范 | 实验记录：code-rag E0 评测脚手架与 L0 审计 | --- | [实验-代码RAG-E0.md](../实验-代码RAG-E0.md) |
