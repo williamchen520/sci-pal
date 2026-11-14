@@ -21,6 +21,12 @@ class SentenceTreeTests(unittest.TestCase):
         self.assertEqual(sentences[0]["char_end"], len("First sentence."))
         self.assertGreater(sentences[1]["char_start"], sentences[0]["char_end"])
 
+    def test_inline_caption_is_removed(self) -> None:
+        text = "Treatment reduced lipid accumulation. Fig. 5 | Overall evaluation of macrophages."
+        sentences = split_sentences(text)
+        self.assertEqual(sentences[0]["text"], "Treatment reduced lipid accumulation.")
+        self.assertEqual(len(sentences), 1)
+
     def test_stable_sentence_ids(self) -> None:
         paragraph = {
             "para_id": "paper_1_para_00001",

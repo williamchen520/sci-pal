@@ -23,7 +23,7 @@ scipal-paper MCP server（9 tools）
 ```text
 HCC LAM 论文
   paragraphs   112
-  sentences    621
+  sentences    800
   embeddings   106
   orphan       0
 ```
@@ -449,7 +449,7 @@ Rmd/Quarto chunk + 内部函数 v1
 HTML 尚未接入 corpus ingest
 DSH 尚未重启加载 scipal-paper
 sentence evidence 链未接
-figure_caption 仍可能被当作正文
+Results section 可能为空（PDF body 标签）
 app 重启后需再验证 outline 归一化
 全库低质量 embedding 只修了 HCC 一篇
 ```
@@ -471,6 +471,7 @@ app 重启后需再验证 outline 归一化
 | [实验-Paper-Code-Bindings](docs/实验-Paper-Code-Bindings.md) | paper ↔ code library |
 | [实验-Scipal-Paper-MCP](docs/实验-Scipal-Paper-MCP.md) | MCP 插件 |
 | [实验-Replication-Plan](docs/实验-Replication-Plan.md) | 复刻计划 |
+| [实验-证据质量修复](docs/实验-证据质量修复.md) | caption/首段/句内图注 |
 | [实验-R-Parser-v1](docs/实验-R-Parser-v1.md) | R 解析与 ingest |
 | [实验-Paper-Module-Map](docs/实验-Paper-Module-Map.md) | 模块视图 |
 | [实验-Paper-Data-Flow](docs/实验-Paper-Data-Flow.md) | 数据流 |
