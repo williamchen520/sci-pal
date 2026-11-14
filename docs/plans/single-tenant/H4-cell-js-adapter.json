@@ -1,0 +1,89 @@
+{
+  "plan_id": "H4",
+  "title": "Cell and JS Page Adapter",
+  "version": 1,
+  "status": "done",
+  "depends_on": [
+    "H2",
+    "H3"
+  ],
+  "objective": "Classify Cell 403/Cloudflare/JS responses and parse real Cell HTML with a dedicated adapter, without bypassing paywalls.",
+  "decisions": [
+    "H4-1 Cell 403 is blocked, never parsed as content",
+    "H4-2 Cloudflare markers are blocked",
+    "H4-3 JS shells are js_required",
+    "H4-4 no paywall bypass",
+    "H4-5 headless browser is not enabled by default",
+    "H4-6 PDF fallback delegates to H3 when provided",
+    "H4-7 usable Cell HTML uses a Cell DOM adapter"
+  ],
+  "access_states": [
+    "ok",
+    "blocked",
+    "js_required",
+    "paywalled",
+    "empty"
+  ],
+  "markers": [
+    "Just a moment",
+    "cf-chl",
+    "Attention Required",
+    "enable JavaScript",
+    "subscribe to continue"
+  ],
+  "tasks": [
+    {
+      "id": "H4.1",
+      "title": "Access classifier and fetch wrapper",
+      "file": "services/imports/html_access.py",
+      "status": "done"
+    },
+    {
+      "id": "H4.2",
+      "title": "Cell publisher detection",
+      "file": "services/papers/html_adapters.py",
+      "status": "done"
+    },
+    {
+      "id": "H4.3",
+      "title": "Cell section adapter",
+      "file": "services/papers/html_adapters.py",
+      "status": "done"
+    },
+    {
+      "id": "H4.4",
+      "title": "Fixtures",
+      "file": "tests/fixtures/html/cell.html",
+      "status": "done"
+    },
+    {
+      "id": "H4.5",
+      "title": "Tests",
+      "file": "tests/test_html_access.py",
+      "status": "done"
+    }
+  ],
+  "acceptance": [
+    "403 is blocked",
+    "Cloudflare marker is blocked",
+    "JS marker is js_required",
+    "Cell fixture yields sections",
+    "challenge page is never parsed as content",
+    "no PDF means explicit failure"
+  ],
+  "out_of_scope": [
+    "headless by default",
+    "paywall bypass",
+    "automatic PMC substitution"
+  ],
+  "verification": {
+    "tests": "6 passed",
+    "cell_fixture": "sections + abstract",
+    "access_states": [
+      "ok",
+      "blocked",
+      "js_required",
+      "paywalled"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 # 阶段计划
 
-> 共 163 篇 · 分类索引，文件原路径不变
+> 共 164 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -58,6 +58,7 @@
 | H1 计划表：Nature / PMC HTML Adapter | --- | [H1-nature-pmc-adapter.md](single-tenant/H1-nature-pmc-adapter.md) |
 | H2 计划表：HTML 质量门禁 | --- | [H2-html-quality-gate.md](single-tenant/H2-html-quality-gate.md) |
 | H3 计划表：HTML 失败后 PDF Fallback | --- | [H3-pdf-fallback.md](single-tenant/H3-pdf-fallback.md) |
+| H4 计划表：Cell / JS 页面适配 | --- | [H4-cell-js-adapter.md](single-tenant/H4-cell-js-adapter.md) |
 | N0 计划表：单租户导入管线 | --- | [N0-import-pipeline.md](single-tenant/N0-import-pipeline.md) |
 | 租户联邦执行计划总表 | --- | [00-execution-plan.md](tenant-federation/00-execution-plan.md) |
 | 决策记录：Tenant-ready 单租户优先 | --- | [DECISION-single-tenant-first.md](tenant-federation/DECISION-single-tenant-first.md) |
