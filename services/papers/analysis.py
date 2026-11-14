@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from services.db.pg_pool import corpus_connection
+from services.papers.bindings import list_bindings
 from services.papers.code_links import list_links
 from services.papers.evidence import paper_evidence
 from services.papers.reader import paper_first_paragraph, paper_outline
@@ -30,6 +31,7 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
     first = paper_first_paragraph(paper_id)
     evidence = paper_evidence(paper_id, query, top_k=top_k) if query.strip() else []
     links = list_links(paper_id)
+    bindings = list_bindings(paper_id)
     return {
         "paper": {
             "paper_id": paper_id,
@@ -43,9 +45,10 @@ def analyze_paper(paper_id: str, *, query: str = "", top_k: int = 8) -> dict[str
         "evidence": evidence,
         "query": query,
         "code": {
-            "status": "candidate" if links else "not_indexed",
+            "status": "bound" if bindings else ("candidate" if links else "not_indexed"),
             "links": links,
-            "reason": "" if links else "no validated code link",
+            "bindings": bindings,
+            "reason": "" if bindings else ("no valid code library binding" if links else "no code link"),
         },
         "status": "ok" if outline else "partial",
         "gaps": [

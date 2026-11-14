@@ -1,6 +1,6 @@
 # 架构规范
 
-> 共 181 篇 · 分类索引，文件原路径不变
+> 共 182 篇 · 分类索引，文件原路径不变
 
 | 标题 | 摘要 | 文档 |
 |---|---|---|
@@ -61,6 +61,7 @@
 | 实验记录：BioViz Recipe RAG Phase 0/1 | --- | [实验-BioViz-Recipe-RAG.md](../实验-BioViz-Recipe-RAG.md) |
 | 实验记录：HTML 论文解析器 | --- | [实验-HTML解析器.md](../实验-HTML解析器.md) |
 | 实验记录：Paper Analysis 聚合入口 | --- | [实验-Paper-Analysis.md](../实验-Paper-Analysis.md) |
+| 实验记录：Paper ↔ Code Library 绑定 | --- | [实验-Paper-Code-Bindings.md](../实验-Paper-Code-Bindings.md) |
 | 实验记录：Paper Code Links | --- | [实验-Paper-Code-Links.md](../实验-Paper-Code-Links.md) |
 | 实验记录：Paper Reader API | --- | [实验-Paper-Reader-API.md](../实验-Paper-Reader-API.md) |
 | 案例：HCC 新辅助免疫治疗 LAM 论文 → 代码模块与数据流 | --- | [实验-Paper-to-Code-HCC-LAM案例.md](../实验-Paper-to-Code-HCC-LAM案例.md) |
