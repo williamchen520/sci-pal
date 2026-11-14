@@ -160,8 +160,8 @@
     "tests": "detector+session+orchestrator+lanes",
     "passed": 20,
     "failed": 0,
-    "smoke_import": "imp_b3fc0b77f12c416a",
-    "built_paper": "paper_import_55b82b868333",
+    "paper_build": "paper_import_55b82b868333",
+    "code_build": "imp_74727a28fa184e2a",
     "routes": 278
   }
 }

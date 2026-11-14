@@ -95,7 +95,12 @@ def get_import(import_id: str) -> dict[str, Any]:
             (import_id,),
         ).fetchall()
     result = dict(session)
-    result["items"] = [dict(item) for item in items]
+    result["items"] = []
+    for item in items:
+        value = dict(item)
+        value["tenant_id"] = result["tenant_id"]
+        value["library_id"] = result["library_id"]
+        result["items"].append(value)
     return result
 
 
