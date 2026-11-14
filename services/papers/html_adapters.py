@@ -70,11 +70,14 @@ def cell_sections(soup: BeautifulSoup) -> list[dict[str, Any]]:
 
 
 def pmc_sections(soup: BeautifulSoup) -> list[dict[str, Any]]:
+    article = soup.select_one("main article") or soup.find("article")
+    if article is None:
+        return []
+    body = article.select_one("section.body") or article
     sections = []
-    for section in soup.select("section, div.sec"):
+    candidates = list(body.find_all("section", recursive=False)) + list(body.select("div.sec"))
+    for section in candidates:
         title = _section_title(section)
-        if not title and not section.find("p"):
-            continue
         paragraphs = _direct_paragraphs(section)
         if paragraphs:
             sections.append({"title": title or "(untitled)", "paragraphs": paragraphs})

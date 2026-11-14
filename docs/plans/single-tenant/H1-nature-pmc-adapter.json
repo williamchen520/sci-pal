@@ -94,6 +94,8 @@
     "tests": "3 passed",
     "nature_sections": 15,
     "nature_abstract_chars": 1386,
-    "pmc_fixture": "passed"
+    "pmc_fixture": "passed",
+    "pmc_real": "PMC12816625: 12 sections / abstract 1058",
+    "pmc_batch": "paper_import_15c6a0f864b0 27 paras/133 sentences"
   }
 }

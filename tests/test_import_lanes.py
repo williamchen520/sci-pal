@@ -41,7 +41,15 @@ class LaneTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "page.html"
             path.write_text(
-                "<html><body><section><h2>Results</h2><p>X</p></section></body></html>",
+                "<html><head><meta name='citation_title' content='A valid test title'>"
+                "</head><body><div id='Abs1-content'>"
+                + ("A" * 150)
+                + "</div>"
+                + "".join(
+                    f"<section data-title='S{i}'><p>{'B' * 220}</p><p>{'C' * 220}</p></section>"
+                    for i in range(3)
+                )
+                + "</body></html>",
                 encoding="utf-8",
             )
             with mock.patch(
