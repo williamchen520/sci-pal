@@ -37,6 +37,18 @@ data_flow.edges_count
 
 MCP 默认 `compact=true`。
 
+compact 默认不再返回 43 条 section 路径：
+
+```text
+outline_summary.sections = []
+```
+
+需要目录：
+
+```text
+compact=1&include_sections=1
+```
+
 ## 2. 用途
 
 `scipal-paper` 不需要先调 4 个接口：

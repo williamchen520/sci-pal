@@ -26,7 +26,12 @@ def _paper_meta(paper_id: str) -> dict[str, Any]:
 
 
 def analyze_paper(
-    paper_id: str, *, query: str = "", top_k: int = 8, compact: bool = False
+    paper_id: str,
+    *,
+    query: str = "",
+    top_k: int = 8,
+    compact: bool = False,
+    include_sections: bool = False,
 ) -> dict[str, Any] | None:
     meta = _paper_meta(paper_id)
     if not meta:
@@ -65,7 +70,7 @@ def analyze_paper(
                 }
                 for row in outline
             ]
-            if compact
+            if compact and include_sections
             else [],
         },
         "first_paragraph": first,
